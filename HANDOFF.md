@@ -34,9 +34,14 @@ while establishing a trustworthy telemetry and configuration baseline.
   verified. See [bench results](docs/heltec-bench-test.md) and
   [receiver/OTA instructions](firmware/heltec/README.md).
 
-During VESC inspection and Heltec testing, no VESC settings were written. No VESC
-firmware update, VESC reboot, motor test,
-CAN enumeration, terminal command or motor actuation was performed. Telemetry
+During the initial USB inspection and normal Heltec telemetry/OTA tests, no VESC
+settings, firmware, resets, motor commands, CAN enumeration or terminal commands
+were sent. Later isolated diagnostic trials sent zero-current requests and finite
+ADC handoff/release commands. Direct laptop Bluetooth subsequently produced a
+physically confirmed half-second forward movement at a 5 A request; longer
+5 s / 5 A and 30 s / 10 A attempts aborted at diagnostic speed limits and returned
+to zero. No VESC configuration or firmware was written. See the diagnostic
+findings below. Telemetry
 queries can reset the controller's averaging accumulators as part of ordinary
 GET_VALUES behavior, but do not change drive settings.
 
@@ -138,11 +143,13 @@ an event log and verified component ratings.
 
 ## Parallel firmware integration note
 
-Eamon’s `eamon/firmware-lora-starter` is at `ab9404a` (PR #1) as last fetched. Recent work also adds pit
-SD-card/display setup and a Manresa imagery package.
+Eamon’s `eamon/firmware-lora-starter` is at `d91422b` (PR #1) when reviewed. His `4164bc1` handoff proposes
+radio reception first, then temporary STOP/START/mode configuration writes. See
+[configuration integration review](docs/eamon-config-review.md). Recent work also
+adds the pit setup and maps, with a 50 Day St bench preset.
 It contains the T-Beam S3 base, another kart starter, a Pi 4 pit server/kiosk,
-simulator and SD-card setup. His notes report base boot, radio initialization
-and GNSS serial reception verified; no received LoRa packet or outdoor fix yet.
+simulator and SD-card setup. His latest notes report kart 2 → T-Beam reception, ping responses and OTA
+verified without a VESC attached; no receipt of our kart 1 or outdoor fix yet.
 Those are collaborator-reported results, not tests performed on this computer.
 
 The owner chose his receiver contract to drive integration. Our adapter now
@@ -155,21 +162,35 @@ Shared bytes/settings match; successful over-air reception remains unverified.
 The detailed [receiver agreement](firmware/heltec/README.md#radio-receiver-agreement-for-eamon)
 records remaining validity, session and slot-timing limitations.
 
-Keep the tested BLE adapter in `firmware/heltec`. Eamon’s other kart starter
-currently defaults to wired UART and enabled writes. Its mode/STOP/START logic
+Keep the tested BLE adapter in `firmware/heltec`. Eamon’s latest kart starter
+now defaults to BLE with a required pinned MAC and enabled writes. Its mode/STOP/START logic
 has not been validated on this kart and is not imported by adopting the packet
 format. Our adapter transmits telemetry only, with unknown modes/scale and
 writes disabled. Retain authenticated maintenance-only OTA. No changes have
 been made to Eamon’s branch and no remote commands are handled here.
 
-The owner also requested removable wheels-up motor testing, now **five seconds
-at mid speed**. A [separate diagnostic draft (PR #3)](https://github.com/colinfost3r/GoKart-Control/pull/3)
-exists, but live zero-current trials aborted on stale telemetry and some
-preflights stalled. No positive-current command or wheel spin was sent. The
-normal read-only telemetry image is restored; no cart reset was needed. This
-branch does not include that diagnostic implementation. After local validation,
-the owner wants to test motors from Eamon’s hub too. That remains subsequent
-bench work, separate from fleet profile/STOP deployment.
+The owner requested a removable bench-control diagnostic and has now paused
+motor testing to save progress and return to basic telemetry. The separate
+`firmware/bench-control` folder contains both the stalled Heltec prototype and
+`direct_ble.py`, a laptop runner using VESC Tool-style current commands. A 5 A,
+half-second probe moved forward as physically confirmed by the owner. The
+requested five-second test aborted at 580 ERPM; the later 30-second / 10 A test
+aborted at 2,474 ERPM. Both returned to zero without a VESC fault. Neither
+sustained test completed. See [test report](docs/bench-control-test.md) and
+[immutable traces](hardware/vesc/baseline-kart/2026-11-05-direct-ble-bench/README.md).
+
+The physical Heltec is back on **0.2.1-bench**, kart 1, BW500, 46-byte telemetry,
+TX enabled, maintenance off and VESC writes disabled. Fresh telemetry showed
+0 ERPM, 0 A and fault 0. Do not flash either unvalidated motor-control image
+as a consequence of pulling repository updates. The immediate next integration
+step is Eamon's reception check; local TX completion does not prove receipt.
+
+Eamon's STOP/START proposal changes temporary motor-current limits; START does
+not command the wheels to spin. It is separate from the direct-current bench
+runner and from the owner's future top-speed profiles. The review records the
+fixed STOP ramp, hardcoded unrelated limits, UUID and OTA differences that need
+reconciliation before adopting his command-capable image. No changes have been
+made to his branch or to the installed VESC configuration.
 
 ## Collaboration and delivery state
 
