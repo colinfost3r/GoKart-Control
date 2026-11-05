@@ -29,14 +29,22 @@ while establishing a trustworthy telemetry and configuration baseline.
 - Runtime configuration and a stationary telemetry sample captured and decoded.
 - Raw response payloads, capture manifest/hashes and schema provenance retained.
 - Read-only capture/offline decode tools, and tests against the real baseline.
+- Heltec bench firmware and authenticated Wi-Fi OTA are implemented and exercised
+  on one board; live VESC UUID/6.00 telemetry, GPS NMEA and radio TX completion
+  verified. See [bench results](docs/heltec-bench-test.md) and
+  [receiver/OTA instructions](firmware/heltec/README.md).
 
-No controller settings were written. No firmware update, reboot, motor test,
+During VESC inspection and Heltec testing, no VESC settings were written. No VESC
+firmware update, VESC reboot, motor test,
 CAN enumeration, terminal command or motor actuation was performed. Telemetry
 queries can reset the controller's averaging accumulators as part of ordinary
 GET_VALUES behavior, but do not change drive settings.
 
-The application has not been built. BLE operation with a Heltec, LoRa coverage,
-GPS reception, touchscreen behavior and failure recovery remain untested.
+No dashboard/pit app is implemented on this branch. Eamon has added a pit server,
+kiosk and simulator on PR #1; see the integration note below. Heltec BLE telemetry,
+GPS serial reception and OTA reboot/reconnection now work on the bench. Outdoor
+GPS fix, receipt on Eamon's radio, LoRa coverage, touchscreen behavior and
+physical driving response under link/accessory failures remain untested.
 
 ## The connected kart: findings that matter
 
@@ -49,7 +57,7 @@ See the [full report and capture](hardware/vesc/baseline-kart/2026-11-05/README.
 | Absolute-current threshold 240 A | This is a different setting, not the battery-current limit. |
 | Motor braking current 0 A; battery regen allowance -100 A | Preserve present behavior; do not enable regen while porting profiles. |
 | Field-weakening current max 95 A | Existing behavior to investigate, not evidence it should be increased. |
-| ADC and UART; Current Reverse Button | Consistent with hardwired throttle/reverse and a UART BLE module. BLE UUID/device identity still needs verification. |
+| ADC and UART; Current Reverse Button | Consistent with hardwired throttle/reverse and a UART BLE module. BLE UUID/device identity verified during Heltec bench testing. |
 | Motor-temperature sensor disabled; owner confirms no sensors wired | Show unavailable; do not interpret 0 C as a cool motor. ESC sensing is separate. |
 | CAN multi-ESC enabled; controller ID 69 | Configuration does not prove a second controller is physically present. |
 | 14 poles, ratio ~2.76923, wheel diameter 0.406 m | Configured values only; physically verify before using for MPH limits. |
@@ -94,14 +102,16 @@ is 1.0, but that alone does not prove there are no temporary overrides elsewhere
 2. Establish the saved-config baseline without overwriting settings or disrupting
    driving; coordinate a controlled inspection with the owner. Do not power-cycle
    or change firmware merely to fill a documentation gap.
-3. Run a read-only Heltec BLE telemetry spike against this kart. Confirm intended
-   device selection, packet fragmentation and reconnect. Measure latency while
-   GPS, LoRa and USB display traffic run concurrently; verify display loss does
-   not block VESC servicing. Validate independent Heltec power/reset behavior.
+3. Extend the working read-only Heltec bench test: quantify latency under GPS,
+   LoRa and USB load; verify physical driving response through accessory/link
+   failures on a controlled bench. BLE identity/readout and OTA reconnect have
+   passed, but independent power and broader failure testing remain open.
 4. Build an explicitly labeled eight-kart simulator and responsive kart/pit views.
    Test filtering, stale/no-fix states, shared browser state and command outcomes.
-5. Implement the Heltec serial contract and a two-radio bench link, then load-test
-   eight-kart traffic before choosing field update rates.
+5. Confirm actual reception on Eamon’s T-Beam S3 base using the shared 46-byte
+   GoKartProtocol/BW500 contract. This development kart is assigned ID 1. TX is
+   opt-in; PPS slotting and eight-kart load testing remain open. Obtain an
+   outdoor GPS fix. See the bench report for installed-image verification.
 6. Bench-verify brief/sustained accessory and link failures plus reconnect:
    no state-changing commands, unchanged active settings and uninterrupted
    hardwired input response with normal protections. Validate this before
@@ -125,6 +135,41 @@ Drift wheel speed and GPS ground speed differ. A wheel-RPM limiter can reduce
 propulsion during a drift even at modest ground speed. Do not conclude that
 higher battery current, motor current or fault thresholds are the fix without
 an event log and verified component ratings.
+
+## Parallel firmware integration note
+
+Eamon’s `eamon/firmware-lora-starter` is at `ab9404a` (PR #1) as last fetched. Recent work also adds pit
+SD-card/display setup and a Manresa imagery package.
+It contains the T-Beam S3 base, another kart starter, a Pi 4 pit server/kiosk,
+simulator and SD-card setup. His notes report base boot, radio initialization
+and GNSS serial reception verified; no received LoRa packet or outdoor fix yet.
+Those are collaborator-reported results, not tests performed on this computer.
+
+The owner chose his receiver contract to drive integration. Our adapter now
+includes his **unchanged canonical GoKartProtocol library** and uses its 46-byte
+frame and 1 Hz reporting. Eamon’s latest base moved to BW500 and supports the
+legacy 47-byte packet too. Our 0.2.1-bench image now follows BW500 while retaining
+the shared 46-byte packet; 0.2.0-bench was BW250 and must be updated. This
+kart is **ID 1** by owner decision; do not assign that ID to another powered kart.
+Shared bytes/settings match; successful over-air reception remains unverified.
+The detailed [receiver agreement](firmware/heltec/README.md#radio-receiver-agreement-for-eamon)
+records remaining validity, session and slot-timing limitations.
+
+Keep the tested BLE adapter in `firmware/heltec`. Eamon’s other kart starter
+currently defaults to wired UART and enabled writes. Its mode/STOP/START logic
+has not been validated on this kart and is not imported by adopting the packet
+format. Our adapter transmits telemetry only, with unknown modes/scale and
+writes disabled. Retain authenticated maintenance-only OTA. No changes have
+been made to Eamon’s branch and no remote commands are handled here.
+
+The owner also requested removable wheels-up motor testing, now **five seconds
+at mid speed**. A [separate diagnostic draft (PR #3)](https://github.com/colinfost3r/GoKart-Control/pull/3)
+exists, but live zero-current trials aborted on stale telemetry and some
+preflights stalled. No positive-current command or wheel spin was sent. The
+normal read-only telemetry image is restored; no cart reset was needed. This
+branch does not include that diagnostic implementation. After local validation,
+the owner wants to test motors from Eamon’s hub too. That remains subsequent
+bench work, separate from fleet profile/STOP deployment.
 
 ## Collaboration and delivery state
 
