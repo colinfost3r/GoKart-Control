@@ -1,0 +1,267 @@
+/* GoKart kart driver display, 1024x600 touch. Dark racing dash: near-black panels, light-grey
+   labels, pure white only for the numbers (speed, battery, lap times), solid state colours, no
+   glow. Game layer (ZONES.md): speedometer card, boost meter, lap strip + panel, item roulette,
+   flashes and the full-screen race start. The safety banners (STOPPED, SLOW, GRID, connection,
+   SIMULATION) stay above everything, including the race start takeover. */
+:root {
+  --bg: #0b0c0e; --panel: #15171a; --card: #000; --ink: #d6d6d6; --num: #fff; --muted: #8d9096; --line: #3b3f45;
+  --ok: #12902f; --warn: #ff9a00; --bad: #d00000; --stale: #5b5f66; --info: #2f7bff;
+  --boost: #ffb000; --mud: #8a5a2b; --mudlite: #c58a4e; --go: #14c23a;
+  font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); }
+body { display: flex; flex-direction: column; -webkit-user-select: none; user-select: none; touch-action: none; }
+button { font: inherit; font-weight: 800; border: 2px solid var(--line); border-radius: 8px;
+  background: #1c1f23; color: var(--ink); cursor: pointer; transition: transform 80ms ease-out; }
+/* tap feedback: every press shrinks the control to 97 % for 80 ms (class set by app.js) */
+.tapfx { transform: scale(.97); }
+.hidden { display: none !important; }
+
+/* banners: full width, above everything (game flash and race takeover included) */
+#banners { position: relative; z-index: 30; }
+.banner { text-align: center; font-weight: 900; letter-spacing: .05em; padding: 4px 8px; }
+.alerts { display: flex; }
+.alerts .banner { flex: 1; white-space: nowrap; overflow: hidden; height: 64px; line-height: 56px; font-size: 44px; }
+.banner.slow { font-size: 36px; }
+.banner.grid { font-size: 40px; }
+.banner.stop { background: var(--bad); color: #fff; }
+.banner.slow { background: var(--warn); color: #000; }
+.banner.grid { background: repeating-conic-gradient(#e8e8e8 0 25%, #000 0 50%) 0 0 / 32px 32px; color: #fff;
+  text-shadow: 0 0 6px #000, 0 0 3px #000, 0 0 2px #000; }
+.banner.grid span { background: #000; padding: 0 18px; border-radius: 6px; }
+.chip.id { touch-action: none; position: relative; overflow: hidden; }
+.chip.id.holding::after { content: ""; position: absolute; left: 0; bottom: 0; height: 4px; width: calc(var(--hp, 0) * 100%); background: var(--boost); }
+/* with an alert banner showing, the dashboard gives up some height so the mode buttons stay on screen */
+body.alerting .mid { font-size: 34px; }
+body.alerting .mbtn { height: 62px; }
+body.alerting .battnote { display: none; }
+.banner.bad { background: #1a0000; color: #fff; font-size: 22px; border-bottom: 4px solid var(--bad); }
+.banner.sim { background: repeating-linear-gradient(45deg, #ffd400 0 16px, #111 16px 32px); color: #fff; font-size: 15px; padding: 2px;
+  white-space: nowrap; overflow: hidden; }
+/* the text sits on a solid pill: readable in sun, not lost in the stripes */
+.banner.sim span { background: #000; padding: 0 12px; border-radius: 4px; }
+.banner.sim.demo { font-size: 17px; }
+
+.main { flex: 1; display: grid; grid-template-columns: 380px 1fr; min-height: 0; }
+
+/* left: driver dashboard */
+.dash { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; background: var(--panel); border-right: 3px solid #000;
+  min-height: 0; overflow: hidden; }
+.chips { display: flex; gap: 5px; flex-wrap: nowrap; overflow: hidden; }
+.chip { display: inline-flex; align-items: center; height: 30px; padding: 0 8px; border-radius: 6px; font-weight: 900; font-size: 16px;
+  border: 2px solid var(--stale); color: #e8e8e8; background: var(--stale); white-space: nowrap; }
+.chip.ok { background: var(--ok); border-color: var(--ok); }
+.chip.warn { background: var(--warn); border-color: var(--warn); color: #000; }
+.chip.bad { background: var(--bad); border-color: var(--bad); }
+.chip.id { background: #000; border-color: #555; }
+.chip.id.bad { background: var(--bad); }
+/* Heltec USB link not up: one chip replaces PIT / VESC / GPS (they would all read "?") */
+.chip.link { flex: 1; justify-content: center; }
+body.pulse .chip.link.warn { opacity: .7; }
+
+/* speedometer: black card, arc 0-30 mph, big italic number, gear badge */
+.speedo { position: relative; flex: 1 1 0; min-height: 112px; background: var(--card); border: 2px solid #26292e; border-radius: 12px; overflow: hidden; }
+.speedo svg { position: absolute; inset: 2px 0 0 0; width: 100%; height: calc(100% - 2px); }
+.arcbg { fill: none; stroke: #2a2d31; stroke-width: 22; stroke-linecap: butt; }
+.arcfg { fill: none; stroke: #ececec; stroke-width: 22; stroke-linecap: butt; }
+.speedo.boost .arcfg { stroke: var(--boost); }
+.speedo.mud .arcfg { stroke: var(--mudlite); }
+.speedo.stopped .arcfg { stroke: var(--bad); }
+.tick { stroke: #c8c8c8; stroke-width: 3; }
+.tick.minor { stroke: #666; stroke-width: 2; }
+.ticklbl { fill: #9a9a9a; font-size: 15px; font-weight: 800; }
+.mphnum { fill: var(--num); font-size: 96px; font-weight: 900; font-style: italic; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
+.mphnum.na { fill: #8a8a8a; font-size: 46px; font-style: normal; letter-spacing: 0; }
+.mphunit { fill: #c4c4c4; font-size: 20px; font-weight: 900; letter-spacing: 2px; }
+.mphunit tspan { fill: #8a8a8a; font-size: 14px; }
+.gear { position: absolute; right: 6px; bottom: 6px; width: 70px; display: flex; flex-direction: column; align-items: center;
+  background: #dcdcdc; color: #000; border: 3px solid #dcdcdc; border-radius: 9px; padding: 0 0 2px; line-height: 1; }
+.gear b { font-size: 40px; font-weight: 900; font-style: italic; }
+.gear span { font-size: 11px; font-weight: 900; letter-spacing: .02em; white-space: nowrap; }
+.gear.req { border-style: dashed; border-color: var(--info); background: #c9d8f2; }
+.gear.stale { background: #6a6a6a; border-color: #6a6a6a; }
+.gear.g2 { background: var(--boost); border-color: var(--boost); }
+
+/* lap strip under the speedometer (game on): LAST | BEST */
+.lapstrip { display: flex; height: 26px; flex: none; border-radius: 6px; overflow: hidden; background: #000; border: 2px solid #26292e;
+  font-size: 13px; font-weight: 800; color: var(--muted); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.lapstrip span { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+.lapstrip span + span { border-left: 2px solid #26292e; }
+.lapstrip b { color: var(--num); font-size: 17px; font-style: italic; letter-spacing: 0; }
+.lapstrip b.best { color: #5dff86; }
+
+/* boost meter: live current scale vs the mode's scale (mark); above = BOOST, below = MUD */
+.meter { display: flex; align-items: center; gap: 8px; height: 34px; flex: none; }
+.btrack { position: relative; flex: 1; height: 26px; border: 2px solid var(--line); border-radius: 6px; overflow: hidden;
+  background: repeating-linear-gradient(-60deg, #1b1d21 0 10px, #23262b 10px 20px); }
+.btrack > div { position: absolute; top: 0; bottom: 0; }
+#bBase { left: 0; width: 0; background: #8d9096; }
+#bFill { left: 0; width: 0; }
+#bMark { width: 4px; margin-left: -2px; background: #fff; top: -3px; bottom: -3px; }
+.meter.boost #bFill { background: repeating-linear-gradient(-60deg, var(--boost) 0 10px, #ff7a00 10px 20px); }
+.meter.mud #bFill { background: var(--mudlite); }
+.blabel { min-width: 104px; text-align: center; font-weight: 900; font-size: 20px; border-radius: 6px; padding: 2px 4px; border: 2px solid var(--line); color: var(--ink); }
+/* the BOOST pulse flips with each render (body.pulse, 5 Hz from app.js), not a 60 fps CSS animation */
+.meter.boost .blabel { background: var(--boost); color: #000; border-color: var(--boost); font-style: italic; }
+.meter.boost .btrack { border-color: var(--boost); }
+body.pulse .meter.boost .blabel { transform: scale(1.07); background: #ffd24a; }
+body.pulse .meter.boost .btrack { border-color: #fff2b8; }
+.meter.mud .blabel { background: var(--mud); color: #fff; border-color: var(--mud); }
+.meter.grid .blabel { background: #000; color: #fff; border-color: #fff; }
+.meter.stopped .blabel { background: var(--bad); color: #fff; border-color: var(--bad); }
+.meter.unknown .blabel, .meter.normal .blabel { color: var(--muted); font-size: 16px; }
+.note { font-size: 15px; font-weight: 700; color: var(--muted); min-height: 18px; }
+.note.cmd { font-size: 16px; color: var(--ink); }
+
+.batt { border-top: 2px solid var(--line); padding-top: 2px; }
+.battrow { display: flex; align-items: baseline; gap: 12px; }
+.mid { font-size: 40px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.05; color: var(--num); }
+.volts { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); }
+.bar { height: 14px; border: 2px solid var(--line); border-radius: 4px; margin-top: 2px; background: #000; }
+.bar > div { height: 100%; width: 0; background: var(--ok); }
+.stale .mid, .stale .volts, .stale .modenow { color: #6d7076; }
+
+.lbl { font-size: 18px; font-weight: 900; color: var(--muted); }
+/* footer lines (battery note, map note): one 12 px muted style */
+.foot, .note.battnote { font-size: 12px; font-weight: 700; color: var(--muted); min-height: 14px; letter-spacing: .01em; }
+
+.fault { background: var(--bad); color: #fff; font-weight: 900; font-size: 18px; padding: 3px 8px; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.modebtns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: auto; }
+.mbtn { height: 76px; font-size: 20px; padding: 0 2px; position: relative; overflow: hidden; --p: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.mbtn small { font-size: 26px; font-style: italic; font-weight: 900; }
+.mbtn.actual { background: #dcdcdc; color: #000; border-color: #dcdcdc; }
+.mbtn.req:not(.actual) { border-style: dashed; border-color: var(--info); color: #8fb6ff; }
+.mbtn:disabled { opacity: .35; }
+/* press-and-hold progress ring (top-right of the button), filled by --p 0..1 */
+.mbtn::after, .holdring::after { content: ""; position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%;
+  background: conic-gradient(var(--info) calc(var(--p) * 360deg), rgba(140,140,140,.35) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  opacity: calc(var(--p) * 100); pointer-events: none; }
+
+/* right: map */
+.mapwrap { position: relative; min-width: 0; min-height: 0; background: #33363a; }
+#map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+/* slim, see-through map buttons so they do not eat the map */
+/* touch targets >= 56 px (gloved hands, bumpy track) */
+.mapctl { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 6px; width: 66px; }
+.mapctl button { height: 56px; font-size: 22px; padding: 0; background: rgba(0,0,0,.42); color: #fff; border: 2px solid rgba(255,255,255,.55);
+  text-shadow: 0 1px 2px #000; }
+.mapctl #followBtn { font-size: 14px; letter-spacing: .02em; }
+.mapctl button.sel { background: rgba(230,230,230,.82); color: #000; border-color: rgba(255,255,255,.9); text-shadow: none; }
+.mapmsg { position: absolute; left: 50%; bottom: 76px; transform: translateX(-50%); background: rgba(0,0,0,.85); color: #eee;
+  font-size: 28px; font-weight: 900; padding: 10px 18px; border-radius: 10px; text-align: center; pointer-events: none; }
+.resume { position: absolute; bottom: 52px; left: 8px; background: #000; color: #eee; font-weight: 800; font-size: 16px; padding: 4px 10px; border-radius: 6px; }
+.mapnote { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.62); padding: 1px 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+/* sound: mute toggle bottom-right of the map, "tap to enable" chip until audio is unlocked */
+.sndwrap { position: absolute; right: 8px; bottom: 22px; display: flex; align-items: center; gap: 6px; }
+.sndbtn { width: 56px; height: 56px; padding: 0; background: rgba(0,0,0,.42); border: 2px solid rgba(255,255,255,.55); color: #fff;
+  display: flex; align-items: center; justify-content: center; }
+.sndbtn svg { width: 30px; height: 30px; }
+.sndbtn.muted { background: rgba(208,0,0,.75); border-color: rgba(255,255,255,.7); }
+.sndtest { height: 56px; padding: 0 12px; font-size: 14px; background: rgba(0,0,0,.6); color: #fff; border: 2px solid var(--boost); }
+.sndhint { background: #000; color: var(--boost); border: 2px solid var(--boost); border-radius: 6px; font-size: 13px; font-weight: 900;
+  padding: 4px 8px; letter-spacing: .04em; }
+
+/* lap panel (top-left of the map) and the GAME OFF chip */
+/* top-left of the map: lap panel (or GAME OFF chip) and the P badge side by side */
+.tl { position: absolute; top: 8px; left: 8px; display: flex; align-items: flex-start; gap: 10px; pointer-events: none; z-index: 4; }
+.lappanel { position: relative; min-width: 196px; background: rgba(0,0,0,.86); color: var(--ink);
+  border-radius: 10px; padding: 0 12px 6px; font-variant-numeric: tabular-nums; pointer-events: none; overflow: hidden; }
+.lapflag { height: 10px; margin: 0 -12px 4px; background: repeating-conic-gradient(#e8e8e8 0 25%, #000 0 50%) 0 0 / 10px 10px; }
+.lapn { font-size: 20px; font-weight: 900; letter-spacing: .06em; }
+.lapn b { font-size: 34px; font-style: italic; color: var(--num); }
+.lapcur { font-size: 40px; font-weight: 900; line-height: 1; font-style: italic; color: var(--num); }
+.laprow { display: flex; justify-content: space-between; gap: 14px; font-size: 20px; font-weight: 800; }
+.laprow b { color: var(--num); }
+.laprow span { color: var(--muted); font-size: 15px; align-self: center; }
+.laprow.best b { color: #5dff86; }
+.lappanel.idle .lapcur { color: #8a8a8a; font-size: 26px; }
+.gamechip { font-size: 14px; background: rgba(0,0,0,.7); color: #bbb; border-color: #777; }
+
+/* boost / mud / lap flash: covers the page for ~0.8 s, below the safety banners; text pops in */
+.flash { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.flash span { font-size: 140px; font-weight: 900; font-style: italic; letter-spacing: -.02em; color: #000;
+  -webkit-text-stroke: 4px #fff; white-space: nowrap; display: inline-block; animation: pop .38s cubic-bezier(.2, 1.7, .45, 1) both; }
+@keyframes pop { 0% { transform: scale(.25); } 100% { transform: scale(1); } }
+.flash.fboost { background: repeating-linear-gradient(-60deg, rgba(255,176,0,.9) 0 60px, rgba(255,122,0,.9) 60px 120px);
+  animation: flash .8s ease-out forwards; }
+.flash.fmud { background: rgba(92,58,24,.86); animation: flash .7s ease-out forwards; }
+.flash.fmud span { color: #fff; -webkit-text-stroke: 3px #000; }
+.flash.flap { background: rgba(0,0,0,.45); animation: flash 1.2s ease-out forwards; }
+.flash.flap span { font-size: 92px; background: #000; color: #fff; -webkit-text-stroke: 0; padding: 6px 28px; border-radius: 12px;
+  border: 4px solid #e8e8e8; }
+.flash.fbest span { border-color: #5dff86; color: #5dff86; }
+@keyframes flash { 0% { opacity: 1; } 60% { opacity: 1; } 100% { opacity: 0; } }
+.flash.fstar { background: repeating-conic-gradient(from 0deg, rgba(255,214,0,.92) 0 15deg, rgba(255,120,0,.92) 15deg 30deg);
+  animation: flash 1.3s ease-out forwards; }
+.flash.fstar span { color: #fff200; -webkit-text-stroke: 6px #000; font-size: 230px; animation: spin 1.3s cubic-bezier(.2, 1, .4, 1); }
+@keyframes spin { from { transform: rotate(-200deg) scale(.3); } to { transform: rotate(0) scale(1.05); } }
+
+/* race start: full-screen takeover (HUD dimmed to 20 %), five 140 px lights in a full-width bar,
+   "GO in N", then the whole screen goes green with GO! and fades out in 0.5 s */
+.raceov { position: fixed; inset: 0; z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; background: rgba(0,0,0,.8); pointer-events: none; transition: opacity .5s ease-out; }
+.raceov.fade { opacity: 0; }
+.lightbar { width: 100%; background: #050505; border-top: 4px solid #2a2a2a; border-bottom: 4px solid #2a2a2a; padding: 16px 0; }
+.lights { display: flex; justify-content: space-evenly; align-items: center; }
+.lights i { width: 140px; height: 140px; border-radius: 50%; background: #2b0505; border: 8px solid #141414; box-shadow: inset 0 0 0 5px #3d0d0d; }
+.lights i.on { background: #ff1c1c; box-shadow: inset 0 0 0 5px #ff8080; animation: lit .22s cubic-bezier(.2, 1.8, .4, 1); }
+@keyframes lit { from { transform: scale(.82); } to { transform: scale(1); } }
+.racemsg { font-size: 120px; font-weight: 900; font-style: italic; color: #fff; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.racemsg:empty { display: none; }
+.raceov.go { background: var(--go); }
+.raceov.go .lightbar, .raceov.go .racemsg { display: none; }
+.racego { font-size: 200px; font-weight: 900; font-style: italic; color: #000; line-height: 1; letter-spacing: -.03em;
+  animation: pop .35s cubic-bezier(.2, 1.7, .45, 1) both; }
+/* a VESC fault stays readable above the takeover */
+body.racing .fault { position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; border-radius: 0; font-size: 28px; text-align: center; padding: 8px; }
+
+/* item box roulette (top-centre of the map): big box, each icon pops in */
+/* right of the lap panel + P badge, left of the map buttons: overlaps neither */
+.itembox { position: absolute; top: 10px; right: 84px; width: 176px; height: 176px; z-index: 5;
+  background: #1e5bd8; border: 7px solid #f0f0f0; outline: 4px solid #000; border-radius: 18px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; color: #fff; pointer-events: none; }
+.iglyph { width: 118px; height: 118px; display: flex; align-items: center; justify-content: center; font-size: 104px; font-weight: 900; line-height: 1; }
+.iglyph svg { width: 100%; height: 100%; }
+.iglyph.pop { animation: pop .16s cubic-bezier(.2, 1.8, .45, 1); }
+.itembox small { font-size: 22px; font-weight: 900; letter-spacing: .06em; min-height: 24px; line-height: 1; }
+.itembox.done { animation: boxpop .3s cubic-bezier(.2, 1.8, .45, 1); }
+@keyframes boxpop { from { transform: scale(.7); } to { transform: scale(1); } }
+.itembox.r-boost { background: var(--boost); color: #000; }
+.itembox.r-super { background: #ffd400; color: #000; }
+.itembox.r-mud { background: var(--mud); }
+.itembox.r-empty { background: #555; }
+
+/* race finish: full-screen checkered takeover (6 s, then 0.5 s fade) with the position, laps and
+   best lap; then a small FINISHED chip on the map until the next countdown */
+.finishov { position: fixed; inset: 0; z-index: 26; display: flex; align-items: center; justify-content: center; pointer-events: none;
+  background: repeating-conic-gradient(#e8e8e8 0 25%, #000 0 50%) 0 0 / 96px 96px; transition: opacity .5s ease-out; }
+.finishov.fade { opacity: 0; }
+.finpanel { background: #000; border: 6px solid #e8e8e8; border-radius: 18px; padding: 10px 56px 18px; text-align: center; color: #fff;
+  animation: pop .4s cubic-bezier(.2, 1.7, .45, 1) both; }
+.finpos { font-size: 220px; font-weight: 900; font-style: italic; line-height: .95; letter-spacing: -.04em; color: #ffd400; }
+.finpos:empty { display: none; }
+.finword { font-size: 84px; font-weight: 900; font-style: italic; letter-spacing: .02em; line-height: 1; }
+.finishov.nopos .finword { font-size: 170px; }
+.finstats { margin-top: 10px; font-size: 30px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.finstats b { color: #fff; }
+.finchip { align-self: center; background: #000; border-color: #e8e8e8; color: #fff;
+  font-size: 18px; height: 36px; padding: 0 14px; letter-spacing: .06em; background-image: none; }
+.finchip::before { content: ""; width: 20px; height: 20px; margin-right: 8px; background: repeating-conic-gradient(#fff 0 25%, #000 0 50%) 0 0 / 10px 10px; border: 1px solid #fff; }
+
+/* running position from the pit beacon: "P3" next to the lap panel, kart colour, pops on change */
+.posbadge { position: relative; flex: none; height: 72px; min-width: 72px; padding: 0 10px; border-radius: 12px;
+  display: flex; align-items: baseline; justify-content: center; gap: 1px; background: var(--kc, #3cb44b); color: var(--kfg, #000);
+  border: 4px solid #000; outline: 2px solid #fff; font-style: italic; font-weight: 900; line-height: 64px;
+  pointer-events: none; transform-origin: center; z-index: 4; }
+.posbadge small { font-size: 30px; }
+.posbadge b { font-size: 56px; font-variant-numeric: tabular-nums; }
+.posbadge.pop { animation: pospop .45s ease-out; }
+.posbadge.up { outline-color: #5dff86; }
+.posbadge.down { outline-color: #ff5d5d; }
+@keyframes pospop { 0% { transform: scale(1); } 35% { transform: scale(1.45); } 100% { transform: scale(1); } }

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GoKart Pit">
+<meta name="theme-color" content="#111111">
+<title>GoKart Pit Login</title>
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/icon-180.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login">
+<form method="post" action="/login">
+  <h2 style="margin:0">GoKart Pit</h2>
+  <div id="bad" class="faultline hidden">Wrong password.</div>
+  <label class="lbl" for="name">Your name (shown in the command log)</label>
+  <input id="name" name="name" autocomplete="nickname" maxlength="24" placeholder="operator" autocapitalize="off" autocorrect="off">
+  <label class="lbl" for="pw">Pit password</label>
+  <input id="pw" name="password" type="password" autocomplete="current-password" inputmode="text" autocapitalize="off" autocorrect="off">
+  <input type="hidden" id="next" name="next" value="">
+  <button type="submit">Log in</button>
+</form>
+<script>
+var q = new URLSearchParams(location.search);
+if (q.get("bad") === "1") document.getElementById("bad").classList.remove("hidden");
+document.getElementById("next").value = q.get("next") || "";
+</script>
+</body>
+</html>

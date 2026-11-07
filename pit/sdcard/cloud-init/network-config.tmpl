@@ -1,0 +1,20 @@
+# netplan v2, rendered by NetworkManager on Raspberry Pi OS Trixie.
+# optional: false on wlan0 makes the first boot wait for Wi-Fi so the apt installs have network.
+# This only gets the FIRST boot online. firstboot.sh -> install.sh then writes persistent
+# NetworkManager keyfiles (tools/wifi_profiles.py, priorities 20/10) and disables cloud-init
+# network config; netplan-backed profiles were lost to power cuts on 2026-11-06.
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+      dhcp6: true
+      optional: true
+  wifis:
+    wlan0:
+      dhcp4: true
+      dhcp6: true
+      optional: false
+      regulatory-domain: {{WIFI_COUNTRY}}
+      access-points:
+{{ACCESS_POINTS}}

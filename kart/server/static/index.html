@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1024, height=600, initial-scale=1, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>GoKart Kart Display</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="banners">
+  <div id="simBanner" class="banner sim hidden"><span id="simText">SIMULATION: not a real kart</span></div>
+  <div id="connBanner" class="banner bad hidden"></div>
+  <div class="alerts">
+    <div id="stopBanner" class="banner stop hidden">STOPPED</div>
+    <div id="slowBanner" class="banner slow hidden">SLOW</div>
+    <div id="gridBanner" class="banner grid hidden"><span>GRID: WAIT FOR GO</span></div>
+  </div>
+</div>
+<div class="main">
+  <section class="dash">
+    <div class="chips">
+      <span id="kartChip" class="chip id">KART ?</span>
+      <span id="linkChip" class="chip bad hidden">USB</span>
+      <span id="pitChip" class="chip">PIT ?</span>
+      <span id="vescChip" class="chip">VESC ?</span>
+      <span id="gpsChip" class="chip">GPS ?</span>
+    </div>
+    <div id="speedo" class="speedo">
+      <svg id="speedoSvg" viewBox="0 0 360 196" preserveAspectRatio="xMidYMid meet" aria-label="speed">
+        <path id="arcBg" class="arcbg" d=""/>
+        <path id="arcFg" class="arcfg" d=""/>
+        <g id="ticks"></g>
+        <text id="mph" class="mphnum" x="180" y="152" text-anchor="middle">--</text>
+        <text id="mphUnit" class="mphunit" x="180" y="180" text-anchor="middle">MPH <tspan id="mphSrc">GPS</tspan></text>
+      </svg>
+      <div id="gear" class="gear"><b id="gearLetter">-</b><span id="modeNow">--</span></div>
+    </div>
+    <div id="lapStrip" class="lapstrip hidden"><span>LAST <b id="lsLast">--</b></span><span>BEST <b id="lsBest">--</b></span></div>
+    <div id="mphNote" class="note"></div>
+    <div id="boostMeter" class="meter unknown">
+      <div class="btrack"><div id="bBase"></div><div id="bFill"></div><div id="bMark"></div></div>
+      <span id="boostLabel" class="blabel">--</span>
+    </div>
+    <div class="batt">
+      <div class="battrow"><span class="lbl">BATT</span><span id="battPct" class="mid">--</span><span id="battV" class="volts">-- V</span></div>
+      <div class="bar"><div id="battBar"></div></div>
+      <div id="battNote" class="note battnote"></div>
+    </div>
+    <div id="modeNote" class="note"></div>
+    <div id="faultBox" class="fault hidden"></div>
+    <div class="modebtns">
+      <button class="mbtn" data-mode="0"><small>E</small>ECO</button>
+      <button class="mbtn" data-mode="1"><small>N</small>NORMAL</button>
+      <button class="mbtn" data-mode="2"><small>S</small>SPORT</button>
+    </div>
+    <div id="cmdNote" class="note cmd"></div>
+  </section>
+  <section class="mapwrap">
+    <canvas id="map"></canvas>
+    <div id="mapMsg" class="mapmsg hidden"></div>
+    <div class="tl">
+      <div id="lapPanel" class="lappanel hidden">
+        <div class="lapflag"></div>
+        <div class="lapn">LAP <b id="lapNum">-</b></div>
+        <div id="lapCur" class="lapcur">--:--.-</div>
+        <div class="laprow"><span>LAST</span><b id="lapLast">--</b></div>
+        <div class="laprow"><span>BEST</span><b id="lapBest">--</b></div>
+      </div>
+      <span id="gameChip" class="chip gamechip hidden">GAME OFF</span>
+      <div id="posBadge" class="posbadge hidden"><small>P</small><b id="posNum">-</b></div>
+      <span id="finChip" class="chip finchip hidden">FINISHED</span>
+    </div>
+    <div id="itemBox" class="itembox hidden"><div id="itemGlyph" class="iglyph">?</div><small id="itemName"></small></div>
+    <div class="mapctl">
+      <button id="followBtn" class="sel">FOLLOW</button>
+      <button data-zoom="in">+</button>
+      <button data-zoom="out">&minus;</button>
+      <button data-zoom="all">ALL</button>
+    </div>
+    <div id="resumeNote" class="resume hidden"></div>
+    <div class="sndwrap"><button id="sndTest" class="sndtest hidden">TEST SOUND</button><span id="sndHint" class="sndhint hidden">TAP TO ENABLE SOUND</span><button id="sndBtn" class="sndbtn" aria-label="sound"></button></div>
+    <div id="mapNote" class="mapnote foot"></div>
+  </section>
+</div>
+<div id="flash" class="flash hidden"><span id="flashText"></span></div>
+<div id="finishOv" class="finishov hidden">
+  <div class="finpanel"><div id="finPos" class="finpos"></div><div id="finWord" class="finword">FINISH</div><div id="finStats" class="finstats"></div></div>
+</div>
+<div id="raceOv" class="raceov hidden">
+  <div class="lightbar"><div class="lights"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div id="raceMsg" class="racemsg"></div>
+  <div id="raceGo" class="racego hidden">GO!</div>
+</div>
+<script src="/static/sound.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
