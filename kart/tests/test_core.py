@@ -864,7 +864,7 @@ class Items(unittest.TestCase):
 
     def test_each_outcome_command(self):
         # 2026-11-09 (owner): BOOST = NORMAL's scale 0.75, ROCKET (was "super") = SPORT's 1.0
-        for x, item, line in ((0.10, "boost", ["boost 5 0.75"]), (0.50, "rocket", ["boost 8 1.00"]),
+        for x, item, line in ((0.10, "boost", ["boost 7 0.75"]), (0.50, "rocket", ["boost 10 1.00"]),
                               (0.70, "mud", ["boost 4 0.50"]), (0.95, "empty", [])):
             g = kc.GameEngine(rng=FixedRng(x))
             g.set_zones(zones_doc(item_zone()), 0.0)
@@ -884,8 +884,8 @@ class Items(unittest.TestCase):
         self.assertEqual(lines(r), [])                              # but NOTHING is sent yet
         self.assertEqual(lines(g.tick(2.5)), [])                    # still spinning at +1.0 s
         r2 = g.tick(3.0)                                            # +1.5 s: the wheel has landed
-        self.assertEqual(lines(r2), ["boost 5 0.75"])
-        self.assertEqual(g.override["until"], 3.0 + 5)             # boost runs its full time from the reveal
+        self.assertEqual(lines(r2), ["boost 7 0.75"])
+        self.assertEqual(g.override["until"], 3.0 + 7)             # boost runs its full time from the reveal
         # a STOP during the spin suppresses the prize (never applied behind the wheel)
         g2 = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4)
         g2.set_zones(zones_doc(item_zone()), 0.0)
@@ -907,7 +907,7 @@ class Items(unittest.TestCase):
         d2["version"] = "freeplay-2"                                # a new doc, game still on
         g.set_zones(d2, 1.7)
         r2 = g.tick(3.0)                                            # reveal time: prize still lands
-        self.assertEqual(lines(r2), ["boost 5 0.75"])
+        self.assertEqual(lines(r2), ["boost 7 0.75"])
         # but a doc that turns the game OFF during the spin kills the prize
         g3 = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4)
         g3.set_zones(zones_doc(item_zone()), 0.0)
@@ -918,13 +918,13 @@ class Items(unittest.TestCase):
     def test_cooldown_15_and_gates(self):
         g = kc.GameEngine(rng=FixedRng(0.1))
         g.set_zones(zones_doc(item_zone()), 0.0)
-        self.assertEqual(lines(g.on_self(fix(0, 0), 1.0)), ["boost 5 0.75"])
+        self.assertEqual(lines(g.on_self(fix(0, 0), 1.0)), ["boost 7 0.75"])
         g.on_self(fix(10, 0), 1.5)                         # out (> 3 m past the 5 m edge)
         r = g.on_self(fix(0, 0), 16.0)                     # 14.5 s after the exit
         self.assertEqual(lines(r), [])
         self.assertIn("cooldown", evs(r, "suppressed")[0]["why"])
         g.on_self(fix(10, 0), 16.5)
-        self.assertEqual(lines(g.on_self(fix(0, 0), 32.0)), ["boost 5 0.75"])
+        self.assertEqual(lines(g.on_self(fix(0, 0), 32.0)), ["boost 7 0.75"])
         st = kc.GameEngine(rng=FixedRng(0.1))
         st.set_zones(zones_doc(item_zone()), 0.0)
         r = st.on_self(fix(0, 0, stopped=True), 1.0)
@@ -1612,11 +1612,11 @@ class BoostStacking(unittest.TestCase):
         self.assertEqual(g.override["until"], 33.0)
 
     def test_item_boost_and_rocket_stack_too(self):
-        g = self.engine(pad("p1", 0), item_zone(e=30, r=3), rng=FixedRng(0.5))   # 0.5 = ROCKET (8 s, 1.0)
+        g = self.engine(pad("p1", 0), item_zone(e=30, r=3), rng=FixedRng(0.5))   # 0.5 = ROCKET (10 s, 1.0)
         g.on_self(fx(0, 0), 1.0)
-        r = g.on_self(fx(30, 0), 2.0)                       # 4 left + 8
+        r = g.on_self(fx(30, 0), 2.0)                       # 4 left + 10
         self.assertEqual(evs(r, "item")[0]["item"], "rocket")
-        self.assertEqual(lines(r), ["boost 12 1.00"])
+        self.assertEqual(lines(r), ["boost 14 1.00"])
 
     def test_no_stack_after_it_ended_or_after_stop_start(self):
         g = self.engine(pad("p1", 0), pad("p2", 30))
@@ -1770,7 +1770,7 @@ class Multiplayer(unittest.TestCase):
         self.assertAlmostEqual(sum(p for _, p, _, _ in kc.MULTI_ITEM_TABLE), 1.0)
         self.assertAlmostEqual(sum(p for _, p, _, _ in kc.ITEM_TABLE), 1.0)
         self.assertEqual({n: (sec, sc) for n, _, sec, sc in kc.ITEM_TABLE if sec},
-                         {"boost": (5, 0.75), "rocket": (8, 1.0), "mud": (kc.MUD_SLOW_SECS, 0.5)})
+                         {"boost": (7, 0.75), "rocket": (10, 1.0), "mud": (kc.MUD_SLOW_SECS, 0.5)})
         rng, n, counts = random.Random(20261109), 20000, {}
         for _ in range(n):
             name, secs, _ = kc.roll_item(rng, kc.MULTI_ITEM_TABLE)
@@ -1792,10 +1792,10 @@ class Multiplayer(unittest.TestCase):
             r = self.engine_roll(x, kc.MULTI_ITEM_TABLE)
             it = evs(r, "item")[0]
             self.assertEqual((it["item"], it["table"], it["held"]), (item, "multi", item in ("shell", "lightning")))
-            want = {"boost": ["boost 5 0.75"], "rocket": ["boost 8 1.00"]}.get(item, [])
+            want = {"boost": ["boost 7 0.75"], "rocket": ["boost 10 1.00"]}.get(item, [])
             self.assertEqual(lines(r), want, item)                     # a held roll sends NOTHING
         r = self.engine_roll(0.40, None)                                # not in a session: single-player table
-        self.assertEqual((evs(r, "item")[0]["item"], lines(r)), ("boost", ["boost 5 0.75"]))
+        self.assertEqual((evs(r, "item")[0]["item"], lines(r)), ("boost", ["boost 7 0.75"]))
         self.assertNotIn("table", evs(r, "item")[0])
         r = self.engine_roll(0.40, kc.MULTI_ITEM_TABLE, source=None)    # the pit's own boxes: single-player
         self.assertEqual(evs(r, "item")[0]["item"], "boost")

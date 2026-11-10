@@ -254,7 +254,7 @@ function renderGame(game, fresh, st) {
   else sty(fill, "width", "0");
   const ov = m.override;
   const left = ov && ov.left_s > 0 ? ` ${Math.ceil(ov.left_s)}s` : "";
-  // freeplay items (owner 2026-11-09): BOOST = NORMAL mode for 5 s (scale ~0.75), ROCKET = SPORT mode for 8 s (scale ~1.0)
+  // freeplay items (owner 2026-11-10): BOOST = NORMAL mode for 7 s (scale ~0.75), ROCKET = SPORT mode for 10 s (scale ~1.0)
   txt("boostLabel", kind === "boost" ? (sc !== null && sc >= 0.9 ? "ROCKET \u2192 SPORT" : "BOOST \u2192 NORMAL") + left : kind === "mud" ? "MUD" + left
     : kind === "stopped" ? "STOP" : kind === "grid" ? "GRID" : kind === "normal" ? `POWER ${Math.round(sc * 100)}%` : "POWER --");
 

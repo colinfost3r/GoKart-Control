@@ -485,12 +485,12 @@ ITEM_REVEAL_S = 1.4            # an item box's effect waits this long after the 
 # (mud: secs is the engine's mud_secs, MUD_SLOW_SECS by default; the scale is only used on firmware < 0.2.4)
 # 2026-11-09 (owner): a BOOST item is NORMAL's scale (0.75: from ECO the firmware lifts the cap to NORMAL's 25 mph)
 # and the ROCKET (was "super") is SPORT's 1.0 (cap lifted to SPORT = uncapped), both for their secs.
-ITEM_TABLE = (("boost", 0.45, 5, 0.75), ("rocket", 0.15, 8, 1.0), ("mud", 0.25, MUD_SLOW_SECS, 0.5),
+ITEM_TABLE = (("boost", 0.45, 7, 0.75), ("rocket", 0.15, 10, 1.0), ("mud", 0.25, MUD_SLOW_SECS, 0.5),
               ("empty", 0.15, None, None))
 # Multiplayer freeplay (docs/freeplay-multiplayer.md section 2): the roll on a FREEPLAY box while this kart is in
 # a session. shell/lightning are HELD (secs None: nothing is sent; FreeplayGame keeps them for `use`).
-MULTI_ITEM_TABLE = (("boost", 0.35, 5, 0.75), ("shell", 0.30, None, None), ("lightning", 0.15, None, None),
-                    ("rocket", 0.10, 8, 1.0), ("empty", 0.10, None, None))
+MULTI_ITEM_TABLE = (("boost", 0.35, 7, 0.75), ("shell", 0.30, None, None), ("lightning", 0.15, None, None),
+                    ("rocket", 0.10, 10, 1.0), ("empty", 0.10, None, None))
 MULTI_HELD_ITEMS = ("shell", "lightning")
 RACE_GO_GRACE_S = 0.0        # the overlay/laps follow the computed GO instant; the go line only confirms it
 RACE_STATES = {0: "idle", 1: "countdown", 2: "running", 3: "finished"}
