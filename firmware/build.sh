@@ -7,6 +7,7 @@
 #   ./build.sh kart-uart                 compile the kart with the wired UART VESC transport instead
 #   ./build.sh m5                        Core2 v1.5 display (UART, no BLE)
 #   ./build.sh m5-espnow                 Core2 encrypted wireless display
+#   ./build.sh kart-m5-espnow             Heltec encrypted M5 modes + full existing pit/game controls
 #   ./build.sh kart-m5-espnow-readonly    Heltec encrypted wireless display, VESC writes disabled
 #   ./build.sh m5-demo                   standalone display demo, UART TX disabled
 #   ./build.sh kart-m5-readonly         Heltec UART adapter, all VESC writes disabled
@@ -31,9 +32,10 @@ case "$TARGET" in
   kart)      SKETCH=kart-heltec-v4; FQBN="esp32:esp32:heltec_wifi_lora_32_V4:CDCOnBoot=cdc,PSRAM=disabled,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB" ;;
   kart-uart) SKETCH=kart-heltec-v4; FQBN="esp32:esp32:heltec_wifi_lora_32_V4:CDCOnBoot=cdc,PSRAM=disabled,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB"; EXTRA="--build-property compiler.cpp.extra_flags=-DVESC_TRANSPORT_UART=1"; BUILD_SUFFIX="-uart" ;;
   repeater) SKETCH=repeater-tbeam-s3; FQBN="esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PartitionScheme=default_8MB,PSRAM=disabled,FlashMode=qio,USBMode=hwcdc" ;;
-  kart-m5|kart-m5-readonly|kart-m5-espnow-readonly)
+  kart-m5|kart-m5-readonly|kart-m5-espnow-readonly|kart-m5-espnow)
     SKETCH=kart-heltec-v4; FQBN="esp32:esp32:heltec_wifi_lora_32_V4:CDCOnBoot=cdc,PSRAM=disabled,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB"
-    if [ "$TARGET" = "kart-m5-espnow-readonly" ]; then FLAGS="-DGK_M5_ESPNOW=1 -DENABLE_VESC_WRITES=0"
+    if [ "$TARGET" = "kart-m5-espnow" ]; then FLAGS="-DGK_M5_ESPNOW=1 -DGK_M5_CONTROL=1 -DENABLE_VESC_WRITES=1"
+    elif [ "$TARGET" = "kart-m5-espnow-readonly" ]; then FLAGS="-DGK_M5_ESPNOW=1 -DENABLE_VESC_WRITES=0"
     else FLAGS="-DGK_M5_UART=1"; [ "$TARGET" != "kart-m5-readonly" ] || FLAGS="$FLAGS -DENABLE_VESC_WRITES=0"; fi
     BUILD_SUFFIX="-$TARGET" ;;
   m5|m5-demo|m5-espnow)
@@ -41,7 +43,7 @@ case "$TARGET" in
     [ "$TARGET" != "m5-demo" ] || FLAGS="-DM5_DEMO=1"
     [ "$TARGET" != "m5-espnow" ] || FLAGS="-DM5_USE_ESPNOW=1" ;;
   base) SKETCH=base-tbeam-s3;  FQBN="esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PartitionScheme=default_8MB,PSRAM=disabled,FlashMode=qio,USBMode=hwcdc" ;;
-  *) echo "target must be kart, kart-uart, kart-m5, kart-m5-readonly, kart-m5-espnow-readonly, m5, m5-demo, m5-espnow, base, repeater, all or test"; exit 2 ;;
+  *) echo "target must be kart, kart-uart, kart-m5, kart-m5-readonly, kart-m5-espnow-readonly, kart-m5-espnow, m5, m5-demo, m5-espnow, base, repeater, all or test"; exit 2 ;;
 esac
 # Keep a single compiler property argument even when the target has multiple flags.
 EXTRA_ARGS=(--warnings default)

@@ -144,14 +144,14 @@ Configuration changes, firmware changes and motor tests are separate, documented
 
 ## M5 v1.5 coordination
 
-Branch `v1.5/m5-core2` is based on Eamon's `fc7e610`. Keep the shared radio contract and motor
+Branch `v1.5/m5-core2` is based on Eamon's `b543bea`. Keep the shared radio contract and motor
 policy with the Heltec; M5 UI code lives in `firmware/m5-core2`. The branch's draft PR targets
 `eamon/firmware-lora-starter` so the M5 diff can be reviewed independently of main integration.
 The implementing agent maintains the focused PR and handoff; merge/deployment remains separate.
 For all tests on this branch, install ArduinoJson 7.4.3 and set `ARDUINOJSON_DIR` to its `src`
 directory (see M5 README). M5 host checks use C++17 plus address/undefined-behavior sanitizers.
 Compile affected targets `m5`, `m5-demo`, `m5-espnow`, `kart-m5`, `kart-m5-readonly`,
-`kart-m5-espnow-readonly`, `kart`, `kart-uart`. ESP-NOW changes also require its native framing/
+`kart-m5-espnow-readonly`, `kart-m5-espnow`, `kart`, `kart-uart`. ESP-NOW changes also require its native framing/
 pairing checks (included in `tools/run_tests.sh`), encrypted-pair reception and loss/channel
 recovery on the bench. Keep private keys/backups in ignored `firmware/build/bench-private/`;
 never infer motor-control authorization from a display transport test.

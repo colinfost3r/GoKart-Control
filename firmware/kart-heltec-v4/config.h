@@ -33,7 +33,15 @@
 #define VESC_BLE_NAME      "VESC BLE UART"
 #define VESC_POLL_MS       200
 #define VESC_LINK_TIMEOUT_MS   1500
+#ifndef GK_M5_CONTROL
+#define GK_M5_CONTROL 0
+#endif
+#define VESC_WRITE_CONFIG_AGE_MS 1000
+#if GK_M5_CONTROL
+#define VESC_MCCONF_REFRESH_MS 500
+#else
 #define VESC_MCCONF_REFRESH_MS 10000 // periodic read-only re-read of live limits
+#endif
 #define VESC_ACK_TIMEOUT_MS    700
 
 // ---- Heltec V4.3 pins --------------------------------------------------------
@@ -150,8 +158,11 @@ static const float STOP_RAMP[] = { 0.5f, 0.2f, 0.0f };
 #if GK_M5_UART && GK_M5_ESPNOW
 #error "Select one M5 transport: UART or ESP-NOW"
 #endif
-#if GK_M5_ESPNOW && ENABLE_VESC_WRITES
-#error "ESP-NOW commissioning is telemetry-only; use kart-m5-espnow-readonly"
+#if GK_M5_ESPNOW && ENABLE_VESC_WRITES && !GK_M5_CONTROL
+#error "Wireless controls require the explicit kart-m5-espnow target"
+#endif
+#if GK_M5_CONTROL && (!GK_M5_ESPNOW || !ENABLE_VESC_WRITES)
+#error "GK_M5_CONTROL requires encrypted wireless display and VESC controls"
 #endif
 #if GK_M5_UART && VESC_TRANSPORT_UART
 #error "M5 display and wired VESC cannot share UART2; use BLE VESC with the M5 target"

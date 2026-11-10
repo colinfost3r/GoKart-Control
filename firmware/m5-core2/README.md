@@ -90,9 +90,19 @@ Use **`m5-espnow` + `kart-m5-espnow-readonly`** for the local Core2-to-Heltec li
 needs power, but no Grove/UART jumper wires or shared ground wire are required. The Heltec
 continues to own VESC BLE, GPS and LoRa; the base station connection stays on LoRa.
 
-This first wireless option is **telemetry-only by a compile-time guard**. It disables all
-VESC writes, including driver mode requests and pit motor-control commands. Pit telemetry
-and non-driving diagnostics remain available. It is not a wireless motor-control deployment.
+The installed `kart-m5-espnow-readonly` checkpoint disables every VESC write. The separate
+**`kart-m5-espnow`** target enables M5 mode requests and the full existing base/pit/USB/game
+command implementation, as requested on November 10. This is a build capability, not evidence
+of deployment. It requires fresh matched identity, a validated atomic baseline record, and a
+recent current-session configuration read before motor-command state changes or writes.
+Unchanged temporary-command fields come from that recent read; no saved configuration is written.
+The baseline record cannot import the older split-key cache. Reconnects stay read-only.
+
+This control target polls motor configuration every 500 ms and refuses a snapshot older than
+1000 ms; BLE/LoRa performance at that rate still needs hardware measurement. This bounds snapshot
+age but is not atomic against simultaneous external VESC Tool edits. STOP ramps never increase
+current allowance, and pending writes/ramp steps become unknown on a controller-session change.
+Actual M5/base command acceptance and controller tune alignment remain commissioning work.
 
 Pairing is local USB provisioning, not over-the-air discovery. The helper generates independent
 random 16-byte LMK and PMK keys, saves a private recovery record before provisioning, then writes
@@ -150,6 +160,7 @@ cd firmware
 ./build.sh kart-m5             # companion Heltec: guarded mode requests, existing pit commands
 ./build.sh m5-espnow            # Core2 encrypted wireless display
 ./build.sh kart-m5-espnow-readonly # companion Heltec: ESP-NOW, ALL VESC writes disabled
+./build.sh kart-m5-espnow          # M5 modes + full existing base/game controls; commission separately
 ```
 
 Other Heltec dependencies remain those in [firmware README](../README.md).
@@ -295,7 +306,7 @@ are complete; continue the final display and end-to-end checks without treating 
    simulated load on the chosen local transport. Test UART disconnect/reconnect or ESP-NOW
    loss/channel recovery, reboot only the display, and confirm no VESC configuration writes.
    Measure actual refresh/latency alongside BLE and LoRa.
-5. Only after reviewing/commissioning the controller, use the wired `kart-m5` for supervised mode readback
+5. Only after reviewing/commissioning the controller, use `kart-m5-espnow` (wireless) or `kart-m5` (wired) for supervised mode readback
    checks. Verify ECO/NORMAL/SPORT, pit SLOW remains through a driver selection, STOP/GRID rejects
    selections, and pending requests are not replayed after cable/BLE loss. No unattended motor test.
 

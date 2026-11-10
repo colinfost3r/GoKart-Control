@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture VESC 6.00 runtime state over macOS/Linux serial; read commands only."""
+"""Capture VESC 6.00/6.02 runtime state over macOS/Linux serial; read commands only."""
 import argparse
 import binascii
 import datetime
@@ -14,6 +14,7 @@ import tty
 
 READ_COMMANDS = {0: 'firmware', 4: 'telemetry', 14: 'motor_configuration', 17: 'app_configuration'}
 MAX_PAYLOAD = 8192
+SUPPORTED_FIRMWARE = ('6.00', '6.02')
 
 
 def query_frame(command):
@@ -77,7 +78,7 @@ def identity(payload):
     end = payload.index(0, 3)
     pos = end + 1
     if len(payload) < pos + 20:
-        raise ValueError('Identity reply lacks expected 6.00 fields')
+        raise ValueError('Identity reply lacks expected 6.00/6.02 fields')
     result = {'firmware': f'{payload[1]}.{payload[2]:02d}', 'hardware': payload[3:end].decode(),
               'uuid': payload[pos:pos+12].hex()}
     pos += 12
@@ -91,6 +92,29 @@ def identity(payload):
         pos = end + 1
     result['remaining_hex'] = payload[pos:].hex()
     return result
+
+
+def verified_identity(payload):
+    """Reject versions/layouts that have not been checked against upstream source."""
+    result = identity(payload)
+    if result['firmware'] not in SUPPORTED_FIRMWARE:
+        raise ValueError('Only firmware 6.00 and 6.02 are supported; stopped after identity')
+    if ('firmware_name' not in result or result['remaining_hex'] or
+            not result['hardware'] or result['uuid'] == '00' * 12):
+        raise ValueError('Unsupported or incomplete 6.00/6.02 identity layout')
+    return result
+
+
+def validate_snapshot(directory):
+    # Lazy import keeps packet/identity primitives independent of offline XML decoding.
+    # The decoder imports those primitives; no serial action occurs during import.
+    from decode import decode_capture
+    decoded = decode_capture(directory)
+    return {name: {'signature_hex': decoded[name]['signature_hex'],
+                   'schema_version': decoded[name]['schema_version'],
+                   'field_count': len(decoded[name]['values']),
+                   'bytes_consumed': decoded[name]['bytes_consumed']}
+            for name in ('motor_configuration', 'app_configuration')}
 
 
 def main():
@@ -125,12 +149,16 @@ def main():
                 'payload_bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()})
             if command == 0:
                 manifest['identity'] = identity(payload)
-                if manifest['identity']['firmware'] != '6.00':
-                    raise ValueError('Only firmware 6.00 is currently supported; stopped after identity')
+                verified_identity(payload)
             print(f'Read {name}: {len(payload)} bytes, CRC verified', flush=True)
             time.sleep(.1)
+        manifest['configuration_validation'] = validate_snapshot(args.out)
         manifest['capture_complete'] = True
+    except Exception as error:
+        manifest['error'] = f'{type(error).__name__}: {error}'
+        raise
     finally:
+        manifest['finished_at_utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         if fd is not None:
             try:
                 if old is not None:

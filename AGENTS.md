@@ -12,17 +12,22 @@
   automatically saved-flash backups. Motor-temperature sensors are not wired.
 - The Heltec owns the VESC connection, GPS, LoRa and supervisory profile logic.
   The kart Pi is display/interface only. BLE remains the preferred VESC transport.
-  Driver inputs and motor control remain with the ESC; profile writes are disabled.
+  Driver inputs and motor control remain with the ESC. Installed read-only milestones keep
+  writes disabled until the requested control build is commissioned.
 - Reliability first: no driving-state changes on display/Heltec/link loss or
   reconnect. Keep current active VESC settings; no saved-profile restore,
   heartbeat-dependent driving lease, stop/reset or cached-command replay.
   Reconnect read-only and reconcile actual state. Existing ESC protections remain
   intact. This supersedes the earlier saved-configuration fallback requirement.
-- Driver messages, gradual remote stop and geofence enforcement are deferred.
-  Status note (2026-11-06, facts only, not a rule change): branch eamon/firmware-lora-starter
-  builds the kart with pit-commanded temporary (store=0) writes enabled for STOP/START/mode/
-  SLOW/BOOST/RACE and an optional game layer; this is flagged for owner review against the
-  rules above (HANDOFF.md, Decisions for Colin). Until the owner decides, the rules stand.
+- Owner decision 2026-11-10: enable M5 mode selection AND full existing Eamon base-station
+  controls (mode, STOP/START, SLOW/BOOST/RACE and game commands). Keep temporary writes store=0,
+  fresh identity/config checks and no reconnect replay. Do not treat telemetry tests as motor tests.
+- Owner also requests checking all motor/app settings and aligning kart 3's tune with the kart 2
+  baseline; owner confirms same motor, battery/BMS, gearing and wheels. Capture all settings first,
+  preserve controller/motor/pedal calibration and identities, and document the actual named-field
+  changes. A runtime export is not proof of saved flash. No blind whole-config import.
+- Driver messages and future safety geofence enforcement remain deferred. M5 game-zone UI parity
+  is separate from enabling the existing Heltec/base command implementation.
 - The owner now explicitly authorizes ongoing commits/pushes at coherent, checked
   milestones so Colin and Eamon share current work. This supersedes the earlier
   per-commit request rule for this project. Fetch before work and again before push;

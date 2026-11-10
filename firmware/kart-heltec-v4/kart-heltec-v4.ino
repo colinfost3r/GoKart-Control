@@ -57,6 +57,7 @@
 #include "config.h"
 #include "cmd_types.h"
 #include <M5DisplayLink.h>
+#include <VerifiedBaseline.h>
 #if GK_M5_ESPNOW
 #include <M5EspNowSettings.h>
 m5now::Link m5Wireless;
@@ -174,6 +175,7 @@ static const char* NUS_RX      = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
 uint8_t  modeReq = GK_MODE_UNKNOWN;
 bool     stopActive = false;
 float    preStopScale = -1.0f;
+float    stopRampCeiling = 1.0f;
 bool     slowActive = false; float slowErpm = 0; uint8_t slowMph = 0;
 // Timed SLOW (USB `slow MPH SECS`, e.g. the game's mud): reverts by itself to what was in force before it
 // (a pit SLOW that was active comes back). A pit SLOW (no SECS) stays until START or a pit mode command.
@@ -298,7 +300,28 @@ static bool vescIdentityOk() {
   if (vescUuid.length() != 24) return true;                        // no pin: the BLE address pin is the identity
   return vesc.fwSeenMs && (int32_t)(vesc.fwSeenMs - vescLinkUpMs) >= 0 && vescUuid.equalsIgnoreCase(vesc.uuidHex);
 }
-static bool writeAllowed() { return writesEnabled() && vescUp() && origValid && vescIdentityOk(); }
+static bool freshWriteConfig() {
+  if (!GK_M5_CONTROL) return true;
+  const VescActiveLimits& L = vesc.limits();
+  if (!L.receivedMs || millis()-L.receivedMs > VESC_WRITE_CONFIG_AGE_MS ||
+      (int32_t)(L.receivedMs-vescLinkUpMs)<0 || vescUuid.length()!=24 || baselineSuspect) return false;
+  const float fields[]={L.currentMax,L.currentMinScale,L.currentMaxScale,L.minErpm,L.maxErpm,
+                        L.minDuty,L.maxDuty,L.wattMin,L.wattMax,L.gearRatio,L.wheelDiameter,
+                        origLimits.gearRatio,origLimits.wheelDiameter};
+  for(float value:fields) if(!isfinite(value)) return false;
+  // Speed-cap calculations use the reconciled drivetrain. A later external edit
+  // requires fresh reconciliation, not silent calculation from the older values.
+  if (origLimits.motorPoles<2 || origLimits.motorPoles%2 || origLimits.gearRatio<=0 ||
+      origLimits.wheelDiameter<=0 || origLimits.motorPoles!=L.motorPoles ||
+      origLimits.gearRatio!=L.gearRatio || origLimits.wheelDiameter!=L.wheelDiameter) return false;
+  return L.currentMax>0 && L.currentMinScale>=0 && L.currentMinScale<=1 &&
+    L.currentMaxScale>=0 && L.currentMaxScale<=1 && L.minErpm<=0 && L.maxErpm>0 &&
+    L.minDuty>=0 && L.maxDuty<=1 && L.minDuty<=L.maxDuty && L.wattMin<=0 && L.wattMax>=0 &&
+    L.motorPoles>=2 && !(L.motorPoles%2) && L.gearRatio>0 && L.gearRatio<=1000 &&
+    L.wheelDiameter>0 && L.wheelDiameter<=5;
+}
+static bool writeAllowed() { return writesEnabled() && vescUp() && origValid && vescIdentityOk() && freshWriteConfig(); }
+static uint32_t writeLinkSession = 0;
 
 static bool ppsFresh() {
   if (!ppsCount) return false;
@@ -463,7 +486,7 @@ static void requestBrake() {
 
 // owner: the command whose cmd_result this write decides; NO_OWNER for the automatic writes of W2(b).
 static bool startWrite(float scale, const CmdRef& owner) {
-  if (!writesEnabled() || !vescUp()) return false;
+  if (!writesEnabled() || !vescUp() || !freshWriteConfig()) return false;
   if (!vescIdentityOk()) { logf("refusing write: VESC identity %s", vescIdentityBad ? "MISMATCH" : "not confirmed yet"); return false; }
   // Per-vehicle: every field except the motor-current scale is echoed back from the live
   // configuration just read out of THIS controller (GET_MCCONF). Never write before that read.
@@ -481,16 +504,20 @@ static bool startWrite(float scale, const CmdRef& owner) {
          cm != GK_MODE_UNKNOWN ? MODES[cm].name : "?", cm != GK_MODE_UNKNOWN ? MODES[cm].topMph : 0, L.motorPoles, L.gearRatio, L.wheelDiameter);
     return false;
   }
+  const VescActiveLimits& live = GK_M5_CONTROL ? vesc.limits() : L;
+  if (GK_M5_CONTROL && (!isfinite(scale) || scale<0 || scale>L.currentMaxScale ||
+      !isfinite(capE) || capE<=0 || capE>L.maxErpm)) return false;
   VescTempLimits l;
-  l.currentMinScale = L.currentMinScale;
+  l.currentMinScale = live.currentMinScale;
   l.currentMaxScale = scale;
   l.minErpm = L.minErpm; l.maxErpm = capE;
   if (l.minErpm < -capE) l.minErpm = -capE;    // reverse capped at the same speed
-  l.minDuty = L.minDuty; l.maxDuty = L.maxDuty;
-  l.wattMin = L.wattMin; l.wattMax = L.wattMax;
+  l.minDuty = live.minDuty; l.maxDuty = live.maxDuty;
+  l.wattMin = live.wattMin; l.wattMax = live.wattMax;
   l.sendInCurrent = false;                     // battery limits: always the controller's own
   wAckSeen = vesc.lastAckMs();
   vesc.sendTempLimits(l);
+  writeLinkSession = vescLinkUpMs;
   wState = W_SENT; wTarget = scale; wErpm = capE; wSentMs = millis(); wOwner = owner; wroteThisBoot = true; wVerifyTries = 0;
   uint8_t capM = capMphNow();
   if (capM) logf("vesc write scale %.3f, cap %u mph = %.0f ERPM", scale, capM, capE);
@@ -502,11 +529,18 @@ static bool startWrite(float scale, const CmdRef& owner) {
 static void autoWrite(const char* why) {
   if (stopActive) return;
   if (!writeAllowed()) { revertMissed = true; logf("%s: VESC not reachable, nothing written (re-read will show the live scale)", why); return; }
-  startWrite(scaleTarget(), NO_OWNER);
+  if (!startWrite(scaleTarget(), NO_OWNER)) { revertMissed = true; logf("%s: temporary write refused, no retry queued", why); }
 }
 
 static void serviceWrites() {
   uint32_t now = millis();
+  if (GK_M5_CONTROL && (wState != W_IDLE || rampIdx >= 0) &&
+      (!vescUp() || !vescIdentityOk() || writeLinkSession != vescLinkUpMs)) {
+    setResult(wOwner, GK_RES_UNKNOWN);
+    if (rampIdx >= 0) setResult(rampOwner, GK_RES_UNKNOWN);
+    wState=W_IDLE; rampIdx=-1; revertMissed=true;
+    logf("pending write verification cancelled after controller link/identity change");
+  }
   if (raceHold && (int32_t)(now - raceGoMs) >= 0) {
     raceHold = false;
     Serial.printf("{\"t\":\"race\",\"kart\":%u,\"event\":\"go\"}\n", kartId);
@@ -526,8 +560,11 @@ static void serviceWrites() {
   }
   if (rampIdx >= 0 && wState == W_IDLE && (int32_t)(now - rampNextMs) >= 0) {
     const int n = sizeof(STOP_RAMP) / sizeof(STOP_RAMP[0]);
-    if (!startWrite(STOP_RAMP[rampIdx], rampOwner)) { setResult(rampOwner, GK_RES_NO_VESC); rampIdx = -1; }
-    else { rampIdx++; rampNextMs = now + STOP_RAMP_STEP_MS; if (rampIdx >= n) rampIdx = -1; }
+    // STOP may only reduce the allowance, even when a timed slow/boost overlay was
+    // already below the first nominal ramp step.
+    const float step = fminf(STOP_RAMP[rampIdx], fminf(stopRampCeiling, vesc.limits().currentMaxScale));
+    if (!startWrite(step, rampOwner)) { setResult(rampOwner, GK_RES_NO_VESC); rampIdx = -1; }
+    else { stopRampCeiling = step; rampIdx++; rampNextMs = now + STOP_RAMP_STEP_MS; if (rampIdx >= n) rampIdx = -1; }
   }
   switch (wState) {
     case W_IDLE: break;
@@ -563,6 +600,10 @@ static void emitCmd(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, uint8_t 
 static uint8_t boostSecs = 0;   // set by the USB `boost` command just before handleCommand
 static uint8_t slowSecs = 0;    // set by the USB `slow MPH SECS` command just before handleCommand (0 = untimed)
 static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, uint16_t ttl, uint32_t issued) {
+  // These arguments belong only to this call, including rejected/duplicate commands.
+  // Never let a rejected USB duration change a subsequent pit command's duration.
+  const uint8_t requestedBoostSecs = boostSecs, requestedSlowSecs = slowSecs;
+  boostSecs = 0; slowSecs = 0;
   const int8_t si = (src == GK_ADDR_BASE) ? 0 : 1;
   const uint32_t nowMs = millis();
   // W6: a retransmit (repeater copy or pit retry) is reported again, never re-applied.
@@ -583,7 +624,34 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
     uint32_t now = gpsUnix();
     if (now && now > issued + ttl) expired = true;
   }
-  if (expired) { cmdResult = GK_RES_REJECTED; logf("command %u expired", seq); }
+  const bool motorCommand = cmd==GK_CMD_SET_MODE || cmd==GK_CMD_STOP || cmd==GK_CMD_START ||
+                            cmd==GK_CMD_SLOW || cmd==GK_CMD_BOOST || cmd==GK_CMD_RACE;
+  // Validate a new selection before it can replace modeReq, arm BOOST, or release
+  // STOP/GRID. A refused target must not leave state for a later timer to apply.
+  bool targetRejected = false;
+  if (GK_M5_CONTROL && origValid) {
+    bool checkTarget = false;
+    float targetScale = 0, targetCap = origLimits.maxErpm;
+    if (cmd == GK_CMD_SET_MODE && arg < GK_MODE_COUNT) {
+      checkTarget = true; targetScale = MODES[arg].currentMaxScale; targetCap = modeCapErpm(arg);
+    } else if (cmd == GK_CMD_BOOST && arg >= 10 && arg <= 100) {
+      checkTarget = true; targetScale = arg / 100.0f;
+    } else if (cmd == GK_CMD_START) {
+      checkTarget = true;
+      targetScale = modeReq < GK_MODE_COUNT ? MODES[modeReq].currentMaxScale : origLimits.currentMaxScale;
+      targetCap = modeCapErpm(modeReq);
+    }
+    if (checkTarget) targetRejected = !isfinite(targetScale) || targetScale < 0.05f ||
+      targetScale > origLimits.currentMaxScale || !isfinite(targetCap) ||
+      targetCap <= 0 || targetCap > origLimits.maxErpm;
+  }
+  if (GK_M5_CONTROL && motorCommand && !writeAllowed()) {
+    cmdResult=GK_RES_NO_VESC; logf("command refused: fresh verified controller configuration required");
+  }
+  else if (expired) { cmdResult = GK_RES_REJECTED; logf("command %u expired", seq); }
+  else if (targetRejected) {
+    cmdResult=GK_RES_REJECTED; logf("command refused: target exceeds or lacks verified controller limits");
+  }
   else {
     cmdResult = GK_RES_ACCEPTED;
     switch (cmd) {
@@ -611,14 +679,15 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
       case GK_CMD_STOP:
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
         if (!vescUp()) { cmdResult = GK_RES_NO_VESC; break; }
-        if (!stopActive) preStopScale = origValid ? origLimits.currentMaxScale : -1.0f;
+        if (!stopActive) preStopScale = vesc.limits().currentMaxScale;
+        stopRampCeiling = fminf(vesc.limits().currentMaxScale, origLimits.currentMaxScale);
         stopActive = true; modeConfirmed = false; ovActive = false; raceHold = false;
         if (wState != W_IDLE) {                           // W4: STOP does not wait behind another write
           CmdEnt* e = cmdEnt(wOwner); if (e && e->result == GK_RES_ACCEPTED) e->result = GK_RES_UNKNOWN;
           wState = W_IDLE;
         }
         requestBrake();                                   // regen via the VESC script, if present
-        rampIdx = 0; rampNextMs = nowMs; rampOwner = cmdCur;
+        rampIdx = 0; rampNextMs = nowMs; rampOwner = cmdCur; writeLinkSession = vescLinkUpMs;
         break;
       case GK_CMD_START: {
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
@@ -665,7 +734,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         break;
       }
       case GK_CMD_BOOST: {                                 // arg = scale percent; duration from boostSecs (USB) or 5 s
-        uint8_t secs = boostSecs ? boostSecs : 5; boostSecs = 0;
+        uint8_t secs = requestedBoostSecs ? requestedBoostSecs : 5;
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
         if (arg < 10 || arg > 100 || stopActive) { cmdResult = GK_RES_REJECTED; break; }
         if (!vescUp() || !origValid) { cmdResult = GK_RES_NO_VESC; break; }
@@ -681,7 +750,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         float e = mphToErpm(mph);
         if (e < 100) { cmdResult = GK_RES_REJECTED; logf("slow: drivetrain numbers unavailable"); break; }
         {
-          uint8_t secs = slowSecs; slowSecs = 0;
+          uint8_t secs = requestedSlowSecs;
           if (secs) {                                       // timed: never above an untimed (pit) cap already in force
             if (slowActive && !slowTimed && slowErpm <= e) { logf("slow %u s: pit cap %u mph already lower, kept", secs, slowMph); cmdResult = GK_RES_APPLIED; break; }
             if (!slowTimed) { slowPrevActive = slowActive; slowPrevErpm = slowErpm; slowPrevMph = slowMph; }
@@ -817,6 +886,9 @@ static bool bleConnectTo(const NimBLEAddress& target) {
   bleStream.clear(); bleStream.setTx(pTxChar);
   { uint16_t mtu = pClient->getMTU(); bleStream.chunk = (mtu > 23) ? (size_t)(mtu - 3) : 20; }
   vesc.setPort(&bleStream);
+  // Every physical BLE connection is a new identity/configuration session, including a
+  // reconnect quicker than the telemetry timeout. Never retain proof from the old peer.
+  vesc.markLinkLost(); vescLinkWas = false; origValid = false; modeConfirmed = false;
   bleConnected = true; bleConnectedMs = millis();
   logf("ble connected %s mtu %u (write chunk %u)", target.toString().c_str(), (unsigned)pClient->getMTU(), (unsigned)bleStream.chunk);
   return true;
@@ -872,7 +944,8 @@ static void serviceVesc() {
   // dropped is not trusted, W1). If this boot already wrote overrides to the controller and it
   // kept them across the link drop, the live scale/ERPM are OUR overrides, not the baseline:
   // keep the earlier baseline for those fields so START still restores the real limits.
-  if (up && !origValid && vesc.limits().receivedMs && (int32_t)(vesc.limits().receivedMs - vescLinkUpMs) >= 0 && wState == W_IDLE) {
+  if (up && !origValid && vesc.limits().receivedMs && (int32_t)(vesc.limits().receivedMs - vescLinkUpMs) >= 0 && wState == W_IDLE &&
+      (vescUuid.length()!=24 || vescIdentityOk()) && (!GK_M5_CONTROL || vescUuid.length()==24)) {
     origLimits = vesc.limits(); origValid = true;
     const VescActiveLimits raw = origLimits;                 // what the controller reports right now
     const bool sameSession = haveFirst && wroteThisBoot && !strcmp(firstUuid, vesc.uuidHex);   // same controller (uuid, or both unknown)
@@ -901,6 +974,14 @@ static void serviceVesc() {
       const bool haveUuid = vesc.uuidHex[0] != 0;
       if (capLike || scaleLike) {
         baselineSuspect = true; baselineSource = "suspect";
+#if GK_M5_CONTROL
+        m5link::baseline::Ceiling saved;
+        if (haveUuid && m5link::baseline::load(prefs, vesc.uuidHex, saved)) {
+          origLimits.currentMaxScale = saved.scale;
+          origLimits.minErpm = saved.minErpm; origLimits.maxErpm = saved.maxErpm;
+          baselineSuspect = false; baselineSource = "verified-cache";
+        }
+#else
         if (haveUuid && prefs.getString("bl_uuid", "") == vesc.uuidHex) {
           float bs = prefs.getFloat("bl_scale", -1.0f), blo = prefs.getFloat("bl_emin", 0.0f), bhi = prefs.getFloat("bl_emax", 0.0f);
           if (bs > 0.05f && bhi > 100.0f) {
@@ -910,16 +991,28 @@ static void serviceVesc() {
                  raw.currentMaxScale, raw.maxErpm, mphF, bs, blo, bhi);
           }
         }
+#endif
         if (baselineSuspect)
           logf("WARNING: limits read at link-up look like this firmware's own (scale %.2f, %.0f ERPM = %.1f mph): a previous Heltec session probably left them; key the kart off and on to restore the controller's own",
                raw.currentMaxScale, raw.maxErpm, mphF);
       } else if (haveUuid) {                                   // a clean read: remember it for the next Heltec reboot
+#if GK_M5_CONTROL
+        const m5link::baseline::Ceiling clean{raw.currentMaxScale, raw.minErpm, raw.maxErpm};
+        m5link::baseline::Ceiling saved;
+        bool same = m5link::baseline::load(prefs, vesc.uuidHex, saved) &&
+          saved.scale == clean.scale && saved.minErpm == clean.minErpm && saved.maxErpm == clean.maxErpm;
+        if (!same && !m5link::baseline::save(prefs, vesc.uuidHex, clean)) {
+          baselineSuspect = true; baselineSource = "cache-save-failed";
+          logf("M5 modes disabled: verified controller ceiling could not be saved/read back atomically");
+        }
+#else
         if (prefs.getString("bl_uuid", "") != vesc.uuidHex || fabsf(prefs.getFloat("bl_scale", -1.0f) - raw.currentMaxScale) > 0.001f
             || fabsf(prefs.getFloat("bl_emax", 0.0f) - raw.maxErpm) > 0.5f || fabsf(prefs.getFloat("bl_emin", 0.0f) - raw.minErpm) > 0.5f) {
           prefs.putString("bl_uuid", vesc.uuidHex); prefs.putFloat("bl_scale", raw.currentMaxScale);
           prefs.putFloat("bl_emin", raw.minErpm); prefs.putFloat("bl_emax", raw.maxErpm);
           logf("controller baseline remembered (uuid %s): scale %.2f, ERPM %.0f..%.0f", vesc.uuidHex, raw.currentMaxScale, raw.minErpm, raw.maxErpm);
         }
+#endif
       }
     }
     if (!sameSession) { firstLimits = origLimits; haveFirst = true; strlcpy(firstUuid, vesc.uuidHex, sizeof firstUuid); }

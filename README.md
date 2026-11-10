@@ -5,7 +5,8 @@ Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
 Kart 3 now shows real VESC telemetry over paired ESP-NOW, and Core2 authenticated Wi-Fi OTA
 has passed a hardware upload and recovery test. UART remains available. The installed Heltec
-is read-only: M5/pit mode changes remain disabled pending the next guarded-control milestone.
+is read-only. A separate full-control target is prepared for M5 modes and all existing base controls;
+its deployment and the complete kart-3 tune comparison await commissioning and a replacement VESC USB cable.
 See the handoff for the corrected kart 3 VESC identity and exact acceptance status.
 
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor

@@ -24,3 +24,17 @@ subsequent work, including fresh controller identity, baseline association and e
 276 offline tests passed with zero skipped; all eight affected firmware targets compiled. ESP-NOW reception,
 recovery and real BLE coexistence were observed at the bench, with occasional dropped/expired packets.
 Eight-kart RF capacity, physical authenticated-packet tamper tests, prolonged soak and driving tests remain open.
+
+
+## Stationary read-only soak
+
+A subsequent [180-second observation](telemetry-soak.json) recorded 344 live VESC self reports,
+median 0.500-second spacing and maximum 0.788-second gap. No VESC-link-false report occurred after
+initial acquisition; observed fault codes were only 0 and ERPM stayed 0. All 34 Core2 status samples
+after its first live sample remained live with VESC data. Update mode stayed off and controls stayed
+unavailable. This is the installed read-only firmware, not a test of the prepared full-control build.
+
+Packet drops/TX failures occurred, and channel diagnostics differed between boards (Heltec 6/Core2 5).
+Those facts remain visible in the evidence; no lossless, full-fleet, range or driving claim is made.
+The exact working accessory application images were also read back into private rollback files and
+matched both application hashes recorded above.

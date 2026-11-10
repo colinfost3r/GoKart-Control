@@ -211,3 +211,16 @@ OTA acceptance is **pending** until the observations above are recorded in HANDO
 
 Then update HANDOFF.md with **observed** results. Mode acknowledgements, STOP/SLOW interactions,
 controller tuning and motor movement belong to the later supervised control session.
+
+
+## After the read-only checkpoint
+
+The owner requested M5 modes plus full existing base controls on November 10. Build
+`kart-m5-espnow` for that scope; `kart-m5-espnow-readonly` remains the rollback/inspection target.
+The Core2 display firmware and ESP-NOW pairing stay the same. Do not confuse compiled support
+with installed control firmware: check the current handoff and the Heltec `writes` status.
+Capture/review the full kart-3 motor and app configuration before its requested tune alignment.
+Use [read-only capture](../../tools/vesc/README.md); verified 6.02 schemas cover all 376 settings.
+Keep the original raw files, hashes and controller identity, then record each intentional change.
+Check explicit M5/pit requests, acknowledgement/readback and no reconnect replay on a stationary
+supervised kart before driving acceptance. No automatic motor test is part of these instructions.

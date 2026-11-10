@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "hardware_baseline_captured_application_not_implemented",
+  "status": "m5_kart3_live_telemetry_and_core2_ota_verified_control_and_tune_commissioning_pending",
   "project": "GoKart Control",
   "site": {
     "name": "Manresa Island",
@@ -160,5 +160,16 @@
       "hardware": "Pi 3 B + LESOWN L7",
       "heltec_transport": "USB serial"
     }
+  },
+  "m5_control_request_2026_11_10": {
+    "m5_modes": true,
+    "full_existing_base_controls": true,
+    "target": "kart-m5-espnow",
+    "installed_target": "kart-m5-espnow-readonly",
+    "hardware_control_acceptance": "pending",
+    "tune_request": "Compare all motor/app settings and align shared tune to dated kart2 baseline; preserve per-unit calibration",
+    "same_drivetrain_battery_bms_owner_confirmed": true,
+    "full_kart3_usb_capture": "blocked_owner_replacing_failed_usb_data_cable",
+    "rf_acceptance": "Adjacent-channel acquisition observed; exact channel-following fix and range/control tests pending"
   }
 }

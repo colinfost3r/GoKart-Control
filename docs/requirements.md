@@ -6,6 +6,21 @@ requirements from proposed implementation and unresolved details. See the
 [measured baseline](../hardware/vesc/baseline-kart/2026-11-05/README.md) and
 [handoff](../HANDOFF.md) for inspection findings and current implementation status.
 
+## Current owner decisions — 2026-11-10 controls and tune
+
+The owner explicitly requests M5 mode selection **and** all existing Eamon base-station command
+features (mode, STOP/START, SLOW/BOOST/RACE and the existing game-command paths). This supersedes
+older notes deferring those command features. Retain temporary `store=0` writes and shared protocol;
+keep link-loss/reconnect behavior unchanged, with no default-profile restore or command replay.
+
+The owner requests comparing **all 189 motor + 187 application settings** and aligning kart 3's tune
+with the kart 2 baseline. They confirm matching motor, battery/BMS, gearing and wheels. Kart 3 is
+75_300_R2 / firmware 6.02; kart 2's dated capture is 75_100_V2 / 6.00. Save complete current evidence
+and a named-field change list before tuning; preserve per-unit calibration, pedal endpoints and
+identities unless separately measured. Matching hardware models alone does not make calibration
+values interchangeable. The November 5 baseline is dated runtime evidence, not a fresh kart-2 export.
+Full kart-3 USB capture and actual tune changes remain pending; see the handoff.
+
 ## M5 v1.5 owner decision — 2026-11-09
 
 - Add an M5Stack Core2 display option on distinct branch `v1.5/m5-core2`, sharing the current

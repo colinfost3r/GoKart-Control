@@ -1,0 +1,38 @@
+{
+  "supported_firmware": "6.02",
+  "reused_schema_version": "6.00",
+  "checked_date": "2026-11-10",
+  "vesc_tool_commit": "f3c6fe5f5dcf0cb2fba7676204ea3db1dc8ff4ee",
+  "bldc_commit": "f7c2b34e1cff2234cae98be3abf0cd50e249558f",
+  "source_branch": "release_6_02",
+  "comparison": "Motor XML byte-identical; app XML differences only in descriptive prose. SerOrder, types, transport, scales, enum/bit names identical for all fields.",
+  "schemas": {
+    "mcconf": {
+      "upstream_path": "res/config/6.02/parameters_mcconf.xml",
+      "upstream_sha256": "b7cc767487bac6fc7526e29b4f71f54db4da0b29b9110b5de23d67fff74255b0",
+      "upstream_git_blob": "6ef7031cfef259f2f00ddb55a3019ca7e99a1329",
+      "reused_600_sha256": "b7cc767487bac6fc7526e29b4f71f54db4da0b29b9110b5de23d67fff74255b0",
+      "wire_layout_sha256": "72a146534c26365ea1e1ca323d26ba7e8c6a17e40ac56984a9635efba755cb91",
+      "signature_hex": "2e43a161",
+      "field_count": 189
+    },
+    "appconf": {
+      "upstream_path": "res/config/6.02/parameters_appconf.xml",
+      "upstream_sha256": "6476557397568cc5815ebbd2b93709a6e70acfd29ba409286fe1d9c4203d6a8c",
+      "upstream_git_blob": "efbd428f0af21e4ae6417f4582468a4f065d234b",
+      "reused_600_sha256": "33c64b9db644b524f5a90a85d3fc76130950cb7247c33cd915aa5bd0414f2436",
+      "wire_layout_sha256": "cf418256edb629f1e07d277c920c1ed3c91ecb2e3f868d0ffa878e4e10b2a975",
+      "signature_hex": "1d003a2c",
+      "field_count": 187
+    }
+  },
+  "protocol": {
+    "firmware_identity": "command, major/minor, NUL hardware, UUID12, 8 flag bytes, NUL firmware name; no trailing bytes",
+    "get_values_bytes": 74,
+    "verified_sources": {
+      "comm/commands.c": "c0d2111a46bf4a9bc7a549e7231dbf171ee16ea7b1d13e7671fe998d1a22ebbf",
+      "confgenerator.c": "e51e51f0901c09703c1323d08155ef421365a819951410142959333b0bc67aab",
+      "confgenerator.h": "10d2f8c8ab0f5e39833f153bee96705f543f52701ae138dba44593ef29d469c9"
+    }
+  }
+}
