@@ -1,6 +1,6 @@
 # Prebuilt images
 
-> **Current images: kart 0.3.1, base and repeater 0.2.2, Core2 item screen 0.2.0** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
+> **Current images: kart 0.3.2, base and repeater 0.2.2, Core2 item screen 0.2.1** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy
 > `build/<sketch>/<sketch>.ino.merged.bin` here under a new version name, add the row and the
@@ -13,6 +13,8 @@ check what you got.
 
 | File | Board | Build | SHA-256 |
 | --- | --- | --- | --- |
+| `kart-heltec-v4-ble-0.3.2.merged.bin` | Heltec WiFi LoRa 32 V4.3 | ESP-NOW channel pinned across WiFi reconnect scans (stored AP channel, re-set 6 s after each retry), broadcasts every 400 ms | `da66b5f7c6958bd9f91deaa9f2668c191e5f43ef22d1d85cf65073528b7484ca` |
+| `core2-items-0.2.1.merged.bin` | M5Stack Core2 | rides out WiFi-scan gaps (6 s link grace, rehunt only after 20 s, from the last good channel) | `9816b295836c68a339f9b8106ac77bf3ed5de9856c71e33fae7d2d4582b900f0` |
 | `kart-heltec-v4-ble-0.3.1.merged.bin` | Heltec WiFi LoRa 32 V4.3 | 0.3.0 with the five new item codes (boost3/star/magnet/hotlap/shield) and charge counts in the Core2 frames | `4d403b51b4793b804a459f72f2e19634efde77a7d5a8cda24f48689f29f892f3` |
 | `core2-items-0.2.0.merged.bin` | M5Stack Core2 | item screen with the five new cards (dash-matched art, charge badge, per-item action labels) | `4a41df3a2fdff984bbe9b5c7d7b872d92470831ac1af4f39c57d7b03986587d8` |
 | `kart-heltec-v4-ble-0.3.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node 0.3.0: 0.2.7 + ESP-NOW Core2 item-screen bridge (`inv` line in, broadcast out, `invuse` relay) | `76f38e10ccc228ae6729db796d8f506811ad2550e6e3f438413d17f5335549f1` |
@@ -118,3 +120,11 @@ Radio unchanged (interoperates with the 0.2.1 base and repeater).
   inventory frame. Flashed on kart 2 over WiFi (espota).
 - `core2-items-0.2.0.merged.bin` draws the new cards, the "x3" charge badge, and per-item action
   text (hot lap arms, shield says it blocks by itself). Flashed over USB.
+
+## 0.3.2 kart + core2-items 0.2.1 (2026-11-10 night, Core2 link dropouts)
+
+Field bug: away from the pit AP the kart's WiFi reconnect scan (every 30 s) hopped the radio and
+parked it on a random channel, so the Core2's locked channel went quiet and the item screen kept
+losing the kart. The Heltec now stores the AP's channel and pins the radio back to it once each
+scan is over, and broadcasts the inventory every 400 ms; the Core2 tolerates the remaining short
+gaps and, if truly lost, rehunts starting from the channel that last worked.

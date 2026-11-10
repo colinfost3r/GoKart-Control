@@ -3,7 +3,8 @@
  * Listens for the kart Heltec's ESP-NOW inventory broadcasts (kart-0.3.0 `inv` line from the Pi),
  * shows the carried item-box prizes, swipe left/right to pick one, tap to USE it (sent back to the
  * Heltec, which relays {"t":"invuse",...} to the Pi over USB). No WiFi join: it hops channels until
- * it hears a kart, then stays on that channel. The rotation is fixed for the bar cradle (ROT below):
+ * it hears a kart, then stays on that channel (tolerating the short gaps while the kart Heltec
+ * retries its pit WiFi). The rotation is fixed for the bar cradle (ROT below):
  * no flip gesture, so a resting palm can never turn the screen over mid-ride.
  *
  * Build: firmware/build.sh core2 [upload /dev/cu.usbserial-XXXX]
@@ -186,7 +187,7 @@ static void draw() {
   int W = M5.Display.width(), H = M5.Display.height();
   cv.createSprite(W, H);
   cv.fillSprite(TFT_BLACK);
-  bool link = locked && millis() - lastRxMs < 3000;
+  bool link = locked && millis() - lastRxMs < 6000;      // WiFi-reconnect scans can gap ~4 s
   cv.setTextDatum(top_left);
   cv.setFont(&fonts::DejaVu18);
   cv.setTextColor(link ? TFT_GREEN : TFT_RED);
@@ -288,8 +289,10 @@ void loop() {
     esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
     dirty = true;
   }
-  if (locked && ms - lastRxMs > 10000) { // lost for 10 s: hunt again
+  if (locked && ms - lastRxMs > 20000) { // really lost: hunt again, starting where it last was
     locked = false; scanHopMs = 0; dirty = true;
+    uint8_t cur; wifi_second_chan_t sc;
+    if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur >= 1 && cur <= 13) scanCh = cur;
   }
   if (useTries && useTries < 3 && ms - useSentMs > 120) {   // use: 3 sends, the Pi de-duplicates by seq
     GkUseFrame f = {'G', 'U', 1, kart, useSlot, useSeq};

@@ -45,6 +45,7 @@
 #include <Preferences.h>
 #include <WiFi.h>
 #include <esp_now.h>
+#include <esp_wifi.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <SPI.h>
@@ -1208,6 +1209,8 @@ struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot
 static const uint8_t ESPNOW_BCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static uint8_t invItems[3]; static uint8_t invN = 0; static uint8_t invSeq = 0;
 static uint32_t invTxMs = 0; static bool espnowUp = false;
+static uint8_t espnowCh = 1;            // the AP's channel (stored): re-pinned after each failed WiFi
+                                        // reconnect scan, so broadcasts stay findable away from the pit
 static volatile uint8_t useSlotRx = 0, useSeqRx = 0; static volatile bool usePending = false;
 static uint8_t useSeqDone = 0xFF;
 
@@ -1242,8 +1245,19 @@ static void serviceEspnow() {
     peer.channel = 0; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
     esp_now_add_peer(&peer);
     esp_now_register_recv_cb(espnowOnRecv);
+    espnowCh = prefs.getUChar("espch", 1);
     espnowUp = true;
-    logf("espnow up (Core2 item screen)");
+    logf("espnow up (Core2 item screen, ch %u)", espnowCh);
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    uint8_t ch = (uint8_t)WiFi.channel();                        // remember the AP's channel
+    if (ch >= 1 && ch <= 13 && ch != espnowCh) { espnowCh = ch; prefs.putUChar("espch", ch); }
+  } else if (millis() - wifiRetryMs > 6000) {
+    // a reconnect scan hops the radio and parks it anywhere; once it is over, go back to our
+    // channel so the Core2 (locked there) keeps hearing the broadcasts
+    uint8_t cur; wifi_second_chan_t sc;
+    if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur != espnowCh)
+      esp_wifi_set_channel(espnowCh, WIFI_SECOND_CHAN_NONE);
   }
   if (usePending) {
     usePending = false;
@@ -1252,7 +1266,7 @@ static void serviceEspnow() {
       Serial.printf("{\"t\":\"invuse\",\"kart\":%u,\"slot\":%u,\"seq\":%u}\n", kartId, useSlotRx, useSeqRx);
     }
   }
-  if (millis() - invTxMs >= 1000) {
+  if (millis() - invTxMs >= 400) {
     invTxMs = millis();
     GkInvFrame f = {'G', 'I', 1, kartId, invSeq, invN, {0, 0, 0}};
     for (uint8_t i = 0; i < invN && i < 3; i++) f.items[i] = invItems[i];
