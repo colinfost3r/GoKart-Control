@@ -873,6 +873,28 @@ class Items(unittest.TestCase):
             self.assertEqual(evs(r, "item")[0]["item"], item)
             self.assertEqual(lines(r), line, item)
 
+    def test_item_reveal_delay_holds_the_prize_until_the_wheel(self):
+        # owner 2026-11-10: with a reveal delay the item record (prize wheel) comes at once, the boost
+        # command lands ITEM_REVEAL_S later; default 0 keeps the old instant behaviour.
+        g = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4)     # 0.1 = BOOST
+        g.set_zones(zones_doc(item_zone()), 0.0)
+        g.on_self(fix(-20, 0), 1.0)
+        r = g.on_self(fix(-4, 0), 1.5)
+        self.assertEqual(evs(r, "item")[0]["item"], "boost")        # the wheel starts now
+        self.assertEqual(lines(r), [])                              # but NOTHING is sent yet
+        self.assertEqual(lines(g.tick(2.5)), [])                    # still spinning at +1.0 s
+        r2 = g.tick(3.0)                                            # +1.5 s: the wheel has landed
+        self.assertEqual(lines(r2), ["boost 5 0.75"])
+        self.assertEqual(g.override["until"], 3.0 + 5)             # boost runs its full time from the reveal
+        # a STOP during the spin suppresses the prize (never applied behind the wheel)
+        g2 = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4)
+        g2.set_zones(zones_doc(item_zone()), 0.0)
+        g2.on_self(fix(-20, 0), 1.0); g2.on_self(fix(-4, 0), 1.5)
+        g2.on_self(fix(-4, 0, stopped=True), 2.0)                                 # STOPPED (telemetry) mid-spin
+        r3 = g2.tick(3.0)
+        self.assertEqual(lines(r3), [])
+        self.assertEqual(evs(r3, "suppressed")[0]["why"], "kart STOPPED")
+
     def test_cooldown_15_and_gates(self):
         g = kc.GameEngine(rng=FixedRng(0.1))
         g.set_zones(zones_doc(item_zone()), 0.0)
