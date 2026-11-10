@@ -101,4 +101,5 @@ acceleration. Existing BOOST is a current-scale/speed-cap override, not field-we
 
 The read-only capture tool remains restricted to IDs 0, 4, 14 and 17. This review does not inventory
 installed Lisp scripts or enable the optional braking script. Remote STOP/coast does not establish
-mechanical braking performance. Installed Heltec firmware remains read-only until that commissioning.
+mechanical braking performance. The later Core2/Heltec mode commissioning enabled temporary supervisory writes; see the
+[mode evidence](../hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).

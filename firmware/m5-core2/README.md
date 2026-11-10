@@ -1,25 +1,49 @@
 # M5 Core2 v1.5
 
-Branch **`v1.5/m5-core2`**, including Eamon's `fc7e610` / kart 0.2.7 (2026-11-10).
-Owner confirmed the display is **Core2 v1.3 / K010-V13** on 2026-11-09.
-An alternative driver display for the existing Heltec + pit stack. The Pi v2 display remains
-available. This milestone implements telemetry, mode requests, base-station status and a simple
-north-up map. **Kart 3 live telemetry and authenticated Core2 OTA are verified on hardware;
-mode writes and full fleet/driving acceptance remain pending.**
+Branch **`v1.5/m5-core2`**, sharing Eamon's kart 0.2.7 / base protocol and upstream work
+through `705bd91` (Pi/pit graphics; native M5 appearance unchanged). Owner confirmed **Core2 v1.3 / K010-V13**. This alternative to the Pi v2
+display provides telemetry, driver mode requests, base-station status and a simple north-up map.
 
-**2026-11-10 setup:** both full 16 MB rollback images are retained privately. Earlier USB
-uploads and the four-target touch diagnostic succeeded; the owner also saw kart 3 in the pit.
-Kart ID **3** is the owner-assigned fleet identity. It does **not** establish which VESC belongs
-to this kart. Eamon's `fc7e610` identifies the previously reused BLE address as kart 2's controller;
-verify kart 3's physical controller and both identity pins before the read-only telemetry test.
-See the [identity check](BRINGUP.md#verify-kart-3s-controller-identity).
+**Kart 3 is commissioned for M5 mode selection as of 2026-11-10.** The owner selected ECO,
+NORMAL and SPORT on the Core2; each request received VESC readback confirmation. Wired throttle
+was exercised with the wheels lifted, and sampled VESC faults remained zero. The owner reports
+the setup works. This does not establish pit motor-command acceptance, track speed, sustained
+loaded operation, RF range or eight-kart acceptance.
 
-Core2 Wi-Fi maintenance/OTA is implemented for `m5-espnow`. **An authenticated application
-upload succeeded; credentials survived restart, the maintenance window returned to off, and
-ESP-NOW telemetry recovered.** The owner confirms live readings and working DASH/MAP tabs.
-Kart 3 now has its own verified 6.02 / 75_300_R2 identity, recorded in the
-[handoff](../../HANDOFF.md) and [sanitized evidence](../../hardware/m5/2026-11-10-kart3/README.md).
-The installed Heltec remains read-only, so M5/pit mode selection is deliberately disabled.
+| Confirmed mode | Current scale | Forward ERPM cap read back |
+| --- | ---: | ---: |
+| ECO | 0.50 | 21661 |
+| NORMAL | 0.75 | 36102 |
+| SPORT | 1.00 | 150000 |
+
+These are **kart 3's observed settings**, not values to clone into another controller. Its
+physically verified VESC is BLE **`f7:bd:23:cc:62:0e`**, UUID **`37004e000951343037353739`**,
+firmware **6.02**, hardware **75_300_R2**. Heltec reported `writes:true`, `id_ok:true`,
+`limits_ok:true`, baseline source `read`; Core2 reported `mode_ready:true`. ESP-NOW driver,
+received and peer channels all matched **6**, with alignment confirmed.
+
+| Installed application | Source | SHA-256 |
+| --- | --- | --- |
+| Heltec `kart-m5-espnow` | `4a582f0` | `11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2` |
+| Core2 `m5-espnow` | `4a582f0` | `996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a` |
+
+Both segmented USB uploads were verified and preserved NVS. Full rollback images, pairing keys
+and OTA credentials remain private. A later Core2 radio-busy touch-feedback patch was built
+(SHA-256 `35162e477bf917464b88840378913ced7ecab43bed83b333810b4cfba6901df1`) but **was not
+installed**; the known working pair above remains in service. See the
+[mode commissioning evidence](../../hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
+
+Core2 authenticated Wi-Fi OTA was verified at the earlier telemetry checkpoint: the application
+uploaded, credentials survived restart, maintenance returned to off and ESP-NOW telemetry
+recovered. DASH/MAP touch is also owner-confirmed. That OTA result remains valid historical
+acceptance; the currently installed applications above were uploaded over USB.
+[Earlier evidence](../../hardware/m5/2026-11-10-kart3/README.md) and
+[handoff](../../HANDOFF.md) retain the chronology.
+
+The next **two M5 karts have no assigned IDs yet**. Coordinate their unique fleet IDs with Eamon,
+then follow [repeat commissioning](BRINGUP.md#build-the-next-two-m5-karts). Each new unit starts
+with the read-only Heltec target and its own physical VESC identity, pairing and calibration.
+Do not copy kart 3's NVS, VESC tune, identity pins or secrets.
 
 ## Ownership and compatibility
 
@@ -39,9 +63,9 @@ VESC. The motor's wired controls and protection stay with the VESC.
 
 The M5 targets are **opt-in**. Integration now includes Eamon's kart0.2.7 and 46/47/54-byte
 radio support; an idle kart still sends 47 bytes. M5 ignores the multiplayer-only fields.
-Active multiplayer requires updated base/repeater0.2.2; this first M5 telemetry test stays
-out of game sessions. Normal `kart`, `kart-uart`, base, repeater and Pi builds retain
-existing behavior. The M5 adapter changes no LoRa packet structs, IDs, frequency/rate/slots or
+Active multiplayer requires updated base/repeater0.2.2; M5 game UI and physical game-command
+acceptance remain separate from the verified driver mode checks. Normal `kart`, `kart-uart`,
+base, repeater and Pi builds retain existing behavior. The M5 adapter changes no LoRa packet structs, IDs, frequency/rate/slots or
 pit APIs. Both local transports carry the existing `self` and `fleet` JSON plus display-only
 `display` metadata; existing USB telemetry stays compatible. ESP-NOW adds local USB pairing
 and diagnostics. See [SERIAL_PROTOCOL](SERIAL_PROTOCOL.md) for display messages and
@@ -56,8 +80,8 @@ eight-kart UART or RF load test is claimed. Current Heltec `self` telemetry arri
 
 Neither an SD card nor a base station is required for own VESC telemetry or the live GPS map
 of directly heard peers. A peer must transmit a valid GPS fix to appear. Central pit monitoring,
-commands and pit-managed race features require the base station. These describe the design;
-they are not a claim that this assembly has passed physical testing.
+commands and pit-managed race features require the base station. Their physical acceptance
+remains separate from kart 3's completed telemetry and driver-mode checks.
 
 ## What the display does
 
@@ -67,9 +91,10 @@ they are not a claim that this assembly has passed physical testing.
   own kart gets a white ring. North up, automatic fit, optional offline course outline.
   FRESH ONLY shows fresh positions. STALE TOO shows hollow last-known dots for at most 15 s.
   Missing GPS is unavailable, never an invented position at (0,0). This is not geofencing.
-- On the later write-capable wired build, hold ECO/NORMAL/SPORT for 650 ms to request.
-  Both initial read-only targets keep these controls unavailable. Pending, rejected, unavailable and unknown
-  outcomes stay distinct from confirmed mode. Buttons use the Heltec's current cap definitions;
+- Hold ECO/NORMAL/SPORT for **650 ms** to request a mode on a commissioned write-capable
+  companion; release before trying again. This works over ESP-NOW on kart 3 and is also supported by UART.
+  Both initial read-only Heltec targets keep these controls unavailable. Pending, rejected,
+  unavailable and unknown outcomes stay distinct from confirmed mode. Buttons use the Heltec's current cap definitions;
   the M5 does not duplicate its speed calibration or current scales. No mode is selected on boot.
 - Driver mode requests cannot release pit SLOW, STOP or race grid hold. The Heltec rejects an
   M5 selection while stopped, holding the grid, busy writing, uncommissioned, OTA-active or
@@ -81,20 +106,23 @@ they are not a claim that this assembly has passed physical testing.
 No aerial maps, race-entry filter (not present in the local telemetry contract), game zones,
 FREEPLAY, boost actions, lap counting, sounds or Wi-Fi map sync yet. The wireless Core2 build
 has its own explicit [maintenance/OTA window](#core2-maintenance-and-ota); the Heltec's separate
-Wi-Fi OTA path remains upstream. Neither source support nor a saved password proves that an
-OTA transfer has completed on this assembly.
+Wi-Fi OTA path remains upstream. Each new pair needs its own recorded OTA transfer and recovery;
+source support or a saved password alone does not establish acceptance.
 
 ## Wireless option: no jumper wires
 
-Use **`m5-espnow` + `kart-m5-espnow-readonly`** for the local Core2-to-Heltec link. Each board
+For a new kart, begin with **`m5-espnow` + `kart-m5-espnow-readonly`**. Commissioned kart 3
+uses **`m5-espnow` + `kart-m5-espnow`** for the local Core2-to-Heltec link. Each board
 needs power, but no Grove/UART jumper wires or shared ground wire are required. The Heltec
 continues to own VESC BLE, GPS and LoRa; the base station connection stays on LoRa.
 
-The installed `kart-m5-espnow-readonly` checkpoint disables every VESC write. The separate
-**`kart-m5-espnow`** target enables M5 mode requests and the full existing base/pit/USB/game
-command implementation, as requested on November 10. This is a build capability, not evidence
-of deployment. It requires fresh matched identity, a validated atomic baseline record, and a
-recent current-session configuration read before motor-command state changes or writes.
+`kart-m5-espnow-readonly` disables every VESC write and remains the initial inspection/rollback
+target. **`kart-m5-espnow`**, now installed on kart 3, enables M5 mode requests and the full
+existing base/pit/USB/game command implementation requested on November 10. M5 mode acceptance
+is verified; pit MODE/STOP/START/SLOW/BOOST/RACE and game acceptance on this assembly is pending.
+Only periodic pit `rate 1` commands were observed during this commissioning session. The control
+target requires fresh matched identity, a validated atomic baseline record, and a recent
+current-session configuration read before motor-command state changes or writes.
 Unchanged temporary-command fields come from that recent read; no saved configuration is written.
 The baseline record cannot import the older split-key cache. Reconnects stay read-only.
 
@@ -102,7 +130,10 @@ This control target polls motor configuration every 500 ms and refuses a snapsho
 1000 ms; BLE/LoRa performance at that rate still needs hardware measurement. This bounds snapshot
 age but is not atomic against simultaneous external VESC Tool edits. STOP ramps never increase
 current allowance, and pending writes/ramp steps become unknown on a controller-session change.
-Actual M5/base command acceptance and controller tune alignment remain commissioning work.
+Kart 3's M5 mode readbacks passed. Its separately authorized, backed-up motor tune trial is
+recorded in [tune evidence](../../hardware/vesc/kart3/2026-11-10/tune-applied-v1/README.md);
+that persistent maintenance write is distinct from temporary supervisory profiles. Do not rerun
+that trial or import it wholesale into another kart. Base-command and loaded-driving acceptance remain open.
 
 Pairing is local USB provisioning, not over-the-air discovery. The helper generates independent
 random 16-byte LMK and PMK keys, saves a private recovery record before provisioning, then writes
@@ -171,21 +202,22 @@ Upload is a separate hardware step: `./build.sh <target> upload <explicit-device
 First capture/retain each board's existing image and commissioning values for rollback. No flash,
 VESC settings write, detection or motor test is part of the build/test commands above.
 
-After installing both wireless targets, confirm the Heltec's saved ID is **3** and
-`writes:false`. With both explicit USB ports connected, run from the repository root
-(Python with `pyserial` installed; replace the two example port names):
+For a **new pair**, install the read-only companion, provision its confirmed fleet ID and
+verify `writes:false`. The next two IDs are still unassigned; **do not reuse 3**. With both
+explicit USB ports connected, run from the repository root (Python with `pyserial` installed;
+replace the two port names and `N` with that unit's confirmed ID):
 
 ```sh
 python3 tools/m5/pair_espnow.py \
   --core2-port /dev/cu.CORE2_PORT \
   --heltec-port /dev/cu.HELTEC_PORT \
-  --kart-id 3
+  --kart-id N
 ```
 
 The ID argument verifies the intended kart; it does not assign an ID. This command writes
 pairing NVS and reboots both boards, so run it while parked with the VESC off. Afterward,
 USB `espnow status` on each board should show the intended peer and eventually `linked:true`;
-Core2 `status` should show `transport:"espnow"` and live kart-3 telemetry. Pairing readback
+Core2 `status` should show `transport:"espnow"` and that unit's live kart telemetry. Pairing readback
 alone does not establish a working radio link. USB provisioning cannot be forwarded over
 ESP-NOW. Keep the VESC off until the display pair is ready for the first read-only VESC test.
 
@@ -194,7 +226,9 @@ ESP-NOW. Keep the VESC off until the display pair is ready for the first read-on
 Available in **`m5-espnow` only**. Updates use ordinary Wi-Fi and the Core2's own hostname,
 **`gokart-display-3.local`**, not the Heltec's `gokart-3.local`, LoRa, or the pit server.
 No SD card is needed. First install the maintenance-capable image over USB; subsequent
-application updates can use the password-protected OTA uploader.
+application updates can use the password-protected OTA uploader. The hostname/examples below
+belong to kart 3. Each new kart needs its own `gokart-display-N` hostname, private OTA password
+and recovery record; do not clone the existing NVS or password file.
 
 Maintenance is **inactive after every boot**, including after an update. Saved credentials do
 not start Wi-Fi or OTA. Hold the dashboard's **top status bar for 1.8 seconds** to open DISPLAY
@@ -246,9 +280,10 @@ explicit success acknowledgement, and enforces a maximum 120-second upload deadl
 no VESC commands. A timeout or uncertain result requires status verification before any retry.
 
 A successful uploader response must be followed by Core2 reboot/status verification, maintenance
-`active:false`, renewed ESP-NOW telemetry, and confirmation that the Heltec still reports
-`writes:false`. Record the image hash and observed results in the handoff. The ordered checks
-are in [BRINGUP](BRINGUP.md#core2-ota-check), and helper details are in the [tools README](../../tools/README.md#core2-ota).
+`active:false`, renewed ESP-NOW telemetry and unchanged Heltec identity/write capability:
+`writes:false` for a new read-only unit, or the expected `writes:true` for commissioned kart 3.
+Do not select a mode as part of an OTA recovery check. Record the image hash and observed results
+in the handoff. The ordered checks are in [BRINGUP](BRINGUP.md#core2-ota-check), and helper details are in the [tools README](../../tools/README.md#core2-ota).
 
 ## Course outline
 
@@ -275,9 +310,10 @@ only geographic geometry, never Wi-Fi credentials or motor limits.
 
 - New data replaces stale data; reconnection never sends a mode. No stored desired mode or
   command resend queue exists on the M5. An interrupted request becomes outcome unknown.
-- On the wired mode-capable path, each request carries a CRC16 and a single-use one-second token from this Heltec boot.
-  Tokens are invalidated on readiness/link-session changes. This is accidental corruption/replay
-  protection on a physical wire, **not authentication** and not a heartbeat driving lease.
+- Both local transports use CRC16 mode requests and a single-use one-second token from the
+  Heltec boot; readiness/link-session changes invalidate tokens. UART alone provides corruption/replay
+  checks, not authentication. ESP-NOW additionally authenticates the provisioned peer and exact channel.
+  Neither transport is a heartbeat driving lease.
 - The adapter accepts only mode requests. It cannot forward arbitrary console commands, change
   credentials, reset boards, set power/current, start/stop the kart or stream motor commands.
 - In addition to upstream gates, M5 requests require a pinned VESC UUID and fresh linked state.
@@ -291,24 +327,12 @@ only geographic geometry, never Wi-Fi credentials or motor limits.
 - Eamon's existing write/OTA policy differs from Colin's older integration safeguards. This
   branch does not merge PR #4 or declare those outstanding integration questions resolved.
 
-The [first-session guide](BRINGUP.md) has pairing/wiring steps, expected screens, troubleshooting
-and a results checklist for the 2026-11-10 bench. The earlier USB uploads and touch diagnostic
-are complete; continue the final display and end-to-end checks without treating them as passed:
-
-1. Retain the completed private rollback images and verify independent board power.
-2. Install the selected display/companion pair and confirm the enlarged DASH/MAP controls.
-   For ESP-NOW, use the USB pairing helper; for UART, connect the three signal/ground wires.
-3. Confirm kart 3 reaches the display while the VESC is off, then run the first read-only VESC
-   telemetry test. Compare volts/current/ESC values, GPS fix, transport drops and simultaneous
-   USB telemetry. No SD card or base is needed for this step. When the
-   base is available, separately confirm the existing pit sees kart 3 and can ping it.
-4. Test outdoor GPS positions with another kart, course loading, 1/2 Hz and a full eight-kart
-   simulated load on the chosen local transport. Test UART disconnect/reconnect or ESP-NOW
-   loss/channel recovery, reboot only the display, and confirm no VESC configuration writes.
-   Measure actual refresh/latency alongside BLE and LoRa.
-5. Only after reviewing/commissioning the controller, use `kart-m5-espnow` (wireless) or `kart-m5` (wired) for supervised mode readback
-   checks. Verify ECO/NORMAL/SPORT, pit SLOW remains through a driver selection, STOP/GRID rejects
-   selections, and pending requests are not replayed after cable/BLE loss. No unattended motor test.
+The [commissioning guide](BRINGUP.md) separates the passed kart-3 checkpoint from first-unit
+checks for the next two karts. Keep the installed working pair unchanged unless deliberately
+updating it. Outstanding work includes outdoor GPS/course/peer checks, range and recovery under
+load, a prolonged soak, eight-kart RF traffic, pit motor-command acceptance and driving validation.
+Pit SLOW persistence through driver modes and STOP/GRID rejection require their own supervised
+acceptance; the three successful mode readbacks do not establish those interactions.
 
 ## Verification
 
@@ -329,15 +353,14 @@ tools/run_tests.sh                 # all existing suites plus M5 tests
 
 See [handoff](../../HANDOFF.md) for current build/test results and hardware status.
 
+## Exact ESP-NOW channel alignment (installed on kart 3, 2026-11-10)
 
-## Exact ESP-NOW channel alignment (prepared source, 2026-11-10)
+The installed `4a582f0` pair exchanges authenticated channel/challenge/boot proof before enabling
+mode requests. Kart 3 reported `channel:6`, `rx_channel:6`, `peer_channel:6` and alignment true;
+all three driver mode requests subsequently reached the VESC and were read back. Adjacent-channel
+telemetry alone does not enable controls. Maintenance clears readiness until fresh proof after exit.
+Old/new firmware pairs still show telemetry but intentionally keep mode controls unavailable.
 
-Both new companion images are required before mode testing. Authenticated telemetry received on
-an adjacent Wi-Fi channel no longer enables controls: the pair exchanges channel/challenge/boot
-proof and the Core2 follows the Heltec's actual channel. Status separates `channel`, `rx_channel`,
-`peer_channel` and `channel_aligned`. Maintenance clears control readiness until fresh proof after
-exit. Old/new firmware pairs still show telemetry but intentionally keep mode controls unavailable.
 See the [transport contract](../libraries/M5EspNowLink/README.md#channel-alignment-protocol).
-All nine affected targets compile; matching-channel recovery, AP channel changes, OTA and mode
-acceptance on the new pair still need supervised bench verification. The previously verified
-read-only pair remains installed; source build success is not hardware deployment.
+This checkpoint proves the paired channel and mode path on the bench, not AP channel-change
+recovery, RF range or prolonged coexistence. Those remain distinct physical acceptance checks.

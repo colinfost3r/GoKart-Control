@@ -27,6 +27,7 @@ struct TabRect {int x,y,w,h;bool contains(int px,int py)const{return px>=x&&px<x
 constexpr TabRect tabs[3]={{4,23,94,40},{103,23,94,40},{202,23,114,40}};
 uint32_t drawMs=0,requestId=0,holdMs=0;
 int heldMode=-1; bool holdFired=false;
+const char* localModeNotice=nullptr;uint32_t localModeNoticeMs=0;
 m5link::Lines<400> usbLines;
 uint32_t touchPresses=0;int touchX=-1,touchY=-1;
 static void displayStatus(){
@@ -155,6 +156,7 @@ void draw(uint32_t now) {
   if(mapPage){const auto& t=tabs[2];canvas.drawRoundRect(t.x,t.y,t.w,t.h,5,TFT_YELLOW);text(onlineOnly?"FRESH ONLY":"STALE TOO",t.x+11,t.y+16,1,TFT_YELLOW);}
   if(mapPage)drawMap(now);else drawDash(now);
   const char* note=!state.live(now)?"HELTEC LOST / no automatic commands":k.stopped?"PIT STOP ACTIVE":k.slow?"PIT SLOW ACTIVE":state.pending?"Mode requested; awaiting read-back":state.pendingUnknown?"Outcome unknown; no retry":state.result==2?"Mode applied / read-back received":state.result==4?"Request refused":state.result==3?"VESC unavailable":state.canRequest(now)?"Hold a mode button to request":state.live(now)?"Mode controls unavailable":"No commands on reconnect";
+  if(localModeNotice&&uint32_t(now-localModeNoticeMs)<4000&&state.live(now)&&!state.pending&&!k.stopped&&!k.slow)note=localModeNotice;
 #if M5_USE_ESPNOW
   if(maintenance.active())note="UPDATE MODE / controls unavailable";
   else if(state.live(now)&&!k.stopped&&!state.pending&&!state.pendingUnknown&&
@@ -173,6 +175,26 @@ void draw(uint32_t now) {
   }
   canvas.pushSprite(0,0);
 }
+#if M5_USE_ESPNOW && !M5_DEMO
+static void requestWirelessMode(uint8_t mode,uint32_t now) {
+  localModeNotice=nullptr;localModeNoticeMs=now;
+  if(maintenance.active()||!state.canRequest(now)){
+    localModeNotice="Mode unavailable: release and hold again";return;
+  }
+  if(!wireless.canSend(now)){
+    localModeNotice="Radio busy: release and hold again";return;
+  }
+  char line[48];if(++requestId==0)++requestId;
+  size_t n=state.request(mode,requestId,now,line,sizeof line);
+  if(!n){localModeNotice="Mode unavailable: release and hold again";return;}
+  if(!wireless.sendLine(line,now)){
+    // false means the transport did not enqueue this line. Keep the token
+    // consumed, but do not claim a sent request or retry this held gesture.
+    state.pending=0;state.requested=-1;state.result=0;state.pendingUnknown=false;
+    localModeNotice="Not sent: release and hold again";
+  }
+}
+#endif
 void touch(uint32_t now) {
   auto t=M5.Touch.getDetail();
   if(t.wasPressed()){++touchPresses;touchX=t.x;touchY=t.y;}
@@ -203,20 +225,16 @@ void touch(uint32_t now) {
   if(at>=0&&!holdFired&&uint32_t(now-holdMs)>=M5_MODE_HOLD_MS){
     holdFired=true;
 #if !M5_DEMO
-    char line[48];
 #if M5_USE_ESPNOW
-    if(!maintenance.active()&&wireless.canSend(now)){
+    requestWirelessMode(uint8_t(at),now);
 #else
+    char line[48];
     if(Serial2.availableForWrite()>=40){
-#endif
       if(++requestId==0)++requestId;
       size_t n=state.request(uint8_t(at),requestId,now,line,sizeof line);
-#if M5_USE_ESPNOW
-      if(n)wireless.sendLine(line,now); // immediate attempt; never replayed after a loss
-#else
       if(n)Serial2.write((uint8_t*)line,n); // one write; never queued/retried by this app
-#endif
     }
+#endif
 #endif
   }
 }

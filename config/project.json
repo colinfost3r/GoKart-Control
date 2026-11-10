@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "m5_telemetry_ota_verified_kart3_tune_trial_applied_control_commissioning_pending",
+  "status": "m5_telemetry_ota_local_modes_verified_kart3_tune_trial_applied",
   "project": "GoKart Control",
   "site": {
     "name": "Manresa Island",
@@ -88,7 +88,7 @@
     "verified_limits": null,
     "intent": "primarily_top_speed_limits_with_strong_acceleration; retain existing profiles pending inspection"
   },
-  "hardware_commands_enabled": false,
+  "hardware_commands_enabled": true,
   "features_deferred": [
     "driver_messages",
     "gradual_remote_stop",
@@ -150,11 +150,23 @@
         "pit_status",
         "simple_fleet_map"
       ],
-      "hardware_verified": false,
+      "hardware_verified": true,
       "development_kart_id": 3,
       "sd_required": false,
       "base_required_for_local_telemetry": false,
-      "initial_vesc_writes_enabled": false
+      "initial_vesc_writes_enabled": false,
+      "hardware_verified_scope": [
+        "telemetry",
+        "dash_map_touch",
+        "core2_authenticated_ota",
+        "local_mode_readbacks"
+      ],
+      "additional_karts_planned": 2,
+      "additional_kart_ids": [
+        null,
+        null
+      ],
+      "current_vesc_writes_enabled": true
     },
     "pi_v2": {
       "hardware": "Pi 3 B + LESOWN L7",
@@ -165,23 +177,28 @@
     "m5_modes": true,
     "full_existing_base_controls": true,
     "target": "kart-m5-espnow",
-    "installed_target": "kart-m5-espnow-readonly",
-    "hardware_control_acceptance": "pending",
+    "installed_target": "kart-m5-espnow",
+    "hardware_control_acceptance": "Core2 ECO/NORMAL/SPORT readback verified; operator confirmed; separate pit controls pending",
     "tune_request": "Compare all motor/app settings and align shared tune to dated kart2 baseline; preserve per-unit calibration",
     "same_drivetrain_battery_bms_owner_confirmed": true,
     "full_kart3_usb_capture": "complete_2026_11_10_192831_utc_376_fields_50_different",
-    "rf_acceptance": "Authenticated exact-channel proof implemented and host-tested; paired hardware recovery/range/control acceptance pending",
+    "rf_acceptance": "Authenticated exact-channel alignment verified on channel6 for both peers; range and eight-kart load pending",
     "full_kart3_usb_capture_path": "hardware/vesc/kart3/2026-11-10/usb-before-tune",
     "tune_applied": true,
     "reference_is_current_kart2": false,
-    "latest_eamon_integrated": "3178a10",
+    "latest_eamon_integrated": "705bd91",
     "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
     "current_usb_state": "Connected; one authorizedSET13 acknowledged and fullreadbackexact",
-    "reverse_input_owner_report": "Final: throttleADC1, reverseTX; stockADC mode expectsRX reverse, TXcruise disabled. Verifyconnector/switchtype beforewiring; appsettingspreserved.",
+    "reverse_input_owner_report": "Latest correction: throttle ADC1, maintained reverse switch RX to VESC signal GND; believed10k pull-up RX to3.3V. Intermittent even from rest. App settings preserved; electrical measurements pending.",
     "tune_applied_at_utc": "2026-11-10T19:58:55+00:00",
     "tune_applied_path": "hardware/vesc/kart3/2026-11-10/tune-applied-v1",
     "tune_verified_fields": 376,
     "tune_changed_motor_fields": 12,
-    "tune_persistence_powercycle_verified": false
-  }
+    "tune_persistence_powercycle_verified": false,
+    "mode_commissioning_path": "hardware/m5/2026-11-10-kart3/mode-commissioning",
+    "installed_heltec_app_sha256": "11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2",
+    "installed_core2_app_sha256": "996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a",
+    "core2_busy_notice_candidate_installed": false
+  },
+  "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending"
 }

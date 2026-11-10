@@ -46,7 +46,14 @@ function sunApply() {
   const b = $("sunBtn");
   if (b) b.classList.toggle("sel", on);
   if (typeof requestDraw === "function" && S) requestDraw();     // the layer key includes sunOn: photo filter, band
+  window.dispatchEvent(new CustomEvent("gokart-sun-change", { detail: on }));
 }
+window.addEventListener("gokart-display-change", (event) => {
+  sunPref = event.detail.contrast;
+  try { localStorage.setItem("gk_sun", sunPref ? "1" : "0"); } catch (_) { /* optional */ }
+  sunApply();
+  if (S) requestDraw();
+});
 /* pit chip colour from how well the kart hears the pit (base_rssi, dBm): > -90 green, > -105 amber, else red */
 /* server.health -> null (nothing to show) or {text, cls}: same rule and words as the pit pages
    (pit/server/static/watch.js healthChip), in the driver page's capitals. Shown only when wrong. */
@@ -127,6 +134,8 @@ function render() {
   if (fresh && !nul(d.gps_mph)) { txt("mph", Math.round(d.gps_mph)); svgCls(mphEl, "mphnum"); txt("mphSrc", "GPS"); arcMph = d.gps_mph; }
   else if (wheel !== null) { txt("mph", Math.round(wheel)); svgCls(mphEl, "mphnum"); txt("mphSrc", "WHEEL"); arcMph = wheel; }
   else { txt("mph", !fresh ? "NO DATA" : "NO FIX"); svgCls(mphEl, "mphnum na"); txt("mphSrc", "GPS"); }
+  mphEl.dataset.digits = String(mphEl.textContent.length);
+  centerSpeedReading();
   txt("mphNote", fresh && !g.fix_fresh
     ? (wheel !== null ? "NO GPS FIX: wheel speed" : !nul(g.fix_age_s) ? `last fix ${ageText(g.fix_age_s)} ago` : "")
     : (wheel !== null ? `wheel ${wheel.toFixed(0)} mph` : ""));
@@ -138,7 +147,7 @@ function render() {
   const battFresh = me.vesc_fresh && fresh;
   document.querySelector(".batt").classList.toggle("stale", !battFresh);
   txt("battPct", nul(d.battery_pct) ? "--" : Math.round(d.battery_pct) + "%");
-  txt("battV", nul(v.volts) ? "-- V" : Number(v.volts).toFixed(1) + " V");
+  txt("battV", nul(v.volts) ? "--" : Number(v.volts).toFixed(1));
   const bar = $("battBar");
   sty(bar, "width", nul(d.battery_pct) ? "0" : d.battery_pct + "%");
   sty(bar, "background", !battFresh ? "var(--stale)" : d.battery_pct < 20 ? "var(--bad)" : d.battery_pct < 40 ? "var(--warn)" : "var(--ok)");
@@ -202,11 +211,26 @@ function render() {
   const pulsing = $("boostMeter").classList.contains("boost") || !link.connected;
   pulse = pulsing && !pulse;
   document.body.classList.toggle("pulse", pulse);     // no-op (no style recalc) while nothing pulses
+  window.dispatchEvent(new CustomEvent("gokart-state-render", { detail: S })); // read-only instrument presentation
 }
 let pulse = false;
 
 /* ------------------------------------------------------- game: speedo */
-const SPEEDO = { cx: 180, cy: 150, r: 128, a0: 160, a1: 380, max: 30 };
+const SPEEDO = { cx: 180, cy: 180, r: 166, a0: 180, a1: 360, max: 30 };
+const speedTextMeasure = document.createElement("canvas").getContext("2d");
+let speedTextKey = "";
+function centerSpeedReading() {
+  const el = $("mph"), font = getComputedStyle(el).font;
+  const key = el.textContent + ";" + font;
+  if (key === speedTextKey) return;
+  speedTextMeasure.font = font;
+  const m = speedTextMeasure.measureText(el.textContent);
+  // Centre the visible segments, not the advance width (the digit 1 has a wide blank bearing).
+  el.setAttribute("x", 180 + (m.width - m.actualBoundingBoxRight + m.actualBoundingBoxLeft) / 2);
+  el.setAttribute("y", 132 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2);
+  speedTextKey = key;
+}
+if (document.fonts) document.fonts.ready.then(() => { speedTextKey = ""; centerSpeedReading(); });
 function polar(a, r) { const t = a * Math.PI / 180; return [SPEEDO.cx + r * Math.cos(t), SPEEDO.cy + r * Math.sin(t)]; }
 function arcPath(a0, a1, r) {
   const p0 = polar(a0, r), p1 = polar(a1, r);
@@ -216,10 +240,10 @@ function arcPath(a0, a1, r) {
   $("arcBg").setAttribute("d", arcPath(SPEEDO.a0, SPEEDO.a1, SPEEDO.r));
   let svg = "";
   for (let v = 0; v <= SPEEDO.max; v += 5) {
-    const a = SPEEDO.a0 + (SPEEDO.a1 - SPEEDO.a0) * v / SPEEDO.max, major = v % 15 === 0;   // labels clear of the number
-    const p = polar(a, SPEEDO.r - 14), q = polar(a, SPEEDO.r - (major ? 30 : 24));
+    const a = SPEEDO.a0 + (SPEEDO.a1 - SPEEDO.a0) * v / SPEEDO.max, major = v % 15 === 0;   // seven radial ticks on one exact semicircle
+    const p = polar(a, SPEEDO.r - 10), q = polar(a, SPEEDO.r - (major ? 22 : 17));
     svg += `<line class="tick${major ? "" : " minor"}" x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}"/>`;
-    if (major) { const l = polar(a, SPEEDO.r - 44); svg += `<text class="ticklbl" x="${l[0].toFixed(1)}" y="${(l[1] + 5).toFixed(1)}" text-anchor="middle">${v}</text>`; }
+    if (major && v !== 15) { const l = v === 0 ? [14, 205] : [346, 205]; svg += `<text class="ticklbl" x="${l[0]}" y="${l[1]}" text-anchor="middle">${v}</text>`; }
   }
   $("ticks").innerHTML = svg;
 })();
@@ -776,7 +800,7 @@ function itemMark(ctx, c, r, on) {
   const h = Math.max(MIN_MARK / 2, Math.min(26, r * 0.8));
   ctx.save(); ctx.setLineDash([]);
   ctx.translate(c[0], c[1]);
-  ctx.fillStyle = on ? "#1e5bd8" : "#888"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 3;
+  ctx.fillStyle = on ? "#1e5bd8" : "#888"; ctx.strokeStyle = "#f1fbff"; ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.rect(-h, -h, 2 * h, 2 * h); ctx.fill(); ctx.stroke();
   ctx.strokeStyle = "#000"; ctx.lineWidth = 1.5; ctx.strokeRect(-h - 2, -h - 2, 2 * h + 4, 2 * h + 4);
   ctx.fillStyle = "#fff"; ctx.font = `900 ${Math.round(h * 1.5)}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -809,14 +833,14 @@ function drawTrack(ctx, en, px, dim) {          // cached layer: band, edge, dir
   ctx.save(); ctx.lineJoin = "round"; ctx.lineCap = "round";
   if (sunOn) { trackPath(ctx, P, t.closed, px); ctx.strokeStyle = "#000"; ctx.lineWidth = w + 6; ctx.stroke(); }
   else { trackPath(ctx, P, t.closed, px); ctx.strokeStyle = "rgba(0,70,90,.55)"; ctx.lineWidth = w + 5; ctx.stroke(); }
-  trackPath(ctx, P, t.closed, px); ctx.strokeStyle = dim ? "rgba(0,229,255,.28)" : "rgba(0,229,255,.5)"; ctx.lineWidth = w; ctx.stroke();
+  trackPath(ctx, P, t.closed, px); ctx.strokeStyle = document.documentElement.dataset.theme === "light" ? (dim ? "rgba(51,169,194,.35)" : "rgba(51,169,194,.7)") : (dim ? "rgba(159,222,239,.35)" : "rgba(159,222,239,.8)"); ctx.lineWidth = w; ctx.stroke();
   const cs = Math.max(5, Math.min(15, w * 0.42));     // direction chevrons, a little larger than the band edge
-  trackChevrons(t.points, t.closed, en, 15).forEach(([e, n, hd]) => {
+  trackChevrons(t.points, t.closed, en, Math.max(15, 72 / view.scale)).forEach(([e, n, hd]) => {
     const q = px([e, n]);
     ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(hd);      // world-aligned: the layer turns with the map
     ctx.beginPath(); ctx.moveTo(-cs, cs * 0.6); ctx.lineTo(0, -cs * 0.5); ctx.lineTo(cs, cs * 0.6);
-    ctx.strokeStyle = "rgba(0,40,60,.9)"; ctx.lineWidth = 6; ctx.stroke();
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.strokeStyle = "rgba(30,67,82,.55)"; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = "#f1fbff"; ctx.lineWidth = 2.5; ctx.stroke();
     ctx.restore();
   });
   ctx.restore();
@@ -986,9 +1010,14 @@ $("itemBtn").addEventListener("click", () => {
 
 /* ------------------------------------------------------------------ map */
 const R_EARTH = 6371000;
-const view = { follow: true, pausedUntil: 0, all: false, scale: null, cx: 0, cy: 0, rot: 0 };
+const view = { follow: true, pausedUntil: 0, all: false, scale: null, cx: 0, cy: 0, rot: 0, overview: false, northUp: false, cameraKey: null };
 let userFollow = true;               // the FOLLOW button; touching the map pauses it
 let mapImg = null, mapImgSrc = null, mapImgReady = null;
+function isSonoMap(pkg) { return !!(pkg && pkg.image && pkg.image.endsWith("/sono-light.png")); }
+function mapImageSource(pkg) {
+  if (!isSonoMap(pkg)) return pkg && pkg.image;
+  return `/static/sono-${document.documentElement.dataset.theme === "light" ? "light" : "dark"}${sunOn ? "-high" : ""}.svg`;
+}
 const DR_MAX_S = 1.2;
 const dr = new Map();
 
@@ -1053,20 +1082,28 @@ function drawMap() {
   const meGood = meFresh && (!mf || !mf.quality || mf.quality === "good");    // poor / outlier: drawn greyed
   const mePos = mf ? drPosition("self", mf, now, en, meFresh) : null;
 
-  // follow resumes follow_resume_s after the last touch
+  // FOLLOW (default): the kart-centred driving camera; it resumes follow_resume_s after the last touch.
+  // Follow off: the fitted course overview (course-up, or north-up via N; it refits only when the
+  // course, viewport or orientation changes - telemetry never moves it).
   if (userFollow && !view.follow && Date.now() >= view.pausedUntil) { view.follow = true; view.all = false; view.scale = null; }
   const resumeIn = userFollow && !view.follow ? Math.ceil((view.pausedUntil - Date.now()) / 1000) : 0;
   show("resumeNote", resumeIn > 0);
   if (resumeIn > 0) txt("resumeNote", `follow in ${resumeIn} s`);
   $("followBtn").classList.toggle("sel", userFollow);
-
-  if (view.scale === null || view.all || (view.follow && !mePos)) fitAll(en, pkg, W, H);
+  $("northBtn").classList.toggle("sel", view.northUp);
+  $("northBtn").setAttribute("aria-pressed", String(view.northUp));
+  const cameraKey = JSON.stringify([S.game && S.game.track, pkg && pkg.course, pkg && pkg.version, W, H, view.northUp]);
+  if (view.all) {
+    fitAll(en, pkg, mapClearWidth(W), H); view.all = false; view.cameraKey = null;
+  } else if (view.scale === null || ((view.overview || (view.follow && !mePos)) && view.cameraKey !== cameraKey)) {
+    fitTrack(en, pkg, W, H); view.cameraKey = cameraKey;
+  }
   if (view.follow && mePos) {
     view.cx = mePos[0]; view.cy = mePos[1];
-    view.scale = view.all ? view.scale : (view.followScale || H / cfg("follow_span_m", 70));
+    view.scale = view.followScale || H / cfg("follow_span_m", 70);
   }
   // heading-up: slew at most 120 deg/s; below 1.5 m/s hold the last heading (Doppler heading is noise)
-  const headingUp = view.follow && !view.all && cfg("map_orientation", "heading_up") === "heading_up" && !!mePos;
+  const headingUp = view.follow && cfg("map_orientation", "heading_up") === "heading_up" && !!mePos;
   const tNow = performance.now(), dtS = view.lastT ? Math.min(0.5, (tNow - view.lastT) / 1000) : 0;
   view.lastT = tNow;
   if (headingUp) {
@@ -1076,31 +1113,46 @@ function drawMap() {
     view.slewing = !nul(tgt) && !nul(view.hdg) && Math.abs(angleDiffDeg(tgt, view.hdg)) > 0.5;
     view.rot = nul(view.hdg) ? 0 : view.hdg * Math.PI / 180;
     if (prev === undefined) view.slewing = true;
-  } else { view.rot = 0; view.hdg = null; view.slewing = false; }
+  } else { view.hdg = null; view.slewing = false; if (view.follow) view.rot = 0; }  // overview/free keep their course-up rot
   const cyS = headingUp && view.rot !== 0 ? H * 0.6 : H / 2;     // own kart ~60 % down: more track ahead
-  view.cyS = cyS;
+  const cxS = mapClearWidth(W) / 2;
+  view.cyS = cyS; view.cxS = cxS;
   const cr = Math.cos(view.rot), sr = Math.sin(view.rot);
   const px = (p) => {
     const dx = (p[0] - view.cx) * view.scale, dy = (p[1] - view.cy) * view.scale;
-    return [W / 2 + dx * cr - dy * sr, cyS - (dx * sr + dy * cr)];
+    return [cxS + dx * cr - dy * sr, cyS - (dx * sr + dy * cr)];
   };
 
   // imagery, course, track band, zone shapes, lap line: one cached north-up layer, turned with the map
-  if (pkg && pkg.image && pkg.bounds && mapImgSrc !== pkg.image) {
-    mapImgSrc = pkg.image; mapImgReady = null;
+  show("mapCredit", isSonoMap(pkg));
+  show("mapArea", isSonoMap(pkg));
+  const imageSource = mapImageSource(pkg);
+  if (imageSource && pkg.bounds && mapImgSrc !== imageSource) {
+    mapImgSrc = imageSource; mapImgReady = null;
     const img = new Image();
     // into the layer only once decoded (a 3000 x 3044 JPEG takes a while on a Pi 3 B)
     img.onload = () => { (img.decode ? img.decode() : Promise.resolve()).catch(() => {}).then(() => {
       if (mapImg === img) { mapImgReady = img.src; requestDraw(); } }); };
-    mapImg = img; img.src = pkg.image;
+    mapImg = img; img.src = imageSource;
   }
   const L = ensureLayer(en, pkg, W, H, cyS, dpr, headingUp);
   if (L.cv) {
     const k = view.scale / L.s;                 // != 1 only for a moment while zooming (rebuild pending)
     ctx.save();
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "low";
-    ctx.translate(W / 2, cyS); ctx.rotate(-view.rot);
+    ctx.translate(cxS, cyS); ctx.rotate(-view.rot);
     ctx.drawImage(L.cv, (L.cx - view.cx) * view.scale - L.half * k, -(L.cy - view.cy) * view.scale - L.half * k, 2 * L.half * k, 2 * L.half * k);
+    ctx.restore();
+  }
+  if (isSonoMap(pkg)) {
+    ctx.save(); ctx.font = '600 14px "Helvetica Neue", Helvetica, Arial, sans-serif';
+    ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.lineJoin = "round";
+    const light = document.documentElement.dataset.theme === "light";
+    ctx.strokeStyle = light ? "#e5e9df" : "#22302a"; ctx.fillStyle = light ? "#48625a" : "#b5c5bc";
+    [[41.099036, -73.41856, "SoNo"], [41.095672, -73.421925, "South Norwalk station"]].forEach(([lat, lon, name]) => {
+      const p = px(en(lat, lon));
+      ctx.strokeText(name, p[0], p[1] - 16); ctx.fillText(name, p[0], p[1] - 16);
+    });
     ctx.restore();
   }
   if (headingUp && mePos) { drawTrackAhead(ctx, en, px, mePos); drawChevronsNear(ctx, L, px, mePos); }
@@ -1111,25 +1163,29 @@ function drawMap() {
     ctx.fillStyle = "#fff"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.fillText("PIT", b[0], b[1] + 4); ctx.textAlign = "left";
   }
 
+  // Every trail is behind every marker, including the driver's own trail.
+  S.fleet.forEach((k) => {
+    if (k.gps && k.gps.last_fix && k.trail.length > 1) trail(ctx, k.trail, en, px, k.link === "online" && k.gps.fix_fresh ? k.color : "#888", 2, 0.28);
+  });
+  if (mePos && me.trail.length > 1) trail(ctx, me.trail, en, px, "#8cbbd1", 2, 0.3);
+
   // other karts: dots with numbers; stale = grey dashed + age; offline = faded
   S.fleet.forEach((k) => {
     if (!k.gps || !k.gps.last_fix) return;
     const fresh = k.link === "online" && k.gps.fix_fresh;
     const gone = k.link === "offline";
-    if (k.trail.length > 1) trail(ctx, k.trail, en, px, fresh ? k.color : "#888", 4, 0.6);
     const p = px(drPosition(k.id, k.gps.last_fix, now, en, fresh) || en(k.gps.last_fix.lat, k.gps.last_fix.lon));
     ctx.beginPath(); ctx.arc(p[0], p[1], 15, 0, 2 * Math.PI);
-    ctx.fillStyle = fresh ? k.color : gone ? "rgba(210,210,210,.6)" : "#bbb"; ctx.fill();
+    ctx.fillStyle = fresh ? k.color : gone ? "#89948e" : "#bbc5be"; ctx.fill();
     ctx.lineWidth = 3; ctx.strokeStyle = fresh ? "#000" : "#555";
     if (!fresh) ctx.setLineDash([4, 3]);
     ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = "#000"; ctx.font = "900 18px sans-serif"; ctx.textAlign = "center"; ctx.fillText(String(k.id), p[0], p[1] + 6); ctx.textAlign = "left";
+    ctx.fillStyle = "#000"; ctx.font = '600 16px "Helvetica Neue", Helvetica, Arial, sans-serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(k.id), p[0], p[1] + .5); ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
     if (!fresh) label(ctx, ageText(k.link === "online" ? k.gps.fix_age_s : k.age_s), p[0] + 18, p[1] - 10);
   });
 
   // own kart: big arrow along the GPS heading (grey + age when not fresh)
   if (mePos) {
-    if (me.trail.length > 1) trail(ctx, me.trail, en, px, "#0b4fb3", 5, 0.75);
     const p = px(mePos);
     const hd = nul(mf.heading) ? null : mf.heading * Math.PI / 180 - view.rot;
     ctx.save(); ctx.translate(p[0], p[1]);
@@ -1142,7 +1198,7 @@ function drawMap() {
     ctx.shadowColor = "rgba(0,0,0,.65)"; ctx.shadowBlur = 10; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4;
     ctx.lineJoin = "round"; ctx.lineWidth = 9; ctx.strokeStyle = "#f2f2f2"; ctx.stroke();
     ctx.restore();
-    ctx.fillStyle = meGood ? me.color : "#999"; ctx.fill();
+    ctx.fillStyle = meGood ? "#ffe348" : "#999"; ctx.fill();
     ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = "#000"; if (!meGood) ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]);
     ctx.restore();
     if (!meFresh) label(ctx, `last fix ${ageText(me.gps.fix_age_s)}`, p[0] + 24, p[1] - 14);
@@ -1152,8 +1208,8 @@ function drawMap() {
   else if (!meFresh) { txt("mapMsg", me.link === "online" ? "NO GPS FIX" : "POSITION FROZEN"); show("mapMsg", true); }
   else show("mapMsg", false);
 
-  // scale bar (bottom-left, just above the HUD speed card: style.css .speedo is bottom 22 + 156 tall) + north arrow
-  const step = niceStep(90 / view.scale), len = step * view.scale, sb = H - 208;
+  // Scale bar clears the attribution footer; instruments are now in the sidebar.
+  const step = niceStep(90 / view.scale), len = step * view.scale, sb = H - 52;
   ctx.fillStyle = sunOn ? "#000" : "rgba(0,0,0,.55)"; ctx.fillRect(8, sb, len + 70, 26);
   if (sunOn) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.strokeRect(9, sb + 1, len + 68, 24); }
   ctx.strokeStyle = "#e6e6e6"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(14, sb + 18); ctx.lineTo(14 + len, sb + 18); ctx.stroke();
@@ -1161,7 +1217,7 @@ function drawMap() {
   // north compass: top-right, under the map buttons, 1.5x the old size (r 30)
   const [ccx, ccy] = compassPos(W);
   ctx.save(); ctx.translate(ccx, ccy); ctx.rotate(-view.rot);
-  ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 2;
+  ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.strokeStyle = document.documentElement.dataset.theme === "light" ? "#496779" : "#a7c3d2"; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(0, 0, 30, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
   ctx.fillStyle = "#ff3030"; ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(10, 2); ctx.lineTo(-10, 2); ctx.closePath(); ctx.fill();
   ctx.fillStyle = "#e6e6e6"; ctx.beginPath(); ctx.moveTo(0, 13); ctx.lineTo(7, 2); ctx.lineTo(-7, 2); ctx.closePath(); ctx.fill();
@@ -1185,7 +1241,7 @@ function layerKey(pkg, headingUp, dpr) {
     headingUp, dpr, sunOn, pkg && pkg.origin ? pkg.origin.lat + "," + pkg.origin.lon : ""].join(";");
 }
 function ensureLayer(en, pkg, W, H, cyS, dpr, headingUp) {
-  const reach = Math.hypot(W / 2, Math.max(cyS, H - cyS));        // view centre -> farthest screen corner
+  const reach = Math.hypot(Math.max(view.cxS || W / 2, W - (view.cxS || W / 2)), Math.max(cyS, H - cyS));        // view centre -> farthest screen corner
   const half = Math.max(reach + 64, Math.min(1024 / dpr, reach + 420));
   const key = layerKey(pkg, headingUp, dpr), now = performance.now();
   const drift = Math.hypot(view.cx - layer.cx, view.cy - layer.cy) * view.scale;
@@ -1211,7 +1267,7 @@ function ensureLayer(en, pkg, W, H, cyS, dpr, headingUp) {
     const x0 = Math.max(0, p0[0]), y0 = Math.max(0, p0[1]), x1 = Math.min(2 * half, p1[0]), y1 = Math.min(2 * half, p1[1]);
     if (x1 > x0 && y1 > y0 && dw > 0 && dh > 0) {            // only the part of the photo inside the layer
       ctx.imageSmoothingQuality = "medium";
-      if (sunOn) ctx.filter = "contrast(1.35) saturate(1.3) brightness(1.08)";   // sun: once per layer build, cheap
+      if (sunOn && !isSonoMap(pkg)) ctx.filter = "contrast(1.35) saturate(1.3) brightness(1.08)";   // street map has its own contrast palette
       ctx.drawImage(mapImg, (x0 - p0[0]) / dw * iw, (y0 - p0[1]) / dh * ih, (x1 - x0) / dw * iw, (y1 - y0) / dh * ih, x0, y0, x1 - x0, y1 - y0);
       ctx.filter = "none";
     }
@@ -1237,8 +1293,8 @@ function drawChevronsNear(ctx, L, px, mePos) {
     const q = px([e, n]);
     ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(hd - view.rot);
     ctx.beginPath(); ctx.moveTo(-cs, cs * 0.6); ctx.lineTo(0, -cs * 0.5); ctx.lineTo(cs, cs * 0.6);
-    ctx.strokeStyle = "rgba(0,40,60,.9)"; ctx.lineWidth = 6; ctx.stroke();
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.strokeStyle = "rgba(30,67,82,.55)"; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = "#f1fbff"; ctx.lineWidth = 2.5; ctx.stroke();
     ctx.restore();
   });
 }
@@ -1298,17 +1354,54 @@ function fitAll(en, pkg, W, H) {
   view.cx = (Math.max(...xs) + Math.min(...xs)) / 2;
   view.cy = (Math.max(...ys) + Math.min(...ys)) / 2;
 }
+function mapClearWidth(W) { return window.matchMedia("(min-width: 800px)").matches ? W * .7 : W; }
+function courseAngle(en, pkg) {
+  const points = (S.game && S.game.track && S.game.track.points) || (pkg && pkg.course) || [];
+  if (points.length < 2) return 0;
+  const a = en(points[0][0], points[0][1]);
+  for (const point of points.slice(1)) {
+    const b = en(point[0], point[1]);
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) > 1) return Math.atan2(b[0] - a[0], b[1] - a[1]);
+  }
+  return 0;
+}
+function fitTrack(en, pkg, W, H) {
+  const track = (S.game && S.game.track && S.game.track.points) || [];
+  const points = [...track, ...((pkg && pkg.course) || [])];
+  if (points.length < 2) { fitAll(en, pkg, mapClearWidth(W), H); view.rot = 0; return; }
+  view.rot = view.northUp ? 0 : courseAngle(en, pkg);
+  const c = Math.cos(view.rot), s = Math.sin(view.rot);
+  const projected = points.map(p => en(p[0], p[1])).map(p => [p[0] * c - p[1] * s, p[0] * s + p[1] * c]);
+  const xs = projected.map(p => p[0]), ys = projected.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  view.scale = Math.min(mapClearWidth(W) * .76 / Math.max(90, x1 - x0), H * .76 / Math.max(90, y1 - y0));
+  const x = (x0 + x1) / 2, y = (y0 + y1) / 2;
+  view.cx = x * c + y * s; view.cy = -x * s + y * c;
+}
 function mapNoteText() {
   const m = S.map || {}, pkg = m.package, sy = m.sync || {};
   const pit = sy.reachable === true ? "pit reachable" : sy.reachable === false ? "pit not reachable" : "pit not checked yet";
   if (!pkg) return `no course map cached (${pit}; it downloads on the pit Wi-Fi)`;
   return `map v${pkg.version} cached ${pkg.fetched_wall ? pkg.fetched_wall.slice(0, 16).replace("T", " ") : ""} | ${pit}`
-    + (pkg.attribution ? ` | imagery: ${pkg.attribution}` : "");
+    + (isSonoMap(pkg) ? "" : pkg.attribution ? ` | imagery: ${pkg.attribution}` : "");
 }
 
-/* map input: one finger pans, two fingers pinch-zoom, both pause auto-follow */
+/* Map input only: stationary course camera, manual pan/zoom, optional north-up. */
+// Preview the whole street-map area; this changes the camera only.
+$("areaBtn").addEventListener("click", () => {
+  const pkg = S && S.map && S.map.package, en = S && projection();
+  if (!isSonoMap(pkg) || !pkg.bounds || !en) return;
+  const b = pkg.bounds, nw = en(b.north, b.west), se = en(b.south, b.east);
+  const W = $("map").clientWidth, H = $("map").clientHeight;
+  touched();                                   // pauses follow; it resumes follow_resume_s later
+  view.scale = Math.max(W / (se[0] - nw[0]), H / (nw[1] - se[1])) * 1.04;
+  view.cx = (nw[0] + se[0]) / 2;
+  view.cy = nw[1] * .4 + se[1] * .6; // favor southern SoNo, including the simulator's shop loop
+  view.overview = false; view.follow = false; view.all = false; view.rot = 0; view.northUp = true;
+  requestDraw();
+});
 function touched() {
-  view.follow = false; view.all = false;
+  view.follow = false; view.all = false; view.overview = false;
   view.pausedUntil = Date.now() + cfg("follow_resume_s", 10) * 1000;
 }
 (function setupMapInput() {
@@ -1318,13 +1411,16 @@ function touched() {
   const MIN_SCALE = 0.02, MAX_SCALE = 40;
   const local = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
   const clampScale = (v) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, v));
-  const world = (x, y) => [view.cx + (x - cv.clientWidth / 2) / view.scale, view.cy - (y - cv.clientHeight / 2) / view.scale];
-  const unrotate = () => { view.rot = 0; };     // free pan is always north-up
+  const world = (x, y) => {
+    const dx = (x - mapClearWidth(cv.clientWidth) / 2) / view.scale, dy = (cv.clientHeight / 2 - y) / view.scale;
+    const c = Math.cos(view.rot), s = Math.sin(view.rot);
+    return [view.cx + dx * c + dy * s, view.cy - dx * s + dy * c];
+  };
   cv.addEventListener("pointerdown", (e) => {
     if (!S || view.scale === null) return;
     cv.setPointerCapture(e.pointerId);
     ptrs.set(e.pointerId, local(e));
-    touched(); unrotate();
+    touched();
     if (ptrs.size === 1) { const [x, y] = local(e); drag = { x, y, cx: view.cx, cy: view.cy, moved: false }; pinch = null; }
     else if (ptrs.size === 2) {
       drag = null;
@@ -1342,14 +1438,18 @@ function touched() {
       const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
       view.scale = clampScale(pinch.scale0 * d / pinch.d0);
       view.followScale = view.scale;
-      view.cx = pinch.anchor[0] - (mx - cv.clientWidth / 2) / view.scale;
-      view.cy = pinch.anchor[1] + (my - cv.clientHeight / 2) / view.scale;
+      const point = world(mx, my);
+      view.cx += pinch.anchor[0] - point[0]; view.cy += pinch.anchor[1] - point[1];
       requestDraw();
     } else if (drag && ptrs.size === 1) {
       const [x, y] = local(e);
       const dx = x - drag.x, dy = y - drag.y;
       if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
-      if (drag.moved) { view.cx = drag.cx - dx / view.scale; view.cy = drag.cy + dy / view.scale; requestDraw(); }
+      if (drag.moved) {
+        const c = Math.cos(view.rot), s = Math.sin(view.rot);
+        view.cx = drag.cx - (dx * c - dy * s) / view.scale;
+        view.cy = drag.cy + (dx * s + dy * c) / view.scale; requestDraw();
+      }
     }
   });
   const release = (e) => {
@@ -1360,7 +1460,7 @@ function touched() {
   };
   ["pointerup", "pointercancel", "lostpointercapture"].forEach((ev) => cv.addEventListener(ev, release));
   cv.addEventListener("wheel", (e) => {
-    e.preventDefault(); touched(); unrotate();
+    e.preventDefault(); touched();
     view.scale = clampScale(view.scale * Math.pow(1.0015, -e.deltaY)); view.followScale = view.scale; requestDraw();
   }, { passive: false });
 })();
@@ -1377,8 +1477,11 @@ document.querySelector(".mapctl").addEventListener("click", (e) => {
   if (b.id === "followBtn") {
     userFollow = !userFollow;
     try { localStorage.setItem("gk_follow", userFollow ? "1" : "0"); } catch (err) { /* ignore */ }
-    if (userFollow) { view.follow = true; view.all = false; } else { view.follow = false; }
-  } else if (b.dataset.zoom === "all") { touched(); view.all = true; view.rot = 0; }
+    if (userFollow) { view.follow = true; view.all = false; view.overview = false; view.pausedUntil = 0; }
+    else { view.follow = false; view.overview = true; view.cameraKey = null; }
+  } else if (b.id === "northBtn") {
+    view.northUp = !view.northUp; touched(); view.overview = true; view.cameraKey = null;
+  } else if (b.dataset.zoom === "all") { touched(); view.all = true; view.rot = 0; view.northUp = true; }
   else {
     if (view.scale === null) return;
     const f = b.dataset.zoom === "in" ? 1.5 : 1 / 1.5;
@@ -1388,7 +1491,7 @@ document.querySelector(".mapctl").addEventListener("click", (e) => {
   requestDraw();
 });
 sunApply();                                      // before the first frame: no flash of the night theme
-try { if (localStorage.getItem("gk_follow") === "0") { userFollow = false; view.follow = false; } } catch (err) { /* ignore */ }
+try { if (localStorage.getItem("gk_follow") === "0") { userFollow = false; view.follow = false; view.overview = true; } } catch (err) { /* ignore */ }
 
 /* -------------------------------------------------------------- wiring */
 /* One draw scheduler: SSE frames, touches and dead reckoning only mark the map dirty; it is drawn at

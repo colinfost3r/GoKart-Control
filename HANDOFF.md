@@ -1,6 +1,61 @@
 # Collaborator handoff
 
-## Kart 3 complete capture, tune preparation and upstream integration — 2026-11-10 (current)
+## Kart 3 M5 modes commissioned; two additional M5 karts planned — 2026-11-10 (current)
+
+**Working hardware:** matching Core2 `m5-espnow` and Heltec `kart-m5-espnow` from source
+`4a582f0` are installed. Each segmented USB upload verified four segments and preserved NVS.
+Heltec application SHA-256: `11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2`.
+Core2 application SHA-256: `996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a`.
+Heltec reports `writes:true`, correct UUID and validated limits; Core2 reports `mode_ready:true`.
+Both ESP-NOW peers have driver/received/advertised channel 6 and authenticated alignment.
+The ceiling record was learned from a clean configuration read, without writing on boot.
+Speed calibration remains **2.48**. Initial telemetry/OTA evidence remains in the historical sections.
+
+**Operator acceptance:** hold a mode button for at least 650 ms, then release. ECO, NORMAL and
+SPORT each produced confirmed VESC readbacks: current scales **0.50 / 0.75 / 1.00** and positive
+ERPM caps **21661 / 36102 / 150000**. The operator exercised the wired throttle with wheels lifted;
+rotation was recorded and sampled fault codes were all zero. Final captured state was confirmed
+SPORT, zero ERPM. These are bench observations, not measured road speeds or braking acceptance.
+No motor-actuation command, app write or additional persistent tune write was sent in this session.
+[Sanitized commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
+
+The full existing pit command implementation is enabled. Periodic LoRa `rate 1` broadcasts were
+seen, but separate pit-mode/STOP/SLOW/BOOST/race checks remain open. RF range, eight-kart load,
+vehicle-level link-loss acceptance, VESC power-cycle persistence and road testing remain open.
+Do not equate compile/host-test success with those hardware checks.
+
+**Source ahead of installed Core2:** a small busy-radio notice tells the driver to release and
+hold again if a request cannot be sent. It never queues or replays the held gesture. All three
+Core2 variants compile; candidate wireless SHA-256
+`35162e477bf917464b88840378913ced7ecab43bed83b333810b4cfba6901df1` is built but **not installed**.
+The working installed `996c4387…` image was left in place after the owner confirmed all modes work.
+Full offline checks passed **356 tests / seven suites / zero skipped** including the new touch
+regression. Test-only mock naming is portable across Clang/GCC; production code was independently reviewed.
+
+**Newest upstream integrated:** `705bd91` brings Eamon/Hunter’s Pi/pit graphics and restores
+its FOLLOW driving camera. The merge preserves this branch’s roulette cancellation/suppression
+fixes. It changes browser presentation and illustrative SoNo assets, not Heltec firmware,
+LoRa/ESP-NOW contracts or the native Core2 UI. No shared Pi/pit deployment or additional board
+flash was performed. The SoNo demo is not a surveyed Manresa course.
+
+**Next two karts:** the owner plans two more Core2/Heltec assemblies. Their fleet IDs are not yet
+assigned. Use the same firmware architecture, with unique fleet IDs, physical BLE MAC/VESC UUID
+pins, ESP-NOW peers/private pair keys and OTA credentials. Capture each VESC before tuning and
+preserve that unit’s Hall, pedal and electrical calibration. Never clone another unit’s NVS or
+whole VESC configuration. [Bring-up procedure](firmware/m5-core2/BRINGUP.md).
+
+**Reverse investigation:** latest owner correction is **throttle ADC1; reverse RX**, using a
+maintained mechanical switch to VESC signal GND and a believed **10 kΩ pull-up RX→3.3 V**.
+It remains intermittent even from a complete stop with the pedal released. RX is the expected
+pin for the unchanged ADC / Current Reverse Button configuration; the former TX diagnosis is
+superseded. Measure RX high/low stability and inspect switch/harness/ground before choosing a
+filter or changing ADC settings. Resistor placement and measured levels remain unknown.
+[Current reverse notes](docs/reverse-input.md). No reverse-related setting or wiring change was made.
+Stock-source review also found a testable interaction between the zero braking limit and FOC
+direction-dependent limiting: about 0.05 A may be available during part of a reverse transition.
+This is a hypothesis, not a measured cause; no additional tune or motor test was performed.
+
+## Earlier checkpoint: complete capture, tune preparation and upstream integration — 2026-11-10
 
 **Accessory checkpoint is unchanged:** Core2 live telemetry + authenticated OTA and Heltec
 `kart-m5-espnow-readonly`. **VESC tune trial applied** at 19:58:55 UTC to UUID
@@ -17,10 +72,10 @@ and access to the cutoff. The VESC disappeared from macOS USB after the first ca
 before opening a device. It then reconnected on the same port. A fresh full snapshot in
 `usb-prewrite-connected/` matches all 376 original settings, 82.1 V, 0 ERPM/current, fault 0.
 Do not describe failed attempts as backups.
-Final reverse wiring clarification: **throttle ADC1, reverse switch TX**. Captured ADC / Current
-Reverse Button mode expects RX for reverse in stock 6.02; TX is cruise (disabled here). Verify the
-physical connector and switch type before rewiring; [investigation](docs/reverse-input.md). Keep
-input configuration/calibration unchanged. Earlier ADC1/ADC2-switch statements were corrected.
+At this earlier checkpoint the owner reported the reverse switch on TX. They subsequently corrected
+it to **RX**, with a maintained mechanical switch to VESC signal GND and an approximately 10 kΩ
+pull-up to 3.3 V. Intermittent reverse remains unresolved; [current investigation](docs/reverse-input.md).
+All input configuration/calibration remains unchanged.
 
 **Actual complete USB capture:** November 10, 19:28:31 UTC, `/dev/cu.usbmodem3041`, four CRC-valid
 replies, all **189 motor + 187 app settings**. Compared with the dated November 5 kart-2 reference:
@@ -82,9 +137,9 @@ Software tests do not establish physical braking, direction, speed calibration, 
 **Rollback retained:** exact installed Heltec `heltec-working-readonly-f55e3e53.bin` and Core2
 `core2-working-ota-c090ce15.bin`, read back and hash-matched, plus original full-flash backups and
 private pairing/OTA credentials under ignored `firmware/build/bench-private/20261110-120545/`.
-No key/password is in Git. The next section records that still-installed checkpoint in detail.
+No key/password is in Git. The next section records that earlier installed checkpoint in detail.
 
-## Kart 3 live telemetry and Core2 OTA — 2026-11-10 (current)
+## Earlier checkpoint: kart 3 live telemetry and Core2 OTA — 2026-11-10
 
 **Working on hardware:** encrypted ESP-NOW carries real kart 3 VESC telemetry to the Core2.
 The owner confirms both DASH/MAP tabs work and live battery/connection readings are visible.

@@ -3,14 +3,15 @@
 **M5 v1.5 branch:** `v1.5/m5-core2` adds a Core2 display option alongside the Pi v2.
 Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
-Kart 3 now shows real VESC telemetry over paired ESP-NOW, and Core2 authenticated Wi-Fi OTA
-has passed a hardware upload and recovery test. UART remains available. The installed Heltec
-is read-only. A separate full-control target is prepared for M5 modes and all existing base controls;
-all 376 kart-3 VESC settings have now been captured over USB and compared with the dated kart-2 baseline.
-The original comparison found 50 differences; a backed-up, calibration-preserving 12-setting motor
-trial has now been applied and all 376 settings read back exactly. Full-control accessory deployment
-still awaits commissioning; see the [complete tune review](docs/kart3-tune-comparison.md).
-See the handoff for the corrected kart 3 VESC identity and exact acceptance status.
+Kart 3 has live VESC telemetry, authenticated Core2 Wi-Fi OTA and working ECO/NORMAL/SPORT
+selection over paired ESP-NOW. Matching control-capable images are installed; the operator
+confirmed all three modes and VESC readbacks matched. The existing pit command implementation
+is enabled, with separate physical pit-control acceptance still pending.
+All 376 kart-3 VESC settings were captured; the calibration-preserving 12-setting motor trial
+was applied and read back exactly. See the [tune review](docs/kart3-tune-comparison.md) and
+[mode commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
+Two additional M5/Heltec karts are planned, with IDs still unassigned; follow the
+[per-kart bring-up guide](firmware/m5-core2/BRINGUP.md).
 
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor
 board on every kart, a shared LoRa radio network, a pit station with touch kiosk and
@@ -29,7 +30,8 @@ See [docs/requirements.md](docs/requirements.md#reliability-and-link-loss-behavi
 ([measured capture](hardware/vesc/baseline-kart/2026-11-05/README.md)). The older M5Stack
 dashboard repository is historical reference only.
 
-Status in this file is as of **2026-11-06**, branch `eamon/firmware-lora-starter`.
+M5 status above is current as of **2026-11-10** on `v1.5/m5-core2`.
+The dated fleet feature table below retains Eamon’s earlier acceptance checkpoints.
 Details, evidence and open decisions: [HANDOFF.md](HANDOFF.md).
 
 ## Architecture
@@ -56,7 +58,7 @@ Details, evidence and open decisions: [HANDOFF.md](HANDOFF.md).
 | Repeater | second T-Beam S3 Core | [firmware/repeater-tbeam-s3](firmware/repeater-tbeam-s3) | Re-sends every packet once, 25 ms later inside the same slot, relay bit 0x80 set; heartbeat every 5 s shown as a pit chip |
 | Pit station | Raspberry Pi 4 + HDMI touch panel | [pit/](pit/README.md) | Fleet state, command delivery with per-kart outcomes, race/laps, zones editor, session logs; touch kiosk, password-protected operator page, phone page at `/m` |
 | Kart display | Raspberry Pi 3 B + LESOWN L7 7" 1024x600 | [kart/](kart/README.md) | Display only (never talks to the VESC): speed, mode, banners, map from the pit, own geofence engine for the game, sounds |
-| M5 v1.5 display (alternative) | M5Stack Core2 320x240 | [firmware/m5-core2](firmware/m5-core2/README.md) | Telemetry, guarded mode requests and fleet/course outline over paired ESP-NOW or UART; kart 3 live telemetry and Core2 OTA verified; mode writes remain disabled |
+| M5 v1.5 display (alternative) | M5Stack Core2 320x240 | [firmware/m5-core2](firmware/m5-core2/README.md) | Telemetry, guarded mode requests and fleet/course outline over paired ESP-NOW or UART; kart 3 live telemetry, Core2 OTA and local mode readbacks verified; full pit-control hardware checks remain open |
 | On-VESC script (optional) | VESC LispBM | [firmware/vesc-lisp](firmware/vesc-lisp/README.md) | Regen on STOP; not loaded on any kart (owner decision pending) |
 
 **Game layer** (off by default; contract [pit/server/map/ZONES.md](pit/server/map/ZONES.md)).

@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-10",
+  "kart_id": 3,
+  "source_commit": "4a582f07d6c10457ff4e1a3c00e9af9d2108265b",
+  "observation_duration_s": 120,
+  "installed_applications": {
+    "heltec": {
+      "target": "kart-m5-espnow",
+      "sha256": "11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2",
+      "upload_verified_segments": 4
+    },
+    "core2": {
+      "target": "m5-espnow",
+      "sha256": "996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a",
+      "upload_verified_segments": 4
+    }
+  },
+  "core2_busy_notice_candidate": {
+    "sha256": "35162e477bf917464b88840378913ced7ecab43bed83b333810b4cfba6901df1",
+    "installed": false
+  },
+  "raw_capture_sha256": {
+    "heltec": "008abcb438d28cd46c7190d6e513d8d6ae714133d310157caeb53d362ba12cf7",
+    "core2": "b5910071a779e0c2600d9231a04d8c070a64f19c56b3bae40b8b47bc7cc143b4"
+  },
+  "operator_report": "Core2 modes all work; two more karts will use this arrangement",
+  "mode_readbacks": [
+    {
+      "mode": "ECO",
+      "id": 0,
+      "confirmed_samples": 23,
+      "scale": 0.5,
+      "max_erpm": 21661,
+      "max_observed_abs_erpm": 21007
+    },
+    {
+      "mode": "NORMAL",
+      "id": 1,
+      "confirmed_samples": 15,
+      "scale": 0.75,
+      "max_erpm": 36102,
+      "max_observed_abs_erpm": 31683
+    },
+    {
+      "mode": "SPORT",
+      "id": 2,
+      "confirmed_samples": 185,
+      "scale": 1,
+      "max_erpm": 150000,
+      "max_observed_abs_erpm": 42270
+    }
+  ],
+  "nonzero_fault_samples": 0,
+  "final_self": {
+    "t": "self",
+    "kart": 3,
+    "seq": 115,
+    "erpm": 0,
+    "fault": 0,
+    "mode_req": 2,
+    "mode_actual": 2,
+    "scale": 1.0,
+    "stopped": false,
+    "vesc_link": true,
+    "mode_confirmed": true,
+    "writes": true
+  },
+  "last_heltec_status": {
+    "t": "status",
+    "kart": 3,
+    "fw": "kart-0.2.7",
+    "writes": true,
+    "vesc_fw": "6.02",
+    "vesc_hw": "75_300_R2",
+    "l_current_max": 140.0,
+    "l_in_current_max": 100.0,
+    "scale_max": 1.0,
+    "max_erpm": 150000,
+    "speed_cal": 2.48,
+    "baseline_suspect": false,
+    "baseline_source": "read",
+    "vescmac": "f7:bd:23:cc:62:0e",
+    "vesc_uuid": "37004e000951343037353739",
+    "uuid_pin": "37004e000951343037353739",
+    "id_ok": true,
+    "limits_ok": true
+  },
+  "last_core2_status": {
+    "t": "m5_status",
+    "fw": "m5-v1.5",
+    "kart": 3,
+    "live": true,
+    "vesc": true,
+    "mode_ready": true,
+    "touch_presses": 8,
+    "touch_x": 268,
+    "touch_y": 219
+  },
+  "limitations": [
+    "No new physical pit-mode, STOP, SLOW, BOOST or race acceptance",
+    "No surveyed speed calibration, road, range or eight-kart acceptance",
+    "No VESC power-cycle persistence test",
+    "Raw logs remain private; exported fields omit network credentials and GPS positions"
+  ]
+}

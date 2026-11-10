@@ -1,5 +1,9 @@
 # Kart 3 M5 telemetry and OTA evidence — 2026-11-10
 
+**Historical read-only checkpoint.** The later [mode commissioning](mode-commissioning/README.md)
+replaced these installed images and verified Core2 mode selection. The observations below describe
+the earlier setup; its captured evidence remains unchanged.
+
 The owner confirmed working DASH/MAP tabs and live readings on the Core2.
 [observations.json](observations.json) contains sanitized device observations and exact application hashes.
 Raw captures, full 16 MiB rollback images, Wi-Fi credentials and ESP-NOW keys remain private under ignored
