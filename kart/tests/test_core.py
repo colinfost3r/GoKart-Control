@@ -890,10 +890,10 @@ class Items(unittest.TestCase):
         g2 = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4)
         g2.set_zones(zones_doc(item_zone()), 0.0)
         g2.on_self(fix(-20, 0), 1.0); g2.on_self(fix(-4, 0), 1.5)
-        g2.on_self(fix(-4, 0, stopped=True), 2.0)                                 # STOPPED (telemetry) mid-spin
+        stopped = g2.on_self(fix(-4, 0, stopped=True), 2.0)       # consume immediately, even if START follows
         r3 = g2.tick(3.0)
         self.assertEqual(lines(r3), [])
-        self.assertEqual(evs(r3, "suppressed")[0]["why"], "kart STOPPED")
+        self.assertEqual(evs(stopped, "suppressed")[0]["why"], "kart STOPPED")
 
     def test_cooldown_15_and_gates(self):
         g = kc.GameEngine(rng=FixedRng(0.1))
@@ -2010,6 +2010,245 @@ class Multiplayer(unittest.TestCase):
         json.dumps(fp.snapshot(3.0))
         self.assertEqual(set(fp.snapshot(3.0)["multi"]), keys)
 
+
+
+class DelayedPrizes(unittest.TestCase):
+    """Production GameEngine + FreeplayGame lifecycles; simulated time, no hardware."""
+
+    def queued(self):
+        g = kc.GameEngine(rng=FixedRng(.1), item_reveal_s=1.4)
+        doc = zones_doc(item_zone())
+        g.set_zones(doc, 0)
+        r = g.on_self(fix(-4, 0), 1)
+        self.assertEqual(lines(r), [])
+        self.assertEqual(len(g.pending_items), 1)
+        return g, doc
+
+    def collected(self, boxes=3):
+        fp, _ = Freeplay().ready(boxes=boxes)
+        g = kc.GameEngine(rng=FixedRng(.1), item_reveal_s=1.4)
+        g.set_zones(fp.doc(), 1)
+        b = fp.boxes[0]
+        msg = dict(fix(0, 0), lat=b["lat"], lon=b["lon"])
+        r = g.on_self(msg, 2)
+        self.assertEqual(len(evs(r, "item")), 1)
+        self.assertEqual(lines(r), [])
+        fp.on_game(r, 2)                       # server _on_line consumes the immediate item record
+        return fp, g, msg
+
+    def test_collection_document_change_preserves_prize_once_even_for_last_box(self):
+        for boxes in (1, 3):
+            with self.subTest(boxes=boxes):
+                fp, g, _ = self.collected(boxes)
+                doc, _ = fp.select(None, 2.25)  # server ticker sees the collected box removed
+                g.set_zones(doc, 2.25)
+                self.assertEqual(len(g.pending_items), 1)
+                self.assertEqual(lines(g.tick(3.3)), [])
+                self.assertEqual(lines(g.tick(3.5)), ["boost 5 0.75"])
+                self.assertEqual(lines(g.tick(3.75)), [])
+
+    def test_freeplay_off_reset_same_course_and_session_changes_consume_prize(self):
+        for boundary in ("off-on", "reset", "same-course", "session"):
+            with self.subTest(boundary=boundary):
+                fp, g, _ = self.collected()
+                if boundary == "off-on":
+                    fp.set_on(False, 2.1); fp.set_on(True, 2.2)
+                elif boundary == "reset":
+                    fp.reset_course(2.1)
+                elif boundary == "same-course":
+                    fp.set_course(fp_course(), "recorded", 2.1, [])
+                else:
+                    fp.on_game_line({"kart":2,"session":2,"hosting":True}, 2.1)
+                g.set_zones(fp.select(None, 2.25)[0], 2.25)
+                self.assertEqual(g.pending_items, [])
+                self.assertEqual(lines(g.tick(3.5)), [])
+
+    def test_stop_mode_grid_and_reconnect_never_replay_the_prize(self):
+        for boundary in ("stop-start", "mode", "mode-echo", "grid-go", "reconnect", "vesc-link", "session"):
+            with self.subTest(boundary=boundary):
+                g, _ = self.queued()
+                if boundary == "stop-start":
+                    g.on_self(fix(-4, 0, stopped=True), 1.2)
+                    g.on_self(fix(-4, 0), 1.5)
+                elif boundary == "mode":
+                    g.on_self(fix(-4, 0, mode_req=2), 1.2)
+                elif boundary == "mode-echo":
+                    g.on_cmd({"cmd":kc.CMD_CODES["mode"],"result":1}, 1.2)
+                elif boundary == "grid-go":
+                    g.on_race({"event":"countdown","go_in_ms":100}, 1.2)
+                    g.on_race({"event":"go"}, 1.5)
+                elif boundary == "reconnect":
+                    g.set_fw(None); g.set_fw("kart-0.2.6")
+                    g.on_self(fix(-4, 0), 1.5)
+                elif boundary == "vesc-link":
+                    g.on_self(fix(-4, 0, vesc_link=False), 1.2)
+                    g.on_self(fix(-4, 0), 1.5)
+                else:
+                    g.on_self(fix(-4, 0, session=2), 1.2)
+                self.assertEqual(g.pending_items, [])
+                self.assertEqual(lines(g.tick(2.5)), [])
+
+    def test_changed_map_and_game_off_consume_prize(self):
+        for boundary in ("version", "new-map", "off", "local-off"):
+            with self.subTest(boundary=boundary):
+                g, doc = self.queued()
+                if boundary == "version": g.set_zones(dict(doc, version=2), 1.2)
+                elif boundary == "new-map": g.set_zones(zones_doc(item_zone(e=30)), 1.2)
+                elif boundary == "off": g.set_zones(dict(doc, enabled=False), 1.2)
+                else:
+                    g.local_enabled = False; g.tick(1.2); g.local_enabled = True
+                g.set_zones(doc, 2)
+                self.assertEqual(lines(g.tick(2.5)), [])
+
+    def test_mud_entered_during_spin_wins_at_reveal(self):
+        g = kc.GameEngine(rng=FixedRng(.1), item_reveal_s=1.4)
+        g.set_zones(zones_doc(item_zone(), mud_zone(x0=8, x1=20)), 0)
+        g.on_self(fix(-4, 0), 1)
+        self.assertEqual(lines(g.on_self(fix(10, 0), 1.5)), ["boost 4 0.50"])
+        r = g.tick(2.5)
+        self.assertEqual(lines(r), [])
+        self.assertEqual(evs(r, "suppressed")[0]["why"], "mud running")
+        self.assertEqual(g.override["kind"], "mud")
+
+    def test_stale_or_very_late_prize_is_consumed_not_deferred(self):
+        g, _ = self.queued()
+        self.assertEqual(lines(g.tick(10)), [])
+        self.assertEqual(g.pending_items, [])
+        self.assertEqual(lines(g.on_self(fix(-4, 0), 10.1)), [])
+        late, _ = self.queued()
+        # A fresh telemetry sample after a long loop pause must not revive an old prize.
+        self.assertEqual(lines(late.on_self(fix(-4, 0), 10)), [])
+        self.assertEqual(late.pending_items, [])
+        unknown = kc.GameEngine(rng=FixedRng(.1), item_reveal_s=1.4)
+        unknown.set_zones(zones_doc(item_zone()), 0)
+        unknown.on_gps(gps(-4, 0), 1)             # no current self/controller proof yet
+        self.assertEqual(lines(unknown.tick(2.5)), [])
+        self.assertEqual(unknown.pending_items, [])
+
+    def test_actual_server_collection_send_and_link_invalidation(self):
+        import tempfile
+        from unittest.mock import patch
+        import kart_server
+        class FakeLink:
+            def __init__(self, *args, **kwargs):
+                self.connected = True
+                self.writes = []
+            def write_text(self, text, **kwargs):
+                self.writes.append(text)
+                return True
+        with tempfile.TemporaryDirectory() as tmp, patch.object(kart_server, "Link", FakeLink):
+            now = [2.0]
+            cfg = dict(kart_server.DEFAULTS, log_dir=tmp+"/logs", cache_dir=tmp+"/cache", pit_urls=[])
+            app = kart_server.App(cfg)             # no start(): no network, threads or device access
+            fp, _ = Freeplay().ready()
+            app.freeplay = fp
+            app.game.rng = FixedRng(.1)
+            app.game.set_zones(fp.doc(), 1)
+            b = fp.boxes[0]
+            msg = dict(fix(0, 0), lat=b["lat"], lon=b["lon"])
+            with patch.object(kart_server.time, "monotonic", side_effect=lambda: now[0]):
+                app._on_line(json.dumps(msg))      # real callback emits item, removes box, logs, queues no motor cmd
+                self.assertEqual(app.link.writes, [])
+                self.assertEqual(fp.collected, 1)
+                now[0] = 2.25
+                zones, recs = fp.select(None, now[0])
+                recs += fp.tick(now[0])
+                zones, more = fp.select(None, now[0])
+                recs += more + app.game.set_zones(zones, now[0])
+                app._game_out(recs + app.game.tick(now[0]))
+                now[0] = 3.5
+                app._game_out(app.game.tick(now[0]))
+                self.assertEqual(app.link.writes, ["boost 5 0.75"])
+                # Queue another explicit new box and pass through the real link callback.
+                now[0] = 4.0
+                app.game.set_zones(zones_doc(item_zone()), now[0])
+                app.game.prev_fix = None
+                app._on_line(json.dumps(fix(-4, 0)))
+                self.assertEqual(len(app.game.pending_items), 1)
+                app._on_link_state(False, "test disconnect")
+                app._on_link_state(True, "test reconnect")
+                now[0] = 5.5
+                app._on_line(json.dumps(fix(-4, 0)))
+                app._game_out(app.game.tick(now[0]))
+                self.assertEqual(app.link.writes, ["boost 5 0.75"])
+            app.log.flush()
+
+
+    def test_generated_prize_is_rechecked_before_server_enqueue(self):
+        import threading
+        from unittest.mock import Mock, patch
+        import kart_server
+        for boundary in ("stop", "mode", "link", "map", "new-engine", "late"):
+            with self.subTest(boundary=boundary):
+                g, doc = self.queued()
+                recs = g.tick(2.5)              # command generated under App.lock, not yet enqueued
+                self.assertEqual(lines(recs), ["boost 5 0.75"])
+                app = kart_server.App.__new__(kart_server.App)
+                app.game, app.demo, app.lock = g, None, threading.RLock()
+                app.link, app.log = Mock(connected=True), Mock()
+                now = 2.6
+                if boundary == "stop": g.on_self(fix(-4, 0, stopped=True), now)
+                elif boundary == "mode": g.on_cmd({"cmd":kc.CMD_CODES["mode"],"result":1}, now)
+                elif boundary == "link":
+                    g.set_fw(None, now); g.on_self(fix(-4, 0), now)
+                elif boundary == "map": g.set_zones(dict(doc, version=2), now)
+                elif boundary == "new-engine": app.game, _ = self.queued()
+                else:
+                    now = 10
+                    g.on_self(fix(-4, 0), now)   # fresh telemetry cannot revive a very late cmd record
+                with patch.object(kart_server.time, "monotonic", return_value=now):
+                    app._game_out(recs)
+                app.link.write_text.assert_not_called()
+                self.assertFalse(any(e["ev"] == "boost" for e in app.game.events))
+                self.assertTrue(any(e["ev"] == "suppressed" for e in app.game.events))
+                self.assertIsNone(app.game.override)
+
+    def test_cancel_feedback_stops_matching_roulette_and_pending_sound(self):
+        node = find_node()
+        if not node:
+            self.skipTest("node not installed")
+        js = "\n".join(js_function(n) for n in ("gameEvents", "itemRoulette", "cancelItemRoulette"))
+        setup = r"""
+const assert = require('assert');
+let now=0, next=1, itemTimer=null, itemSoundTimer=null, itemZone=null, flashTimer=null, lastEvSeq=0;
+const intervals=new Map(), timers=new Map(), sounds=[], flashes=[];
+const performance={now:()=>now};
+function setInterval(fn){const id=next++; intervals.set(id,fn); return id;}
+function clearInterval(id){intervals.delete(id);}
+function setTimeout(fn){const id=next++; timers.set(id,fn); return id;}
+function clearTimeout(id){timers.delete(id);}
+const elements={};
+function $(id){return elements[id] || (elements[id]={textContent:'',className:''});}
+function txt(id,text){$(id).textContent=text;}
+function itemGlyph(){}
+function flash(text){flashes.push(text);txt('flashText',text);$('flash').className='flash';}
+const Snd={play:k=>sounds.push(k)}, MP_ITEMS={}, ITEM_ALIAS={}, ITEM_COLOR={},
+      ITEM_NAME={boost:'BOOST'}, ITEM_SUB={boost:'NORMAL'}, mpUi={rouletteAt:-10000};
+function mpSound(){} function requestDraw(){} let renderDirty=false;
+"""
+        cases = r"""
+gameEvents({events:[{ev:'item',seq:1,age_s:0,zone:'box1',item:'boost'}]});
+assert.equal(itemZone,'box1');
+const firstTimer=itemTimer;
+cancelItemRoulette('other','ignored');
+assert(intervals.has(firstTimer));
+gameEvents({events:[{ev:'suppressed',seq:2,age_s:0,zone:'box1',why:'kart STOPPED'}]});
+assert(!intervals.has(firstTimer)); assert.equal($('itemName').textContent,'CANCELED');
+for(const fn of [...timers.values()]) fn();
+assert(!sounds.includes('boost')); assert(!flashes.includes('BOOST!'));
+// Cancel after the result landed but before its delayed item sound: retract the old flash too.
+gameEvents({events:[{ev:'item',seq:3,age_s:0,zone:'box2',item:'boost'}]});
+now=1300; intervals.get(itemTimer)();
+assert.equal($('itemName').textContent,'BOOST');
+const pendingSound=itemSoundTimer; assert(timers.has(pendingSound));
+gameEvents({events:[{ev:'suppressed',seq:4,age_s:0,zone:'box2',why:'mode changed'}]});
+assert(!timers.has(pendingSound)); assert.equal($('itemName').textContent,'CANCELED');
+assert.equal($('flash').className,'flash hidden');
+for(const fn of [...timers.values()]) fn();
+assert(!sounds.includes('boost'));
+console.log('roulette cancellation passed');
+"""
+        subprocess.run([node, "-e", setup+js+cases], check=True, capture_output=True, text=True, timeout=10)
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

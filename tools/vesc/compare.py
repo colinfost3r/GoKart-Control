@@ -22,7 +22,7 @@ NOTES = [
     'Equal/different means exact decoded value equality; no tolerance, preferred value, '
     'copy decision or automatic change recommendation is applied.',
     'The November 5, 2026 baseline is historical runtime evidence; it does not establish '
-    "kart 2's current tune. A fresh kart 3 capture is required before an actual comparison.",
+    "kart 2's current tune. The candidate capture is dated separately below; refresh both reads before applying a tune.",
     'The project handoff dated November 10 reports kart 2 drivetrain values wrong by about '
     '2.5x and a Heltec speed-calibration factor of 2.48 compensating for them. Do not blindly '
     'copy si_motor_poles, si_gear_ratio or si_wheel_diameter, or set speedcal to 1.0 without '

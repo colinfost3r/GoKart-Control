@@ -19,7 +19,11 @@ with the kart 2 baseline. They confirm matching motor, battery/BMS, gearing and 
 and a named-field change list before tuning; preserve per-unit calibration, pedal endpoints and
 identities unless separately measured. Matching hardware models alone does not make calibration
 values interchangeable. The November 5 baseline is dated runtime evidence, not a fresh kart-2 export.
-Full kart-3 USB capture and actual tune changes remain pending; see the handoff.
+Kart 3 USB capture is complete on November 10: 376 fields, 50 differences from that dated baseline.
+The owner then requested a Desktop backup and trial preserving calibration. Twelve motor settings
+were applied/read back at 19:58:55 UTC; all Hall/pedal/motor electrical calibration and all app
+settings remain unchanged. See the [complete review](kart3-tune-comparison.md) and handoff.
+This explicit persistent maintenance tune is separate from temporary supervisory profile writes.
 
 ## M5 v1.5 owner decision — 2026-11-09
 
@@ -69,8 +73,10 @@ Full kart-3 USB capture and actual tune changes remain pending; see the handoff.
   for inspection and development; a wired replacement is not the chosen default.
 - Throttle, brake-related inputs, and reverse are wired directly to the ESC,
   independent of the dashboard. Pedal braking is mechanical. Motor regenerative
-  braking is disabled according to the owner; the runtime motor-braking limit
-  reads 0 A. The battery regen allowance remains -100 A; preserve current behavior.
+  braking was reported disabled by the owner. The dated kart-2 baseline has motor-braking
+  limit 0 A / battery regen -100 A; kart 3 originally read -50 A / -12 A. The supervised
+  November 10 trial changed motor braking to 0 A and retained battery regen -12 A. These are
+  allowances, not observed braking; no physical braking test has been performed.
 - Battery: owner reports 72 V nominal, 84 V fully charged, supplying the VESC.
   Present variation in achievable top speed with charge is acceptable.
 - Keep ECO/NORMAL/SPORT for now. Desired profile behavior primarily limits top

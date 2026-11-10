@@ -44,7 +44,22 @@ bool Link::begin(Role role,const uint8_t peer[6],const uint8_t lmk[16],const uin
     channel_=1;esp_wifi_set_channel(channel_,WIFI_SECOND_CHAN_NONE);
   }
   boot_=esp_random();if(!boot_)boot_=1;id_=0;
+  alignment_.begin(role_,boot_,esp_random());alignment_.driver(channel_,esp_random());
   hopMs_=heartbeatMs_=millis();ready_=true;return true;
+}
+void Link::setChannelSearchEnabled(bool enabled) {
+  if(channelSearchEnabled_==enabled)return;
+  channelSearchEnabled_=enabled;hopMs_=millis();++radioEpoch_;
+  alignment_.enable(enabled);assembler_.clear();
+  if(role_==Role::Display)abandonTx();
+}
+void Link::refreshChannel() {
+  uint8_t current=0;wifi_second_chan_t secondary;
+  if(esp_wifi_get_channel(&current,&secondary)!=ESP_OK)current=0;
+  if(current!=channel_) {
+    channel_=current;++radioEpoch_;alignment_.driver(current,esp_random());assembler_.clear();
+    abandonTx(); // old channel advertisements/grants are stale too; telemetry resumes fresh
+  }
 }
 void Link::end() {
   ready_=false;
@@ -54,14 +69,14 @@ void Link::end() {
   if(packets_) {vQueueDelete(packets_);packets_=nullptr;}
   if(done_) {vQueueDelete(done_);done_=nullptr;}
   txCount_=rxCount_=0;txHead_=txTail_=rxHead_=rxTail_=0;active_=inFlight_=abandoned_=haveRx_=false;
-  assembler_.clear();std::memset(authKey_,0,sizeof authKey_);
+  assembler_.clear();alignment_.invalidate();++radioEpoch_;std::memset(authKey_,0,sizeof authKey_);
 }
 void Link::receive(const esp_now_recv_info_t* info,const uint8_t* data,int length) {
   Link* self=instance_;
   if(!self || !self->ready_ || !info || !info->src_addr || !info->des_addr || !data ||
      length<int(HEADER_SIZE+TAG_SIZE) || length>int(PACKET_MAX) ||
      std::memcmp(info->src_addr,self->peer_,6) || std::memcmp(info->des_addr,self->own_,6))return;
-  Packet p{};p.arrived=millis();p.length=uint16_t(length);
+  Packet p{};p.arrived=millis();p.epoch=self->radioEpoch_.load();p.length=uint16_t(length);
   if(info->rx_ctrl) {p.rssi=info->rx_ctrl->rssi;p.channel=info->rx_ctrl->channel;}
   std::memcpy(p.data,data,size_t(length));
   if(xQueueSend(self->packets_,&p,0)!=pdTRUE) {
@@ -103,7 +118,7 @@ bool Link::sendLine(const char* line,uint32_t now) {
   if(!n || n>MAX_LINE) {++stats_.txDropped;return false;}
   for(size_t i=0;i<n;++i)if(uint8_t(line[i])<32 || line[i]==127) {++stats_.txDropped;return false;}
   // The display request is never queued behind telemetry or a recovery event. No command retry.
-  if(role_==Role::Display && (n>CHUNK_SIZE || !connected(now) || inFlight_ || active_ || txCount_)) {
+  if(channelRecordPrefix(line) || (role_==Role::Display && (n>CHUNK_SIZE || !canSend(now)))) {
     ++stats_.txDropped;return false;
   }
   if(!enqueue(line,n,Kind::Line,now))return false;
@@ -118,6 +133,7 @@ void Link::abandonTx() {
 }
 void Link::serviceTx(uint32_t now) {
   if(!ready_)return;
+  refreshChannel();
   bool ok;
   if(xQueueReceive(done_,&ok,0)==pdTRUE) {
     inFlight_=false;
@@ -140,6 +156,9 @@ void Link::serviceTx(uint32_t now) {
     active_=true;part_=0;
   }
   if(!active_)return;
+  // A channel/maintenance change after enqueue must not release a queued mode request.
+  if(role_==Role::Display && current_.kind==Kind::Line && !channelRecordPrefix(current_.text) &&
+     (!channelSearchEnabled_ || !alignment_.aligned(now))) {abandonTx();return;}
   uint8_t p[PACKET_MAX];size_t n=encode(p,role_,current_.kind,boot_,current_.id,current_.text,current_.length,part_);
   if(!n || !tag(p,n,p+n)) {++stats_.txFailed;active_=false;return;}
   inFlight_=true;
@@ -148,6 +167,7 @@ void Link::serviceTx(uint32_t now) {
 }
 void Link::poll(uint32_t now) {
   if(!ready_)return;
+  refreshChannel();
   portENTER_CRITICAL(&mux_);stats_.rxDropped+=callbackDrops_;callbackDrops_=0;portEXIT_CRITICAL(&mux_);
   Packet p;unsigned budget=RX_PACKET_DEPTH;
   // Leave remaining packets queued until the caller drains completed lines. Dropping an
@@ -163,12 +183,21 @@ void Link::poll(uint32_t now) {
     if(result==Result::Invalid) {++stats_.rxInvalid;continue;}
     if(result==Result::Line || result==Result::Heartbeat) {
       haveRx_=true;lastRxMs_=assembler_.receivedMs();rssi_=p.rssi;
-      // A complete authenticated frame, not untrusted RF energy, establishes the channel.
-      if(p.channel>=1 && p.channel<=14)channel_=p.channel;
+      rxChannel_=p.channel;
+      if(alignment_.peerBoot(assembler_.peerBoot(),esp_random()))abandonTx();
       hopMs_=now;
       if(result==Result::Line) {
+        if(channelRecordPrefix(assembler_.line())) {
+          ChannelRecord record;
+          if(!decodeChannelRecord(assembler_.line(),record))++stats_.rxInvalid;
+          else if(!alignment_.accept(record,p.channel,assembler_.receivedMs(),p.epoch==radioEpoch_.load()))++stats_.rxDropped;
+          continue;
+        }
+        if(role_==Role::Heltec && (p.epoch!=radioEpoch_.load() || p.channel!=channel_ || !alignment_.aligned(now))) {
+          ++stats_.rxDropped;continue;
+        }
         ++stats_.rxLines;
-        Completed& line=completed_[rxHead_];line.arrived=assembler_.receivedMs();
+        Completed& line=completed_[rxHead_];line.arrived=assembler_.receivedMs();line.epoch=p.epoch;line.peerBoot=assembler_.peerBoot();
         std::memcpy(line.text,assembler_.line(),std::strlen(assembler_.line())+1);
         rxHead_=(rxHead_+1)%RX_LINE_DEPTH;++rxCount_;
       }
@@ -177,28 +206,47 @@ void Link::poll(uint32_t now) {
   now=millis(); // parsing/authentication also consume time; expiry and hopping use current time
   if(assembler_.expire(now))++stats_.rxDropped;
   if(role_==Role::Display) {
-    if(!connected(now)) {
+    const uint8_t target=alignment_.retuneTarget(now);
+    const bool mayRetune=channelSearchEnabled_ && !inFlight_ && !active_ && !txCount_ &&
+      WiFi.status()!=WL_CONNECTED && WiFi.scanComplete()!=WIFI_SCAN_RUNNING;
+    if(target && mayRetune) {
+      // First invalidate queued callback proof; require a NEW authenticated announcement
+      // received on the intended channel before acknowledgement/control readiness.
+      ++radioEpoch_;alignment_.invalidate();assembler_.clear();
+      if(esp_wifi_set_channel(target,WIFI_SECOND_CHAN_NONE)==ESP_OK) {refreshChannel();++stats_.channelHops;}
+      hopMs_=now;
+    } else if(!connected(now)) {
       abandonTx();
-      if(channelSearchEnabled_ && !inFlight_ && WiFi.status()!=WL_CONNECTED && uint32_t(now-hopMs_)>=650) {
+      if(mayRetune && uint32_t(now-hopMs_)>=650) {
         const uint8_t next=channel_>=11?1:uint8_t(channel_+1);
         if(esp_wifi_set_channel(next,WIFI_SECOND_CHAN_NONE)==ESP_OK) {
-          channel_=next;++stats_.channelHops;assembler_.clear();
+          refreshChannel();++stats_.channelHops;
         }
         hopMs_=now;
       }
     } else if(uint32_t(now-heartbeatMs_)>=500 && !inFlight_ && !active_ && !txCount_) {
       enqueue(nullptr,0,Kind::Heartbeat,now);heartbeatMs_=now;
     }
-  } else {
-    uint8_t c;wifi_second_chan_t secondary;
-    if(esp_wifi_get_channel(&c,&secondary)==ESP_OK && c>=1 && c<=14)channel_=c;
+  }
+  // Only insert one-packet maintenance frames into an idle transmitter, never ahead of
+  // an active line. Older firmware ignores these ordinary v1 lines; controls require both
+  // updated peers. A Heltec grant names the current display boot, not merely a channel.
+  if(uint32_t(now-channelReportMs_)>=500 && !inFlight_ && !active_ && !txCount_) {
+    ChannelRecord record;char text[CHANNEL_RECORD_SIZE+1];
+    if(alignment_.record(now,record) && encodeChannelRecord(record,text)) {
+      enqueue(text,CHANNEL_RECORD_SIZE,Kind::Line,now);channelReportMs_=now;
+    }
   }
   serviceTx(now);
 }
 const char* Link::readLine(uint32_t now) {
+  refreshChannel(); // AP-owned channel can change after poll but before command dispatch
   while(rxCount_) {
     const Completed& line=completed_[rxTail_];rxTail_=(rxTail_+1)%RX_LINE_DEPTH;--rxCount_;
     if(uint32_t(now-line.arrived)>MAX_AGE_MS) {++stats_.rxDropped;continue;}
+    if(role_==Role::Heltec && (line.epoch!=radioEpoch_.load() || line.peerBoot!=assembler_.peerBoot() || !alignment_.aligned(now))) {
+      ++stats_.rxDropped;continue;
+    }
     std::memcpy(read_,line.text,std::strlen(line.text)+1);readMs_=line.arrived;return read_;
   }
   return nullptr;

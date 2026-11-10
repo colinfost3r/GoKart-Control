@@ -6,7 +6,10 @@ Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md)
 Kart 3 now shows real VESC telemetry over paired ESP-NOW, and Core2 authenticated Wi-Fi OTA
 has passed a hardware upload and recovery test. UART remains available. The installed Heltec
 is read-only. A separate full-control target is prepared for M5 modes and all existing base controls;
-its deployment and the complete kart-3 tune comparison await commissioning and a replacement VESC USB cable.
+all 376 kart-3 VESC settings have now been captured over USB and compared with the dated kart-2 baseline.
+The original comparison found 50 differences; a backed-up, calibration-preserving 12-setting motor
+trial has now been applied and all 376 settings read back exactly. Full-control accessory deployment
+still awaits commissioning; see the [complete tune review](docs/kart3-tune-comparison.md).
 See the handoff for the corrected kart 3 VESC identity and exact acceptance status.
 
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor
@@ -17,7 +20,9 @@ layer (boost pads, mud, item boxes, laps, race start and finish).
 **Reliability first.** The VESC runs the motor; throttle and reverse stay wired to it and
 braking is mechanical. Losing the display, Heltec, BLE, GPS or pit link never changes the
 kart's active settings. Nothing is written to a VESC on boot, reconnect or retransmit;
-only an explicit pit or console command writes, and only a temporary (`store=0`) setting.
+supervisory pit/console commands write only temporary (`store=0`) settings. Explicit maintenance
+tuning is separate: the November 10 motor trial used a documented persistent configuration write
+after a backup and fresh identity/stationary checks.
 See [docs/requirements.md](docs/requirements.md#reliability-and-link-loss-behavior).
 
 **The connected development kart is the hardware baseline**

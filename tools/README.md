@@ -5,7 +5,7 @@
 | [`run_tests.sh`](run_tests.sh) | Runs every offline test suite, prints a summary table | Python 3.9+, pyserial |
 | [`bench/e2e_bench.py`](bench/e2e_bench.py) | Live check of the whole chain: pit server -> T-Beam -> LoRa -> kart Heltec -> kart Pi | The pit Pi, a powered kart |
 | [`m5/ota_core2.py`](m5/ota_core2.py) | Password-protected Core2 application update with exact image SHA-256 and bounded uploader process | `m5-espnow` maintenance enabled, private credentials JSON, official ESP32 3.3.8 `espota.py` |
-| [`vesc/`](vesc/README.md) | Read-only VESC capture (allowlisted command ids 0, 4, 14, 17) and offline decoder | A VESC on USB for capture; nothing for decode |
+| [`vesc/`](vesc/README.md) | Read-only capture/decode/compare; separate fixed-trial prepare and explicitly opted-in persistent motor-config writer | USB for capture/application; offline review is default |
 
 The SD card kits and deploy scripts live with their component (`pit/sdcard`, `kart/sdcard`,
 `firmware/build.sh`); they are summarised at the end of this file.

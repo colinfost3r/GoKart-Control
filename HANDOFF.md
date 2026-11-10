@@ -1,74 +1,88 @@
 # Collaborator handoff
 
-## Full-control preparation and all-settings comparison — 2026-11-10 (current)
+## Kart 3 complete capture, tune preparation and upstream integration — 2026-11-10 (current)
 
-**Owner scope:** M5 mode selection and **full existing Eamon base-station controls**, including
-STOP/START, SLOW/BOOST/RACE and game commands. The intermediate suggestion to enable only M5 modes
-was superseded. The owner also requests checking all motor/app settings and matching the shared kart-2
-tune; they confirm identical motor, battery/BMS, gearing and wheels. Preserve per-unit calibration.
-The owner is away; the VESC USB cable failed and will be replaced. No tune changes, motor commands or
-control-enabled deployment have been performed. Installed accessories remain the verified read-only
-Heltec + OTA-capable Core2 checkpoint below.
+**Accessory checkpoint is unchanged:** Core2 live telemetry + authenticated OTA and Heltec
+`kart-m5-espnow-readonly`. **VESC tune trial applied** at 19:58:55 UTC to UUID
+**37004e000951343037353739** / 6.02 / 75_300_R2, with one persistent SET_MCCONF (13), exact ACK
+and all 376 fields read back. Exactly 12 motor settings/23 bytes changed; every other motor byte
+and all application bytes were preserved. No motor actuation command, reset/detection, firmware
+write or new accessory deployment occurred. Runtime readback is verified; power-cycle persistence
+and driving behavior are not. [Applied evidence](hardware/vesc/kart3/2026-11-10/tune-applied-v1/README.md).
 
-**Latest upstream integrated:** Eamon's `b543bea`, including his November 10 learnings. It documents
-known-bad drivetrain numbers compensated by speedcal 2.48, required base/repeater 0.2.2 compatibility
-for 54-byte game telemetry, and the STOP-during-BLE-loss limitation. These notes are preserved below.
-Do not copy the known-bad drivetrain metadata as an approved tune. Do not claim the shared base or
-repeater was updated: neither has been flashed in this session.
+**Owner scope:** M5 modes plus full existing Eamon pit controls (STOP/START, SLOW/BOOST/RACE/game).
+The owner subsequently requested a Desktop backup and a trial tune preserving Hall/pedal and all
+calibration while matching the shared driving tune. They confirmed wheels lifted, pedals released
+and access to the cutoff. The VESC disappeared from macOS USB after the first capture; two subsequent attempts failed
+before opening a device. It then reconnected on the same port. A fresh full snapshot in
+`usb-prewrite-connected/` matches all 376 original settings, 82.1 V, 0 ERPM/current, fault 0.
+Do not describe failed attempts as backups.
+Final reverse wiring clarification: **throttle ADC1, reverse switch TX**. Captured ADC / Current
+Reverse Button mode expects RX for reverse in stock 6.02; TX is cruise (disabled here). Verify the
+physical connector and switch type before rewiring; [investigation](docs/reverse-input.md). Keep
+input configuration/calibration unchanged. Earlier ADC1/ADC2-switch statements were corrected.
 
-**Prepared control target:** `kart-m5-espnow` (`GK_M5_CONTROL=1`, `ENABLE_VESC_WRITES=1`), with the
-existing command protocol. All nine affected targets compile. The new target retains temporary
-store=0 writes and adds complete fresh UUID proof, fresh configuration guards before driving-state
-mutation, atomic validated per-controller ceiling records and current-session verification. It polls
-configuration every 500 ms and refuses data older than 1000 ms; actual RF/latency at that rate still
-needs bench measurement. It uses current untouched duty/watt/braking-scale fields, rejects invalid
-or above-ceiling targets, clears transient command durations even on rejection, makes STOP ramps
-monotonic, and cancels pending verification/ramp steps across link changes. No command is queued for
-replay on reconnect. Simultaneous external configuration edits are not an atomic transaction.
+**Actual complete USB capture:** November 10, 19:28:31 UTC, `/dev/cu.usbmodem3041`, four CRC-valid
+replies, all **189 motor + 187 app settings**. Compared with the dated November 5 kart-2 reference:
+**326 equal, 50 different (40 motor / 10 app)**. All fields have a review disposition. Snapshot:
+82.1 V, 0 ERPM/current, fault 0, ESC 19.1 C. Kart 3 is still configured as NTC despite the unwired
+motor-temperature sensor; raw -95.4 C is unusable. Motor braking is -50 A versus baseline 0 A;
+battery regen -12 A versus -100 A; field weakening 15 A versus 95 A. Those are **pre-tune** values.
+The later trial sets motor/braking/battery currents 140/0/100 A, ERPM ±150000, duty 0.95, field
+weakening 95 A/start 0.87, open-loop 700/sensorless 4000 ERPM, DC/BLDC ramp 0.04, sensor Disabled.
+Battery-charge limit -12 A, absolute current 220 A, minimum VIN 60 V, Hall/pedal/motor electrical
+calibration, identity, phase filters, drivetrain metadata and every app setting remain unchanged.
+[Evidence](hardware/vesc/kart3/2026-11-10/usb-before-tune/README.md),
+[complete comparison and review](docs/kart3-tune-comparison.md).
 
-The original unprotected split-key ceiling cache is not imported by this target. A fresh clean read
-is required before its first controlled mode change. The runtime export and this ceiling record are
-not a complete saved VESC backup. On intentional retuning, validate the new ceiling rather than
-silently using old remembered caps. STOP during missing/stale controller data returns NO_VESC; a
-fresh command is needed after recovery. Eamon's suggested latched STOP changes reconnect policy and
-has not been silently adopted. STOP/coast is not a substitute for mechanical braking.
+**Desktop backup:** `/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10/`, explicitly
+requested by the owner. Raw/decoded settings, manifests, review and verified schema were copied and
+all 17 bundled files hash-verified. This is a complete runtime settings reference, not a firmware
+image or verified saved-flash snapshot. Do not silently import another controller's calibration.
 
-**Prepared full settings reader:** strict verified 6.00 and 6.02 support for all **376 fields**,
-including both complete schemas, exact lengths and fixed bitfield interpretation. Raw read allowlist
-remains only firmware/values/motor/app queries. Historical evidence is unchanged. See
-[comparison preparation](docs/kart3-tune-comparison.md) and [read-only tools](tools/vesc/README.md).
-Kart 3's complete USB capture is still blocked on the replacement data cable; no guessed full diff or
-preset has been created. No real 6.02 complete capture is claimed by the synthetic host tests.
+**Latest upstream integrated:** Eamon's `3178a10`, including delayed freeplay item prizes and the
+one-second NEW LAP hold. Integration review found that collected-box removal discarded the delayed
+prize, and a delayed boost could override mud entered during the spin. The fixes retain earned prizes
+across same-course box removal/respawn, cancel them on operator/game/course/session/link boundaries,
+recheck freshness/mud at send, and prevent staged commands from crossing an interrupted generation.
+The roulette now shows CANCELED and cancels its sound when suppressed. This is Pi game source;
+M5 game/roulette parity remains outside the initial v1.5 display scope. Shared pit/Pi deployments
+were not performed. Eamon's prior notes on speedcal 2.48, 54-byte game telemetry requiring
+base/repeater 0.2.2 and STOP-during-BLE-loss remain applicable; neither shared radio was flashed here.
 
-**Rollback retained:** exact working Heltec application `heltec-working-readonly-f55e3e53.bin` and
-Core2 application `core2-working-ota-c090ce15.bin` were read back and hashes matched the installed
-checkpoint. They are private under ignored `firmware/build/bench-private/20261110-120545/`, alongside
-the original full-flash backups. ESP-NOW pairing keys and OTA credentials remain private.
+**Prepared control target:** `kart-m5-espnow` keeps temporary `store=0` supervisory writes, fresh
+complete UUID/config proof, atomic per-controller ceiling records, a 500 ms configuration poll and
+1000 ms maximum config age. It preserves current untouched duty/watt/braking-scale fields, rejects
+invalid/above-ceiling commands before state changes, makes STOP ramps monotonic, clears pending
+verification/ramp/duration state on link changes, and never replays commands on reconnect.
+A fresh clean baseline read is required; the legacy split-key cache is not imported. Intentional
+retuning requires deliberate ceiling reconciliation. No refreshed target has been installed or
+physically accepted. Existing STOP/coast and the unloaded optional brake script remain distinct.
 
-**Final validation:** all seven suites pass: **316 tests, zero skipped**. All nine affected firmware
-builds pass, including the new full-control wireless target. Its application SHA-256 is
-`aa742a4def8511e5f3aea8f24de206a1ef2d41e46c928ad6d5a5107de3606015`; it has not been installed.
-The native runtime harness executes actual production control functions across 25 scenarios; tests
-use fakes and do not establish physical braking or radio delivery. The all-settings comparison tool
-validates manifest hashes/identities and emits all 376 rows, including unchanged fields. No actual
-kart-3 full comparison was fabricated without its USB capture.
+**ESP-NOW channel fix prepared:** authenticated private v1 line records carry the Heltec's actual
+channel, a rotating challenge and a grant bound to the current Core2 boot. Core2 must retune and
+receive fresh proof on that same channel; Heltec independently checks proof before releasing a
+request. Maintenance/association/scanning/in-flight TX block retuning, and channel/session changes
+invalidate queued grants/commands. Status exposes driver, received and advertised channels separately.
+Old firmware retains telemetry but controls require both updated peers. This addresses the observed
+Heltec channel 6/Core2 channel 5 acquisition issue in source; actual paired-channel recovery, range
+and command delivery still require the supervised hardware test.
 
-**Read-only bench observation:** 180 seconds on the installed checkpoint produced 344 live VESC
-reports, median 0.500 s spacing, zero observed VESC faults and no link-down reports after acquisition.
-All 34 Core2 samples after its first live sample remained live. ERPM stayed zero and writes stayed
-false. [Evidence](hardware/m5/2026-11-10-kart3/telemetry-soak.json).
+**Validation:** all nine affected firmware targets compile. Full-control image SHA-256 is
+`11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2`; prepared wireless read-only
+Heltec is `65b28cb9595f4e645afb3aabf5811e7f26136ff4defa4a593795ce6aa1568052`; prepared Core2
+is `996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a`. These are not installed
+image hashes. Logs are ignored under `firmware/build/review-channel-20261110/`. Game core passes
+133 tests; three native RF suites pass with ASan/UBSan; prepare/apply guards have focused fake-serial
+tests and independent review. Final `tools/run_tests.sh` completed **355 tests across all seven
+suites, zero skipped, ALL PASSED** (56 VESC / 74 pit core / 7 pit e2e / 133 kart core / 9 mapsync /
+18 kart e2e / 58 firmware). All changed documentation links resolve and `git diff --check` is clean.
+Software tests do not establish physical braking, direction, speed calibration, RF range or driving acceptance.
 
-**RF follow-up before driving control acceptance:** diagnostics reported Heltec channel 6 and Core2
-channel 5 despite valid reception. Code review shows discovery can lock on adjacent-channel reception:
-Core2 currently learns the receiver's channel from rx metadata, not a sender-advertised channel.
-[Espressif documents adjacent-channel reception](https://github.com/espressif/esp-now/blob/master/src/espnow/include/espnow.h).
-This does not bypass authentication/tokens, but close-range telemetry is not proof of exact channel
-alignment or range/reliable command delivery. Add an authenticated Heltec channel advertisement,
-retune outside maintenance/in-flight TX, and require fresh reception on the intended channel before
-calling it driving-ready. That protocol/driver change is not included or silently flashed here.
-The read-only working pair remains installed, with exact rollback applications retained.
-
-The next section records the still-installed hardware checkpoint.
+**Rollback retained:** exact installed Heltec `heltec-working-readonly-f55e3e53.bin` and Core2
+`core2-working-ota-c090ce15.bin`, read back and hash-matched, plus original full-flash backups and
+private pairing/OTA credentials under ignored `firmware/build/bench-private/20261110-120545/`.
+No key/password is in Git. The next section records that still-installed checkpoint in detail.
 
 ## Kart 3 live telemetry and Core2 OTA — 2026-11-10 (current)
 

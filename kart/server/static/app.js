@@ -489,7 +489,8 @@ function gameEvents(game) {
   const fresh = evs.filter((e) => e.seq > lastEvSeq && e.age_s < 3);
   const itemZones = new Set(fresh.filter((e) => e.ev === "item").map((e) => e.zone));
   fresh.forEach((e) => {
-    if (e.ev === "item") { if (!(MP_ITEMS[e.item] && performance.now() - mpUi.rouletteAt < 3000)) itemRoulette(e.item); }   // a multi "held" may have spun it
+    if (e.ev === "item") { if (!(MP_ITEMS[e.item] && performance.now() - mpUi.rouletteAt < 3000)) itemRoulette(e.item, e.zone); }   // a multi "held" may have spun it
+    else if (e.ev === "suppressed") cancelItemRoulette(e.zone, e.why);
     else if (e.ev === "boost" && itemZones.has(e.zone)) { /* shown by the roulette */ }
     else if (e.ev === "boost") { flash("BOOST!", "boost"); Snd.play("boost"); }
     else if (e.ev === "mud") { flash("MUD", "mud"); Snd.play("mud"); }
@@ -499,7 +500,7 @@ function gameEvents(game) {
   lastEvSeq = top;
 }
 /* item box roulette: ~1.2 s of cycling icons (each pops in with a tick), then the result
-   (the command already went out at entry) */
+   (the server holds a box's effect until reveal and can cancel it on interruption) */
 const ITEM_SVG = {
   boost: '<svg viewBox="0 0 100 100"><g fill="none" stroke="#000" stroke-width="20" stroke-linejoin="miter"><path d="M18 50 L50 22 L82 50"/><path d="M18 76 L50 48 L82 76"/></g>'
     + '<g fill="none" stroke="currentColor" stroke-width="11" stroke-linejoin="miter"><path d="M18 50 L50 22 L82 50"/><path d="M18 76 L50 48 L82 76"/></g></svg>',
@@ -526,17 +527,30 @@ const ITEM_NAME = { boost: "BOOST", rocket: "ROCKET", mud: "MUD", empty: "EMPTY"
 const ITEM_SUB = { boost: "NORMAL", rocket: "SPORT" };          // the mode the item gives for a few seconds
 const ITEM_ALIAS = { super: "rocket" };                        // old records ("super") still render
 ITEM_SVG.super = ITEM_SVG.rocket; ITEM_COLOR.super = ITEM_COLOR.rocket; ITEM_NAME.super = ITEM_NAME.rocket; ITEM_SUB.super = ITEM_SUB.rocket;
-let itemTimer = null;
+let itemTimer = null, itemSoundTimer = null, itemZone = null;
+function cancelItemRoulette(zone, why) {
+  if (zone == null || zone !== itemZone) return;
+  clearInterval(itemTimer); clearTimeout(itemTimer); clearTimeout(itemSoundTimer);
+  itemZone = null; itemSoundTimer = null;
+  if (["BOOST!", "ROCKET!", "MUD"].includes($("flashText").textContent)) {
+    clearTimeout(flashTimer); $("flash").className = "flash hidden";
+  }
+  const box = $("itemBox");
+  box.className = "itembox done r-empty";
+  itemGlyph("empty", "#bbb"); txt("itemName", "CANCELED"); txt("itemSub", why || "NOT APPLIED");
+  itemTimer = setTimeout(() => { box.className = "itembox hidden"; }, 1500);
+}
 function itemGlyph(k, color) {
   const g = $("itemGlyph");
   g.innerHTML = ITEM_SVG[k] || "?";
   g.style.color = color || "";
   g.classList.remove("pop"); void g.offsetWidth; g.classList.add("pop");
 }
-function itemRoulette(result) {
+function itemRoulette(result, zone = null) {
   result = ITEM_ALIAS[result] || result;
   const box = $("itemBox"), order = ["boost", "mud", "rocket", "shell", "lightning", "empty"];
-  clearInterval(itemTimer); clearTimeout(itemTimer);
+  clearInterval(itemTimer); clearTimeout(itemTimer); clearTimeout(itemSoundTimer);
+  itemZone = zone; itemSoundTimer = null;
   let i = 0;
   const t0 = performance.now();
   mpUi.rouletteAt = t0; mpUi.rouletteUntil = t0 + 1300;        // the held-item button waits for the spin
@@ -554,15 +568,15 @@ function itemRoulette(result) {
     txt("itemName", ITEM_NAME[result] || result);
     txt("itemSub", ITEM_SUB[result] || "");
     if (result === "empty") Snd.play("empty");
-    else if (MP_ITEMS[result]) { Snd.play("item"); setTimeout(() => mpSound(result), 260); renderDirty = true; requestDraw(); }
+    else if (MP_ITEMS[result]) { Snd.play("item"); itemSoundTimer = setTimeout(() => mpSound(result), 260); renderDirty = true; requestDraw(); }
     else {
       Snd.play("item");                        // bright two-note chime, then the item's own sound
-      setTimeout(() => Snd.play(result === "rocket" ? "super" : result), 260);     // sound.js still calls it "super"
+      itemSoundTimer = setTimeout(() => Snd.play(result === "rocket" ? "super" : result), 260);     // sound.js still calls it "super"
       if (result === "rocket") flash("ROCKET!", "star", "fword");
       else if (result === "boost") flash("BOOST!", "boost");
       else if (result === "mud") flash("MUD", "mud");
     }
-    itemTimer = setTimeout(() => { box.className = "itembox hidden"; }, 1500);
+    itemTimer = setTimeout(() => { box.className = "itembox hidden"; itemZone = null; }, 1500);
   }, 90);
 }
 

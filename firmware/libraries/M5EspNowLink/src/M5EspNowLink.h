@@ -1,5 +1,6 @@
 #pragma once
 #include "M5EspNowFrame.h"
+#include "M5ChannelAlignment.h"
 #include <atomic>
 #include <Arduino.h>
 #include <WiFi.h>
@@ -21,23 +22,26 @@ public:
   void poll(uint32_t now);
   // Display maintenance owns the Wi-Fi channel while joining/using its AP. Pausing search
   // does not disconnect Wi-Fi, reinitialize ESP-NOW, or clear the authenticated peer session.
-  void setChannelSearchEnabled(bool enabled) {
-    if(channelSearchEnabled_!=enabled) {channelSearchEnabled_=enabled;hopMs_=millis();}
-  }
+  void setChannelSearchEnabled(bool enabled);
   bool sendLine(const char* line,uint32_t now);
   const char* readLine(uint32_t now); // NUL-terminated; valid until the next readLine call
   uint32_t receivedMs() const { return readMs_; }
   bool ready() const { return ready_; }
-  bool canSend(uint32_t now) const { return ready_ && connected(now) && !inFlight_ && !active_ && !txCount_; }
+  bool canSend(uint32_t now) const { return ready_ && connected(now) &&
+    (role_!=Role::Display || (channelSearchEnabled_ && alignment_.aligned(now))) &&
+    !inFlight_ && !active_ && !txCount_; }
   bool connected(uint32_t now) const { return haveRx_ && uint32_t(now-lastRxMs_)<LINK_MS; }
   uint8_t channel() const { return channel_; }
+  uint8_t receivedChannel() const { return rxChannel_; }
+  uint8_t peerChannel() const { return alignment_.peerChannel(); }
+  bool channelAligned(uint32_t now) const { return alignment_.aligned(now); }
   int8_t rssi() const { return rssi_; }
   const Stats& stats() const { return stats_; }
 private:
   static constexpr unsigned TX_DEPTH=12,RX_PACKET_DEPTH=32,RX_LINE_DEPTH=4;
-  struct Packet { uint32_t arrived;uint16_t length;int8_t rssi;uint8_t channel;uint8_t data[PACKET_MAX]; };
+  struct Packet { uint32_t arrived,epoch;uint16_t length;int8_t rssi;uint8_t channel;uint8_t data[PACKET_MAX]; };
   struct Line { uint32_t born,id;uint16_t length;Kind kind;char text[MAX_LINE+1]; };
-  struct Completed { uint32_t arrived;char text[MAX_LINE+1]; };
+  struct Completed { uint32_t arrived,epoch,peerBoot;char text[MAX_LINE+1]; };
   static std::atomic<Link*> instance_;
   static void receive(const esp_now_recv_info_t* info,const uint8_t* data,int length);
   static void sent(const esp_now_send_info_t* info,esp_now_send_status_t status);
@@ -46,14 +50,16 @@ private:
   bool enqueue(const char* text,size_t n,Kind kind,uint32_t now);
   void serviceTx(uint32_t now);
   void abandonTx();
+  void refreshChannel();
   uint32_t nextId();
   uint8_t peer_[6]{},own_[6]{},authKey_[32]{};
   Role role_=Role::Display;
   std::atomic<bool> ready_{false};
   bool haveRx_=false,inFlight_=false,abandoned_=false,active_=false;
   bool channelSearchEnabled_=true;
-  uint8_t channel_=1,part_=0;int8_t rssi_=0;
-  uint32_t boot_=0,id_=0,lastRxMs_=0,hopMs_=0,heartbeatMs_=0,readMs_=0;
+  uint8_t channel_=1,rxChannel_=0,part_=0;int8_t rssi_=0;
+  uint32_t boot_=0,id_=0,lastRxMs_=0,hopMs_=0,heartbeatMs_=0,readMs_=0,channelReportMs_=0;
+  std::atomic<uint32_t> radioEpoch_{1};
   QueueHandle_t packets_=nullptr,done_=nullptr;
   // Queue overflow accounting crosses Wi-Fi/application tasks via this critical section.
   portMUX_TYPE mux_=portMUX_INITIALIZER_UNLOCKED;
@@ -62,6 +68,7 @@ private:
   Completed completed_[RX_LINE_DEPTH]{};unsigned rxHead_=0,rxTail_=0,rxCount_=0;
   char read_[MAX_LINE+1]{};
   Assembler assembler_;
+  ChannelAlignment alignment_;
   Stats stats_{};
 };
 }

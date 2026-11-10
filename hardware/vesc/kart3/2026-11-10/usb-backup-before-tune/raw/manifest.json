@@ -1,0 +1,10 @@
+{
+  "started_at_utc": "2026-11-10T19:40:39.933979+00:00",
+  "transport": "usb_serial",
+  "port": "/dev/cu.usbmodem3041",
+  "scope": "current_runtime_not_verified_saved_flash",
+  "capture_complete": false,
+  "queries": [],
+  "error": "FileNotFoundError: [Errno 2] No such file or directory: '/dev/cu.usbmodem3041'",
+  "finished_at_utc": "2026-11-10T19:40:39.934138+00:00"
+}

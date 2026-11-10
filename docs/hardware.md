@@ -11,7 +11,7 @@
 | VESC BLE | Preferred existing link; original code uses Nordic UART Service | Owner report + historical code; Heltec link/module identity unverified |
 | Driver input | ADC and UART / Current Reverse Button | Configuration verified; physical wiring owner reported |
 | Brakes | Mechanical pedal; motor braking limit 0 A | Owner report + runtime configuration |
-| Motor temperature | No temperature sensors wired; sensing disabled | Owner confirmed + configuration |
+| Motor temperature | No sensors wired; kart 3 initially NTC, corrected to Disabled in the Nov 10 tune | Owner confirmed; complete before/after readback |
 | Motor sensing | FOC / Hall Sensors | Configuration; separate from temperature sensing |
 | Motor model/rating | Unknown | Required for tuning |
 | Battery | 72 V nominal / 84 V full; sampled 76.4 V | Nominal/full owner report; sample verified |
@@ -55,3 +55,13 @@ VESC **75_300_R2 / firmware 6.02**, Bluetooth **f7:bd:23:cc:62:0e**, UUID
 The old d8:94:35:be:e5:32 / 2c004c000951343037353739 pairing belongs to kart 2 per Eamon's
 `fc7e610`; do not copy it to another kart. Read-only telemetry reached the Core2 and the owner
 confirmed live readings. [Evidence and capture limitations](../hardware/m5/2026-11-10-kart3/README.md).
+
+
+The replacement USB cable worked on November 10 at 19:28 UTC. All **189 motor + 187 app settings**
+were captured from kart 3, with four CRC-valid replies: [complete evidence](../hardware/vesc/kart3/2026-11-10/usb-before-tune/README.md).
+There are 40 motor and 10 app differences from the November 5 reference. At capture: 82.1 V,
+0 ERPM/current, fault 0, ESC 19.1 C. The raw motor-temperature value (-95.4 C) is invalid for use:
+the sensor is unwired despite the controller still being configured for NTC. This capture changes
+no settings and is runtime evidence, not a saved-flash image. See the [all-settings review](kart3-tune-comparison.md).
+
+The later [12-setting trial](../hardware/vesc/kart3/2026-11-10/tune-applied-v1/README.md) was applied at 19:58:55 UTC and fully read back. Sensor selection is now Disabled; input calibration/configuration stayed unchanged.

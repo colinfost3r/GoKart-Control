@@ -1,0 +1,3682 @@
+{
+  "assessment_format": 1,
+  "assessed_at_utc": "2026-11-10T19:35:34.635866+00:00",
+  "operation": "offline_review_only_no_changes_applied_or_approved",
+  "reference_capture": "hardware/vesc/baseline-kart/2026-11-05/raw",
+  "candidate_capture": "hardware/vesc/kart3/2026-11-10/usb-before-tune/raw",
+  "reference_identity": {
+    "firmware": "6.00",
+    "hardware": "75_100_V2",
+    "uuid": "2c004c000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 0,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "candidate_identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "reference_capture_date": "2026-11-05",
+  "candidate_capture_started_at_utc": "2026-11-10T19:28:31.611151+00:00",
+  "scope": "current_runtime_not_verified_saved_flash",
+  "validation": {
+    "all_payload_hashes_match_manifests": true,
+    "saved_decodes_match_fresh_strict_decode": true,
+    "saved_comparison_matches_recomputation": true,
+    "all_376_markdown_rows_present_once": true,
+    "known_schema_signatures": {
+      "motor": "2e43a161",
+      "app": "1d003a2c"
+    },
+    "configuration_values_all_present_and_finite": true
+  },
+  "counts": {
+    "all_fields": 376,
+    "equal": 326,
+    "different": 50,
+    "motor_different": 40,
+    "app_different": 10,
+    "equal_retain": 326,
+    "shared_tune_candidate": 7,
+    "protective_or_uncertain": 13,
+    "per_unit_calibration_or_identity": 30
+  },
+  "classification_meanings": {
+    "shared_tune_candidate": "A field relevant to a potentially shared driving envelope; this category is not an approved new value or a recommendation to copy. Requires a named-field review before any write.",
+    "per_unit_calibration_or_identity": "Retain current per-unit/controller/hardware/drivetrain values unless independently measured and intentionally changed.",
+    "protective_or_uncertain": "Retain until protection, braking, hardware/application or applicability questions are resolved.",
+    "equal_retain": "No difference; retain candidate value. Equality is not independent validation."
+  },
+  "key_findings": [
+    "Kart 3 fresh capture identity matches expected UUID 37004e000951343037353739, 6.02, 75_300_R2; firmware name is no_hw_limits. This name does not prove current/voltage capability.",
+    "Telemetry at capture: 82.1 V, ERPM 0, motor/battery current 0 A, fault 0, ESC filtered temperature 19.1 C. Raw motor temperature -95.4 C is invalid because sensor is unwired despite NTC configuration.",
+    "Kart 3 supports/enables phase filters; baseline hardware does not. Preserve this hardware-specific difference.",
+    "Hall tables, motor electrical values/current-loop tuning, ADC/phase offsets and pedal endpoints differ; do not clone these to match a tune.",
+    "Kart 3 currently permits -50 A motor braking and -12 A battery regen versus baseline 0 A/-100 A. These are allowances, not proof of braking during this snapshot. Confirm disabled-regen intent before change.",
+    "Historical field weakening is 95 A versus kart 3 15 A. Increasing it 6.33x is not justified solely by identical motor model, especially with no wired motor-temperature sensor.",
+    "Baseline drivetrain metadata is known wrong by approximately 2.5x with Heltec speedcal 2.48 compensating. Pole counts differ 14/20; wheel diameter equality does not validate it. Do not copy or reset calibration without physical measurements.",
+    "All ADC positive/negative ramp values already match. cc_ramp_step_max differs but is described for DC/BLDC, whereas both motors are FOC; do not claim it will improve FOC acceleration."
+  ],
+  "configurations": {
+    "motor_configuration": {
+      "field_count": 189,
+      "equal_count": 149,
+      "different_count": 40,
+      "fields": [
+        {
+          "field": "pwm_mode",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Synchronous",
+            "candidate": "Synchronous"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "comm_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Integrate",
+            "candidate": "Integrate"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "motor_type",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "FOC",
+            "candidate": "FOC"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sensor_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Sensorless",
+            "candidate": "Sensorless"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_current_max",
+          "reference": 140.0,
+          "candidate": 120.0,
+          "status": "different",
+          "classification": "shared_tune_candidate",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Shared torque/current-envelope candidate only. 120 to 140 A would increase configured motor current; verify controller/motor thermal and current headroom. No wired motor-temperature measurement exists."
+        },
+        {
+          "field": "l_current_min",
+          "reference": 0.0,
+          "candidate": -50.0,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Braking-policy difference: kart 3 permits -50 A motor braking while the dated baseline is 0 A. Owner intended motor regen off; confirm the intended disabled-braking configuration. Allowance does not prove braking is occurring."
+        },
+        {
+          "field": "l_in_current_max",
+          "reference": 100.0,
+          "candidate": 90.0,
+          "status": "different",
+          "classification": "shared_tune_candidate",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Shared battery-current-envelope candidate only. 90 to 100 A would increase battery current; verify battery/BMS, wiring, connector and fuse limits independently of motor current."
+        },
+        {
+          "field": "l_in_current_min",
+          "reference": -100.0,
+          "candidate": -12.0,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Protective battery charge-current limit: -12 to -100 A would permit much more battery regen. Do not copy without battery/BMS charge-current evidence and explicit braking-policy review."
+        },
+        {
+          "field": "l_abs_current_max",
+          "reference": 240.0,
+          "candidate": 220.0,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Absolute overcurrent fault threshold: 220 to 240 A relaxes a protection threshold, not just a drive-current setting. Do not raise it as a generic cure for cutoff."
+        },
+        {
+          "field": "l_min_erpm",
+          "reference": -150000.0,
+          "candidate": -100000.0,
+          "status": "different",
+          "classification": "shared_tune_candidate",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Shared signed speed-envelope candidate only. -100000 to -150000 extends the negative-ERPM allowance as well; confirm reverse behavior and physically measured speed conversion before a change."
+        },
+        {
+          "field": "l_max_erpm",
+          "reference": 150000.0,
+          "candidate": 100000.0,
+          "status": "different",
+          "classification": "shared_tune_candidate",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Shared speed-envelope candidate only. 100000 to 150000 extends electrical speed allowance; road-speed meaning is unresolved while pole/gearing calibration differs."
+        },
+        {
+          "field": "l_erpm_start",
+          "reference": 0.8,
+          "candidate": 0.8,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 0.8: ERPM current reduction starts at a fraction of the differing ERPM ceiling. Road-speed conversion still requires physical calibration."
+        },
+        {
+          "field": "l_max_erpm_fbrake",
+          "reference": 300.0,
+          "candidate": 300.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_max_erpm_fbrake_cc",
+          "reference": 1500.0,
+          "candidate": 1500.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_min_vin",
+          "reference": 12.0,
+          "candidate": 60.0,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Undervoltage fault threshold: 60 to 12 V would greatly lower this fault boundary. Both battery-reduction thresholds separately remain 68/60 V. Preserve until controller/pack protection intent is reviewed."
+        },
+        {
+          "field": "l_max_vin",
+          "reference": 90.0,
+          "candidate": 90.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 90 V: software voltage threshold does not prove the physical controller voltage rating; retain pending ratings verification."
+        },
+        {
+          "field": "l_battery_cut_start",
+          "reference": 68.0,
+          "candidate": 68.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 68 V current-reduction start; equality is not independent battery/BMS rating or state-of-charge validation."
+        },
+        {
+          "field": "l_battery_cut_end",
+          "reference": 60.0,
+          "candidate": 60.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 60 V end of allowed battery current draw; separate from the differing l_min_vin fault threshold."
+        },
+        {
+          "field": "l_slow_abs_current",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_temp_fet_start",
+          "reference": 85.0,
+          "candidate": 85.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 85 C ESC derating start. ESC sensing is separate from the unwired motor-temperature input; do not relax protections."
+        },
+        {
+          "field": "l_temp_fet_end",
+          "reference": 100.0,
+          "candidate": 100.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 100 C ESC derating end. ESC sensing is separate from the unwired motor-temperature input; do not relax protections."
+        },
+        {
+          "field": "l_temp_motor_start",
+          "reference": 85.0,
+          "candidate": 85.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 85 C, but motor sensors are unwired, so this value does not establish measured motor thermal protection."
+        },
+        {
+          "field": "l_temp_motor_end",
+          "reference": 100.0,
+          "candidate": 100.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 100 C, but motor sensors are unwired, so this value does not establish measured motor thermal protection."
+        },
+        {
+          "field": "l_temp_accel_dec",
+          "reference": 0.15,
+          "candidate": 0.15,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_min_duty",
+          "reference": 0.005,
+          "candidate": 0.005,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_max_duty",
+          "reference": 0.95,
+          "candidate": 0.99,
+          "status": "different",
+          "classification": "shared_tune_candidate",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Shared duty-envelope candidate only. 0.99 to 0.95 reduces the duty ceiling and also affects field-weakening onset; review together with ERPM and field-weakening limits."
+        },
+        {
+          "field": "l_watt_max",
+          "reference": 1500000.0,
+          "candidate": 1500000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_watt_min",
+          "reference": -1500000.0,
+          "candidate": -1500000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "l_current_max_scale",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 1.0 in these captures; equality does not prove saved flash or physically safe full-current headroom."
+        },
+        {
+          "field": "l_current_min_scale",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 1.0; braking behavior still depends on differing motor/battery negative-current limits and active control paths."
+        },
+        {
+          "field": "l_duty_start",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sl_min_erpm",
+          "reference": 150.0,
+          "candidate": 150.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sl_min_erpm_cycle_int_limit",
+          "reference": 1100.0,
+          "candidate": 1100.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sl_max_fullbreak_current_dir_change",
+          "reference": 10.0,
+          "candidate": 10.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sl_cycle_int_limit",
+          "reference": 62.0,
+          "candidate": 62.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sl_phase_advance_at_br",
+          "reference": 0.8,
+          "candidate": 0.8,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sl_cycle_int_rpm_br",
+          "reference": 80000.0,
+          "candidate": 80000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sl_bemf_coupling_k",
+          "reference": 600.0,
+          "candidate": 600.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__0",
+          "reference": -1,
+          "candidate": -1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__1",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__2",
+          "reference": 3,
+          "candidate": 3,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__3",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__4",
+          "reference": 5,
+          "candidate": 5,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__5",
+          "reference": 6,
+          "candidate": 6,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__6",
+          "reference": 4,
+          "candidate": 4,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_table__7",
+          "reference": -1,
+          "candidate": -1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "hall_sl_erpm",
+          "reference": 2000.0,
+          "candidate": 2000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_current_kp",
+          "reference": 0.08353837579488754,
+          "candidate": 0.08179999887943268,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain local current-loop tuning tied to this motor/controller electrical parameters; identical motor model does not justify copying gains."
+        },
+        {
+          "field": "foc_current_ki",
+          "reference": 18.026309967041016,
+          "candidate": 13.640000343322754,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain local current-loop tuning tied to this motor/controller electrical parameters; identical motor model does not justify copying gains."
+        },
+        {
+          "field": "foc_f_zv",
+          "reference": 30000.0,
+          "candidate": 30000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_dt_us",
+          "reference": 0.11999999731779099,
+          "candidate": 0.11999999731779099,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_encoder_inverted",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_encoder_offset",
+          "reference": 180.0,
+          "candidate": 180.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_encoder_ratio",
+          "reference": 7.0,
+          "candidate": 7.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sensor_mode",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Hall Sensors",
+            "candidate": "Hall Sensors"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_pll_kp",
+          "reference": 2000.0,
+          "candidate": 2000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_pll_ki",
+          "reference": 30000.0,
+          "candidate": 30000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_motor_l",
+          "reference": 8.353838347829878e-05,
+          "candidate": 8.181000157492235e-05,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit motor inductance value; do not replace measured/tuned motor electrical parameters with another unit export."
+        },
+        {
+          "field": "foc_motor_ld_lq_diff",
+          "reference": 3.433670644881204e-05,
+          "candidate": 3.10200011881534e-05,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit d/q inductance difference; motor model equality is not a calibration measurement."
+        },
+        {
+          "field": "foc_motor_r",
+          "reference": 0.018026310950517654,
+          "candidate": 0.01360000018030405,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit motor resistance value; temperature, winding and connection differences matter."
+        },
+        {
+          "field": "foc_motor_flux_linkage",
+          "reference": 0.017599789425730705,
+          "candidate": 0.017501000314950943,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit flux-linkage calibration; do not clone another unit motor detection result."
+        },
+        {
+          "field": "foc_observer_gain",
+          "reference": 3228383.0,
+          "candidate": 3260000.0,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain local observer tuning associated with local motor electrical parameters."
+        },
+        {
+          "field": "foc_observer_gain_slow",
+          "reference": 0.05000000074505806,
+          "candidate": 0.05000000074505806,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_observer_offset",
+          "reference": -1.0,
+          "candidate": -1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_duty_dowmramp_kp",
+          "reference": 50.0,
+          "candidate": 50.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_duty_dowmramp_ki",
+          "reference": 1000.0,
+          "candidate": 1000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_start_curr_dec",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_start_curr_dec_rpm",
+          "reference": 2500.0,
+          "candidate": 2500.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_openloop_rpm",
+          "reference": 700.0,
+          "candidate": 800.0,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Startup/commutation threshold, not a simple top-speed limit. Review with local motor/load behavior; no need to copy to obtain the desired normal speed envelope."
+        },
+        {
+          "field": "foc_openloop_rpm_low",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_d_gain_scale_start",
+          "reference": 0.9,
+          "candidate": 0.9,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_d_gain_scale_max_mod",
+          "reference": 0.2,
+          "candidate": 0.2,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_openloop_hyst",
+          "reference": 0.1,
+          "candidate": 0.1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_openloop_time_lock",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_openloop_time_ramp",
+          "reference": 0.1,
+          "candidate": 0.1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_openloop_time",
+          "reference": 0.05,
+          "candidate": 0.05,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_openloop_boost_q",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_openloop_max_q",
+          "reference": -1.0,
+          "candidate": -1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hall_table__0",
+          "reference": 255,
+          "candidate": 255,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hall_table__1",
+          "reference": 15,
+          "candidate": 150,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit Hall/phase relationship. The six Hall entries differ substantially; copying another motor/phase wiring calibration can produce incorrect commutation."
+        },
+        {
+          "field": "foc_hall_table__2",
+          "reference": 81,
+          "candidate": 5,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit Hall/phase relationship. The six Hall entries differ substantially; copying another motor/phase wiring calibration can produce incorrect commutation."
+        },
+        {
+          "field": "foc_hall_table__3",
+          "reference": 48,
+          "candidate": 175,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit Hall/phase relationship. The six Hall entries differ substantially; copying another motor/phase wiring calibration can produce incorrect commutation."
+        },
+        {
+          "field": "foc_hall_table__4",
+          "reference": 149,
+          "candidate": 93,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit Hall/phase relationship. The six Hall entries differ substantially; copying another motor/phase wiring calibration can produce incorrect commutation."
+        },
+        {
+          "field": "foc_hall_table__5",
+          "reference": 183,
+          "candidate": 127,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit Hall/phase relationship. The six Hall entries differ substantially; copying another motor/phase wiring calibration can produce incorrect commutation."
+        },
+        {
+          "field": "foc_hall_table__6",
+          "reference": 115,
+          "candidate": 47,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this unit Hall/phase relationship. The six Hall entries differ substantially; copying another motor/phase wiring calibration can produce incorrect commutation."
+        },
+        {
+          "field": "foc_hall_table__7",
+          "reference": 255,
+          "candidate": 255,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hall_interp_erpm",
+          "reference": 500.0,
+          "candidate": 500.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_erpm",
+          "reference": 4000.0,
+          "candidate": 2000.0,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Hall-to-sensorless transition threshold differs (2000 versus 4000 ERPM). Review with local commutation behavior and Hall calibration before changing."
+        },
+        {
+          "field": "foc_sample_v0_v7",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sample_high_current",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sat_comp_mode",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Lambda",
+            "candidate": "Lambda"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sat_comp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_temp_comp",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both disabled. This explains why differing resistance-reference temperature is currently inactive; unwired motor temperature must not be treated as valid."
+        },
+        {
+          "field": "foc_temp_comp_base_temp",
+          "reference": 0.0,
+          "candidate": 25.0,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain the reference temperature associated with local motor resistance. Temperature compensation is disabled on both captures, so this difference is presently inactive."
+        },
+        {
+          "field": "foc_current_filter_const",
+          "reference": 0.1,
+          "candidate": 0.1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_cc_decoupling",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "FOC_CC_DECOUPLING_DISABLED",
+            "candidate": "FOC_CC_DECOUPLING_DISABLED"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_observer_type",
+          "reference": 3,
+          "candidate": 3,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "FOC_OBSERVER_MXLEMMING_LAMBDA_COMP",
+            "candidate": "FOC_OBSERVER_MXLEMMING_LAMBDA_COMP"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_voltage_start",
+          "reference": 20.0,
+          "candidate": 20.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_voltage_run",
+          "reference": 4.0,
+          "candidate": 4.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_voltage_max",
+          "reference": 6.0,
+          "candidate": 6.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_gain",
+          "reference": 0.3,
+          "candidate": 0.3,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_hyst",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_sl_erpm_hfi",
+          "reference": 3000.0,
+          "candidate": 3000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_start_samples",
+          "reference": 5,
+          "candidate": 5,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_obs_ovr_sec",
+          "reference": 0.0010000000474974513,
+          "candidate": 0.0010000000474974513,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_hfi_samples",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "16",
+            "candidate": "16"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_offsets_cal_on_boot",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_offsets_current__0",
+          "reference": 2039.4830322265625,
+          "candidate": 2045.0849609375,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this controller current-sensor ADC offset; it is per-unit calibration, not shared tune."
+        },
+        {
+          "field": "foc_offsets_current__1",
+          "reference": 2041.508056640625,
+          "candidate": 2041.3380126953125,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this controller current-sensor ADC offset; it is per-unit calibration, not shared tune."
+        },
+        {
+          "field": "foc_offsets_current__2",
+          "reference": 2048.761962890625,
+          "candidate": 2041.3060302734375,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this controller current-sensor ADC offset; it is per-unit calibration, not shared tune."
+        },
+        {
+          "field": "foc_offsets_voltage__0",
+          "reference": -0.007,
+          "candidate": -0.0041,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this controller phase-voltage offset; it is per-unit calibration, not shared tune."
+        },
+        {
+          "field": "foc_offsets_voltage__1",
+          "reference": 0.0042,
+          "candidate": 0.0043,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this controller phase-voltage offset; it is per-unit calibration, not shared tune."
+        },
+        {
+          "field": "foc_offsets_voltage__2",
+          "reference": 0.0027,
+          "candidate": -0.0002,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this controller phase-voltage offset; it is per-unit calibration, not shared tune."
+        },
+        {
+          "field": "foc_offsets_voltage_undriven__0",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_offsets_voltage_undriven__1",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_offsets_voltage_undriven__2",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_phase_filter_enable",
+          "reference": 0,
+          "candidate": 1,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain hardware-specific phase-filter setting: kart 3 identity reports has_phase_filters=1 and enabled=1; baseline reports support=0 and enabled=0. Different hardware capabilities explain this difference."
+        },
+        {
+          "field": "foc_phase_filter_disable_fault",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_phase_filter_max_erpm",
+          "reference": 4000.0,
+          "candidate": 4000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_mtpa_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Disabled",
+            "candidate": "Disabled"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "foc_fw_current_max",
+          "reference": 95.0,
+          "candidate": 15.0,
+          "status": "different",
+          "classification": "shared_tune_candidate",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Shared field-weakening candidate only, with especially large uncertainty: 15 to 95 A is a 6.33x increase. The old value is not proven safe for this motor/controller; no motor-temperature sensor is wired. Not an approved write value."
+        },
+        {
+          "field": "foc_fw_duty_start",
+          "reference": 0.87,
+          "candidate": 0.9,
+          "status": "different",
+          "classification": "shared_tune_candidate",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Shared field-weakening onset candidate only. 0.90 to 0.87 starts at a lower fraction of maximum duty; review together with maximum duty/current and actual speed/thermal behavior."
+        },
+        {
+          "field": "foc_fw_ramp_time",
+          "reference": 0.2,
+          "candidate": 0.2,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 0.2 s; equal ramp does not validate the much larger historical field-weakening current."
+        },
+        {
+          "field": "foc_fw_q_current_factor",
+          "reference": 0.02,
+          "candidate": 0.02,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 0.02, which can contribute q-axis braking with field weakening. A motor braking limit of zero alone is not proof that every regen-related path is disabled."
+        },
+        {
+          "field": "foc_speed_soure",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Observer",
+            "candidate": "Observer"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "gpd_buffer_notify_left",
+          "reference": 200,
+          "candidate": 200,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "gpd_buffer_interpol",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "gpd_current_filter_const",
+          "reference": 0.1,
+          "candidate": 0.1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "gpd_current_kp",
+          "reference": 0.029999999329447746,
+          "candidate": 0.029999999329447746,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "gpd_current_ki",
+          "reference": 50.0,
+          "candidate": 50.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "sp_pid_loop_rate",
+          "reference": 5,
+          "candidate": 5,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "1000 Hz",
+            "candidate": "1000 Hz"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "s_pid_kp",
+          "reference": 0.004000000189989805,
+          "candidate": 0.004000000189989805,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "s_pid_ki",
+          "reference": 0.004000000189989805,
+          "candidate": 0.004000000189989805,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "s_pid_kd",
+          "reference": 9.999999747378752e-05,
+          "candidate": 9.999999747378752e-05,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "s_pid_kd_filter",
+          "reference": 0.2,
+          "candidate": 0.2,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "s_pid_min_erpm",
+          "reference": 900.0,
+          "candidate": 900.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "s_pid_allow_braking",
+          "reference": 1,
+          "candidate": 0,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Speed-controller braking policy: copying baseline 1 would enable braking where kart 3 currently has 0. Preserve until braking/control mode intent is confirmed."
+        },
+        {
+          "field": "s_pid_ramp_erpms_s",
+          "reference": 25000.0,
+          "candidate": 25000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_kp",
+          "reference": 0.02500000037252903,
+          "candidate": 0.02500000037252903,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_ki",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_kd",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_kd_proc",
+          "reference": 0.0003499999875202775,
+          "candidate": 0.0003499999875202775,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_kd_filter",
+          "reference": 0.2,
+          "candidate": 0.2,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_ang_div",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_gain_dec_angle",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "p_pid_offset",
+          "reference": 0.0,
+          "candidate": 27.0,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain the local position-controller angle offset; do not clone zero/alignment calibration from the other controller."
+        },
+        {
+          "field": "cc_startup_boost_duty",
+          "reference": 0.01,
+          "candidate": 0.01,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "cc_min_current",
+          "reference": 0.05000000074505806,
+          "candidate": 0.05000000074505806,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "cc_gain",
+          "reference": 0.004600000102072954,
+          "candidate": 0.004600000102072954,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "cc_ramp_step_max",
+          "reference": 0.04,
+          "candidate": 0.02,
+          "status": "different",
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "The pinned schema describes this ramp parameter for DC/BLDC current control; both captured motors use FOC. Do not claim changing 0.02 to 0.04 will improve FOC acceleration."
+        },
+        {
+          "field": "m_fault_stop_time_ms",
+          "reference": 500,
+          "candidate": 500,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_duty_ramp_step",
+          "reference": 0.02,
+          "candidate": 0.02,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_current_backoff_gain",
+          "reference": 0.5,
+          "candidate": 0.5,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_encoder_counts",
+          "reference": 8192,
+          "candidate": 8192,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_encoder_sin_amp",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_encoder_cos_amp",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_encoder_sin_offset",
+          "reference": 1.65,
+          "candidate": 1.65,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_encoder_cos_offset",
+          "reference": 1.65,
+          "candidate": 1.65,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_encoder_sincos_filter_constant",
+          "reference": 0.5,
+          "candidate": 0.5,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_encoder_sincos_phase_correction",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_sensor_port_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Hall Sensors",
+            "candidate": "Hall Sensors"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_invert_direction",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_drv8301_oc_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Current Limit",
+            "candidate": "Current Limit"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_drv8301_oc_adj",
+          "reference": 16,
+          "candidate": 16,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_bldc_f_sw_min",
+          "reference": 3000.0,
+          "candidate": 3000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_bldc_f_sw_max",
+          "reference": 35000.0,
+          "candidate": 35000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_dc_f_sw",
+          "reference": 25000.0,
+          "candidate": 25000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_ntc_motor_beta",
+          "reference": 3380.0,
+          "candidate": 3380.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_out_aux_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Off",
+            "candidate": "Off"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_motor_temp_sens_type",
+          "reference": 8,
+          "candidate": 0,
+          "status": "different",
+          "enum_labels": {
+            "reference": "Disabled",
+            "candidate": "NTC 10K at 25\u00b0C"
+          },
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Known wiring mismatch: kart 3 configured NTC 10K but owner confirms no motor-temperature sensor; raw telemetry -95.4 C is invalid. Review sensor-disable correction rather than treating the configured thermal thresholds as real motor protection."
+        },
+        {
+          "field": "m_ptc_motor_coeff",
+          "reference": 0.6100000143051147,
+          "candidate": 0.6100000143051147,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_ntcx_ptcx_res",
+          "reference": 10000.0,
+          "candidate": 10000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_ntcx_ptcx_temp_base",
+          "reference": 25.0,
+          "candidate": 25.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_hall_extra_samples",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "m_batt_filter_const",
+          "reference": 45,
+          "candidate": 45,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "si_motor_poles",
+          "reference": 14,
+          "candidate": 20,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Physical drivetrain calibration remains unresolved: 20 versus historical 14. Same motor model does not prove which stored value is correct; measure/verify, do not copy the known-questionable baseline."
+        },
+        {
+          "field": "si_gear_ratio",
+          "reference": 2.769230842590332,
+          "candidate": 2.7690000534057617,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Physical drivetrain metadata remains unresolved: 2.7690000534 versus historical 2.7692308426. Verify actual tooth counts/ratio; do not copy merely to remove this numeric difference."
+        },
+        {
+          "field": "si_wheel_diameter",
+          "reference": 0.4059999883174896,
+          "candidate": 0.4059999883174896,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both stored as approximately 0.406 m; equality is not physical rolling-diameter measurement. Baseline drivetrain metadata is already known-questionable."
+        },
+        {
+          "field": "si_battery_type",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "BATTERY_TYPE_LIION_3_0__4_2",
+            "candidate": "BATTERY_TYPE_LIION_3_0__4_2"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "si_battery_cells",
+          "reference": 20,
+          "candidate": 20,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 20-cell metadata; not independent proof of battery/BMS current ratings."
+        },
+        {
+          "field": "si_battery_ah",
+          "reference": 20.0,
+          "candidate": 20.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 20 Ah metadata; not independent proof of pack capacity/current capability."
+        },
+        {
+          "field": "si_motor_nl_current",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "bms.type",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "VESC BMS",
+            "candidate": "VESC BMS"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "bms.limit_mode",
+          "reference": 3,
+          "candidate": 3,
+          "status": "equal",
+          "bitfield_labels": {
+            "reference": [
+              "Overtemp",
+              "SOC"
+            ],
+            "candidate": [
+              "Overtemp",
+              "SOC"
+            ]
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "bms.t_limit_start",
+          "reference": 45.0,
+          "candidate": 45.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "bms.t_limit_end",
+          "reference": 65.0,
+          "candidate": 65.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "bms.soc_limit_start",
+          "reference": 0.05,
+          "candidate": 0.05,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "bms.soc_limit_end",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "bms.fwd_can_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Disabled",
+            "candidate": "Disabled"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        }
+      ]
+    },
+    "app_configuration": {
+      "field_count": 187,
+      "equal_count": 177,
+      "different_count": 10,
+      "fields": [
+        {
+          "field": "controller_id",
+          "reference": 69,
+          "candidate": 19,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this controller CAN identity (19); baseline identity 69 belongs to another controller. Confirm network uniqueness separately."
+        },
+        {
+          "field": "timeout_msec",
+          "reference": 1000,
+          "candidate": 1000,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both 1000 ms; ordinary command timeout is not proof that temporary configuration writes restore saved values on link loss."
+        },
+        {
+          "field": "timeout_brake_current",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both zero; do not infer that all motor/field-weakening/control braking paths are disabled."
+        },
+        {
+          "field": "can_status_rate_1",
+          "reference": 50,
+          "candidate": 50,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "can_status_rate_2",
+          "reference": 5,
+          "candidate": 5,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "can_status_msgs_r1",
+          "reference": 15,
+          "candidate": 0,
+          "status": "different",
+          "bitfield_labels": {
+            "reference": [
+              "Status 1",
+              "Status 2",
+              "Status 3",
+              "Status 4"
+            ],
+            "candidate": []
+          },
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "CAN reporting/topology difference: kart 3 sends none versus historical Status 1-4 mask. Confirm actual CAN topology/consumers before enabling messages; no automatic clone."
+        },
+        {
+          "field": "can_status_msgs_r2",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "bitfield_labels": {
+            "reference": [],
+            "candidate": []
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "can_baud_rate",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "CAN_BAUD_500K",
+            "candidate": "CAN_BAUD_500K"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "pairing_done",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "permanent_uart_enabled",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "shutdown_mode",
+          "reference": 7,
+          "candidate": 7,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "OFF_AFTER_30M",
+            "candidate": "OFF_AFTER_30M"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "can_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "VESC",
+            "candidate": "VESC"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "uavcan_esc_index",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "uavcan_raw_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Current Control",
+            "candidate": "Current Control"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "uavcan_raw_rpm_max",
+          "reference": 50000.0,
+          "candidate": 50000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "uavcan_status_current_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Motor Current",
+            "candidate": "Motor Current"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "servo_out_enable",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "kill_sw_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Disabled",
+            "candidate": "Disabled"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both disabled in configuration; does not establish presence/absence of a separate physical disconnect."
+        },
+        {
+          "field": "app_to_use",
+          "reference": 5,
+          "candidate": 2,
+          "status": "different",
+          "enum_labels": {
+            "reference": "ADC and UART",
+            "candidate": "ADC"
+          },
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Input/transport topology differs (ADC versus ADC and UART). Preserve working wired inputs; verify whether UART application is needed by this physical controller/transport before enabling another app."
+        },
+        {
+          "field": "app_ppm_conf.ctrl_type",
+          "reference": 3,
+          "candidate": 0,
+          "status": "different",
+          "enum_labels": {
+            "reference": "Current No Reverse With Brake",
+            "candidate": "Off"
+          },
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Unused-app behavior differs (Off versus Current No Reverse With Brake) while active app is ADC. Do not enable latent PPM motor/brake behavior just to match the baseline."
+        },
+        {
+          "field": "app_ppm_conf.pid_max_erpm",
+          "reference": 15000.0,
+          "candidate": 15000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.hyst",
+          "reference": 0.15000000596046448,
+          "candidate": 0.15000000596046448,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.pulse_start",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.pulse_end",
+          "reference": 2.0,
+          "candidate": 2.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.pulse_center",
+          "reference": 1.5,
+          "candidate": 1.5,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.median_filter",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.safe_start",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Regular",
+            "candidate": "Regular"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.throttle_exp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.throttle_exp_brake",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.throttle_exp_mode",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Polynomial",
+            "candidate": "Polynomial"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.ramp_time_pos",
+          "reference": 0.4000000059604645,
+          "candidate": 0.4000000059604645,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.ramp_time_neg",
+          "reference": 0.20000000298023224,
+          "candidate": 0.20000000298023224,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.multi_esc",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.tc",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.tc_max_diff",
+          "reference": 3000.0,
+          "candidate": 3000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.max_erpm_for_dir",
+          "reference": 4000.0,
+          "candidate": 4000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.smart_rev_max_duty",
+          "reference": 0.07000000029802322,
+          "candidate": 0.07000000029802322,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_ppm_conf.smart_rev_ramp_time",
+          "reference": 3.0,
+          "candidate": 3.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.ctrl_type",
+          "reference": 3,
+          "candidate": 3,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Current Reverse Button",
+            "candidate": "Current Reverse Button"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both Current Reverse Button; preserve the existing wired-input control mode."
+        },
+        {
+          "field": "app_adc_conf.hyst",
+          "reference": 0.15000000596046448,
+          "candidate": 0.15000000596046448,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.voltage_start",
+          "reference": 0.837,
+          "candidate": 0.69,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this kart pedal/ADC endpoint calibration. Copying another pedal voltage range can alter zero/full-scale behavior; physical pedal measurements are required before changing it."
+        },
+        {
+          "field": "app_adc_conf.voltage_end",
+          "reference": 2.385,
+          "candidate": 2.67,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this kart pedal/ADC endpoint calibration. Copying another pedal voltage range can alter zero/full-scale behavior; physical pedal measurements are required before changing it."
+        },
+        {
+          "field": "app_adc_conf.voltage_min",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.voltage_max",
+          "reference": 3.5,
+          "candidate": 3.5,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.voltage_center",
+          "reference": 1.663,
+          "candidate": 1.68,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this kart pedal/ADC endpoint calibration. Copying another pedal voltage range can alter zero/full-scale behavior; physical pedal measurements are required before changing it."
+        },
+        {
+          "field": "app_adc_conf.voltage2_start",
+          "reference": 1.501,
+          "candidate": 0.33,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this kart pedal/ADC endpoint calibration. Copying another pedal voltage range can alter zero/full-scale behavior; physical pedal measurements are required before changing it."
+        },
+        {
+          "field": "app_adc_conf.voltage2_end",
+          "reference": 1.515,
+          "candidate": 3.3,
+          "status": "different",
+          "classification": "per_unit_calibration_or_identity",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Retain this kart pedal/ADC endpoint calibration. Copying another pedal voltage range can alter zero/full-scale behavior; physical pedal measurements are required before changing it."
+        },
+        {
+          "field": "app_adc_conf.use_filter",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.safe_start",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Regular",
+            "candidate": "Regular"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both Regular; retain the wired-input safe-start behavior."
+        },
+        {
+          "field": "app_adc_conf.buttons",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "bitfield_labels": {
+            "reference": [],
+            "candidate": []
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.voltage_inverted",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.voltage2_inverted",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.throttle_exp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.throttle_exp_brake",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.throttle_exp_mode",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Polynomial",
+            "candidate": "Polynomial"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.ramp_time_pos",
+          "reference": 0.30000001192092896,
+          "candidate": 0.30000001192092896,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both approximately 0.3 s positive ADC ramp; this throttle-feel setting already matches."
+        },
+        {
+          "field": "app_adc_conf.ramp_time_neg",
+          "reference": 0.10000000149011612,
+          "candidate": 0.10000000149011612,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both approximately 0.1 s negative ADC ramp; this throttle-feel setting already matches."
+        },
+        {
+          "field": "app_adc_conf.multi_esc",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Both enabled, but this does not prove another controller is connected. Actual CAN topology remains to be checked."
+        },
+        {
+          "field": "app_adc_conf.tc",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.tc_max_diff",
+          "reference": 3000.0,
+          "candidate": 3000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_adc_conf.update_rate_hz",
+          "reference": 500,
+          "candidate": 500,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_uart_baudrate",
+          "reference": 115200,
+          "candidate": 115200,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.ctrl_type",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Off",
+            "candidate": "Off"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.hyst",
+          "reference": 0.15000000596046448,
+          "candidate": 0.15000000596046448,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.ramp_time_pos",
+          "reference": 0.4000000059604645,
+          "candidate": 0.4000000059604645,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.ramp_time_neg",
+          "reference": 0.20000000298023224,
+          "candidate": 0.20000000298023224,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.stick_erpm_per_s_in_cc",
+          "reference": 3000.0,
+          "candidate": 3000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.throttle_exp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.throttle_exp_brake",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.throttle_exp_mode",
+          "reference": 2,
+          "candidate": 2,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Polynomial",
+            "candidate": "Polynomial"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.multi_esc",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.tc",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.tc_max_diff",
+          "reference": 3000.0,
+          "candidate": 3000.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.use_smart_rev",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.smart_rev_max_duty",
+          "reference": 0.07000000029802322,
+          "candidate": 0.07000000029802322,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_chuk_conf.smart_rev_ramp_time",
+          "reference": 3.0,
+          "candidate": 3.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.speed",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "1 MBit/s",
+            "candidate": "1 MBit/s"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.power",
+          "reference": 3,
+          "candidate": 3,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "0 dBm",
+            "candidate": "0 dBm"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.crc_type",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "1 Byte",
+            "candidate": "1 Byte"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.retry_delay",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "250 \u00b5S",
+            "candidate": "250 \u00b5S"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.retries",
+          "reference": 3,
+          "candidate": 3,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.channel",
+          "reference": 76,
+          "candidate": 76,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.address__0",
+          "reference": 198,
+          "candidate": 198,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.address__1",
+          "reference": 199,
+          "candidate": 199,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.address__2",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_nrf_conf.send_crc_ack",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.pid_mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "BALANCE_PID_MODE_ANGLE",
+            "candidate": "BALANCE_PID_MODE_ANGLE"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.kp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.ki",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.kd",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.kp2",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.ki2",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.kd2",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.hertz",
+          "reference": 1000,
+          "candidate": 1000,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.loop_time_filter",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_pitch",
+          "reference": 20.0,
+          "candidate": 20.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_roll",
+          "reference": 45.0,
+          "candidate": 45.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_duty",
+          "reference": 0.8999999761581421,
+          "candidate": 0.8999999761581421,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_adc1",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_adc2",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_delay_pitch",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_delay_roll",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_delay_duty",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_delay_switch_half",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_delay_switch_full",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_adc_half_erpm",
+          "reference": 1000,
+          "candidate": 1000,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.fault_is_dual_switch",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_duty_angle",
+          "reference": 10.0,
+          "candidate": 10.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_duty_speed",
+          "reference": 3.0,
+          "candidate": 3.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_duty",
+          "reference": 0.75,
+          "candidate": 0.75,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_hv_angle",
+          "reference": 10.0,
+          "candidate": 10.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_hv_speed",
+          "reference": 3.0,
+          "candidate": 3.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_hv",
+          "reference": 200.0,
+          "candidate": 200.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_lv_angle",
+          "reference": 10.0,
+          "candidate": 10.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_lv_speed",
+          "reference": 3.0,
+          "candidate": 3.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_lv",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_return_speed",
+          "reference": 2.0,
+          "candidate": 2.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_constant",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_constant_erpm",
+          "reference": 500,
+          "candidate": 500,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_variable",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.tiltback_variable_max",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.noseangling_speed",
+          "reference": 3.0,
+          "candidate": 3.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.startup_pitch_tolerance",
+          "reference": 20.0,
+          "candidate": 20.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.startup_roll_tolerance",
+          "reference": 8.0,
+          "candidate": 8.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.startup_speed",
+          "reference": 30.0,
+          "candidate": 30.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.deadzone",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.multi_esc",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.yaw_kp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.yaw_ki",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.yaw_kd",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.roll_steer_kp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.roll_steer_erpm_kp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.brake_current",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.brake_timeout",
+          "reference": 10,
+          "candidate": 10,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.yaw_current_clamp",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.ki_limit",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.kd_pt1_lowpass_frequency",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.kd_pt1_highpass_frequency",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.booster_angle",
+          "reference": 8.0,
+          "candidate": 8.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.booster_ramp",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.booster_current",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.torquetilt_start_current",
+          "reference": 10.0,
+          "candidate": 10.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.torquetilt_angle_limit",
+          "reference": 5.0,
+          "candidate": 5.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.torquetilt_on_speed",
+          "reference": 5.0,
+          "candidate": 5.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.torquetilt_off_speed",
+          "reference": 3.0,
+          "candidate": 3.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.torquetilt_strength",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.torquetilt_filter",
+          "reference": 2.0,
+          "candidate": 2.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.turntilt_strength",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.turntilt_angle_limit",
+          "reference": 5.0,
+          "candidate": 5.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.turntilt_start_angle",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.turntilt_start_erpm",
+          "reference": 100,
+          "candidate": 100,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.turntilt_speed",
+          "reference": 5.0,
+          "candidate": 5.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.turntilt_erpm_boost",
+          "reference": 20,
+          "candidate": 20,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_balance_conf.turntilt_erpm_boost_end",
+          "reference": 20000,
+          "candidate": 20000,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.ctrl_type",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Off",
+            "candidate": "Off"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.sensor_type",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "Quadrature",
+            "candidate": "Quadrature"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.current_scaling",
+          "reference": 0.1,
+          "candidate": 0.1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.pedal_rpm_start",
+          "reference": 10.0,
+          "candidate": 10.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.pedal_rpm_end",
+          "reference": 180.0,
+          "candidate": 180.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.invert_pedal_direction",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.magnets",
+          "reference": 24,
+          "candidate": 24,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.use_filter",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.ramp_time_pos",
+          "reference": 0.6,
+          "candidate": 0.6,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.ramp_time_neg",
+          "reference": 0.3,
+          "candidate": 0.3,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "app_pas_conf.update_rate_hz",
+          "reference": 500,
+          "candidate": 500,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.type",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "IMU_TYPE_INTERNAL",
+            "candidate": "IMU_TYPE_INTERNAL"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.mode",
+          "reference": 0,
+          "candidate": 0,
+          "status": "equal",
+          "enum_labels": {
+            "reference": "AHRS_MODE_MADGWICK",
+            "candidate": "AHRS_MODE_MADGWICK"
+          },
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.filter",
+          "reference": 0,
+          "candidate": 1,
+          "status": "different",
+          "enum_labels": {
+            "reference": "IMU_FILTER_LOW",
+            "candidate": "IMU_FILTER_MEDIUM"
+          },
+          "classification": "protective_or_uncertain",
+          "review_action": "retain_candidate_pending_named_field_review",
+          "reason": "Hardware/application-specific onboard accelerometer/gyro filter. Relevance to this kart is unverified; retain rather than copying an unrelated filter setting."
+        },
+        {
+          "field": "imu_conf.accel_lowpass_filter_x",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.accel_lowpass_filter_y",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.accel_lowpass_filter_z",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.gyro_lowpass_filter",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.sample_rate_hz",
+          "reference": 200,
+          "candidate": 200,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.use_magnetometer",
+          "reference": 1,
+          "candidate": 1,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.accel_confidence_decay",
+          "reference": 1.0,
+          "candidate": 1.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.mahony_kp",
+          "reference": 0.30000001192092896,
+          "candidate": 0.30000001192092896,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.mahony_ki",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.madgwick_beta",
+          "reference": 0.10000000149011612,
+          "candidate": 0.10000000149011612,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.rot_roll",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.rot_pitch",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.rot_yaw",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.accel_offsets__0",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.accel_offsets__1",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.accel_offsets__2",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.gyro_offsets__0",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.gyro_offsets__1",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        },
+        {
+          "field": "imu_conf.gyro_offsets__2",
+          "reference": 0.0,
+          "candidate": 0.0,
+          "status": "equal",
+          "classification": "equal_retain",
+          "review_action": "retain_candidate",
+          "reason": "Exact captured values match; retain the candidate value. Equality alone does not establish physical correctness, ratings or applicability."
+        }
+      ]
+    }
+  },
+  "editorial_note": "Initial stale cable/capture wording has been corrected in current docs and the new comparison-reviewed report; original raw, decoded and initial comparison records remain unchanged."
+}

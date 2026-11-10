@@ -30,6 +30,8 @@ class Settings {
       configured?"true":"false",rebootRequired?"true":"false",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
       pair.peer[0],pair.peer[1],pair.peer[2],pair.peer[3],pair.peer[4],pair.peer[5],
       link.ready()?"true":"false",link.connected(millis())?"true":"false",link.channel(),link.rssi());
+    out.printf(",\"rx_channel\":%u,\"peer_channel\":%u,\"channel_aligned\":%s",
+      link.receivedChannel(),link.peerChannel(),link.channelAligned(millis())?"true":"false");
     const auto& s=link.stats();
     out.printf(",\"tx_lines\":%lu,\"tx_packets\":%lu,\"tx_failed\":%lu,\"tx_dropped\":%lu,\"rx_lines\":%lu,\"rx_packets\":%lu,\"rx_dropped\":%lu,\"rx_invalid\":%lu,\"channel_hops\":%lu}\n",
       (unsigned long)s.txLines,(unsigned long)s.txPackets,(unsigned long)s.txFailed,(unsigned long)s.txDropped,

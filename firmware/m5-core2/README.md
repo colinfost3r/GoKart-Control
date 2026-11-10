@@ -328,3 +328,16 @@ tools/run_tests.sh                 # all existing suites plus M5 tests
 ```
 
 See [handoff](../../HANDOFF.md) for current build/test results and hardware status.
+
+
+## Exact ESP-NOW channel alignment (prepared source, 2026-11-10)
+
+Both new companion images are required before mode testing. Authenticated telemetry received on
+an adjacent Wi-Fi channel no longer enables controls: the pair exchanges channel/challenge/boot
+proof and the Core2 follows the Heltec's actual channel. Status separates `channel`, `rx_channel`,
+`peer_channel` and `channel_aligned`. Maintenance clears control readiness until fresh proof after
+exit. Old/new firmware pairs still show telemetry but intentionally keep mode controls unavailable.
+See the [transport contract](../libraries/M5EspNowLink/README.md#channel-alignment-protocol).
+All nine affected targets compile; matching-channel recovery, AP channel changes, OTA and mode
+acceptance on the new pair still need supervised bench verification. The previously verified
+read-only pair remains installed; source build success is not hardware deployment.

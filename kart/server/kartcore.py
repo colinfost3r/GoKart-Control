@@ -25,6 +25,9 @@ import math
 import random
 import re
 from collections import deque
+from itertools import count
+
+_PRIZE_ENGINES = count(1)       # process-local identity; old demo/server-instance records never match a new engine
 
 KART_IDS = tuple(range(1, 9))
 ONLINE_S = 5.0     # same thresholds as the pit (pitcore.ONLINE_S / STALE_S)
@@ -1073,10 +1076,15 @@ class GameEngine:
         self.inside = {}            # zone id -> entered mono
         self.zst = {}               # zone id -> {"fired": bool, "cool_until": mono}
         self.pending_items = []     # item-box prizes rolled but not yet sent: wait ITEM_REVEAL_S for the prize-wheel reveal
+        self.prize_engine = next(_PRIZE_ENGINES)
+        self.prize_generation = 0
         self.next_mud = None
         self.prev_fix = None        # (lat, lon, mono)
         self.last_fix_mono = None
         self.stopped = None
+        self.self_mono = None
+        self.vesc_link = False
+        self.item_session = None
         self.scale = None
         self.mode_req = None
         self.override = None        # {"kind", "scale", "until", "zone", "via"} as last sent (until = stacked end)
@@ -1097,7 +1105,7 @@ class GameEngine:
         self.lap_armed = True       # False after a crossing until the kart is LAP_REARM_M from the line
 
     def active(self):
-        return self.local_enabled and self.enabled and (bool(self.areas) or self.lapline is not None)
+        return self.local_enabled and self.enabled and (bool(self.areas) or self.lapline is not None or bool(self.pending_items))
 
     def off_reason(self):
         if not self.local_enabled:
@@ -1120,9 +1128,43 @@ class GameEngine:
             self.events.append(dict(r, mono=now))
         return r
 
-    def set_fw(self, fw):
-        """The Heltec's firmware string (status reply), or None when unknown (link change, reboot)."""
+    def set_fw(self, fw, now=None):
+        """Firmware status; callers pass now to log a link/reboot cancellation at its actual time."""
         self.fw = fw if isinstance(fw, str) and fw else None
+        recs = []
+        if self.fw is None:              # link change/reboot: never deliver a pre-disconnect prize
+            recs = self.cancel_items(now if now is not None else self.self_mono or 0, "controller link/reboot")
+            self.self_mono = None
+            self.vesc_link = False
+        return recs
+
+    def cancel_items(self, now, why, recs=None):
+        """A prize is consumed, never deferred across an operator/session interruption."""
+        recs = [] if recs is None else recs
+        self.prize_generation += 1       # also invalidates cmd records waiting outside the app lock
+        for pending in self.pending_items:
+            self._rec(recs, "suppressed", now, zone=pending["zone"].id, why=why)
+        self.pending_items = []
+        return recs
+
+    def prize_current(self, token, now):
+        """Rechecked under the app lock immediately before a delayed command is queued."""
+        return (len(token) == 4 and tuple(token[:2]) == (self.prize_engine, self.prize_generation)
+                and 0 <= now - token[3] <= SELF_FRESH_S
+                and self.local_enabled and self.enabled and self.stopped is False
+                and not self.race["hold"] and self.vesc_link and self.self_mono is not None
+                and 0 <= now - self.self_mono <= SELF_FRESH_S
+                and not any(z.type == "mud" for z in self.areas if z.id in self.inside)
+                and not (self._ov_running(now, "mud") and self.override.get("prize_token") != token))
+
+    def reject_prize(self, token, zone, now):
+        """A generated effect was invalidated before enqueue: retract its speculative HUD state."""
+        if self.override and self.override.get("prize_token") == token:
+            self.override = None
+        self.events = deque((e for e in self.events if e.get("prize_token") != token), maxlen=12)
+        recs = []
+        self._rec(recs, "suppressed", now, zone=zone, why="prize invalidated before send")
+        return recs
 
     def timed_slow(self):
         """Mud as a real timed SLOW (`slow MPH SECS`) only on firmware kart-0.2.4+: older firmware reads
@@ -1174,7 +1216,16 @@ class GameEngine:
             return recs
         old_lap = self.lapline.raw if self.lapline else None
         was_active = self.active()
-        self.pending_items = []
+        # Freeplay removes a collected box immediately and respawns boxes independently.
+        # Those list/version changes must not erase its already-rolled prize. The explicit
+        # epoch changes on off/reset/course/session boundaries, even if the same map returns.
+        same_freeplay = (isinstance(doc, dict) and isinstance(self.doc, dict)
+                         and doc.get("source") == self.doc.get("source") == "freeplay"
+                         and type(doc.get("prize_epoch")) is int
+                         and {k: v for k, v in doc.items() if k not in ("zones", "version")}
+                         == {k: v for k, v in self.doc.items() if k not in ("zones", "version")})
+        if not same_freeplay:
+            self.cancel_items(now, "game/course changed", recs)
         self.doc = doc
         self.version = doc.get("version") if isinstance(doc, dict) else None
         src = doc.get("source") if isinstance(doc, dict) else None
@@ -1209,6 +1260,16 @@ class GameEngine:
         return pos_recs + self._on_self(msg, now)
 
     def _on_self(self, msg, now):
+        recs = []
+        if msg.get("stopped") is True:
+            self.cancel_items(now, "kart STOPPED", recs)
+        elif msg.get("vesc_link") is not True:
+            self.cancel_items(now, "VESC link unavailable", recs)
+        elif self.self_mono is not None and (msg.get("mode_req") != self.mode_req
+                                            or msg.get("session") != self.item_session):
+            self.cancel_items(now, "mode/session changed", recs)
+        self.self_mono, self.vesc_link = now, msg.get("vesc_link") is True
+        self.item_session = msg.get("session")
         self.stopped = msg.get("stopped")
         if self.stopped is True:
             self._drop_override(slow_too=False)     # STOP cancels the scale override: nothing to stack on later
@@ -1217,7 +1278,6 @@ class GameEngine:
         if _num(msg.get("gps_hz")):
             self.gps_hz = msg.get("gps_hz")
         self.corr.feed(msg, now)
-        recs = []
         if self.gps_line_mono is not None and now - self.gps_line_mono <= GPS_LINE_FRESH_S:
             return self._timeouts(now, recs) if self.active() else recs     # 5 Hz gps lines carry the position
         lat, lon = msg.get("lat"), msg.get("lon")
@@ -1259,7 +1319,7 @@ class GameEngine:
         if r["hold"] and r["go_at"] is not None and now >= r["go_at"] + RACE_GO_GRACE_S:
             self._go(r["go_at"], now, "clock", recs)
         if not self.active():
-            return recs
+            return self.cancel_items(now, "game off", recs)
         self._timeouts(now, recs)
         self._fire_pending(now, recs)
         self._mud(now, recs, entered=False)
@@ -1352,7 +1412,7 @@ class GameEngine:
 
     def _fire_pending(self, now, recs):
         """Send item-box prizes whose prize-wheel reveal time has arrived (ITEM_REVEAL_S after the roll).
-        Re-checks the safety gates at fire time: a STOP or grid hold during the reveal suppresses it."""
+        Re-checks current state; an interruption consumes the prize rather than replaying it."""
         if not self.pending_items:
             return
         due = [p for p in self.pending_items if now >= p["due"]]
@@ -1364,8 +1424,22 @@ class GameEngine:
                 self._rec(recs, "suppressed", now, zone=p["zone"].id, why="kart STOPPED")
             elif self.race["hold"]:
                 self._rec(recs, "suppressed", now, zone=p["zone"].id, why="grid hold")
+            elif (self.self_mono is None or not 0 <= now - self.self_mono <= SELF_FRESH_S
+                  or not self.vesc_link or self.stopped is not False or now - p["due"] > SELF_FRESH_S):
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="stale prize/controller state")
+            elif (any(z.type == "mud" for z in self.areas if z.id in self.inside)
+                  or self._ov_running(now, "mud")):
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="mud running")
             else:
+                start = len(recs)
+                token = (self.prize_engine, self.prize_generation, self.seq + 1, now)
                 self._cmd(recs, now, p["zone"], p["kind"], p["secs"], p["scale"])
+                for record in recs[start:]:
+                    record["prize_token"] = token
+                for event in self.events:
+                    if event["seq"] >= token[2]:
+                        event["prize_token"] = token
+                self.override["prize_token"] = token
 
     def _mud(self, now, recs, entered):
         muds = [z for z in self.areas if z.type == "mud" and z.id in self.inside]
@@ -1452,6 +1526,7 @@ class GameEngine:
         return recs
 
     def _finish(self, pos, src, now, recs):
+        self.cancel_items(now, "race finished", recs)
         r, lap = self.race, self.lap
         r.update(hold=False, finished=True, position=pos, finish_mono=now, position_source=src if pos else None,
                  finish_lap={"laps": lap["count"], "best_s": lap["best_s"], "last_s": lap["last_s"]})
@@ -1466,6 +1541,7 @@ class GameEngine:
         r = self.race
         ev = msg.get("event")
         if ev == "countdown":
+            self.cancel_items(now, "grid hold", recs)
             go_in = msg.get("go_in_ms")
             go_in = max(0.0, float(go_in) / 1000.0) if _num(go_in) else float(msg.get("secs") or 5)
             r.update(hold=True, go_at=now + go_in, secs=msg.get("secs"), rx=now, go_confirmed=False, how=None,
@@ -1555,9 +1631,11 @@ class GameEngine:
     def grid_hold(self):
         return bool(self.race["hold"])
 
-    def on_cmd(self, msg, now):
+    def on_cmd(self, msg, now, recs=None):
         """A {"t":"cmd"} line: STOP/START end a grid hold (the firmware clears it);
         remember the result of our last boost/slow (src 254, cmd 6 or 5)."""
+        if msg.get("cmd") in (CMD_CODES["stop"], CMD_CODES["start"], CMD_CODES["mode"]) and msg.get("result") in (1, 2, 5):
+            self.cancel_items(now, "operator command", recs)
         if msg.get("cmd") == CMD_CODES["stop"] and msg.get("result") in (1, 2, 5):
             self._drop_override(slow_too=False)     # firmware STOP cancels a scale override (a timed slow stays)
         elif msg.get("cmd") == CMD_CODES["start"] and msg.get("result") in (1, 2, 3, 5):
@@ -1872,6 +1950,7 @@ class FreeplayGame:
         self._last_mono = None
         self._gen = 0
         self._ver = 0
+        self.prize_epoch = 0          # stable across collection/respawn, changes on true game boundaries
         self._doc = None
         self._fill_at = 0.0
         self.changed = True          # persistence: the server saves export() when this is set
@@ -1915,6 +1994,7 @@ class FreeplayGame:
         if on == self.on:
             return recs
         self.on = on
+        self.prize_epoch += 1
         self.eco_due = on            # only the off -> on transition (button or API); never a restore
         self.boxes, self.pending = [], []
         self.rec = LoopRecorder() if on and self.course is None else None
@@ -1949,6 +2029,7 @@ class FreeplayGame:
 
     def reset_course(self, now):
         recs = []
+        self.prize_epoch += 1
         self.course, self.loop = None, None
         self.boxes, self.pending = [], []
         self.no_adopt = True
@@ -1958,6 +2039,7 @@ class FreeplayGame:
         return recs
 
     def set_course(self, course, source, now, recs):
+        self.prize_epoch += 1
         self.course = dict(course, source=source)
         self.loop = _Loop(course["points"])
         self.rec = None
@@ -2110,6 +2192,7 @@ class FreeplayGame:
         if self._doc is None:
             self._ver += 1
             d = {"version": f"freeplay-{self._ver}", "enabled": True, "source": "freeplay",
+                 "prize_epoch": self.prize_epoch,
                  "zones": [{"id": b["id"], "type": "item", "name": b["name"], "shape": "circle",
                             "lat": b["lat"], "lon": b["lon"], "r_m": b["r_m"], "cooldown_s": FP_BOX_COOLDOWN_S}
                            for b in self.boxes]}
@@ -2238,6 +2321,7 @@ class FreeplayGame:
             self._touch(persist=True)
 
     def _set_wish(self, wish):
+        self.prize_epoch += 1
         self.wish = wish
         self.wish_tries = 0
         self.wish_note = None
@@ -2292,6 +2376,7 @@ class FreeplayGame:
         the held item. Never refused."""
         recs = []
         was_wish, was = self.wish, self._session()
+        self.prize_epoch += 1
         self.wish, self.wish_tries, self._resend_due, self.wish_note = None, 0, False, None
         self._drop_held()
         self.use_pending = None
@@ -2374,6 +2459,8 @@ class FreeplayGame:
                 self._mevent(now, "peer", id=p, joined=False)
         changed = (sess, hosting) != (prev_sess, prev_host) or new_end
         if changed:
+            self.prize_epoch += 1
+            self._touch()
             self._mevent(now, "session", session=sess, hosting=hosting, ended=ended)
         if changed or peers != prev_peers:
             self._rec(recs, "freeplay_session", session=sess, hosting=hosting, peers=peers, hosts=hosts,

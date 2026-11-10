@@ -1,8 +1,13 @@
-# Read-only VESC inspection
+# VESC inspection and explicit tune trial
 
-These tools capture current runtime state and decode it offline. They cannot
-write VESC configuration, command motor current/speed, reboot or flash firmware.
-Only command IDs 0, 4, 14 and 17 are allowed by `capture.py`.
+`capture.py` captures runtime state read-only; `decode.py` and `compare.py` work offline.
+These inspection tools cannot write configuration, command motor current/speed, reboot or
+flash firmware. Only IDs 0, 4, 14 and 17 remain allowed by `capture.py`.
+
+`tune.py` separately prepares the fixed 12-field kart-3 trial offline. `apply_tune.py` is an
+explicitly opted-in **persistent motor-configuration writer** for that reviewed trial; see
+[guarded application](#guarded-kart-3-tune-trial). It defaults to offline validation and never
+writes application settings, commands motor current/speed, resets, detects or flashes firmware.
 
 ## Capture
 
@@ -55,8 +60,8 @@ the historical evidence. The November 5 runtime capture is dated evidence and do
 not establish kart 2's current settings.
 
 Other firmware versions/layouts fail explicitly rather than guessing offsets. Tests
-use the real 6.00 baseline, clearly synthetic 6.02 identity fixtures with compatible
-configuration bytes, corrupt/fragmented packets, and mocked CLI serial calls. They
+use the real 6.00 baseline and real November 10 kart-3 6.02 capture, clearly synthetic
+identity fixtures, corrupt/fragmented packets, and mocked CLI serial calls. They
 never access hardware or claim a 6.02 hardware measurement.
 
 These exports are not flash images, not a proven saved-configuration backup,
@@ -65,20 +70,21 @@ accumulators in ordinary VESC operation. No load/fault-history trace is collecte
 
 The initial baseline used a small one-off read script with the same four
 allowlisted queries. The maintained capture CLI was prepared afterward and tested
-offline; it has not itself been run against hardware yet. The maintained decoder
-has been run against the actual captured baseline.
+offline. On November 10 the maintained CLI captured kart 3 over USB, with four CRC-valid
+replies and all 376 settings decoded on actual 6.02 hardware. See the
+[kart 3 evidence](../../hardware/vesc/kart3/2026-11-10/usb-before-tune/README.md).
+The tests themselves remain offline; they never operate a controller.
 
 
 ## Compare every captured setting offline
 
-After obtaining a **real, complete new capture**, compare its raw directory with an
-explicit reference. For example, replace `/path/to/fresh-kart3/raw` with that actual
-capture path; it does not exist yet and must not be substituted with synthetic data:
+Compare complete captures against an explicit, dated reference. This example uses the actual
+November 10 kart 3 capture; choose a new output directory:
 
 ```sh
 python3 -B tools/vesc/compare.py \
   hardware/vesc/baseline-kart/2026-11-05/raw \
-  /path/to/fresh-kart3/raw \
+  hardware/vesc/kart3/2026-11-10/usb-before-tune/raw \
   --out /tmp/gokart-settings-comparison
 ```
 
@@ -120,3 +126,37 @@ kart 3 capture. Run them with the other VESC checks:
 ```sh
 python3 -B -m unittest discover -s tests -v
 ```
+
+
+## Guarded kart 3 tune trial
+
+The fixed trial copies only the 12 fields in `tune.TRIAL_FIELDS` from the pinned dated reference
+into the current kart-3 motor payload. Every other motor byte and all app bytes are preserved.
+The actual [November 10 application](../../hardware/vesc/kart3/2026-11-10/tune-applied-v1/README.md)
+is complete; **do not rerun it**. A mismatched current configuration rejects the old plan.
+
+Prepare and review offline (new output directory):
+
+```sh
+python3 -B tools/vesc/tune.py hardware/vesc/baseline-kart/2026-11-05/raw \
+  /path/to/new/kart3/raw --out /path/to/new/trial
+python3 -B tools/vesc/apply_tune.py /path/to/new/trial
+```
+
+For a separately authorized, reviewed hardware session, `--preflight-only --port <actual-port>
+--out <new-evidence-directory>` performs reads only. Mutation requires **both** `--apply` and
+`--acknowledge-persistent-write`, plus explicit port and new evidence directory. Do not copy-paste
+these options as a recovery attempt after an uncertain result. The full MCCONF command (13) stores
+configuration; it is not the Heltec's temporary `store=0` profile command.
+
+Before writing, the utility independently rebuilds the candidate, checks schemas/file hashes,
+reads fresh identity plus all motor/app bytes, and reads stationary/fault-free telemetry last.
+It requires the exact prepared before state and checks a 750 ms telemetry/10 s capture deadline.
+There is at most one configuration-frame send. Missing/malformed ACK, partial/unknown send or
+unexpected readback remains uncertain: never automatic retry or rollback. Partial sends prohibit
+additional bytes; after a known complete send, a read-only recovery capture may clarify state.
+
+Success requires the exact ACK and an exact all-376-field/raw-byte readback. Evidence includes
+before/after manifests, frame hash, one-write count and field audit. Runtime verification does not
+independently prove flash persistence; the tool never power-cycles or drives the motor. Restore
+from the Desktop/raw reference is separate reviewed work, not an automatic whole-config import.

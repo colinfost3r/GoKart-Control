@@ -36,15 +36,18 @@ wireless link rejects the request; callers must not queue or automatically retry
 `ready()` means the driver and encrypted peer initialized. `connected(now)` means a complete,
 authenticated peer message arrived within 1500 ms. The display sends an internal authenticated
 heartbeat every 500 ms while receiving the Heltec. Heartbeats are never exposed as command
-lines. `channel()`, `rssi()` and `stats()` provide nonsecret diagnostics. `txLines` means MAC
+lines. `channel()` reports the actual driver channel; `receivedChannel()` reports the last
+callback channel; `peerChannel()` reports the authenticated advertised/proved channel.
+`channelAligned(now)`, `rssi()` and `stats()` provide nonsecret diagnostics. `txLines` means MAC
 confirmation of all fragments, not application acknowledgement or proof that a setting changed.
 Pair changes take effect at the next boot; provision through the sketches' local USB interface.
 
 For Core2 maintenance Wi-Fi/OTA, call `setChannelSearchEnabled(false)` **before** `WiFi.begin()`.
-Continue `poll()` and ordinary telemetry processing while connecting/connected. The setter only
-pauses the display's channel search: it does not disconnect Wi-Fi, restart ESP-NOW or clear the
-pair/session. After maintenance disconnects Wi-Fi, call `setChannelSearchEnabled(true)` to
-resume discovery. Search defaults to enabled; the setter has no effect on Heltec-role behavior.
+Continue `poll()` and ordinary telemetry processing while connecting/connected. The setter
+pauses channel search, clears alignment proof/queued requests and blocks display controls. It
+does not disconnect Wi-Fi, restart ESP-NOW or erase pairing. After maintenance disconnects Wi-Fi,
+call `setChannelSearchEnabled(true)` to resume discovery and require fresh alignment proof.
+Search defaults to enabled; the maintenance integration uses this setter on the display only.
 ESP-NOW can continue on the AP's channel when both paired devices share that channel. A different
 AP channel can temporarily interrupt telemetry; normal stale/lost indicators still apply.
 
@@ -78,10 +81,33 @@ future write-capable use must still require the Heltec's existing fresh single-u
 
 The Heltec preserves its Wi-Fi station channel, including an existing AP/OTA connection. The
 Core2 normally does not join an AP or reuse stored Wi-Fi credentials: it disables reconnect and searches
-US channels 1–11, dwelling 650 ms per channel after loss. A complete authenticated message locks
-the channel; ordinary RF traffic does not. Channel recovery can take several seconds and must
+US channels 1–11, dwelling 650 ms per channel after loss. Authentication alone is not channel
+alignment: adjacent-channel reception was observed on the bench. Updated peers exchange the
+proof below before enabling commands. Channel recovery can take several seconds and must
 be measured alongside VESC BLE, OLED refresh, LoRa and OTA. Accessory radio loss never restores,
 stops or otherwise changes VESC state.
+
+## Channel alignment protocol
+
+Framing remains v1. Two reserved 26-character authenticated `Line` payloads are consumed by the
+transport and never passed to the JSON/mode parser:
+
+- `G5CH1,CC,challengeHex,grantDisplayBootHex`: Heltec actual channel and current challenge; grant
+  is zero until a fresh matching acknowledgement proves the current display boot.
+- `G5CA1,CC,challengeHex,00000000`: Core2 acknowledgement on the advertised channel.
+
+Channels are decimal 01–11; challenge/grant are eight lowercase hex digits. Records are sent
+opportunistically every 500 ms when the transmitter is idle. A Heltec channel/peer-boot change
+rotates its challenge and invalidates old grants/queued requests. Core2 retunes only outside
+maintenance, Wi-Fi association/scanning and in-flight/queued TX, then requires a **new** record
+received on its actual matching channel with a grant naming its own boot. Both sides check
+freshness; callback and completed-line epochs reject proof or requests buffered before changes.
+The Heltec rechecks its actual driver channel at final request dispatch as well as polling/TX.
+
+Old/new pairs retain telemetry but cannot control: **update both accessory images** before testing
+mode commands. A complete authenticated telemetry message is not an alignment grant. Transport
+proof is additional to the existing application token, VESC identity/config checks and read-only
+build gate; it does not alter VESC state on loss, channel change, maintenance or restart.
 
 ## Validation and limits
 
@@ -89,6 +115,9 @@ stops or otherwise changes VESC state.
 undefined-behavior sanitizers: maximum size, loss/recovery, reordering, duplicate/replay, changed
 sender boot, malformed headers, CRC corruption, timeout and clock wrap. These are host framing
 checks, not over-the-air encryption, latency, BLE coexistence or eight-kart throughput evidence.
+The same command also runs pure alignment-state and actual adapter queue/callback tests. The
+adapter harness substitutes a deterministic test MAC to verify authentication ordering/rejection;
+it is not a test of cryptographic strength. Exact channel/recovery/range acceptance remains pending.
 The native framing test does not exercise the runtime HMAC verifier: wrong-key/header/payload/tag
 tamper acceptance remains a separate verification item. Hardware acceptance and actual installed
 image hashes belong in the project handoff.

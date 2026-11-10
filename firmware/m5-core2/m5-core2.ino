@@ -33,7 +33,7 @@ static void displayStatus(){
   const uint32_t now=millis();const auto& k=state.karts[state.self];
   bool modeReady=state.canRequest(now);
 #if M5_USE_ESPNOW
-  modeReady=modeReady&&!maintenance.active();
+  modeReady=modeReady&&!maintenance.active()&&wireless.channelAligned(now);
 #endif
   Serial.printf("{\"t\":\"m5_status\",\"fw\":\"m5-v1.5\",\"transport\":\"%s\",\"kart\":%d,\"live\":%s,\"vesc\":%s,\"mode_ready\":%s,\"page\":\"%s\",\"touch_enabled\":%s,\"touch_presses\":%lu,\"touch_x\":%d,\"touch_y\":%d,\"heap\":%lu}\n",
     M5_DEMO?"demo":M5_USE_ESPNOW?"espnow":"uart",state.self,state.live(now)?"true":"false",
@@ -157,6 +157,8 @@ void draw(uint32_t now) {
   const char* note=!state.live(now)?"HELTEC LOST / no automatic commands":k.stopped?"PIT STOP ACTIVE":k.slow?"PIT SLOW ACTIVE":state.pending?"Mode requested; awaiting read-back":state.pendingUnknown?"Outcome unknown; no retry":state.result==2?"Mode applied / read-back received":state.result==4?"Request refused":state.result==3?"VESC unavailable":state.canRequest(now)?"Hold a mode button to request":state.live(now)?"Mode controls unavailable":"No commands on reconnect";
 #if M5_USE_ESPNOW
   if(maintenance.active())note="UPDATE MODE / controls unavailable";
+  else if(state.live(now)&&!k.stopped&&!state.pending&&!state.pendingUnknown&&
+          !wireless.channelAligned(now))note="Waiting for verified radio channel";
 #endif
   text(note,5,189,1,TFT_LIGHTGREY);
   for(int i=0;i<3;++i){

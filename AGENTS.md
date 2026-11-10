@@ -26,6 +26,10 @@
   baseline; owner confirms same motor, battery/BMS, gearing and wheels. Capture all settings first,
   preserve controller/motor/pedal calibration and identities, and document the actual named-field
   changes. A runtime export is not proof of saved flash. No blind whole-config import.
+- Explicit maintenance exception recorded 2026-11-10: owner requested a Desktop backup and a
+  calibration-preserving tune trial. Twelve named motor fields were applied once with persistent
+  SET_MCCONF and exact 376-field readback; all app/calibration bytes preserved. Do not rerun the
+  old trial or infer permission for arbitrary future tuning. Supervisory writes remain temporary.
 - Driver messages and future safety geofence enforcement remain deferred. M5 game-zone UI parity
   is separate from enabling the existing Heltec/base command implementation.
 - The owner now explicitly authorizes ongoing commits/pushes at coherent, checked

@@ -92,6 +92,25 @@ class CompareTests(unittest.TestCase):
     def report(self):
         return compare.build_report(RAW, self.candidate)
 
+    def test_real_kart3_usb_capture_is_complete_and_distinct_from_baseline(self):
+        # Immutable real 6.02 bytes, captured read-only on November 10. No device access.
+        candidate = ROOT/'hardware/vesc/kart3/2026-11-10/usb-before-tune/raw'
+        report = compare.build_report(RAW, candidate)
+        self.assertEqual(report['candidate']['identity']['uuid'], '37004e000951343037353739')
+        self.assertEqual(report['candidate']['identity']['hardware'], '75_300_R2')
+        self.assertEqual(report['candidate']['identity']['firmware'], '6.02')
+        self.assertEqual(report['summary'], {'field_count':376, 'equal_count':326, 'different_count':50})
+        motor = report['configurations']['motor_configuration']
+        app = report['configurations']['app_configuration']
+        self.assertEqual((motor['different_count'], app['different_count']), (40, 10))
+        values = {row['field']:row['candidate'] for row in motor['fields']}
+        self.assertEqual(values['l_current_min'], -50.0)
+        self.assertEqual(values['foc_fw_current_max'], 15.0)
+        self.assertEqual(values['m_motor_temp_sens_type'], 0)
+        self.assertEqual(values['foc_phase_filter_enable'], 1)
+        self.assertTrue(report['candidate']['provenance']['payload_hashes_verified'])
+        self.assertTrue(report['candidate']['provenance']['manifest_identity_verified'])
+
     def test_every_field_and_expected_changes_are_recorded(self):
         report = self.report()
         self.assertEqual(report['summary'], {'field_count':376,'equal_count':374,'different_count':2})

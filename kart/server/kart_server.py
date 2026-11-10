@@ -460,7 +460,7 @@ class App:
             if self.disp.heltec_reboots != self._reboots_seen:     # Heltec rebooted mid-session
                 self._reboots_seen = self.disp.heltec_reboots
                 self._status_due = now + 1.0                        # re-read fw/radio/gps details
-                self.game.set_fw(None)                              # maybe reflashed: old mud until the reply
+                pre += self.game.set_fw(None, now)                  # maybe reflashed: cancel old prizes too
                 self.log.write("event", what="heltec_reboot", uptime_s=msg.get("uptime_s"))
                 if not demo:                                        # the firmware forgot its freeplay session
                     self.freeplay.set_fw(None)
@@ -473,26 +473,28 @@ class App:
                       f"{self.disp.heltec_id}; showing the Heltec's id (fix config.json or the Heltec's `id`)", flush=True)
             game = pre
             if t == "status":
-                self.game.set_fw(msg.get("fw"))     # mud as a timed SLOW only on kart-0.2.4+ (kartcore.FW_TIMED_SLOW)
+                game += self.game.set_fw(msg.get("fw"), now)     # timed SLOW only on kart-0.2.4+
                 if not demo:
                     self.freeplay.set_fw(msg.get("fw"))     # multiplayer only on kart-0.2.5+ (kartcore.FW_MULTIPLAYER)
             if t == "cmd":
                 rec = self.cmds.on_cmd_line(msg, wall)
                 if rec:
                     self.log.write("cmd_echo", id=rec["id"], seq=rec["seq"], result=rec["result_name"])
-                res = self.game.on_cmd(msg, now)
+                res = self.game.on_cmd(msg, now, game)
                 if res:
                     self.log.write("game", ev="cmd_echo", seq=msg.get("seq"), arg=msg.get("arg"),
                                    result=res["result_name"])
             elif t == "self":
                 self.cmds.on_self(msg)
-                game = self.game.on_self(msg, now, wall)
+                game += self.game.on_self(msg, now, wall)
             elif t == "gps":
-                game = self.game.on_gps(msg, now)
+                game += self.game.on_gps(msg, now)
             elif t == "race":
-                game = self.game.on_race(msg, now, wall)
+                game += self.game.on_race(msg, now, wall)
             elif t in ("game", "hit", "attack") and not demo:
                 game = game + self.freeplay.on_multi_line(t, msg, now)     # multiplayer freeplay (kart-0.2.5)
+                zones, more = self.freeplay.select(self.maps.zones(), now)
+                game += more + self.game.set_zones(zones, now)          # session changes invalidate pending prizes now
             if not demo and t in ("self", "gps"):
                 # freeplay: the engine's filtered position (course recording, the 10 m rule) and its
                 # item rolls (a roll on a freeplay box = collected)
@@ -512,11 +514,11 @@ class App:
                 self.log.write("event", what="link_up" if connected else "link_down", desc=desc, during="demo")
                 return
             self.disp.on_link_change()
-            self.game.set_fw(None)                    # another Heltec / a reflash: unknown until its status reply
+            mp = self.game.set_fw(None, time.monotonic())  # another Heltec/reflash; cancel and log old prizes
             # multiplayer: the Heltec may have rebooted and forgotten its session; the wish is re-sent once its
             # status reply shows kart-0.2.5+ (FreeplayGame.multi_tick)
             self.freeplay.set_fw(None)
-            mp = self.freeplay.multi_resync(time.monotonic())
+            mp += self.freeplay.multi_resync(time.monotonic())
             if connected:
                 self.disp.simulation = False
                 self._status_due = time.monotonic() + 1.0     # ask for fw/radio/gps details soon
@@ -545,9 +547,30 @@ class App:
         records from a simulated line: they are never saved as the real kart's game state, even if
         the demo was stopped while the line was in flight (the reader thread could otherwise write
         the simulator's laps/race into game-state.json a few ms after demo_stop)."""
+        rejected_prizes = set()
         for r in recs:
+            token = r.get("prize_token")
+            if token is not None:
+                token = tuple(token)
+                if token in rejected_prizes:
+                    continue
+                # Delayed prize records leave the engine lock before reaching this method.
+                # Atomically recheck generation/current state and enqueue without waiting.
+                with self.lock:
+                    valid = self.game.prize_current(token, time.monotonic())
+                    sent = valid and self._connected()
+                    if sent and r["ev"] == "cmd":
+                        sent = self._send_text(r["line"], wait=False)
+                    if not sent:
+                        rejected_prizes.add(token)
+                        rejected = self.game.reject_prize(token, r.get("zone"), time.monotonic())
+                        for event in rejected:
+                            self.log.write("game", **event)
+                if not sent:
+                    continue
             if r["ev"] == "cmd":
-                sent = self._connected() and self._send_text(r["line"], wait=False)
+                if token is None:
+                    sent = self._connected() and self._send_text(r["line"], wait=False)
                 self.log.write("game", **r, sent=bool(sent))
             else:
                 self.log.write("game", **r)
@@ -668,6 +691,8 @@ class App:
                     recs = fp.leave(now, why="driver")
                 else:
                     recs = fp.use(now)
+                zones, more = fp.select(self.maps.zones(), now)
+                recs += more + self.game.set_zones(zones, now)
         except kartcore.CommandError as e:
             self.log.write("op", who=who, action="freeplay", request=body, refused=str(e))
             raise
@@ -695,7 +720,10 @@ class App:
                 if not isinstance(on, bool):
                     raise ValueError('expected {"on": true|false}, {"toggle": true} or {"reset": true}')
                 recs = fp.set_on(on, now)
-            recs += fp.select(self.maps.zones(), now, demo=self.demo is not None)[1]   # phase for the reply
+            zones, more = fp.select(self.maps.zones(), now, demo=self.demo is not None)
+            recs += more
+            if self.demo is None:
+                recs += self.game.set_zones(zones, now)     # off/reset must not wait for the next ticker
             eco = fp.take_eco(self.game.stopped, self.game.grid_hold())       # switched on: ECO is the base
         self.log.write("op", who=who, action="freeplay", request=body)
         self._game_out(recs)
@@ -817,6 +845,9 @@ class App:
         if not self._connected():
             self.log.write("op", who=who, action="cmd", request=body, refused="heltec link down")
             raise kartcore.CommandError("Heltec not connected; nothing sent")
+        with self.lock:
+            canceled = self.game.cancel_items(time.monotonic(), "operator command") if cmd in ("mode", "stop", "start", "race") else []
+        self._game_out(canceled)
         ok = self._send_text(line)
         now, wall = time.monotonic(), wall_iso()
         with self.lock:

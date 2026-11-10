@@ -144,7 +144,7 @@ Configuration changes, firmware changes and motor tests are separate, documented
 
 ## M5 v1.5 coordination
 
-Branch `v1.5/m5-core2` is based on Eamon's `b543bea`. Keep the shared radio contract and motor
+Branch `v1.5/m5-core2` includes Eamon's `3178a10`. Keep the shared radio contract and motor
 policy with the Heltec; M5 UI code lives in `firmware/m5-core2`. The branch's draft PR targets
 `eamon/firmware-lora-starter` so the M5 diff can be reviewed independently of main integration.
 The implementing agent maintains the focused PR and handoff; merge/deployment remains separate.
