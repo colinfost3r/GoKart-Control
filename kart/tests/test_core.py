@@ -895,6 +895,26 @@ class Items(unittest.TestCase):
         self.assertEqual(lines(r3), [])
         self.assertEqual(evs(r3, "suppressed")[0]["why"], "kart STOPPED")
 
+    def test_item_reveal_survives_a_zone_update_like_freeplay_respawns(self):
+        # field 2026-11-10 (kart 2): freeplay rewrites its zones document right after every
+        # collection (box consumed + respawn), which must NOT cancel the rolled prize.
+        g = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4)     # 0.1 = BOOST
+        g.set_zones(zones_doc(item_zone()), 0.0)
+        g.on_self(fix(-20, 0), 1.0)
+        r = g.on_self(fix(-4, 0), 1.5)
+        self.assertEqual(evs(r, "item")[0]["item"], "boost")
+        d2 = zones_doc(item_zone())
+        d2["version"] = "freeplay-2"                                # a new doc, game still on
+        g.set_zones(d2, 1.7)
+        r2 = g.tick(3.0)                                            # reveal time: prize still lands
+        self.assertEqual(lines(r2), ["boost 5 0.75"])
+        # but a doc that turns the game OFF during the spin kills the prize
+        g3 = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4)
+        g3.set_zones(zones_doc(item_zone()), 0.0)
+        g3.on_self(fix(-20, 0), 1.0); g3.on_self(fix(-4, 0), 1.5)
+        g3.set_zones(zones_doc(item_zone(), enabled=False), 1.7)
+        self.assertEqual(lines(g3.tick(3.0)), [])
+
     def test_cooldown_15_and_gates(self):
         g = kc.GameEngine(rng=FixedRng(0.1))
         g.set_zones(zones_doc(item_zone()), 0.0)

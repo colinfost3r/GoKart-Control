@@ -1174,12 +1174,14 @@ class GameEngine:
             return recs
         old_lap = self.lapline.raw if self.lapline else None
         was_active = self.active()
-        self.pending_items = []
         self.doc = doc
         self.version = doc.get("version") if isinstance(doc, dict) else None
         src = doc.get("source") if isinstance(doc, dict) else None
         self.source = src if isinstance(src, str) and src else None
         self.enabled, self.areas, self.lapline, self.ignored = parse_zones(doc)
+        if not self.enabled:
+            self.pending_items = []     # game turned off mid-reveal: the rolled prize dies with it
+                                        # (zone updates keep them: freeplay respawns boxes on every collection)
         self.track = parse_track(doc)
         if isinstance(doc, dict) and doc.get("track") is not None and self.track is None:
             self.ignored.append({"id": "track", "reason": "invalid track (2-200 [lat, lon] points)"})
@@ -1360,7 +1362,9 @@ class GameEngine:
             return
         self.pending_items = [p for p in self.pending_items if now < p["due"]]
         for p in due:
-            if self.stopped is True:
+            if not self.enabled:
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="game disabled")
+            elif self.stopped is True:
                 self._rec(recs, "suppressed", now, zone=p["zone"].id, why="kart STOPPED")
             elif self.race["hold"]:
                 self._rec(recs, "suppressed", now, zone=p["zone"].id, why="grid hold")
