@@ -158,6 +158,7 @@ uint32_t bleScanMs = 0, bleConnectedMs = 0;
 struct BleCand { NimBLEAddress addr; int rssi; uint32_t seenMs; };
 BleCand bleCands[6]; int bleCandN = 0;
 bool bleWantConnect = false; NimBLEAddress bleTarget;
+String bleRejectMac;   // a VESC we connected to whose uuid did not match our pin: released, and not reconnected to until re-pinned or reboot (one Heltec per VESC)
 static const char* NUS_SERVICE = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
 static const char* NUS_TX      = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
 static const char* NUS_RX      = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
@@ -740,8 +741,11 @@ static void bleService() {
   if (bleScanMs) {                                   // previous scan results are in: report and pick
     bleReport();
     if (vescMac.length() >= 17) {
-      for (int i = 0; i < bleCandN; i++) if (sameMac(bleCands[i].addr, vescMac)) { bleTarget = bleCands[i].addr; bleWantConnect = true; break; }
-      if (!bleWantConnect && bleCandN) logf("ble: pinned VESC %s not seen (%d other VESC in range)", vescMac.c_str(), bleCandN);
+      for (int i = 0; i < bleCandN; i++) if (sameMac(bleCands[i].addr, vescMac)) {
+        if (bleRejectMac.length() && bleRejectMac.equalsIgnoreCase(bleCands[i].addr.toString().c_str())) break;   // its uuid proved to be another kart's: wait for a re-pin
+        bleTarget = bleCands[i].addr; bleWantConnect = true; break;
+      }
+      if (!bleWantConnect && bleCandN) logf("ble: pinned VESC %s %s (%d VESC in range)", vescMac.c_str(), bleRejectMac.length() ? "is another kart's controller (uuid mismatch); not reconnecting" : "not seen", bleCandN);
     } else if (bleCandN) {
       logf("ble: %d VESC in range, not connecting until pinned with vescmac", bleCandN);
     }
@@ -847,6 +851,17 @@ static void serviceVesc() {
     char hw[32]; gkJsonStr(hw, sizeof hw, vesc.hwName);
     if (bad != vescIdentityBad) { vescIdentityBad = bad; logf(bad ? "VESC IDENTITY MISMATCH: uuid %s, pinned %s; writes refused" : "vesc identity ok uuid %s", vesc.uuidHex, vescUuid.c_str()); }
     else if (!bad) logf("vesc fw %u.%02u %s uuid %s", vesc.fwMajor, vesc.fwMinor, hw, vesc.uuidHex);
+#if !VESC_TRANSPORT_UART
+    // One Heltec per VESC: a VESC whose uuid is not ours belongs to another kart. Do NOT squat on it
+    // (that blocks its own Heltec on the single BLE slot) -- release it and stop reconnecting until this
+    // kart is re-pinned. Needs a vescuuid pin to detect; an unpinned/clear kart never connects anyway.
+    if (bad) {
+      bleRejectMac = bleTarget.toString().c_str();
+      logf("VESC %s is not this kart's (pinned %s): releasing it so its own Heltec can connect; fix this kart's vescmac/vescuuid", vesc.uuidHex, vescUuid.c_str());
+      if (pClient && bleConnected) pClient->disconnect();
+      bleConnected = false; origValid = false; vesc.markLinkLost();
+    }
+#endif
   }
   if (!up && vescLinkWas) { modeConfirmed = false; logf("vesc link lost"); }
   vescLinkWas = up;
@@ -1254,15 +1269,15 @@ static void usbCommand(char* line) {
   else if (!strcmp(line, "otapw") && arg) { prefs.putString("otapw", arg); logf("ota password stored; reboot to apply"); }
   else if (!strcmp(line, "rate") && arg) { int r = atoi(arg); if (r == 1 || r == 2) { reportRate = r; prefs.putUChar("rate", r); logf("report rate %d Hz", r); } else logf("rate must be 1 or 2"); }
   else if (!strcmp(line, "vescuuid") && arg) {
-    if (!strcmp(arg, "clear")) { prefs.remove("vescuuid"); vescUuid = ""; vescIdentityBad = false; logf("vesc uuid pin cleared"); }
-    else if (!strcmp(arg, "now") && vesc.uuidHex[0]) { vescUuid = vesc.uuidHex; prefs.putString("vescuuid", vescUuid); vescIdentityBad = false; logf("vesc uuid pinned to %s", vescUuid.c_str()); }
-    else if (strlen(arg) == 24) { vescUuid = arg; prefs.putString("vescuuid", vescUuid); vescIdCheckedMs = 0; logf("vesc uuid pinned to %s", arg); }
+    if (!strcmp(arg, "clear")) { prefs.remove("vescuuid"); vescUuid = ""; vescIdentityBad = false; bleRejectMac = ""; logf("vesc uuid pin cleared"); }
+    else if (!strcmp(arg, "now") && vesc.uuidHex[0]) { vescUuid = vesc.uuidHex; prefs.putString("vescuuid", vescUuid); vescIdentityBad = false; bleRejectMac = ""; logf("vesc uuid pinned to %s", vescUuid.c_str()); }
+    else if (strlen(arg) == 24) { vescUuid = arg; prefs.putString("vescuuid", vescUuid); vescIdCheckedMs = 0; bleRejectMac = ""; logf("vesc uuid pinned to %s", arg); }
     else logf("usage: vescuuid <24 hex> | now | clear");
   }
   else if (!strcmp(line, "vescmac") && arg) {
     if (!strcmp(arg, "clear")) { prefs.remove("vescmac"); vescMac = ""; logf("vesc address cleared"); }
     else { prefs.putString("vescmac", arg); vescMac = arg; logf("vesc address pinned to %s", arg); }
-    haveFirst = false; wroteThisBoot = false;            // a different controller gets its own baseline
+    haveFirst = false; wroteThisBoot = false; bleRejectMac = "";   // a different controller gets its own baseline
 #if !VESC_TRANSPORT_UART
     if (bleConnected && pClient) pClient->disconnect();
 #endif
