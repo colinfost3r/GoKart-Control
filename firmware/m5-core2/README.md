@@ -1,24 +1,25 @@
 # M5 Core2 v1.5
 
-Branch **`v1.5/m5-core2`**, based on Eamon's `b48c5ad` (2026-11-10).
+Branch **`v1.5/m5-core2`**, including Eamon's `fc7e610` / kart 0.2.7 (2026-11-10).
 Owner confirmed the display is **Core2 v1.3 / K010-V13** on 2026-11-09.
 An alternative driver display for the existing Heltec + pit stack. The Pi v2 display remains
 available. This milestone implements telemetry, mode requests, base-station status and a simple
-north-up map. **Initial hardware deployment is in progress; display and full-system acceptance
-are still pending.**
+north-up map. **Kart 3 live telemetry and authenticated Core2 OTA are verified on hardware;
+mode writes and full fleet/driving acceptance remain pending.**
 
-**2026-11-10 checkpoint:** both full 16 MB rollback images are retained privately. The Core2
-demo/live images and Heltec `kart-m5-readonly` image were uploaded and hash-verified. Kart ID
-**3** is saved, VESC UUID/MAC are pinned, `writes:false` and radio OK at 2 Hz are reported.
-GPS data is arriving with no fix. Wi-Fi is connected and the `gokart-3` hostname is verified;
-an OTA password is stored, but an actual OTA upload has not been tested. The owner sees kart 3
-in the pit. No UART wires are installed and the VESC remains off pending the first read-only
-telemetry test.
+**2026-11-10 setup:** both full 16 MB rollback images are retained privately. Earlier USB
+uploads and the four-target touch diagnostic succeeded; the owner also saw kart 3 in the pit.
+Kart ID **3** is the owner-assigned fleet identity. It does **not** establish which VESC belongs
+to this kart. Eamon's `fc7e610` identifies the previously reused BLE address as kart 2's controller;
+verify kart 3's physical controller and both identity pins before the read-only telemetry test.
+See the [identity check](BRINGUP.md#verify-kart-3s-controller-identity).
 
-All four targets in the standalone touch diagnostic worked in normal IRQ mode, with coordinates
-logged. The dashboard now has outlined, 40-pixel-high tabs in source; final UI confirmation is
-pending. The new ESP-NOW targets below still need their builds, installation and physical
-acceptance; they are **not claimed installed** by this checkpoint.
+Core2 Wi-Fi maintenance/OTA is implemented for `m5-espnow`. **An authenticated application
+upload succeeded; credentials survived restart, the maintenance window returned to off, and
+ESP-NOW telemetry recovered.** The owner confirms live readings and working DASH/MAP tabs.
+Kart 3 now has its own verified 6.02 / 75_300_R2 identity, recorded in the
+[handoff](../../HANDOFF.md) and [sanitized evidence](../../hardware/m5/2026-11-10-kart3/README.md).
+The installed Heltec remains read-only, so M5/pit mode selection is deliberately disabled.
 
 ## Ownership and compatibility
 
@@ -36,7 +37,7 @@ and touch only. The original M5 BLE client/profile writer is not included. It mu
 by this display image before using this topology. No two devices should connect to the same
 VESC. The motor's wired controls and protection stay with the VESC.
 
-The M5 targets are **opt-in**. Integration now includes Eamon's kart0.2.6 and 46/47/54-byte
+The M5 targets are **opt-in**. Integration now includes Eamon's kart0.2.7 and 46/47/54-byte
 radio support; an idle kart still sends 47 bytes. M5 ignores the multiplayer-only fields.
 Active multiplayer requires updated base/repeater0.2.2; this first M5 telemetry test stays
 out of game sessions. Normal `kart`, `kart-uart`, base, repeater and Pi builds retain
@@ -78,8 +79,10 @@ they are not a claim that this assembly has passed physical testing.
   leaving VESC protection, telemetry and pit reporting intact.
 
 No aerial maps, race-entry filter (not present in the local telemetry contract), game zones,
-FREEPLAY, boost actions, lap counting, sounds, Wi-Fi map sync, or M5 OTA yet. The Heltec's
-existing Wi-Fi OTA path remains as upstream; OTA operation on this board is not yet validated.
+FREEPLAY, boost actions, lap counting, sounds or Wi-Fi map sync yet. The wireless Core2 build
+has its own explicit [maintenance/OTA window](#core2-maintenance-and-ota); the Heltec's separate
+Wi-Fi OTA path remains upstream. Neither source support nor a saved password proves that an
+OTA transfer has completed on this assembly.
 
 ## Wireless option: no jumper wires
 
@@ -98,9 +101,12 @@ per-board writes, so retain the recovery record if setup stops partway. Keys are
 or committed; the record stays in ignored `firmware/build/bench-private/` with restricted
 permissions. Existing pairings are not silently replaced.
 
-The Heltec keeps its existing Wi-Fi station channel and OTA connection. Core2 joins no Wi-Fi
-access point; it searches channels 1–11 for its authenticated Heltec. Channel recovery can take
-several seconds. Radio coexistence, range and recovery still need physical validation.
+The Heltec keeps its existing Wi-Fi station channel and OTA connection. During normal display
+operation, Core2 searches channels 1–11 for its authenticated Heltec without joining an access
+point. Only an explicitly enabled maintenance window joins the Core2's saved Wi-Fi network.
+The access point then owns its radio channel, which can temporarily interrupt ESP-NOW if the
+Heltec is on a different channel. Disabling maintenance resumes channel search. Reacquisition
+can take several seconds; radio coexistence, range and recovery need physical validation.
 
 ## Wired option (verify on the actual boards before connecting)
 
@@ -171,6 +177,67 @@ USB `espnow status` on each board should show the intended peer and eventually `
 Core2 `status` should show `transport:"espnow"` and live kart-3 telemetry. Pairing readback
 alone does not establish a working radio link. USB provisioning cannot be forwarded over
 ESP-NOW. Keep the VESC off until the display pair is ready for the first read-only VESC test.
+
+## Core2 maintenance and OTA
+
+Available in **`m5-espnow` only**. Updates use ordinary Wi-Fi and the Core2's own hostname,
+**`gokart-display-3.local`**, not the Heltec's `gokart-3.local`, LoRa, or the pit server.
+No SD card is needed. First install the maintenance-capable image over USB; subsequent
+application updates can use the password-protected OTA uploader.
+
+Maintenance is **inactive after every boot**, including after an update. Saved credentials do
+not start Wi-Fi or OTA. Hold the dashboard's **top status bar for 1.8 seconds** to open DISPLAY
+UPDATES, then tap **ENABLE UPDATES**. The USB equivalent is `ota on`. This starts a ten-minute
+window, including the time spent joining Wi-Fi. Repeating `ota on` does not extend it. The screen
+shows the hostname, readiness, remaining time and upload progress. Returning to the dashboard
+does not close the window; use **DISABLE UPDATES**, USB `ota off`, or let it expire.
+
+While maintenance is active, the Core2 sends **no driver mode requests**. It follows the access
+point's Wi-Fi channel and pauses its ESP-NOW channel search, so live display data may pause.
+During the actual firmware transfer, the updater blocks normal display telemetry processing;
+progress is drawn from the update callbacks. The Heltec continues to own VESC BLE and LoRa.
+Maintenance expiry does not interrupt an authenticated flash transfer already in progress;
+success restarts the Core2, and normal ESP-NOW discovery resumes with maintenance off.
+
+Provision through the **Core2's physical USB console**, with maintenance off. The command is
+`ota config ` followed by one JSON object with exactly these four fields (example values only):
+
+```text
+ota config {"ssid":"YOUR_WIFI_SSID","wifi_password":"YOUR_WIFI_PASSWORD","ota_password":"REPLACE_WITH_UNIQUE_12_TO_64_CHAR_SECRET","hostname":"gokart-display-3"}
+```
+
+`ssid` is 1–32 bytes, `wifi_password` is 0–64 bytes, and `ota_password` is 12–64 bytes.
+`hostname` is 1–31 letters/digits/hyphens without leading/trailing hyphens; omit `.local` here.
+The JSON is limited to 300 bytes. One NVS record stores the validated configuration. Neither
+credentials nor configuration commands are accepted over ESP-NOW, and status output omits
+SSID/passwords. `ota status` reports `configured`, `active`, `wifi`, `ready`, `progress`,
+`remaining_ms`, hostname and any error. Wait for `ready:true` before uploading.
+
+Keep a private JSON file containing the same `ota_password` under ignored
+`firmware/build/bench-private/` with file permissions `0600` and a private parent directory.
+It may also contain the other provisioning fields. Do not put real credentials into shared
+terminal logs, source files or Git. From the repository root:
+
+```sh
+bash firmware/build.sh m5-espnow
+python3 tools/m5/ota_core2.py \
+  --host gokart-display-3.local \
+  --image firmware/build/m5-core2-m5-espnow/m5-core2.ino.bin \
+  --credentials firmware/build/bench-private/core2-ota-private.json \
+  --espota /path/to/esp32/3.3.8/tools/espota.py
+```
+
+Replace the credentials and installed-core paths with the actual private file and official
+`espota.py` from ESP32 Arduino **3.3.8**. Use an application `.ino.bin`, never a merged-flash,
+bootloader or Heltec image. The helper snapshots the image and prints its exact SHA-256, passes
+the password through a private pipe rather than argv, requires password authentication plus an
+explicit success acknowledgement, and enforces a maximum 120-second upload deadline. It sends
+no VESC commands. A timeout or uncertain result requires status verification before any retry.
+
+A successful uploader response must be followed by Core2 reboot/status verification, maintenance
+`active:false`, renewed ESP-NOW telemetry, and confirmation that the Heltec still reports
+`writes:false`. Record the image hash and observed results in the handoff. The ordered checks
+are in [BRINGUP](BRINGUP.md#core2-ota-check), and helper details are in the [tools README](../../tools/README.md#core2-ota).
 
 ## Course outline
 
@@ -245,6 +312,7 @@ These tests need C++17 plus ArduinoJson's installed header directory:
 export ARDUINOJSON_DIR='/path/to/Arduino/libraries/ArduinoJson/src'
 python3 -I firmware/tests/test_m5.py
 python3 -I firmware/tests/test_m5_espnow.py
+python3 -I firmware/tests/test_m5_ota.py  # fake uploader; no hardware/network
 tools/run_tests.sh                 # all existing suites plus M5 tests
 ```
 

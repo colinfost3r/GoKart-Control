@@ -1335,6 +1335,14 @@ static void usbStatus() {
                 (int)txPowerDbm, radiatedDbm(), (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMinFreeHeap());
 }
 
+// The UUID console is shared by BLE and wired VESC builds. Only BLE has a rejected-peer
+// quarantine, so clearing it after a valid re-pin is intentionally a no-op for UART.
+static void clearBleRejection() {
+#if !VESC_TRANSPORT_UART
+  bleRejectMac = "";
+#endif
+}
+
 static void usbCommand(char* line) {
 #if GK_M5_ESPNOW
   if (m5WirelessSettings.command(line, m5Wireless, Serial)) return;
@@ -1369,15 +1377,15 @@ static void usbCommand(char* line) {
   else if (!strcmp(line, "otapw") && arg) { prefs.putString("otapw", arg); logf("ota password stored; reboot to apply"); }
   else if (!strcmp(line, "rate") && arg) { int r = atoi(arg); if (r == 1 || r == 2) { reportRate = r; prefs.putUChar("rate", r); logf("report rate %d Hz", r); } else logf("rate must be 1 or 2"); }
   else if (!strcmp(line, "vescuuid") && arg) {
-    if (!strcmp(arg, "clear")) { prefs.remove("vescuuid"); vescUuid = ""; vescIdentityBad = false; bleRejectMac = ""; logf("vesc uuid pin cleared"); }
-    else if (!strcmp(arg, "now") && vesc.uuidHex[0]) { vescUuid = vesc.uuidHex; prefs.putString("vescuuid", vescUuid); vescIdentityBad = false; bleRejectMac = ""; logf("vesc uuid pinned to %s", vescUuid.c_str()); }
-    else if (strlen(arg) == 24) { vescUuid = arg; prefs.putString("vescuuid", vescUuid); vescIdCheckedMs = 0; bleRejectMac = ""; logf("vesc uuid pinned to %s", arg); }
+    if (!strcmp(arg, "clear")) { prefs.remove("vescuuid"); vescUuid = ""; vescIdentityBad = false; clearBleRejection(); logf("vesc uuid pin cleared"); }
+    else if (!strcmp(arg, "now") && vesc.uuidHex[0]) { vescUuid = vesc.uuidHex; prefs.putString("vescuuid", vescUuid); vescIdentityBad = false; clearBleRejection(); logf("vesc uuid pinned to %s", vescUuid.c_str()); }
+    else if (strlen(arg) == 24) { vescUuid = arg; prefs.putString("vescuuid", vescUuid); vescIdCheckedMs = 0; clearBleRejection(); logf("vesc uuid pinned to %s", arg); }
     else logf("usage: vescuuid <24 hex> | now | clear");
   }
   else if (!strcmp(line, "vescmac") && arg) {
     if (!strcmp(arg, "clear")) { prefs.remove("vescmac"); vescMac = ""; logf("vesc address cleared"); }
     else { prefs.putString("vescmac", arg); vescMac = arg; logf("vesc address pinned to %s", arg); }
-    haveFirst = false; wroteThisBoot = false; bleRejectMac = "";   // a different controller gets its own baseline
+    haveFirst = false; wroteThisBoot = false; clearBleRejection();   // a different controller gets its own baseline
 #if !VESC_TRANSPORT_UART
     if (bleConnected && pClient) pClient->disconnect();
 #endif

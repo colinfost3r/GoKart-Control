@@ -4,6 +4,7 @@
 | --- | --- | --- |
 | [`run_tests.sh`](run_tests.sh) | Runs every offline test suite, prints a summary table | Python 3.9+, pyserial |
 | [`bench/e2e_bench.py`](bench/e2e_bench.py) | Live check of the whole chain: pit server -> T-Beam -> LoRa -> kart Heltec -> kart Pi | The pit Pi, a powered kart |
+| [`m5/ota_core2.py`](m5/ota_core2.py) | Password-protected Core2 application update with exact image SHA-256 and bounded uploader process | `m5-espnow` maintenance enabled, private credentials JSON, official ESP32 3.3.8 `espota.py` |
 | [`vesc/`](vesc/README.md) | Read-only VESC capture (allowlisted command ids 0, 4, 14, 17) and offline decoder | A VESC on USB for capture; nothing for decode |
 
 The SD card kits and deploy scripts live with their component (`pit/sdcard`, `kart/sdcard`,
@@ -65,6 +66,51 @@ sends `race 3`, which on a kart with a linked VESC holds the current scale at 0 
 then restores it. Run it with the drive wheels off the ground or the VESC unlinked.
 
 Last recorded run: 16 checks pass on kart 2, 2026-11-06 (commit cc5c406).
+
+## Core2 OTA
+
+`m5/ota_core2.py` updates only the Core2 display application. It does not provision Wi-Fi,
+pair ESP-NOW, modify the Heltec, or issue VESC commands. Use the `m5-espnow` build and enable
+its explicit ten-minute maintenance window first. Hold the top status bar for 1.8 seconds,
+then tap ENABLE UPDATES, or use Core2 USB `ota on`; wait for `ota status` with `ready:true`.
+Maintenance is off on every boot. No SD card is involved. See the [Core2 setup guide](../firmware/m5-core2/README.md#core2-maintenance-and-ota)
+for USB provisioning and [bring-up checks](../firmware/m5-core2/BRINGUP.md#core2-ota-check).
+
+From the repository root:
+
+```sh
+python3 tools/m5/ota_core2.py \
+  --host gokart-display-3.local \
+  --image firmware/build/m5-core2-m5-espnow/m5-core2.ino.bin \
+  --credentials firmware/build/bench-private/core2-ota-private.json \
+  --espota /path/to/esp32/3.3.8/tools/espota.py
+```
+
+All four arguments are required; replace example file paths with the actual files. The
+credentials JSON must belong to the current user, have no group/other access (`chmod 600`),
+and contain `ota_password` matching the Core2's saved configuration. Keep it in an ignored
+private directory, never Git. The helper is standard-library Python; it imports the official
+local uploader in a child process and sends the password through stdin instead of argv or the
+environment. Raw uploader output and credentials are not printed.
+
+The image must be a Core2/ESP32 **application** `.bin`, not a Heltec/S3, bootloader or merged
+image. A private immutable snapshot is hashed, and the exact SHA-256/byte count is printed
+before upload. Authentication is required with the current SHA256 protocol; an unauthenticated
+target or legacy downgrade is refused. Success requires the official uploader's explicit
+acknowledgement, not just its exit code. `--timeout` accepts 1–120 seconds and defaults to 120;
+a deadline or interruption terminates the worker. Verify device state before retrying an
+uncertain transfer. USB recovery and post-reboot telemetry checks remain separate.
+
+Core2 follows the AP channel while maintenance is active, so ESP-NOW telemetry can pause;
+normal discovery resumes after disabling updates or reboot. Driver mode requests are blocked
+throughout maintenance. An OTA acknowledgement is not proof of an observed reboot or restored
+telemetry; those hardware checks remain pending until recorded in HANDOFF.
+
+Offline regression tests use a fake uploader and never open sockets or serial ports:
+
+```sh
+python3 -I firmware/tests/test_m5_ota.py
+```
 
 ## The three deploy kits
 

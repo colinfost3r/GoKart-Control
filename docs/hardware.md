@@ -45,3 +45,13 @@ Owner confirmed M5Stack Core2 v1.3 / K010-V13 (320x240) on 2026-11-09
 TX, G32 TX to Heltec G48 RX, shared ground, 3.3 V UART logic at 230400 baud. Exact unit/pinout,
 power supply/backfeed and sustained UART load are not yet checked. Keep Heltec power independent
 of the display. [M5 wiring/build guide](../firmware/m5-core2/README.md). No hardware was changed.
+
+
+## Kart 3 controller identity — observed 2026-11-10
+
+This M5 v1.5 development kart is a different controller from the original captured baseline:
+VESC **75_300_R2 / firmware 6.02**, Bluetooth **f7:bd:23:cc:62:0e**, UUID
+**37004e000951343037353739**. The Heltec is fleet ID 3, with both pins saved/read back.
+The old d8:94:35:be:e5:32 / 2c004c000951343037353739 pairing belongs to kart 2 per Eamon's
+`fc7e610`; do not copy it to another kart. Read-only telemetry reached the Core2 and the owner
+confirmed live readings. [Evidence and capture limitations](../hardware/m5/2026-11-10-kart3/README.md).

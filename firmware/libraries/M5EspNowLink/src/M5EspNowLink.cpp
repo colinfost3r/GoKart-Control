@@ -179,7 +179,7 @@ void Link::poll(uint32_t now) {
   if(role_==Role::Display) {
     if(!connected(now)) {
       abandonTx();
-      if(!inFlight_ && WiFi.status()!=WL_CONNECTED && uint32_t(now-hopMs_)>=650) {
+      if(channelSearchEnabled_ && !inFlight_ && WiFi.status()!=WL_CONNECTED && uint32_t(now-hopMs_)>=650) {
         const uint8_t next=channel_>=11?1:uint8_t(channel_+1);
         if(esp_wifi_set_channel(next,WIFI_SECOND_CHAN_NONE)==ESP_OK) {
           channel_=next;++stats_.channelHops;assembler_.clear();

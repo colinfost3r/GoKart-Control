@@ -1,0 +1,126 @@
+{
+  "date": "2026-11-10",
+  "scope": "Accessory firmware, ESP-NOW display, authenticated Core2 OTA, read-only kart 3 VESC telemetry; no motor commands or VESC settings writes",
+  "upstream": "fc7e610",
+  "core2": {
+    "status": {
+      "fw": "m5-v1.5",
+      "transport": "espnow",
+      "kart": 3,
+      "live": true,
+      "vesc": true,
+      "mode_ready": false,
+      "touch_enabled": true
+    },
+    "ota_after_restart": {
+      "configured": true,
+      "active": false,
+      "wifi": false,
+      "ready": false,
+      "updating": false,
+      "restarting": false,
+      "hostname": "gokart-display-3",
+      "error": ""
+    },
+    "espnow": {
+      "ready": true,
+      "linked": true,
+      "channel": 5,
+      "tx_packets": 39,
+      "tx_failed": 0,
+      "rx_lines": 135,
+      "rx_packets": 392,
+      "rx_dropped": 1,
+      "rx_invalid": 0,
+      "channel_hops": 4
+    },
+    "ota_upload": "Password-authenticated application upload acknowledged by official ESP32 3.3.8 uploader; same tested application; subsequent restart readback and ESP-NOW recovery verified.",
+    "owner_observations": [
+      "DASH and MAP tabs respond",
+      "Live battery voltage and connected status visible"
+    ],
+    "application": {
+      "target": "m5-core2-m5-espnow",
+      "bytes": 1296288,
+      "sha256": "c090ce154e457343b4ab7b99ef39fd4b996fb826c23dc242543ea47d21c4cb63"
+    }
+  },
+  "heltec": {
+    "status": {
+      "kart": 3,
+      "fw": "kart-0.2.7",
+      "writes": false,
+      "vescmac": "f7:bd:23:cc:62:0e",
+      "vesc_uuid": "37004e000951343037353739",
+      "uuid_pin": "37004e000951343037353739",
+      "id_ok": true,
+      "vesc_packets": 81,
+      "limits_ok": true
+    },
+    "application": {
+      "target": "kart-heltec-v4-kart-m5-espnow-readonly",
+      "bytes": 1323184,
+      "sha256": "f55e3e53fe7c36cb0aa64371de528d9d1ac6d1f416b0b9bf3cdce68d7054453e"
+    }
+  },
+  "vesc": {
+    "identity_and_runtime_limits": {
+      "vescmac": "f7:bd:23:cc:62:0e",
+      "vesc_uuid": "37004e000951343037353739",
+      "uuid_pin": "37004e000951343037353739",
+      "id_ok": true,
+      "vesc_fw": "6.02",
+      "vesc_hw": "75_300_R2",
+      "vesc_packets": 174,
+      "vesc_limits": true,
+      "limits_ok": true,
+      "l_current_max": 120.0,
+      "l_in_current_max": 90.0,
+      "max_erpm": 100000,
+      "scale_max": 1.0,
+      "scale_min": 1.0,
+      "poles": 20,
+      "gear": 2.769,
+      "wheel_m": 0.406
+    },
+    "telemetry": {
+      "kart": 3,
+      "volts": 82.4,
+      "motor_a": 0.0,
+      "batt_a": 0.0,
+      "erpm": 0,
+      "esc_c": 17.3,
+      "fault": 0,
+      "vesc_link": true,
+      "writes": false,
+      "mode_confirmed": true
+    },
+    "capture_limit": "Heltec runtime reads only, not a complete configuration export or verified saved-flash backup. Original fw6.00 baseline is a different controller; do not apply its schemas/config automatically to fw6.02."
+  },
+  "validation": {
+    "offline_tests": 276,
+    "skipped": 0,
+    "suites": 7,
+    "result": "ALL PASSED",
+    "affected_builds": [
+      "m5",
+      "m5-demo",
+      "m5-espnow",
+      "kart",
+      "kart-uart",
+      "kart-m5",
+      "kart-m5-readonly",
+      "kart-m5-espnow-readonly"
+    ]
+  },
+  "limits": [
+    "No VESC writes or motor motion commanded",
+    "Mode selection intentionally disabled by read-only firmware",
+    "No 8-kart RF load test",
+    "No physical wrong-key/tamper injection test",
+    "No actual Heltec OTA transfer in this checkpoint (authenticated service advertised)",
+    "Core2 long-press update menu implemented; this upload window was enabled over USB",
+    "RF drops observed; not lossless",
+    "USB diagnostic attachment can reset accessories"
+  ]
+}

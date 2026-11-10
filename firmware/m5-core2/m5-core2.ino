@@ -7,8 +7,12 @@
 #include "DisplayState.h"
 #if M5_USE_ESPNOW
 #include <M5EspNowSettings.h>
+#include "DisplayMaintenance.h"
 m5now::Link wireless;
 m5now::Settings wirelessSettings;
+m5dash::DisplayMaintenance maintenance;
+bool maintenanceMenu=false,headerHolding=false;
+uint32_t headerHoldMs=0;
 
 #endif
 
@@ -23,13 +27,17 @@ struct TabRect {int x,y,w,h;bool contains(int px,int py)const{return px>=x&&px<x
 constexpr TabRect tabs[3]={{4,23,94,40},{103,23,94,40},{202,23,114,40}};
 uint32_t drawMs=0,requestId=0,holdMs=0;
 int heldMode=-1; bool holdFired=false;
-m5link::Lines<160> usbLines;
+m5link::Lines<400> usbLines;
 uint32_t touchPresses=0;int touchX=-1,touchY=-1;
 static void displayStatus(){
   const uint32_t now=millis();const auto& k=state.karts[state.self];
+  bool modeReady=state.canRequest(now);
+#if M5_USE_ESPNOW
+  modeReady=modeReady&&!maintenance.active();
+#endif
   Serial.printf("{\"t\":\"m5_status\",\"fw\":\"m5-v1.5\",\"transport\":\"%s\",\"kart\":%d,\"live\":%s,\"vesc\":%s,\"mode_ready\":%s,\"page\":\"%s\",\"touch_enabled\":%s,\"touch_presses\":%lu,\"touch_x\":%d,\"touch_y\":%d,\"heap\":%lu}\n",
     M5_DEMO?"demo":M5_USE_ESPNOW?"espnow":"uart",state.self,state.live(now)?"true":"false",
-    state.live(now)&&k.vesc?"true":"false",state.canRequest(now)?"true":"false",mapPage?"map":"dash",
+    state.live(now)&&k.vesc?"true":"false",modeReady?"true":"false",mapPage?"map":"dash",
     M5.Touch.isEnabled()?"true":"false",(unsigned long)touchPresses,touchX,touchY,(unsigned long)ESP.getFreeHeap());
 }
 static void displayUsb(){
@@ -38,6 +46,12 @@ static void displayUsb(){
     const char* line=usbLines.feed((char)Serial.read(),millis());if(!line)continue;
 #if M5_USE_ESPNOW
     if(wirelessSettings.command(line,wireless,Serial))continue;
+    if(!strcmp(line,"ota on"))wireless.setChannelSearchEnabled(false);
+    if(maintenance.command(line,Serial)){
+      wireless.setChannelSearchEnabled(!maintenance.active());
+      if(maintenance.active())maintenanceMenu=true;
+      continue;
+    }
 #endif
     if(!strcmp(line,"status"))displayStatus();
     else if(!strcmp(line,"reboot")){Serial.flush();ESP.restart();}
@@ -104,7 +118,29 @@ void drawDash(uint32_t now) {
   text(b,10,161,1,TFT_YELLOW);
   if(state.metadataFresh(now)&&std::isfinite(state.speedCal)){snprintf(b,sizeof b,"RF %d Hz / %d dBm | Cal %.3f",state.rate,state.baseRssi,state.speedCal);text(b,10,177,1,TFT_LIGHTGREY);}
 }
+#if M5_USE_ESPNOW
+static void drawMaintenance(){
+  canvas.fillScreen(TFT_BLACK);
+  text("DISPLAY UPDATES",10,10,2,TFT_CYAN);
+  const char* status=maintenance.restarting()?"Update complete / restarting":maintenance.updating()?"Installing authenticated firmware":maintenance.ready()?"Ready for password-protected OTA":maintenance.active()?"Joining saved Wi-Fi...":maintenance.configured()?"Updates are disabled":"Set up update Wi-Fi over USB first";
+  text(status,10,43,1,TFT_WHITE);
+  if(maintenance.configured()){char host[55];snprintf(host,sizeof host,"%s.local",maintenance.hostname());text(host,10,61,1,TFT_LIGHTGREY);}
+  if(maintenance.active()){
+    char detail[60];snprintf(detail,sizeof detail,"%u%% uploaded | window %lu:%02lu",unsigned(maintenance.progress()),(unsigned long)(maintenance.remainingMs()/60000),(unsigned long)(maintenance.remainingMs()/1000%60));
+    text(detail,10,80,1,TFT_YELLOW);
+  }
+  if(maintenance.lastError()[0])text(maintenance.lastError(),10,96,1,TFT_YELLOW);
+  canvas.drawRoundRect(10,108,300,48,6,TFT_CYAN);
+  text(maintenance.active()?"DISABLE UPDATES":"ENABLE UPDATES",23,124,2,maintenance.updating()?TFT_DARKGREY:TFT_WHITE);
+  text("Live display data may pause in update mode.",10,166,1,TFT_LIGHTGREY);
+  canvas.drawRoundRect(10,186,300,44,6,TFT_LIGHTGREY);text("BACK TO DASHBOARD",22,200,2,TFT_WHITE);
+  canvas.pushSprite(0,0);
+}
+#endif
 void draw(uint32_t now) {
+#if M5_USE_ESPNOW
+  if(maintenanceMenu||maintenance.updating()||maintenance.restarting()){drawMaintenance();return;}
+#endif
   canvas.fillScreen(TFT_BLACK);char b[64];const auto& k=state.karts[state.self];
   bool meta=state.metadataFresh(now);
   if(M5_DEMO)snprintf(b,sizeof b,"DEMO / NO OUTPUT   K%d",state.self);
@@ -119,6 +155,9 @@ void draw(uint32_t now) {
   if(mapPage){const auto& t=tabs[2];canvas.drawRoundRect(t.x,t.y,t.w,t.h,5,TFT_YELLOW);text(onlineOnly?"FRESH ONLY":"STALE TOO",t.x+11,t.y+16,1,TFT_YELLOW);}
   if(mapPage)drawMap(now);else drawDash(now);
   const char* note=!state.live(now)?"HELTEC LOST / no automatic commands":k.stopped?"PIT STOP ACTIVE":k.slow?"PIT SLOW ACTIVE":state.pending?"Mode requested; awaiting read-back":state.pendingUnknown?"Outcome unknown; no retry":state.result==2?"Mode applied / read-back received":state.result==4?"Request refused":state.result==3?"VESC unavailable":state.canRequest(now)?"Hold a mode button to request":state.live(now)?"Mode controls unavailable":"No commands on reconnect";
+#if M5_USE_ESPNOW
+  if(maintenance.active())note="UPDATE MODE / controls unavailable";
+#endif
   text(note,5,189,1,TFT_LIGHTGREY);
   for(int i=0;i<3;++i){
     int x=i*107;bool selected=state.live(now)&&k.vesc&&k.confirmed&&k.mode==i;
@@ -135,6 +174,23 @@ void draw(uint32_t now) {
 void touch(uint32_t now) {
   auto t=M5.Touch.getDetail();
   if(t.wasPressed()){++touchPresses;touchX=t.x;touchY=t.y;}
+#if M5_USE_ESPNOW
+  if(maintenanceMenu||maintenance.updating()||maintenance.restarting()){
+    heldMode=-1;holdFired=false;headerHolding=false;
+    if(!maintenance.updating()&&!maintenance.restarting()&&t.wasPressed()){
+      if(t.x>=10&&t.x<310&&t.y>=108&&t.y<156){
+        if(maintenance.active())maintenance.stop();
+        else {wireless.setChannelSearchEnabled(false);maintenance.start();}
+        wireless.setChannelSearchEnabled(!maintenance.active());
+      }else if(t.x>=10&&t.x<310&&t.y>=186&&t.y<230)maintenanceMenu=false;
+    }
+    return;
+  }
+  if(t.isPressed()&&t.x>=0&&t.x<320&&t.y>=0&&t.y<22){
+    if(!headerHolding){headerHolding=true;headerHoldMs=now;}
+    if(uint32_t(now-headerHoldMs)>=1800){maintenanceMenu=true;heldMode=-1;return;}
+  }else headerHolding=false;
+#endif
   if(t.wasPressed()){
     if(tabs[0].contains(t.x,t.y))mapPage=false;
     else if(tabs[1].contains(t.x,t.y))mapPage=true;
@@ -147,7 +203,7 @@ void touch(uint32_t now) {
 #if !M5_DEMO
     char line[48];
 #if M5_USE_ESPNOW
-    if(wireless.canSend(now)){
+    if(!maintenance.active()&&wireless.canSend(now)){
 #else
     if(Serial2.availableForWrite()>=40){
 #endif
@@ -187,6 +243,8 @@ void setup() {
     wireless.begin(m5now::Role::Display,p.peer,p.lmk,p.pmk);
   }
   wirelessSettings.status(wireless,Serial);
+  maintenance.begin();
+  maintenance.setUiCallback([](){maintenanceMenu=true;draw(millis());});
 #elif !M5_DEMO
   Serial2.setRxBufferSize(8192);Serial2.setTxBufferSize(128);
   Serial2.begin(M5_LINK_BAUD,SERIAL_8N1,M5_LINK_RX,M5_LINK_TX);
@@ -198,7 +256,9 @@ void loop() {
 #if M5_DEMO
   demo(now);
 #elif M5_USE_ESPNOW
-  wireless.poll(now);
+  maintenance.poll();
+  wireless.setChannelSearchEnabled(!maintenance.active());
+  now=millis();wireless.poll(now);
   for(unsigned budget=0;budget<12;++budget){
     const char* line=wireless.readLine(millis());if(!line)break;
     state.ingest(line,wireless.receivedMs());

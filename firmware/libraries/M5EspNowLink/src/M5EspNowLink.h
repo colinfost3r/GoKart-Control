@@ -19,6 +19,11 @@ public:
   bool begin(Role role,const uint8_t peer[6],const uint8_t lmk[16],const uint8_t pmk[16]);
   void end();
   void poll(uint32_t now);
+  // Display maintenance owns the Wi-Fi channel while joining/using its AP. Pausing search
+  // does not disconnect Wi-Fi, reinitialize ESP-NOW, or clear the authenticated peer session.
+  void setChannelSearchEnabled(bool enabled) {
+    if(channelSearchEnabled_!=enabled) {channelSearchEnabled_=enabled;hopMs_=millis();}
+  }
   bool sendLine(const char* line,uint32_t now);
   const char* readLine(uint32_t now); // NUL-terminated; valid until the next readLine call
   uint32_t receivedMs() const { return readMs_; }
@@ -46,6 +51,7 @@ private:
   Role role_=Role::Display;
   std::atomic<bool> ready_{false};
   bool haveRx_=false,inFlight_=false,abandoned_=false,active_=false;
+  bool channelSearchEnabled_=true;
   uint8_t channel_=1,part_=0;int8_t rssi_=0;
   uint32_t boot_=0,id_=0,lastRxMs_=0,hopMs_=0,heartbeatMs_=0,readMs_=0;
   QueueHandle_t packets_=nullptr,done_=nullptr;

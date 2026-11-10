@@ -1,5 +1,55 @@
 # Collaborator handoff
 
+## Kart 3 live telemetry and Core2 OTA — 2026-11-10 (current)
+
+**Working on hardware:** encrypted ESP-NOW carries real kart 3 VESC telemetry to the Core2.
+The owner confirms both DASH/MAP tabs work and live battery/connection readings are visible.
+No jumper wires or SD card are required. Core2 accepted an authenticated Wi-Fi application update,
+restarted with credentials retained and its update window off, and recovered live ESP-NOW data.
+Hold the top status bar for 1.8 seconds, then ENABLE UPDATES, for a ten-minute maintenance window;
+USB `ota on/off/status` is also available. See the [OTA guide](firmware/m5-core2/README.md#core2-maintenance-and-ota).
+The hardware upload used USB to open that window; the touch maintenance flow still needs an owner check.
+
+**Corrected controller assignment:** the copied historical VESC pin belonged to kart 2.
+Eamon's latest `fc7e610` identifies that ownership; the owner confirmed this kart has a different VESC.
+Removed the copied pins and commissioned kart 3 read-only with MAC **f7:bd:23:cc:62:0e**,
+UUID **37004e000951343037353739**, hardware **75_300_R2**, firmware **6.02**.
+Saved pins survived accessory restart and freshly matched the connected controller. Do not reuse the
+original 6.00 / 75_100_V2 baseline configuration/schema for this controller without verifying compatibility.
+Runtime observations: 82.3–82.4 V, zero ERPM/current, ESC about 17.4 C, fault 0; reported motor current
+limit 120 A and battery current limit 90 A. These are reads, not changed settings or complete backups.
+Motor-temperature sensors remain unwired; ESC temperature is not motor temperature.
+
+**Installed images:** Core2 `m5-espnow` application SHA-256
+`c090ce154e457343b4ab7b99ef39fd4b996fb826c23dc242543ea47d21c4cb63`;
+Heltec `kart-m5-espnow-readonly` / kart 0.2.7 application SHA-256
+`f55e3e53fe7c36cb0aa64371de528d9d1ac6d1f416b0b9bf3cdce68d7054453e`.
+Both segmented USB uploads hash-verified four segments and preserved NVS. Core2 also received the same
+application through the official pinned uploader with password authentication and an explicit success ACK.
+Private rollback images, captures and Core2 update credentials are under ignored
+`firmware/build/bench-private/20261110-120545/`; ESP-NOW recovery keys are under ignored
+`firmware/build/bench-private/espnow-pair-20261110T174439Z/`. Never commit these private files.
+Heltec `gokart-3.local:3232` advertised `auth_upload=yes`; its OTA transfer is not yet hardware-tested here.
+
+**Mode selection remains disabled:** `ENABLE_VESC_WRITES=0` is installed, so the M5 correctly reports
+`mode_ready:false`. The owner has now reported wanting to select modes; the next task is guarded M5 mode
+enablement, including fresh UUID/baseline association, rather than silently enabling all pit/game writes.
+No motor command, VESC settings/firmware change, automated profile restore or motor test occurred.
+
+**Shared source:** merged Eamon's `fc7e610` (kart 0.2.7 wrong-UUID disconnect). Fixed its UART-only
+compile regression by guarding the BLE rejection reset. The wrong-UUID fix does not protect two boards
+configured with the same MAC *and* UUID: unique physical assignments are still required.
+All seven offline suites pass: **276 tests, zero skipped**. Eight affected targets compile: `m5`,
+`m5-demo`, `m5-espnow`, `kart`, `kart-uart`, `kart-m5`, `kart-m5-readonly`, `kart-m5-espnow-readonly`.
+No LoRa packet format or radio rate changed. Base/repeater sources are unchanged from the earlier passing builds.
+
+[Sanitized evidence](hardware/m5/2026-11-10-kart3/README.md) includes application hashes and readbacks.
+Observed ESP-NOW drops/expiry mean no lossless claim. Eight-kart RF load, physical wrong-key/tamper tests,
+prolonged soak and driving acceptance remain open. Native framing/config checks use ASan/UBSan.
+Opening USB diagnostics can reset these accessories; those resets were tooling-induced, not a VESC reset.
+
+The sections below are historical checkpoints, superseded by the current status above.
+
 ## Kart 3 M5 wireless commissioning — 2026-11-10
 
 **Owner changes:** the newly connected Heltec is **kart 3**, superseding the earlier kart-1

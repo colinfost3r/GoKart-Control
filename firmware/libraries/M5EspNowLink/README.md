@@ -40,6 +40,14 @@ lines. `channel()`, `rssi()` and `stats()` provide nonsecret diagnostics. `txLin
 confirmation of all fragments, not application acknowledgement or proof that a setting changed.
 Pair changes take effect at the next boot; provision through the sketches' local USB interface.
 
+For Core2 maintenance Wi-Fi/OTA, call `setChannelSearchEnabled(false)` **before** `WiFi.begin()`.
+Continue `poll()` and ordinary telemetry processing while connecting/connected. The setter only
+pauses the display's channel search: it does not disconnect Wi-Fi, restart ESP-NOW or clear the
+pair/session. After maintenance disconnects Wi-Fi, call `setChannelSearchEnabled(true)` to
+resume discovery. Search defaults to enabled; the setter has no effect on Heltec-role behavior.
+ESP-NOW can continue on the AP's channel when both paired devices share that channel. A different
+AP channel can temporarily interrupt telemetry; normal stale/lost indicators still apply.
+
 ## Framing, trust and recovery
 
 A packet is at most 250 bytes: a 20-byte versioned header, up to 214 text bytes and a 16-byte
@@ -69,7 +77,7 @@ to reject recent old-session replay. This bounded cache is not a persistent repl
 future write-capable use must still require the Heltec's existing fresh single-use command token.
 
 The Heltec preserves its Wi-Fi station channel, including an existing AP/OTA connection. The
-Core2 does not join an AP or reuse stored Wi-Fi credentials: it disables reconnect and searches
+Core2 normally does not join an AP or reuse stored Wi-Fi credentials: it disables reconnect and searches
 US channels 1–11, dwelling 650 ms per channel after loss. A complete authenticated message locks
 the channel; ordinary RF traffic does not. Channel recovery can take several seconds and must
 be measured alongside VESC BLE, OLED refresh, LoRa and OTA. Accessory radio loss never restores,

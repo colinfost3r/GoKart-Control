@@ -36,6 +36,9 @@ class M5Tests(unittest.TestCase):
     def test_eight_kart_stream_and_recovery(self):
         self.run_native('stream_test.cpp')
 
+    def test_maintenance_config_and_window(self):
+        self.run_native('maintenance_test.cpp')
+
     def test_course_from_pit_contract(self):
         zones = json.loads((ROOT/'pit/server/map/zones.json').read_text())
         out = exporter.export(zones, 'Shop test course')
