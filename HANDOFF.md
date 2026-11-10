@@ -209,6 +209,43 @@ written to the real Heltec. Hold again to end. Pit side: run the simulators on a
     dropped and re-enumerated once; the Heltec was NOT on its USB at the time. Supply or cable. The
     kart display now carries the pit's health chip so it shows UNDERVOLT on the panel (kart/README.md).
 
+## Learnings and tips (2026-11-10)
+
+Distilled from the 2026-11-09/10 sessions; the details are in History and the sections above.
+
+- **Pin every Heltec to its own controller, mac AND uuid.** Per kart: `id N`, `vescmac <that kart's
+  controller>`, then `vescuuid now` while connected to it. A Heltec with no controller gets `vescmac
+  clear`. Do NOT clone one kart's flash/config onto another without re-pinning: that is how kart 3 (pinned
+  to kart 2's controller mac) connected to kart 2's VESC and, on the old firmware, squatted on the single
+  BLE slot so kart 2's own Heltec was locked out ("VESC link down" while the controller was on and in
+  range). 0.2.7 makes a Heltec release a controller whose uuid is not its own, but that only fires when the
+  kart has its own `vescuuid` pinned.
+- **Caps/speed are per-kart and only as right as the controller's drivetrain numbers.** The "stuck in ECO,
+  boosts do nothing" failure was a Heltec reboot (OTA/brown-out) reading back the previous session's
+  leftover caps and clamping every mode to 15 mph. 0.2.6 remembers a clean baseline per controller uuid in
+  NVS and recovers automatically; if a kart is ever stuck slow, key it off and on. The honest fix is still
+  `si_motor_poles`/`si_gear_ratio`/`si_wheel_diameter` in VESC Tool per kart, then `speedcal 1.0` (there is
+  a 2.48 calibration fudge today covering wrong drivetrain numbers — see Decisions).
+- **Update the WHOLE fleet before using the game.** Multiplayer telemetry is 54 bytes; a base/repeater/kart
+  older than 0.2.5 rejects it, so a kart disappears from the pit (and a repeater won't relay it) for as long
+  as it is in a game. The base and repeater are still on 0.2.1 — reflash them to 0.2.2 first (images built,
+  firmware/releases). See Open items.
+- **STOP during a BLE blip (firmware review, HIGH).** A STOP pressed while the VESC link is momentarily down
+  returns NO_VESC, which is then cached (W6 dedup, 30 s); the pit's retransmits are deduped to that cached
+  result and never re-attempt once the link returns, so the kart can stay at speed until a fresh STOP press.
+  Mechanical brakes are the only backstop today. Fix direction: latch STOP intent and ramp once on reconnect
+  for STOP only, or never cache a NO_VESC terminal result for STOP/START. (Full review in the session notes.)
+- **Hardware beats firmware for the two real limits.** The Pi 3 B browns out (`get_throttled` 0x50005)
+  running the panel + Heltec off its USB — give each a solid 5 V 3 A supply. Range is antennas and placement
+  (pit antenna on a mast, a repeater mid-course with line of sight), not firmware tuning.
+- **Operational:** don't type at the Heltec USB console while the Pi's gokart-kart service owns the port — it
+  races and garbles the command; use the server or stop the service first. `kart/sdcard/flash.sh` can time
+  out auto-mounting the boot partition at the end; the manual fallback it prints (mount `s1`, copy
+  build/{user-data,network-config,meta-data}, eject) is reliable, and set `KART_ID` before flashing. The
+  whole stack runs in a local sim with no hardware (`kart/sim/run-sim.py`), which is how map/UX work (Hunter,
+  kart/MAP-DEV.md) stays off the live karts; deploy to karts with `kart/deploy.sh`, firmware by OTA
+  (`espota.py -i <ip>`).
+
 ## Decisions for Colin
 
 - **Drivetrain numbers in the controllers are wrong by ~2.5x** (2026-11-09, measured on kart 2: GPS vs ERPM).
