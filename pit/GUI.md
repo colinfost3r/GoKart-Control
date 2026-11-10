@@ -1,3 +1,6 @@
+> **Status 2026-11-10:** the pit restyle below is NOT deployed; the pit runs the original
+> display. The SoNo map artwork is used on the kart dash via a MAP/SAT toggle.
+
 # Hunter's pit graphics preview
 
 This is presentation work on `7Hunt3r/GoKart-Control`, branch

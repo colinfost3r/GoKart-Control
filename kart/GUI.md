@@ -1,3 +1,8 @@
+> **Status 2026-11-10:** the full restyle below is NOT deployed (Eamon's call after a kiosk
+> look). What shipped instead: the original display with a **MAP** button that swaps the
+> aerial photo for this branch's stylized SoNo street map (sono-light*.svg, kart-local).
+> The restyle itself stays in history on the gui/driver-map-display branch for later.
+
 # Hunter's driver display preview
 
 This graphics branch starts from Eamon's actual driver display at
