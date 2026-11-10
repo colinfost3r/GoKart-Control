@@ -32,8 +32,13 @@ static uint32_t scanHopMs = 0; static uint8_t scanCh = 1; static bool locked = f
 static uint32_t useSentMs = 0; static uint8_t useSeq = 0, useTries = 0, useSlot = 0;
 static uint32_t lastDrawMs = 0; static bool dirty = true;
 
+/* Names, colors and shapes mirror the dash (app.js ITEM_SVG / ITEM_COLOR / ITEM_SUB):
+   boost #ffb000 chevrons, rocket white + blue porthole + orange flame, shell #3ddc84 turtle
+   disc with hex plates, lightning #ffe600 bolt, all black-outlined on the dark card. */
 static const char* NAMES[6] = {"?", "BOOST", "ROCKET", "SHELL", "LIGHTNING", "MUD"};
-static const uint16_t COLORS[6] = {0xFFFF, 0xFD20, 0xFFE0, 0x3FE8, 0xFFE6, 0xCC68};
+static const char* SUBS[6]  = {"", "> NORMAL", "> SPORT", "", "", ""};
+static const uint16_t COLORS[6] = {0xFFFF, 0xFD80, 0xFEA0, 0x3EF0, 0xFF20, 0xC449};
+static const uint16_t C_FLAME = 0xFBC0, C_FLAMEIN = 0xFEA0, C_PORT = 0x2BDF;
 
 static void onRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
   if (len != (int)sizeof(GkInvFrame)) return;
@@ -56,31 +61,72 @@ static void sendUse(uint8_t slot) {
   useSentMs = millis(); useTries = 1; useSlot = slot;
 }
 
+// glyphs in the dash's 100x100 viewBox, scaled to GS around (cx, cy)
+static const float GS = 1.24f;
+static int gx, gy;
+static inline int X(float x) { return gx + (int)lroundf((x - 50) * GS); }
+static inline int Y(float y) { return gy + (int)lroundf((y - 50) * GS); }
+static void wline(float x0, float y0, float x1, float y1, float r, uint16_t col) {
+  cv.drawWideLine(X(x0), Y(y0), X(x1), Y(y1), r * GS, col);
+}
+static void boltPoly(float grow, uint16_t col) {       // the dash bolt, fan-triangulated from (45,56)
+  static const float P[6][2] = {{60, 3}, {18, 56}, {45, 56}, {34, 97}, {82, 40}, {54, 40}};
+  float cxp = 48.8f, cyp = 48.7f, q[6][2];
+  for (int i = 0; i < 6; i++) { q[i][0] = cxp + (P[i][0] - cxp) * grow; q[i][1] = cyp + (P[i][1] - cyp) * grow; }
+  for (int i = 0; i < 4; i++)
+    cv.fillTriangle(X(q[2][0]), Y(q[2][1]), X(q[(3 + i) % 6][0]), Y(q[(3 + i) % 6][1]),
+                    X(q[(4 + i) % 6][0]), Y(q[(4 + i) % 6][1]), col);
+}
 static void glyph(int cx, int cy, uint8_t code, uint16_t col) {
-  if (code == 1) {                      // boost: double chevron up
+  gx = cx; gy = cy;
+  if (code == 1) {                      // boost: double chevron, black outline under amber (dash exact)
     for (int k = 0; k < 2; k++) {
-      int y = cy + 18 - k * 34;
-      cv.fillTriangle(cx - 38, y + 18, cx + 38, y + 18, cx, y - 18, col);
-      cv.fillTriangle(cx - 26, y + 18, cx + 26, y + 18, cx, y - 4, TFT_BLACK);
+      float dy = k * 26;
+      wline(18, 50 + dy, 50, 22 + dy, 10, TFT_BLACK); wline(50, 22 + dy, 82, 50 + dy, 10, TFT_BLACK);
     }
-  } else if (code == 2) {               // rocket
-    cv.fillTriangle(cx, cy - 46, cx - 20, cy - 6, cx + 20, cy - 6, col);
-    cv.fillRect(cx - 20, cy - 6, 40, 44, col);
-    cv.fillTriangle(cx - 20, cy + 38, cx - 38, cy + 52, cx - 20, cy + 14, col);
-    cv.fillTriangle(cx + 20, cy + 38, cx + 38, cy + 52, cx + 20, cy + 14, col);
-    cv.fillTriangle(cx - 10, cy + 40, cx + 10, cy + 40, cx, cy + 62, 0xFC00);
-    cv.fillCircle(cx, cy + 8, 9, TFT_BLACK);
-  } else if (code == 3) {               // shell
-    cv.fillCircle(cx, cy, 42, col);
-    cv.fillCircle(cx, cy, 26, TFT_WHITE);
-    cv.fillRect(cx - 46, cy + 18, 92, 26, col);
-  } else if (code == 4) {               // lightning
-    cv.fillTriangle(cx + 16, cy - 50, cx - 26, cy + 10, cx + 2, cy + 10, col);
-    cv.fillTriangle(cx - 16, cy + 50, cx + 26, cy - 10, cx - 2, cy - 10, col);
-  } else if (code == 5) {               // mud
-    cv.fillCircle(cx, cy + 10, 40, col);
-    cv.fillCircle(cx - 18, cy - 14, 18, col);
-    cv.fillCircle(cx + 16, cy - 18, 14, col);
+    for (int k = 0; k < 2; k++) {
+      float dy = k * 26;
+      wline(18, 50 + dy, 50, 22 + dy, 5.5f, col); wline(50, 22 + dy, 82, 50 + dy, 5.5f, col);
+    }
+  } else if (code == 2) {               // rocket: white body, white fins, orange/yellow flame, blue porthole
+    cv.fillTriangle(X(40), Y(76), X(50), Y(99), X(60), Y(76), TFT_BLACK);        // flame outline
+    cv.fillTriangle(X(42), Y(78), X(50), Y(95), X(58), Y(78), C_FLAME);
+    cv.fillTriangle(X(45), Y(78), X(50), Y(88), X(55), Y(78), C_FLAMEIN);
+    cv.fillTriangle(X(36), Y(50), X(17), Y(81), X(39), Y(76), TFT_BLACK);        // fins, outlined
+    cv.fillTriangle(X(64), Y(50), X(83), Y(81), X(61), Y(76), TFT_BLACK);
+    cv.fillTriangle(X(37), Y(53), X(22), Y(77), X(39), Y(73), TFT_WHITE);
+    cv.fillTriangle(X(63), Y(53), X(78), Y(77), X(61), Y(73), TFT_WHITE);
+    for (int i = 0; i <= 20; i++) {                                              // teardrop body by slices
+      float t = i / 20.0f, y = 3 + t * 73;                                       // y 3..76
+      float half = 13.5f * sqrtf(t > 0.08f ? t : 0.08f) + (t > 0.8f ? -8 * (t - 0.8f) : 0);
+      cv.fillRect(X(50 - half) - 2, Y(y) - 3, (int)(2 * half * GS) + 4, 7, TFT_BLACK);
+    }
+    for (int i = 0; i <= 20; i++) {
+      float t = i / 20.0f, y = 3 + t * 73;
+      float half = 13.5f * sqrtf(t > 0.08f ? t : 0.08f) + (t > 0.8f ? -8 * (t - 0.8f) : 0);
+      cv.fillRect(X(50 - half), Y(y) - 2, (int)(2 * half * GS), 5, TFT_WHITE);
+    }
+    cv.fillCircle(X(50), Y(38), (int)(10 * GS), TFT_BLACK);                      // porthole
+    cv.fillCircle(X(50), Y(38), (int)(8 * GS), C_PORT);
+  } else if (code == 3) {               // shell: white disc, green dome, black hex plates (dash exact)
+    cv.fillEllipse(X(50), Y(54), (int)(46 * GS), (int)(40 * GS), TFT_BLACK);
+    cv.fillEllipse(X(50), Y(54), (int)(44 * GS), (int)(38 * GS), TFT_WHITE);
+    cv.fillEllipse(X(50), Y(48), (int)(40 * GS), (int)(34 * GS), TFT_BLACK);
+    cv.fillEllipse(X(50), Y(48), (int)(38 * GS), (int)(32 * GS), col);
+    const float hx[6][2] = {{38, 34}, {62, 34}, {70, 48}, {62, 62}, {38, 62}, {30, 48}};
+    for (int i = 0; i < 6; i++)
+      wline(hx[i][0], hx[i][1], hx[(i + 1) % 6][0], hx[(i + 1) % 6][1], 2.5f, TFT_BLACK);
+    wline(38, 34, 30, 22, 2.5f, TFT_BLACK); wline(62, 34, 70, 22, 2.5f, TFT_BLACK);
+    wline(70, 48, 86, 48, 2.5f, TFT_BLACK); wline(62, 62, 70, 74, 2.5f, TFT_BLACK);
+    wline(38, 62, 30, 74, 2.5f, TFT_BLACK); wline(30, 48, 14, 48, 2.5f, TFT_BLACK);
+  } else if (code == 4) {               // lightning: the dash bolt, black outline
+    boltPoly(1.16f, TFT_BLACK);
+    boltPoly(1.0f, col);
+  } else if (code == 5) {               // mud splat
+    cv.fillCircle(X(50), Y(58), (int)(32 * GS), TFT_BLACK);
+    cv.fillCircle(X(50), Y(58), (int)(29 * GS), col);
+    cv.fillCircle(X(84), Y(22), (int)(8 * GS), col);
+    cv.fillCircle(X(16), Y(84), (int)(7 * GS), col);
   }
 }
 
@@ -126,10 +172,16 @@ static void draw() {
     cv.setFont(&fonts::DejaVu24);
     cv.setTextColor(col);
     cv.drawString(NAMES[code], W / 2, H / 2 + 46);
+    if (SUBS[code][0]) {                 // the mode it gives, like the dash prize wheel
+      cv.setFont(&fonts::DejaVu12);
+      cv.setTextColor(TFT_BLACK, TFT_WHITE);
+      cv.drawString(String(" ") + SUBS[code] + " ", W / 2, H / 2 + 66);
+      cv.setTextColor(TFT_WHITE, TFT_BLACK);
+    }
     bool using_ = useTries && millis() - useSentMs < 1500;
     cv.setFont(&fonts::DejaVu18);
-    cv.setTextColor(using_ ? TFT_YELLOW : TFT_WHITE);
-    cv.drawString(using_ ? "USING..." : "TAP TO USE", W / 2, H / 2 + 82);
+    cv.setTextColor(using_ ? TFT_YELLOW : TFT_WHITE, TFT_BLACK);
+    cv.drawString(using_ ? "USING..." : "TAP TO USE", W / 2, H / 2 + 88);
     for (int i = 0; i < n; i++)                             // slot dots
       cv.fillCircle(W / 2 + (i - (n - 1) / 2.0f) * 24, H - 26, i == sel ? 8 : 5,
                     i == sel ? TFT_WHITE : TFT_DARKGREY);

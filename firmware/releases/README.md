@@ -1,6 +1,6 @@
 # Prebuilt images
 
-> **Current images: kart 0.3.0, base and repeater 0.2.2, Core2 item screen 0.1.0** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
+> **Current images: kart 0.3.0, base and repeater 0.2.2, Core2 item screen 0.1.1** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy
 > `build/<sketch>/<sketch>.ino.merged.bin` here under a new version name, add the row and the
@@ -15,6 +15,7 @@ check what you got.
 | --- | --- | --- | --- |
 | `kart-heltec-v4-ble-0.3.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node 0.3.0: 0.2.7 + ESP-NOW Core2 item-screen bridge (`inv` line in, broadcast out, `invuse` relay) | `76f38e10ccc228ae6729db796d8f506811ad2550e6e3f438413d17f5335549f1` |
 | `core2-items-0.1.0.merged.bin` | M5Stack Core2 | bar-mounted item screen: ESP-NOW channel hunt, swipe/tap to use, fixed rotation for the cradle | `667a1aa214b991d51231cc2c1658c48ea0b63744db050b5551a24fefc0e5e502` |
+| `core2-items-0.1.1.merged.bin` | M5Stack Core2 | 0.1.0 with the rotation fixed for the cradle (flip gesture removed) and the item art redrawn to match the dash icons (chevrons / white rocket / turtle shell / bolt, mode sub-labels) | `c3ba83cd0192d530f935425549863d0a8f7e4c6e9dc14d19856fd4b69025c79a` |
 | `kart-heltec-v4-ble-0.1.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node, VESC over BLE (MTU-chunked writes), per-controller limits, SLOW + brake request, 2 Hz, 16777216 bytes | `9f2994756dc42af61051fbd7cfc24a81caafd142c01f7f0955c53c4353a30799` |
 
 ## Flash with esptool (PlatformIO's or pip's)
