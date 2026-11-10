@@ -1,12 +1,21 @@
+> **Status 2026-11-10:** the full restyle below is NOT deployed (Eamon's call after a kiosk
+> look). What shipped instead: the original display with a **MAP** button that swaps the
+> aerial photo for this branch's stylized SoNo street map (sono-light*.svg, kart-local).
+> The restyle itself stays in history on the gui/driver-map-display branch for later.
+
 # Hunter's driver display preview
 
 This graphics branch starts from Eamon's actual driver display at
 `b48c5ad3a7eca250ee8e119c96c344ee98f68587` (`eamon/firmware-lora-starter`).
 The graphics originated in **7Hunt3r/GoKart-Control**, branch `gui/driver-map-display`.
-Eamon integrated them into the shared project at `705bd91`, including restoration of the
-FOLLOW driving camera. They are now also integrated into `v1.5/m5-core2`; this branch preserves
-its roulette cancellation/suppression fixes. Source integration does not deploy a Pi or change
-the native Core2 UI.
+Eamon integrated them at `705bd91`, then restored the original layout at **`a9c8459`**, keeping
+MAP/SAT artwork and FOLLOW behavior. This final state is integrated into `v1.5/m5-core2` with
+its roulette cancellation/suppression fixes preserved. Source integration does not deploy a Pi
+or change the native Core2 UI.
+
+The remaining restyle descriptions, deleted CSS/font files and asset-sync commands below are
+**archival instructions for the graphics branch**, not the current checkout. The simulator
+runner remains available but serves the current original layout with the MAP/SAT option.
 
 ## Open the simulator
 

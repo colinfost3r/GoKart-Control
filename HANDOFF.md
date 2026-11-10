@@ -32,11 +32,12 @@ The working installed `996c4387…` image was left in place after the owner conf
 Full offline checks passed **356 tests / seven suites / zero skipped** including the new touch
 regression. Test-only mock naming is portable across Clang/GCC; production code was independently reviewed.
 
-**Newest upstream integrated:** `705bd91` brings Eamon/Hunter’s Pi/pit graphics and restores
-its FOLLOW driving camera. The merge preserves this branch’s roulette cancellation/suppression
-fixes. It changes browser presentation and illustrative SoNo assets, not Heltec firmware,
+**Newest upstream integrated:** `a9c8459` supersedes the `705bd91` full browser restyle:
+Eamon restored the original Pi/pit layout while retaining Hunter’s SoNo artwork behind the kart
+MAP/SAT toggle. FOLLOW driving-camera behavior and this branch’s roulette cancellation/suppression
+fixes remain intact. This changes browser presentation and illustrative assets, not Heltec firmware,
 LoRa/ESP-NOW contracts or the native Core2 UI. No shared Pi/pit deployment or additional board
-flash was performed. The SoNo demo is not a surveyed Manresa course.
+flash was performed here. The SoNo demo is not a surveyed Manresa course.
 
 **Next two karts:** the owner plans two more Core2/Heltec assemblies. Their fleet IDs are not yet
 assigned. Use the same firmware architecture, with unique fleet IDs, physical BLE MAC/VESC UUID

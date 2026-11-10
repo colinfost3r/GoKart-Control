@@ -186,7 +186,7 @@
     "full_kart3_usb_capture_path": "hardware/vesc/kart3/2026-11-10/usb-before-tune",
     "tune_applied": true,
     "reference_is_current_kart2": false,
-    "latest_eamon_integrated": "705bd91",
+    "latest_eamon_integrated": "a9c8459",
     "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
     "current_usb_state": "Connected; one authorizedSET13 acknowledged and fullreadbackexact",
     "reverse_input_owner_report": "Latest correction: throttle ADC1, maintained reverse switch RX to VESC signal GND; believed10k pull-up RX to3.3V. Intermittent even from rest. App settings preserved; electrical measurements pending.",

@@ -1,7 +1,7 @@
 # M5 Core2 v1.5
 
 Branch **`v1.5/m5-core2`**, sharing Eamon's kart 0.2.7 / base protocol and upstream work
-through `705bd91` (Pi/pit graphics; native M5 appearance unchanged). Owner confirmed **Core2 v1.3 / K010-V13**. This alternative to the Pi v2
+through `a9c8459` (original Pi/pit layout plus MAP/SAT; native M5 appearance unchanged). Owner confirmed **Core2 v1.3 / K010-V13**. This alternative to the Pi v2
 display provides telemetry, driver mode requests, base-station status and a simple north-up map.
 
 **Kart 3 is commissioned for M5 mode selection as of 2026-11-10.** The owner selected ECO,
