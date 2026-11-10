@@ -9,3 +9,10 @@
 #ifndef M5_DEMO
 #define M5_DEMO 0
 #endif
+
+#ifndef M5_USE_ESPNOW
+#define M5_USE_ESPNOW 0
+#endif
+#if M5_USE_ESPNOW && M5_DEMO
+#error "The standalone demo must not initialize a wireless control link"
+#endif

@@ -143,14 +143,18 @@
         320,
         240
       ],
-      "heltec_transport": "3.3 V UART 230400 8N1",
+      "heltec_transport": "Paired encrypted ESP-NOW; optional 3.3 V UART 230400 8N1",
       "scope": [
         "telemetry",
         "mode_requests",
         "pit_status",
         "simple_fleet_map"
       ],
-      "hardware_verified": false
+      "hardware_verified": false,
+      "development_kart_id": 3,
+      "sd_required": false,
+      "base_required_for_local_telemetry": false,
+      "initial_vesc_writes_enabled": false
     },
     "pi_v2": {
       "hardware": "Pi 3 B + LESOWN L7",

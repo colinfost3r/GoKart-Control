@@ -8,7 +8,7 @@ flowchart LR
   D[Hardwired driver inputs] --> V[VESC]
   V <-->|BLE preferred| H[Heltec V4.3 with GPS]
   H <-->|USB serial: telemetry and UI requests| K[Kart Pi 3 B: v2 display]
-  H <-->|Optional UART: telemetry and mode requests| M[M5 Core2: v1.5 display]
+  H <-->|Paired ESP-NOW or UART: display data| M[M5 Core2: v1.5 display]
   K <-->|HDMI video + USB touch| T[LESOWN L7 1024x600]
   H <-->|LoRa| B[Pit base radio]
   B <-->|Serial| P[Pi 4 pit server]
@@ -20,13 +20,18 @@ sharing uses direct/repeater reception in Eamon's current firmware. The M5 consu
 fleet reports through the Heltec; no new pit fleet broadcast is required. Coverage and
 eight-kart load measurements remain pending for the M5 assembly.
 
-## M5 v1.5 alternative (2026-11-09)
+## M5 v1.5 alternative (2026-11-10)
 
 The Core2 replaces the Pi/display assembly on a v1.5 kart. It does not replace the Heltec or
 share BLE ownership. Firmware reuses the same radio protocol and motor policy; the optional
-UART adapter and [display contract](../firmware/m5-core2/SERIAL_PROTOCOL.md) isolate local UI
+UART/paired ESP-NOW adapters and [display contract](../firmware/m5-core2/SERIAL_PROTOCOL.md) isolate local UI
 requests. Both display versions can participate in the same eight-kart fleet. Local map
-outlines are display data, not geofence enforcement. Hardware acceptance remains pending.
+outlines are display data, not geofence enforcement. Hardware acceptance remains pending. The owner selected ESP-NOW for the local Heltec/Core2
+link on November 10; UART remains available. Each pair uses private provisioned keys; the
+Core2 follows the Heltec's Wi-Fi channel. This changes neither LoRa nor VESC BLE ownership.
+The first wireless target is compile-time read-only, including pit/USB/game VESC writes.
+Neither a base station nor an SD card is needed for own telemetry/direct peer GPS positions;
+SD supplies an optional course outline, while the base provides central pit/race functions.
 
 ## Boundaries
 

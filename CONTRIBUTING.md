@@ -150,4 +150,8 @@ policy with the Heltec; M5 UI code lives in `firmware/m5-core2`. The branch's dr
 The implementing agent maintains the focused PR and handoff; merge/deployment remains separate.
 For all tests on this branch, install ArduinoJson 7.4.3 and set `ARDUINOJSON_DIR` to its `src`
 directory (see M5 README). M5 host checks use C++17 plus address/undefined-behavior sanitizers.
-Compile affected targets `m5`, `m5-demo`, `kart-m5`, `kart-m5-readonly`, `kart`, `kart-uart`.
+Compile affected targets `m5`, `m5-demo`, `m5-espnow`, `kart-m5`, `kart-m5-readonly`,
+`kart-m5-espnow-readonly`, `kart`, `kart-uart`. ESP-NOW changes also require its native framing/
+pairing checks (included in `tools/run_tests.sh`), encrypted-pair reception and loss/channel
+recovery on the bench. Keep private keys/backups in ignored `firmware/build/bench-private/`;
+never infer motor-control authorization from a display transport test.

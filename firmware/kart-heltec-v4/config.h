@@ -143,6 +143,16 @@ static const float STOP_RAMP[] = { 0.5f, 0.2f, 0.0f };
 #ifndef GK_M5_UART
 #define GK_M5_UART 0
 #endif
+#ifndef GK_M5_ESPNOW
+#define GK_M5_ESPNOW 0
+#endif
+#define GK_M5_LINK (GK_M5_UART || GK_M5_ESPNOW)
+#if GK_M5_UART && GK_M5_ESPNOW
+#error "Select one M5 transport: UART or ESP-NOW"
+#endif
+#if GK_M5_ESPNOW && ENABLE_VESC_WRITES
+#error "ESP-NOW commissioning is telemetry-only; use kart-m5-espnow-readonly"
+#endif
 #if GK_M5_UART && VESC_TRANSPORT_UART
 #error "M5 display and wired VESC cannot share UART2; use BLE VESC with the M5 target"
 #endif

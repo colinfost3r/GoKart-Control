@@ -1,5 +1,58 @@
 # Collaborator handoff
 
+## Kart 3 M5 wireless commissioning — 2026-11-10
+
+**Owner changes:** the newly connected Heltec is **kart 3**, superseding the earlier kart-1
+assignment for this board. Use paired ESP-NOW between Heltec and Core2; retain UART as an
+option. Eamon stays kart 2. No SD card or jumper wiring is installed. Neither is required for
+wireless dashboard telemetry/direct peer GPS positions. A base is optional for those functions;
+central pit/race control still uses the base.
+
+**Accessory programming observed:** both boards have complete private 16 MiB rollback images
+under ignored `firmware/build/bench-private/20261110-120545/`. Do not publish raw flash, keys,
+credentials or private serial captures. The connected Heltec initially emitted factory I/O-test
+text and had no GoKart namespace; it was not assumed to contain the older development firmware.
+Segmented uploads preserved NVS. Core2 `m5-demo` and `m5`, and Heltec `kart-m5-readonly`, were
+uploaded from source `2fd0359` with all four written segments hash-verified per upload. Kart 3,
+known VESC MAC/UUID pins and private Wi-Fi/OTA settings were saved and read back after reboot.
+
+**Observed Heltec:** `kart-0.2.6`, BLE transport, `writes:false`, LoRa radio OK, GPS serial data
+at 9600 baud with no position fix. A 30-second USB capture contained 60 self reports with median
+0.500-second spacing. Wi-Fi joined and `gokart-3.local` resolved to its reported address; an
+actual OTA firmware transfer has not been tested. One cumulative malformed LoRa receive was
+reported, so this is not evidence of zero RF loss. The owner reports seeing kart 3 in the pit.
+Pit/control rejection is expected: all VESC writes are disabled and the VESC remains off.
+
+**Touch:** owner reported the original small tabs did not switch. A temporary standalone
+four-box diagnostic captured all four presses with matching raw/display coordinates and
+working IRQ39; the owner confirmed its boxes responded. Production tabs are now 40 pixels
+high and outlined, sharing drawing/hit bounds. Final dashboard touch confirmation remains
+pending. The temporary diagnostic is ignored build output, not production functionality.
+
+**Wireless implementation:** `m5-espnow` + `kart-m5-espnow-readonly` retain the same M5 JSON and
+LoRa contracts. Pairing uses private independently generated LMK/PMK, pinned MACs, encrypted
+unicast plus fragment authentication, bounded buffers/age, and channel recovery. No wireless
+text reaches the USB console, no reconnect commands are replayed, and write-enabled wireless
+compilation is refused for this first milestone. See [M5 guide](firmware/m5-core2/README.md),
+[bring-up](firmware/m5-core2/BRINGUP.md) and [transport](firmware/libraries/M5EspNowLink/README.md).
+The USB pairing tool stores its recovery keys privately before either board's NVS is changed.
+Pairing is atomic per board, not across the two boards.
+
+**Validation:** all seven offline suites pass: 269 tests, zero skipped. All ten targets
+compile: `m5`, `m5-demo`, `m5-espnow`, `kart-m5`, `kart-m5-readonly`,
+`kart-m5-espnow-readonly`, `kart`, `kart-uart`, `base`, `repeater`. The final receive-time/queue
+fix was followed by both wireless builds and all 30 firmware tests again. Native framing,
+malformed-packet and pairing-corruption checks use ASan/UBSan. HMAC wrong-key/tamper injection
+and physical radio behavior remain separate acceptance work.
+
+**Current acceptance boundary:** wireless source/build checks are complete;
+new wireless images and pairing have not yet been recorded as installed in this checkpoint.
+The larger final tabs, actual Heltec/Core2 wireless reception, VESC BLE telemetry, outdoor GPS,
+RF coexistence, channel/loss recovery, eight-kart load and actual OTA upload need hardware
+results. No motor test, VESC configuration change or write-capable deployment was performed.
+
+The following integration section records the state before these accessory programming steps.
+
 ## M5 first telemetry integration — 2026-11-10
 
 **Latest upstream:** merged Eamon's `b48c5ad` into `v1.5/m5-core2` without changing his

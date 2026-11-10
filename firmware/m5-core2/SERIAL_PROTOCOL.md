@@ -1,7 +1,19 @@
-# M5 display UART v1
+# M5 display messages v1
 
 Local connection only: 230400 baud, 8N1, 3.3 V, newline-delimited ASCII. This adds no LoRa
-messages and changes no USB contract. Enabled by `GK_M5_UART=1` in the Heltec BLE build.
+messages and changes no existing Pi USB contract. Enabled by `GK_M5_UART=1` in the Heltec BLE build.
+
+The same logical lines can travel over paired encrypted ESP-NOW with `GK_M5_ESPNOW=1` and
+Core2 `M5_USE_ESPNOW=1`. UART and ESP-NOW are mutually exclusive build choices. See the
+[wireless transport](../libraries/M5EspNowLink/README.md) for framing, authentication, bounded
+queues and channel discovery. It removes the terminal newline, preserves receive age and
+never forwards wireless text to the USB maintenance parser. The first wireless build refuses
+write-enabled compilation; mode, pit and USB VESC writes remain disabled.
+
+Core2 USB `status` reports display/link/touch diagnostics. On wireless targets, local USB
+`espnow status`, `espnow pair MAC LMK PMK` and `espnow clear` manage pairing; keys are never
+returned by status. Pair changes require a board reboot. These are USB provisioning commands,
+not display-to-Heltec requests.
 
 Heltec -> M5:
 - `self` / `fleet`: unchanged output of `GoKartProtocol::gkTelemetryToJson`; `self` retains its
@@ -27,7 +39,7 @@ M5 performs no wheel-RPM conversion and has no duplicated calibration. `mph:0` m
 within the VESC's own limits. `boot` is a nonzero random 32-bit boot identifier. `token` is a
 nonzero random, single-use token replaced at least once per second; zero means unavailable.
 Readiness/VESC link-session changes also invalidate tokens and publish updated metadata.
-A frame already in flight at expiry, or lost to UART backpressure, can still time out as unknown;
+A frame already in flight at expiry, or lost to transport backpressure, can still time out as unknown;
 it is not automatically retried. Expiry never changes driving state.
 
 `request` is the last recognized M5 request ID; `result` uses existing GoKartProtocol codes:

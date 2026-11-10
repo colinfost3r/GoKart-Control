@@ -57,6 +57,11 @@
 #include "config.h"
 #include "cmd_types.h"
 #include <M5DisplayLink.h>
+#if GK_M5_ESPNOW
+#include <M5EspNowSettings.h>
+m5now::Link m5Wireless;
+m5now::Settings m5WirelessSettings;
+#endif
 #if !VESC_TRANSPORT_UART
 #include <NimBLEDevice.h>
 #endif
@@ -248,7 +253,7 @@ char     usbLine[200];
 uint8_t  usbLen = 0; bool usbOverflow = false;
 
 // Optional display transport, isolated from USB provisioning and the radio protocol.
-#if GK_M5_UART
+#if GK_M5_LINK
 m5link::Gate m5Gate;
 m5link::Lines<80> m5Lines;
 uint32_t m5Boot = 0, m5Drops = 0, m5Request = 0;
@@ -257,7 +262,9 @@ uint8_t m5Result = GK_RES_NONE;
 bool m5WasReady = false; uint32_t m5LinkSession = 0;
 #endif
 static void m5Emit(const char* line) {
-#if GK_M5_UART
+#if GK_M5_ESPNOW
+  if (!m5Wireless.sendLine(line, millis())) ++m5Drops;
+#elif GK_M5_UART
   size_t n = strlen(line);
   // Whole-line drop under backpressure. Never wait for a missing/slow display or block LoRa slots.
   if (n + 1 > (size_t)Serial2.availableForWrite()) { ++m5Drops; return; }
@@ -704,33 +711,49 @@ static bool m5ModeReady() {
          wState == W_IDLE && rampIdx < 0 && !otaInProgress && !baselineSuspect;
 }
 static void m5Report();
+static void m5HandleLine(const char* line) {
+#if GK_M5_LINK
+  m5link::Request r;
+  // Execute against current time, never a delayed callback's timestamp.
+  if (!m5link::decode(line, r) || !m5Gate.accept(r, millis())) return;
+  m5Request = r.id; m5Owner = NO_OWNER; m5Result = GK_RES_REJECTED;
+  if (!m5ModeReady()) return;
+  handleCommand(0xFE, ++usbSeq, GK_CMD_SET_MODE, r.mode, 0, 0);
+  int8_t idx = cmdLastIdx[1];
+  if (idx >= 0) { CmdEnt& e = cmdHist[1][idx]; m5Owner = {1, idx, e.seq, e.ms}; m5Result = e.result; }
+#else
+  (void)line;
+#endif
+}
 static void serviceM5() {
-#if GK_M5_UART
+#if GK_M5_LINK
   uint32_t now = millis();
+#if GK_M5_ESPNOW
+  m5Wireless.poll(now);
+#endif
   bool ready = m5ModeReady();
   bool rotated = m5Gate.expired(now) || ready != m5WasReady || m5LinkSession != vescLinkUpMs;
   if (rotated) m5Gate.rotate(esp_random(), now);
   m5WasReady = ready; m5LinkSession = vescLinkUpMs;
-  // Publish the replacement now, not up to 500 ms later at the next USB report.
-  // Backpressure still drops whole lines; a lost/in-flight request remains unknown, never retried.
   if (rotated) m5Report();
-  // Bounded input work, and only CRC-checked, fresh single-use mode requests are understood.
+#if GK_M5_ESPNOW
+  // Only the existing fixed, CRC/token checked mode frame is parsed. Never usbCommand().
+  for (unsigned budget=0; budget<4; ++budget) {
+    const char* line=m5Wireless.readLine(millis());
+    if (!line) break;
+    m5HandleLine(line);
+  }
+#else
   unsigned budget = 128;
   while (budget-- && Serial2.available()) {
     const char* line = m5Lines.feed((char)Serial2.read(), millis());
-    if (!line) continue;
-    m5link::Request r;
-    if (!m5link::decode(line, r) || !m5Gate.accept(r, millis())) continue;
-    m5Request = r.id; m5Owner = NO_OWNER; m5Result = GK_RES_REJECTED;
-    if (!m5ModeReady()) continue;
-    handleCommand(0xFE, ++usbSeq, GK_CMD_SET_MODE, r.mode, 0, 0); // SAME driver source as Pi USB
-    int8_t idx = cmdLastIdx[1];
-    if (idx >= 0) { CmdEnt& e = cmdHist[1][idx]; m5Owner = {1, idx, e.seq, e.ms}; m5Result = e.result; }
+    if (line) m5HandleLine(line);
   }
+#endif
 #endif
 }
 static void m5Report() {
-#if GK_M5_UART
+#if GK_M5_LINK
   CmdEnt* e = cmdEnt(m5Owner);
   uint8_t result = e ? e->result : (m5Owner.src >= 0 ? GK_RES_UNKNOWN : m5Result);
   char b[640];
@@ -1298,6 +1321,9 @@ static void usbStatus() {
 }
 
 static void usbCommand(char* line) {
+#if GK_M5_ESPNOW
+  if (m5WirelessSettings.command(line, m5Wireless, Serial)) return;
+#endif
   while (*line == ' ') line++;
   char* arg = strchr(line, ' ');
   if (arg) { *arg++ = 0; while (*arg == ' ') arg++; }
@@ -1541,10 +1567,19 @@ void setup() {
 #if GK_M5_UART
   Serial2.setRxBufferSize(256); Serial2.setTxBufferSize(4096);
   Serial2.begin(M5_UART_BAUD, SERIAL_8N1, M5_UART_RX_PIN, M5_UART_TX_PIN);
+#endif
+#if GK_M5_LINK
   m5Boot = esp_random(); if (!m5Boot) m5Boot = 1;
   m5Gate.rotate(esp_random(), millis());
 #endif
   wifiStart();
+#if GK_M5_ESPNOW
+  if (m5WirelessSettings.load()) {
+    const auto& p=m5WirelessSettings.pair;
+    m5Wireless.begin(m5now::Role::Heltec,p.peer,p.lmk,p.pmk);
+  }
+  m5WirelessSettings.status(m5Wireless,Serial);
+#endif
 
   esp_task_wdt_config_t wdt = { .timeout_ms = WDT_TIMEOUT_S * 1000, .idle_core_mask = 0, .trigger_panic = true };
   if (esp_task_wdt_reconfigure(&wdt) != ESP_OK) esp_task_wdt_init(&wdt);

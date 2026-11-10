@@ -22,6 +22,17 @@ requirements from proposed implementation and unresolved details. See the
   for a possible boost mode. No final new cap, current or field-weakening values are approved.
   Existing 95 A maximum field-weakening setting is baseline evidence, not a recommendation.
 
+## M5 bench decisions — 2026-11-10
+
+- Program the connected Core2 and Heltec for the first telemetry test; the VESC remains off
+  during accessory programming. This board is **kart 3**, superseding the earlier kart-1 choice
+  for this particular Heltec. Eamon remains kart 2.
+- Use ESP-NOW between this Core2 and Heltec; keep the wired UART option available. Pair only
+  the intended boards, retain private rollback/configuration evidence, and preserve LoRa/pit
+  compatibility. Initial deployment remains read-only for all VESC control paths.
+- No SD card is installed. Telemetry and live GPS positions must work without one. The base
+  station is optional for local telemetry and directly heard peers, not for central pit control.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.
