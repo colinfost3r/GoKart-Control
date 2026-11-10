@@ -318,6 +318,14 @@ body.racing .fault { position: fixed; left: 0; right: 0; bottom: 0; z-index: 31;
 .itembox.r-empty { background: #555; }
 .itembox.r-shell { background: #0b3a20; }
 .itembox.r-lightning { background: #161616; color: #ffe600; }
+.itembox.r-boost3 { background: var(--boost); color: #000; }
+.itembox.r-star { background: #ffd400; color: #000; }
+.itembox.r-magnet { background: #7a1f1f; }
+.itembox.r-hotlap { background: #7ad7ff; color: #000; }
+.itembox.r-shield { background: #124a86; }
+.invfx { display: flex; align-items: center; padding: 7px 12px; border-radius: 10px; background: #000;
+         color: #ffe600; font-size: 15px; font-weight: 900; letter-spacing: .04em; border: 3px solid #ffe600; }
+body.sun .invfx { background: #000; }
 
 /* race finish: full-screen checkered takeover (6 s, then 0.5 s fade) with the position, laps and
    best lap; then a small FINISHED chip on the map until the next countdown */

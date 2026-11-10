@@ -609,7 +609,7 @@ class ServerPieces(unittest.TestCase):
                                               map_orientation="sideways", rotate=90, pit_urls="http://x",
                                               freeplay="on", freeplay_boxes=9))
         self.assertEqual((cfg["map_fps"], cfg["kart_id"], cfg["sound"], cfg["sun_mode"], cfg["map_orientation"], cfg["rotate"]),
-                         (10, 2, True, True, "heading_up", 0))
+                         (15, 2, True, True, "heading_up", 0))
         self.assertEqual((cfg["freeplay"], cfg["freeplay_boxes"]), (True, 3))
         self.assertEqual(cfg["pit_urls"], ["http://x"])
         self.assertEqual(len(w), 9, w)

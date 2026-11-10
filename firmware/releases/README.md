@@ -1,6 +1,6 @@
 # Prebuilt images
 
-> **Current images: kart 0.3.0, base and repeater 0.2.2, Core2 item screen 0.1.1** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
+> **Current images: kart 0.3.1, base and repeater 0.2.2, Core2 item screen 0.2.0** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy
 > `build/<sketch>/<sketch>.ino.merged.bin` here under a new version name, add the row and the
@@ -13,6 +13,8 @@ check what you got.
 
 | File | Board | Build | SHA-256 |
 | --- | --- | --- | --- |
+| `kart-heltec-v4-ble-0.3.1.merged.bin` | Heltec WiFi LoRa 32 V4.3 | 0.3.0 with the five new item codes (boost3/star/magnet/hotlap/shield) and charge counts in the Core2 frames | `4d403b51b4793b804a459f72f2e19634efde77a7d5a8cda24f48689f29f892f3` |
+| `core2-items-0.2.0.merged.bin` | M5Stack Core2 | item screen with the five new cards (dash-matched art, charge badge, per-item action labels) | `4a41df3a2fdff984bbe9b5c7d7b872d92470831ac1af4f39c57d7b03986587d8` |
 | `kart-heltec-v4-ble-0.3.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node 0.3.0: 0.2.7 + ESP-NOW Core2 item-screen bridge (`inv` line in, broadcast out, `invuse` relay) | `76f38e10ccc228ae6729db796d8f506811ad2550e6e3f438413d17f5335549f1` |
 | `core2-items-0.1.0.merged.bin` | M5Stack Core2 | bar-mounted item screen: ESP-NOW channel hunt, swipe/tap to use, fixed rotation for the cradle | `667a1aa214b991d51231cc2c1658c48ea0b63744db050b5551a24fefc0e5e502` |
 | `core2-items-0.1.1.merged.bin` | M5Stack Core2 | 0.1.0 with the rotation fixed for the cradle (flip gesture removed) and the item art redrawn to match the dash icons (chevrons / white rocket / turtle shell / bolt, mode sub-labels) | `c3ba83cd0192d530f935425549863d0a8f7e4c6e9dc14d19856fd4b69025c79a` |
@@ -105,3 +107,14 @@ Radio unchanged (interoperates with the 0.2.1 base and repeater).
   a kart's inventory broadcast, then shows the carried prizes (swipe to pick, tap to use, slot
   dots, battery + link header). Rotation fixed for the bar cradle; no WiFi join, no credentials.
   Needs the kart Pi's `item_hold` config (default true) and kart 0.3.0.
+
+## 0.3.1 kart + core2-items 0.2.0 (2026-11-10 evening, five new items)
+
+- Five new carried freeplay prizes rolled on the kart Pi (kartcore): **shield** (auto-blocks one
+  mud), **triple boost** (one card, three taps), **star** (8 s SPORT + mud immunity), **magnet**
+  (double box pickup radius, 20 s), **hot lap** (beat your best lap -> a rocket, miss -> mud).
+  The Heltec only forwards names/codes; no LoRa, BLE or drive-path changes.
+- `kart-heltec-v4-ble-0.3.1.merged.bin` adds the codes 6-10 and a charges nibble to the ESP-NOW
+  inventory frame. Flashed on kart 2 over WiFi (espota).
+- `core2-items-0.2.0.merged.bin` draws the new cards, the "x3" charge badge, and per-item action
+  text (hot lap arms, shield says it blocks by itself). Flashed over USB.

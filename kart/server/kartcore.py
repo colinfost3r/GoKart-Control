@@ -481,18 +481,23 @@ BOOST_STACK_MAX_S = 30       # stacked boosts: firmware `boost` SECS limit
 BOOST_DEFAULTS = {"secs": 5, "scale": 1.0, "cooldown_s": 20.0}
 ITEM_COOLDOWN_S = 15.0
 ITEM_REVEAL_S = 1.4
-ITEM_HOLD_CAP = 3              # held item-box prizes (boost/rocket) the driver can carry; a 4th fires at once
-HOLDABLE_ITEMS = ("boost", "rocket")   # freeplay prizes that go to the inventory when item_hold is on            # an item box's effect waits this long after the roll so it lands when the dash prize-wheel finishes (owner 2026-11-10: boost was applying the instant you hit the box)
+ITEM_HOLD_CAP = 3              # held item-box prizes the driver can carry; a 4th takes effect at once
+HOLDABLE_ITEMS = ("boost", "rocket", "boost3", "star", "magnet", "hotlap", "shield")   # carried when item_hold is on
+MAGNET_S = 20                  # magnet: item boxes are picked up at double radius this long
+STAR_S = 8                     # star: SPORT power + immunity to mud for this long
+BOOST3_CHARGES = 3             # triple boost: one card, three taps            # an item box's effect waits this long after the roll so it lands when the dash prize-wheel finishes (owner 2026-11-10: boost was applying the instant you hit the box)
 # Item box roll (ZONES.md "Item boxes"): (name, probability, secs, scale); empty = nothing sent
 # (mud: secs is the engine's mud_secs, MUD_SLOW_SECS by default; the scale is only used on firmware < 0.2.4)
 # 2026-11-09 (owner): a BOOST item is NORMAL's scale (0.75: from ECO the firmware lifts the cap to NORMAL's 25 mph)
 # and the ROCKET (was "super") is SPORT's 1.0 (cap lifted to SPORT = uncapped), both for their secs.
-ITEM_TABLE = (("boost", 0.45, 7, 0.75), ("rocket", 0.15, 10, 1.0), ("mud", 0.25, MUD_SLOW_SECS, 0.5),
-              ("empty", 0.15, None, None))
+ITEM_TABLE = (("boost", 0.26, 7, 0.75), ("rocket", 0.10, 10, 1.0), ("mud", 0.18, MUD_SLOW_SECS, 0.5),
+              ("boost3", 0.08, 7, 0.75), ("star", 0.07, STAR_S, 1.0), ("magnet", 0.08, None, None),
+              ("hotlap", 0.08, None, None), ("shield", 0.07, None, None), ("empty", 0.08, None, None))
 # Multiplayer freeplay (docs/freeplay-multiplayer.md section 2): the roll on a FREEPLAY box while this kart is in
 # a session. shell/lightning are HELD (secs None: nothing is sent; FreeplayGame keeps them for `use`).
-MULTI_ITEM_TABLE = (("boost", 0.35, 7, 0.75), ("shell", 0.30, None, None), ("lightning", 0.15, None, None),
-                    ("rocket", 0.10, 10, 1.0), ("empty", 0.10, None, None))
+MULTI_ITEM_TABLE = (("boost", 0.22, 7, 0.75), ("shell", 0.24, None, None), ("lightning", 0.12, None, None),
+                    ("rocket", 0.08, 10, 1.0), ("boost3", 0.06, 7, 0.75), ("star", 0.06, STAR_S, 1.0),
+                    ("shield", 0.08, None, None), ("magnet", 0.06, None, None), ("empty", 0.08, None, None))
 MULTI_HELD_ITEMS = ("shell", "lightning")
 RACE_GO_GRACE_S = 0.0        # the overlay/laps follow the computed GO instant; the go line only confirms it
 RACE_STATES = {0: "idle", 1: "countdown", 2: "running", 3: "finished"}
@@ -1060,8 +1065,12 @@ class GameEngine:
                  item_hold=False):
         self.local_enabled = bool(local_enabled)
         self.item_reveal_s = max(0.0, float(item_reveal_s))   # hold an item-box prize this long for the dash prize-wheel; 0 = fire at once
-        self.item_hold = bool(item_hold)     # freeplay boost/rocket go to a carried inventory (used later) instead of firing
-        self.inventory = []                  # [{"item","secs","scale","zone","mono"}] oldest first, max ITEM_HOLD_CAP
+        self.item_hold = bool(item_hold)     # freeplay prizes go to a carried inventory (used later) instead of firing
+        self.inventory = []                  # [{"item","secs","scale","zone","mono","charges"?}] oldest first, max ITEM_HOLD_CAP
+        self.star_until = 0.0                # star active: SPORT boost sent + mud/hotlap-penalty immune until then
+        self.magnet_until = 0.0              # magnet active: item boxes picked up at double radius
+        self.hotlap = None                   # {"target": best_s}: beat it on the next lap -> rocket, miss -> mud
+        self.shields = 0                     # auto-block charges NOT in the inventory (prize landed while full)
         self.mud_secs = int(max(1, min(30, int(mud_secs))))
         self.fw = None              # Heltec firmware string from its status reply (None = unknown)
         self.rng = rng or random.Random()
@@ -1150,6 +1159,17 @@ class GameEngine:
         return ov is not None and now < ov["until"] and (kind is None or ov["kind"] == kind)
 
     def _cmd(self, recs, now, zone, kind, secs, scale):
+        if kind == "mud" and now < self.star_until:
+            self._rec(recs, "star_blocked", now, zone=zone.id)       # invincible: the mud fizzles
+            return
+        if kind == "mud" and (self.shields > 0 or any(i["item"] == "shield" for i in self.inventory)):
+            sh = next((n for n, i in enumerate(self.inventory) if i["item"] == "shield"), None)
+            if sh is not None:
+                self.inventory.pop(sh)
+            else:
+                self.shields -= 1
+            self._rec(recs, "shield_broke", now, zone=zone.id)       # one mud eaten, shield gone
+            return
         if kind == "mud":
             secs = self.mud_secs
             if self.timed_slow():
@@ -1194,6 +1214,9 @@ class GameEngine:
         if not self.enabled:
             self.pending_items = []     # game turned off mid-reveal: the rolled prize dies with it
             self.inventory = []         # carried items die with the game too
+            self.star_until = self.magnet_until = 0.0
+            self.hotlap = None
+            self.shields = 0
                                         # (zone updates keep them: freeplay respawns boxes on every collection)
         self.track = parse_track(doc)
         if isinstance(doc, dict) and doc.get("track") is not None and self.track is None:
@@ -1302,10 +1325,12 @@ class GameEngine:
         prev = self.prev_fix if self.prev_fix is not None and now - self.prev_fix[2] <= SWEEP_MAX_GAP_S else None
         for z in self.areas:
             d = z.outside_m(lat, lon)
+            # magnet: item boxes reach twice as far (outside_m is dist - r, so within another r)
+            lim = getattr(z, "r", 0) if z.type == "item" and now < self.magnet_until else 0
             if z.id not in self.inside:
                 # inside now, or the path since the previous fix went through it (fast kart, 2 Hz fallback,
                 # small pad): an entry either way
-                if d <= 0 or (prev is not None and z.swept(prev[0], prev[1], lat, lon)):
+                if d <= lim or (prev is not None and z.swept(prev[0], prev[1], lat, lon)):
                     self.inside[z.id] = now
                     entered.append(z)
                     self._rec(recs, "zone_enter", now, zone=z.id, type=z.type, name=z.name,
@@ -1337,6 +1362,8 @@ class GameEngine:
                           **({"table": "multi", "held": name in MULTI_HELD_ITEMS} if table else {}))
                 if secs is not None:
                     fire.append((z, "mud" if name == "mud" else "boost", secs, scale, True, name))   # True = from a box (prize-wheel)
+                elif self.item_hold and self.source == "freeplay" and name in HOLDABLE_ITEMS:
+                    fire.append((z, "carry", 0, 0.0, True, name))    # shield/magnet/hotlap: nothing to send, just carried
             else:
                 st["fired"] = True
                 fire.append((z, "boost", z.secs, z.scale, False, None))
@@ -1386,16 +1413,50 @@ class GameEngine:
                 self._prize(recs, now, p["zone"], p["kind"], p["secs"], p["scale"], p.get("name"))
 
     def _prize(self, recs, now, zone, kind, secs, scale, name):
-        """A revealed item-box prize. With item_hold on (freeplay), boost/rocket go to the carried
-        inventory for the driver to use later (Core2 / dash); a full inventory fires it at once.
-        Mud and boost PADs always apply immediately."""
-        if (self.item_hold and name in HOLDABLE_ITEMS and self.source == "freeplay"
-                and len(self.inventory) < ITEM_HOLD_CAP):
-            self.inventory.append({"item": name, "secs": int(secs), "scale": clamp_scale(scale),
-                                   "zone": zone.id, "mono": now})
-            self._rec(recs, "item_held", now, zone=zone.id, item=name, slots=len(self.inventory))
-            return
+        """A revealed item-box prize. With item_hold on (freeplay), holdable prizes go to the carried
+        inventory for the driver to use later (Core2 / dash); a full inventory makes the prize take
+        effect at once. Mud and boost PADs always apply immediately."""
+        if self.item_hold and name in HOLDABLE_ITEMS and self.source == "freeplay":
+            if len(self.inventory) < ITEM_HOLD_CAP:
+                it = {"item": name, "secs": int(secs) if secs else 0, "scale": clamp_scale(scale) if scale else 0.0,
+                      "zone": zone.id, "mono": now}
+                if name == "boost3":
+                    it["charges"] = BOOST3_CHARGES
+                self.inventory.append(it)
+                self._rec(recs, "item_held", now, zone=zone.id, item=name, slots=len(self.inventory))
+                return
+            return self._apply_item(recs, now, zone, name, secs, scale)   # full: at once instead
+        if kind == "carry":
+            return self._apply_item(recs, now, zone, name, secs, scale)   # item table rolled it outside hold mode
         self._cmd(recs, now, zone, kind, secs, scale)
+
+    def _apply_item(self, recs, now, zone, name, secs, scale):
+        """A prize taking effect immediately (inventory full, or a non-firing item with item_hold off)."""
+        if name in ("boost", "rocket", "boost3"):
+            self._cmd(recs, now, zone, "boost", secs or 7, scale or 0.75)
+        elif name == "star":
+            self._star_on(recs, now, zone)
+        elif name == "magnet":
+            self.magnet_until = now + MAGNET_S
+            self._rec(recs, "magnet_on", now, zone=zone.id, secs=MAGNET_S)
+        elif name == "shield":
+            self.shields += 1
+            self._rec(recs, "shield_on", now, zone=zone.id)
+        elif name == "hotlap":
+            self._hotlap_arm(recs, now, zone)
+
+    def _star_on(self, recs, now, zone):
+        self.star_until = now + STAR_S
+        self._rec(recs, "star_on", now, zone=zone.id, secs=STAR_S)
+        self._cmd(recs, now, zone, "boost", STAR_S, 1.0)
+
+    def _hotlap_arm(self, recs, now, zone):
+        best = self.lap["best_s"]
+        if best is None:
+            self._rec(recs, "suppressed", now, zone=zone.id, why="hotlap needs a best lap")
+            return
+        self.hotlap = {"target": best}
+        self._rec(recs, "hotlap_armed", now, zone=zone.id, target_s=best)
 
     def use_item(self, now, slot):
         """Fire carried item `slot` (0-based, oldest first). Returns recs; CommandError when refused."""
@@ -1407,10 +1468,29 @@ class GameEngine:
             raise CommandError("grid hold")
         if not self.enabled:
             raise CommandError("game off")
-        it = self.inventory.pop(slot)
+        it = self.inventory[slot]
+        name = it["item"]
+        if name == "shield":
+            raise CommandError("shield blocks by itself")
+        if name == "hotlap" and self.lap["best_s"] is None:
+            raise CommandError("no best lap yet")
         recs = []
-        self._rec(recs, "item_used", now, item=it["item"], slots=len(self.inventory))
-        self._cmd(recs, now, _InvZone(f"inv-{it['item']}"), "boost", it["secs"], it["scale"])
+        if name == "boost3" and it.get("charges", 1) > 1:
+            it["charges"] -= 1
+            self._rec(recs, "item_used", now, item=name, slots=len(self.inventory), charges_left=it["charges"])
+        else:
+            self.inventory.pop(slot)
+            self._rec(recs, "item_used", now, item=name, slots=len(self.inventory))
+        z = _InvZone(f"inv-{name}")
+        if name in ("boost", "rocket", "boost3"):
+            self._cmd(recs, now, z, "boost", it["secs"], it["scale"])
+        elif name == "star":
+            self._star_on(recs, now, z)
+        elif name == "magnet":
+            self.magnet_until = now + MAGNET_S
+            self._rec(recs, "magnet_on", now, zone=z.id, secs=MAGNET_S)
+        elif name == "hotlap":
+            self._hotlap_arm(recs, now, z)
         return recs
 
     def _mud(self, now, recs, entered):
@@ -1465,6 +1545,15 @@ class GameEngine:
         lap["times"] = (lap["times"] + [lap_s])[-10:]
         lap.update(start=t_cross, last_cross=t_cross, running=True)
         self._rec(recs, "lap", now, zone=L.id, lap=lap["count"], lap_s=lap_s, best=best)
+        if self.hotlap is not None:
+            tgt = self.hotlap["target"]
+            self.hotlap = None
+            if lap_s < tgt:
+                self._rec(recs, "hotlap_won", now, lap_s=lap_s, target_s=tgt)
+                self._prize(recs, now, _InvZone("hotlap-prize"), "boost", 10, 1.0, "rocket")   # a rocket, carried if room
+            else:
+                self._rec(recs, "hotlap_lost", now, lap_s=lap_s, target_s=tgt)
+                self._cmd(recs, now, _InvZone("hotlap-mud"), "mud", self.mud_secs, 0.5)        # shield/star can still save you
 
     # -- race start (ZONES.md "Race start") -------------------------------------------
     def race_position(self, pos, state, now, wall=None, recs=None):
@@ -1682,7 +1771,12 @@ class GameEngine:
             "events": [{k: v for k, v in e.items() if k != "mono"} | {"age_s": _age(e["mono"], now)}
                        for e in list(self.events)[-8:]],
             "cmds_sent": self.cmds_sent,
-            "inventory": [{"item": i["item"], "secs": i["secs"]} for i in self.inventory],
+            "inventory": [{"item": i["item"], "secs": i["secs"],
+                           **({"charges": i["charges"]} if "charges" in i else {})} for i in self.inventory],
+            "effects": {"star_s": round(self.star_until - now, 1) if now < self.star_until else None,
+                        "magnet_s": round(self.magnet_until - now, 1) if now < self.magnet_until else None,
+                        "shields": self.shields,
+                        "hotlap_target_s": self.hotlap["target"] if self.hotlap else None},
             "fw": self.fw,
             "mud_cmd": "slow" if self.timed_slow() else "boost",
             "source": self.source,

@@ -32,12 +32,15 @@ static uint32_t scanHopMs = 0; static uint8_t scanCh = 1; static bool locked = f
 static uint32_t useSentMs = 0; static uint8_t useSeq = 0, useTries = 0, useSlot = 0;
 static uint32_t lastDrawMs = 0; static bool dirty = true;
 
-/* Names, colors and shapes mirror the dash (app.js ITEM_SVG / ITEM_COLOR / ITEM_SUB):
-   boost #ffb000 chevrons, rocket white + blue porthole + orange flame, shell #3ddc84 turtle
-   disc with hex plates, lightning #ffe600 bolt, all black-outlined on the dark card. */
-static const char* NAMES[6] = {"?", "BOOST", "ROCKET", "SHELL", "LIGHTNING", "MUD"};
-static const char* SUBS[6]  = {"", "> NORMAL", "> SPORT", "", "", ""};
-static const uint16_t COLORS[6] = {0xFFFF, 0xFD80, 0xFEA0, 0x3EF0, 0xFF20, 0xC449};
+/* Names, colors and shapes mirror the dash (app.js ITEM_SVG / ITEM_COLOR / ITEM_SUB).
+   Codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud, 6 boost3, 7 star, 8 magnet,
+   9 hotlap, 10 shield; a frame byte is code | (charges-1)<<4. */
+static const char* NAMES[11] = {"?", "BOOST", "ROCKET", "SHELL", "LIGHTNING", "MUD",
+                                "BOOST x3", "STAR", "MAGNET", "HOT LAP", "SHIELD"};
+static const char* SUBS[11]  = {"", "> NORMAL", "> SPORT", "", "", "",
+                                "> NORMAL x3", "SPORT + IMMUNE", "BIG PICKUP", "BEAT YOUR BEST", "AUTO BLOCK"};
+static const uint16_t COLORS[11] = {0xFFFF, 0xFD80, 0xFEA0, 0x3EF0, 0xFF20, 0xC449,
+                                    0xFD80, 0xFEA0, 0xFAEB, 0x7EBF, 0x3D30};
 static const uint16_t C_FLAME = 0xFBC0, C_FLAMEIN = 0xFEA0, C_PORT = 0x2BDF;
 
 static void onRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
@@ -127,6 +130,55 @@ static void glyph(int cx, int cy, uint8_t code, uint16_t col) {
     cv.fillCircle(X(50), Y(58), (int)(29 * GS), col);
     cv.fillCircle(X(84), Y(22), (int)(8 * GS), col);
     cv.fillCircle(X(16), Y(84), (int)(7 * GS), col);
+  } else if (code == 6) {               // triple boost: three chevrons (dash boost3)
+    for (int pass = 0; pass < 2; pass++) {
+      float r = pass ? 4.5f : 8.5f; uint16_t c = pass ? col : TFT_BLACK;
+      for (int k = 0; k < 3; k++) {
+        float dy = k * 22;
+        wline(20, 42 + dy, 50, 16 + dy, r, c); wline(50, 16 + dy, 80, 42 + dy, r, c);
+      }
+    }
+  } else if (code == 7) {               // star with eyes (dash star)
+    static const float SP[10][2] = {{50, 4}, {61, 36}, {95, 37}, {68, 58}, {78, 91},
+                                    {50, 71}, {22, 91}, {32, 58}, {5, 37}, {39, 36}};
+    for (int pass = 0; pass < 2; pass++) {
+      float grow = pass ? 1.0f : 1.12f; uint16_t c = pass ? col : TFT_BLACK;
+      for (int i = 0; i < 10; i++) {
+        int j = (i + 1) % 10;
+        cv.fillTriangle(X(50), Y(50),
+                        X(50 + (SP[i][0] - 50) * grow), Y(50 + (SP[i][1] - 50) * grow),
+                        X(50 + (SP[j][0] - 50) * grow), Y(50 + (SP[j][1] - 50) * grow), c);
+      }
+    }
+    cv.fillCircle(X(40), Y(48), (int)(4.5f * GS), TFT_BLACK);
+    cv.fillCircle(X(60), Y(48), (int)(4.5f * GS), TFT_BLACK);
+  } else if (code == 8) {               // horseshoe magnet (dash magnet)
+    for (int pass = 0; pass < 2; pass++) {
+      float r = pass ? 7.5f : 10.5f; uint16_t c = pass ? col : TFT_BLACK;
+      wline(34, 14, 34, 50, r, c); wline(66, 14, 66, 50, r, c);
+      for (int a = 0; a <= 8; a++) {
+        float t0 = 3.14159f * a / 8, t1 = 3.14159f * (a + 1) / 8;
+        wline(50 - 16 * cosf(t0), 50 + 16 * sinf(t0), 50 - 16 * cosf(t1), 50 + 16 * sinf(t1), r, c);
+      }
+    }
+    cv.fillRect(X(27), Y(8), (int)(15 * GS), (int)(12 * GS), TFT_WHITE);
+    cv.fillRect(X(59), Y(8), (int)(15 * GS), (int)(12 * GS), TFT_WHITE);
+  } else if (code == 9) {               // stopwatch (dash hotlap)
+    cv.fillRect(X(42), Y(2), (int)(16 * GS), (int)(10 * GS), col);
+    cv.fillCircle(X(50), Y(56), (int)(40 * GS), TFT_BLACK);
+    cv.fillCircle(X(50), Y(56), (int)(37 * GS), TFT_WHITE);
+    cv.fillCircle(X(50), Y(56), (int)(29 * GS), col);
+    wline(50, 56, 50, 34, 3.5f, TFT_BLACK); wline(50, 56, 66, 64, 3.5f, TFT_BLACK);
+  } else if (code == 10) {              // shield badge (dash shield)
+    for (int pass = 0; pass < 2; pass++) {
+      float g = pass ? 1.0f : 1.1f; uint16_t c = pass ? col : TFT_BLACK;
+      static const float SH[7][2] = {{50, 5}, {88, 18}, {88, 48}, {72, 82}, {50, 96}, {28, 82}, {12, 48}};
+      for (int i = 0; i < 7; i++) {
+        int j = (i + 1) % 7;
+        cv.fillTriangle(X(50), Y(50), X(50 + (SH[i][0] - 50) * g), Y(50 + (SH[i][1] - 50) * g),
+                        X(50 + (SH[j][0] - 50) * g), Y(50 + (SH[j][1] - 50) * g), c);
+      }
+    }
   }
 }
 
@@ -165,7 +217,9 @@ static void draw() {
     cv.drawString("hit a ? box", W / 2, H / 2 + 56);
   } else {
     if (sel >= n) sel = n - 1;
-    uint8_t code = items[sel] < 6 ? items[sel] : 0;
+    uint8_t code = items[sel] & 0x0F;
+    if (code > 10) code = 0;
+    uint8_t charges = (items[sel] >> 4) + 1;
     uint16_t col = COLORS[code];
     glyph(W / 2, H / 2 - 40, code, col);
     cv.setTextDatum(middle_center);
@@ -181,7 +235,13 @@ static void draw() {
     bool using_ = useTries && millis() - useSentMs < 1500;
     cv.setFont(&fonts::DejaVu18);
     cv.setTextColor(using_ ? TFT_YELLOW : TFT_WHITE, TFT_BLACK);
-    cv.drawString(using_ ? "USING..." : "TAP TO USE", W / 2, H / 2 + 88);
+    const char* act = code == 10 ? "BLOCKS BY ITSELF" : code == 9 ? "TAP TO ARM" : "TAP TO USE";
+    cv.drawString(using_ ? "USING..." : act, W / 2, H / 2 + 88);
+    if (charges > 1) {                  // triple boost: taps left
+      cv.setFont(&fonts::DejaVu24);
+      cv.setTextColor(col, TFT_BLACK);
+      cv.drawString(String("x") + charges, W - 34, 44);
+    }
     for (int i = 0; i < n; i++)                             // slot dots
       cv.fillCircle(W / 2 + (i - (n - 1) / 2.0f) * 24, H - 26, i == sel ? 8 : 5,
                     i == sel ? TFT_WHITE : TFT_DARKGREY);

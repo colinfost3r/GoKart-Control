@@ -864,8 +864,10 @@ class Items(unittest.TestCase):
 
     def test_each_outcome_command(self):
         # 2026-11-09 (owner): BOOST = NORMAL's scale 0.75, ROCKET (was "super") = SPORT's 1.0
-        for x, item, line in ((0.10, "boost", ["boost 7 0.75"]), (0.50, "rocket", ["boost 10 1.00"]),
-                              (0.70, "mud", ["boost 4 0.50"]), (0.95, "empty", [])):
+        for x, item, line in ((0.10, "boost", ["boost 7 0.75"]), (0.30, "rocket", ["boost 10 1.00"]),
+                              (0.40, "mud", ["boost 4 0.50"]), (0.58, "boost3", ["boost 7 0.75"]),
+                              (0.65, "star", ["boost 8 1.00"]), (0.72, "magnet", []),
+                              (0.88, "shield", []), (0.95, "empty", [])):
             g = kc.GameEngine(rng=FixedRng(x))
             g.set_zones(zones_doc(item_zone()), 0.0)
             g.on_self(fix(-20, 0), 1.0)
@@ -940,6 +942,91 @@ class Items(unittest.TestCase):
         with self.assertRaises(kc.CommandError):
             g.use_item(39.5, 0)
         self.assertEqual(len(g.inventory), 1)
+
+    def _fp_engine(self, x, **kw):
+        g = kc.GameEngine(rng=FixedRng(x), item_hold=True, **kw)
+        d = zones_doc(item_zone())
+        d["source"] = "freeplay"
+        g.set_zones(d, 0.0)
+        g.on_self(fix(-20, 0), 1.0)
+        return g
+
+    def test_shield_is_carried_and_auto_blocks_one_mud(self):
+        g = self._fp_engine(0.88)                                        # 0.88 = SHIELD
+        r = g.on_self(fix(-4, 0), 1.5)
+        self.assertEqual(evs(r, "item")[0]["item"], "shield")
+        self.assertEqual([i["item"] for i in g.inventory], ["shield"])
+        with self.assertRaises(kc.CommandError):                         # it cannot be tapped
+            g.use_item(2.0, 0)
+        g.rng = FixedRng(0.40)                                           # next box rolls MUD
+        g.on_self(fix(-20, 0), 20.0)
+        r = g.on_self(fix(-4, 0), 36.0)                                  # past the zone cooldown
+        self.assertEqual(lines(r), [])                                   # shield ate it
+        self.assertEqual(evs(r, "shield_broke")[0]["zone"], "i1")
+        self.assertEqual(g.inventory, [])
+
+    def test_star_gives_sport_power_and_mud_immunity(self):
+        g = self._fp_engine(0.65)                                        # 0.65 = STAR
+        g.on_self(fix(-4, 0), 1.5)
+        self.assertEqual([i["item"] for i in g.inventory], ["star"])
+        g.on_self(fix(-20, 0), 6.0)                                      # leave the box (15 s cooldown)
+        r = g.use_item(21.5, 0)                                          # star on until 29.5
+        self.assertEqual(lines(r), ["boost 8 1.00"])
+        self.assertTrue(evs(r, "star_on"))
+        g.rng = FixedRng(0.40)                                           # MUD while the star runs
+        r = g.on_self(fix(-4, 0), 22.0)
+        self.assertEqual(lines(r), [])
+        self.assertTrue(evs(r, "star_blocked"))                          # fizzled, nothing consumed
+        g.on_self(fix(-20, 0), 23.0)
+        r = g.on_self(fix(-4, 0), 39.0)                                  # star long over: mud lands
+        self.assertEqual(lines(r), ["boost 4 0.50"])
+
+    def test_magnet_doubles_the_item_pickup_radius(self):
+        g = self._fp_engine(0.10)                                        # any roll; zone r = 5 m
+        r = g.on_self(fix(-8, 0), 1.5)                                   # 8 m out: no pickup normally
+        self.assertEqual(evs(r, "item"), [])
+        g.magnet_until = 100.0
+        r = g.on_self(fix(-8, 0), 2.0)                                   # within 2 r with the magnet
+        self.assertEqual(evs(r, "item")[0]["item"], "boost")
+        r2 = g.on_self(fix(-12, 0), 2.5)                                 # 12 m: beyond even the magnet
+        self.assertFalse(evs(r2, "item"))
+
+    def test_boost3_is_three_taps_on_one_card(self):
+        g = self._fp_engine(0.58)                                        # 0.58 = BOOST3
+        g.on_self(fix(-4, 0), 1.5)
+        self.assertEqual(g.inventory[0], g.inventory[0] | {"item": "boost3", "charges": 3})
+        for n, left in ((2.0, 2), (30.0, 1)):
+            r = g.use_item(n, 0)
+            self.assertEqual(lines(r), ["boost 7 0.75"])
+            self.assertEqual(g.inventory[0]["charges"], left)
+        r = g.use_item(60.0, 0)                                          # the last charge spends the card
+        self.assertEqual(lines(r), ["boost 7 0.75"])
+        self.assertEqual(g.inventory, [])
+
+    def test_hotlap_rewards_a_rocket_or_punishes_with_mud(self):
+        g = kc.GameEngine(rng=FixedRng(0.80), item_hold=True)            # 0.80 = HOTLAP
+        d = zones_doc(item_zone(n=30), lap_zone())                       # the box north of the lap line
+        d["source"] = "freeplay"
+        g.set_zones(d, 0.0)
+        g.on_self(fix(-2, 0), 0.0); g.on_self(fix(2, 0), 1.0)            # lap timing starts
+        g.on_self(fix(12, 0), 5.0)
+        g.on_self(fix(2, 0), 40.0); g.on_self(fix(-2, 0), 41.0)          # first lap ~40 s = best
+        g.on_self(fix(2, 20), 42.0)
+        r = g.on_self(fix(0, 30), 43.0)                                  # the box: HOTLAP carried
+        self.assertEqual(evs(r, "item")[0]["item"], "hotlap")
+        r = g.use_item(44.0, 0)
+        self.assertEqual(evs(r, "hotlap_armed")[0]["target_s"], g.lap["best_s"])
+        g.on_self(fix(3, 20), 45.0)
+        g.on_self(fix(-3, 0), 68.0)                                      # back west, clear of the segment
+        r = g.on_self(fix(-2, 0), 69.0) + g.on_self(fix(2, 0), 70.0)     # ~29 s lap: beaten
+        self.assertTrue(evs(r, "hotlap_won"))
+        self.assertIn("rocket", [i["item"] for i in g.inventory])        # the prize is carried
+        # and a slow lap after arming again punishes with mud
+        g.hotlap = {"target": 5.0}
+        g.on_self(fix(12, 0), 75.0)
+        r = g.on_self(fix(2, 0), 99.0) + g.on_self(fix(-2, 0), 100.0)
+        self.assertTrue(evs(r, "hotlap_lost"))
+        self.assertEqual(lines(r), ["boost 4 0.50"])                     # mud (no shield left)
 
     def test_item_hold_full_inventory_fires_at_once_and_pit_game_never_holds(self):
         g = kc.GameEngine(rng=FixedRng(0.1), item_hold=True)        # reveal 0: prize gate at entry
@@ -1651,7 +1738,7 @@ class BoostStacking(unittest.TestCase):
         self.assertEqual(g.override["until"], 33.0)
 
     def test_item_boost_and_rocket_stack_too(self):
-        g = self.engine(pad("p1", 0), item_zone(e=30, r=3), rng=FixedRng(0.5))   # 0.5 = ROCKET (10 s, 1.0)
+        g = self.engine(pad("p1", 0), item_zone(e=30, r=3), rng=FixedRng(0.30))  # 0.30 = ROCKET (10 s, 1.0)
         g.on_self(fx(0, 0), 1.0)
         r = g.on_self(fx(30, 0), 2.0)                       # 4 left + 10
         self.assertEqual(evs(r, "item")[0]["item"], "rocket")
@@ -1668,7 +1755,7 @@ class BoostStacking(unittest.TestCase):
         self.assertEqual(lines(g.on_self(fx(30, 0), 3.0)), ["boost 5 1.00"])
 
     def test_mud_running_does_not_stack_and_wins(self):
-        g = self.engine(item_zone(e=0, r=3), pad("p1", 30), rng=FixedRng(0.7), fw="kart-0.2.4")   # 0.7 = MUD
+        g = self.engine(item_zone(e=0, r=3), pad("p1", 30), rng=FixedRng(0.40), fw="kart-0.2.4")   # 0.40 = MUD
         r = g.on_self(fx(0, 0), 1.0)
         self.assertEqual(lines(r), ["slow 5 4"])
         r = g.on_self(fx(30, 0), 3.0)                       # boost pad while the mud slow runs
@@ -1676,7 +1763,7 @@ class BoostStacking(unittest.TestCase):
         self.assertEqual(evs(r, "suppressed")[0]["why"], "mud running")
         self.assertEqual(g.override["kind"], "mud")
         # mud during a boost replaces it (mud wins; nothing stacks onto a mud)
-        g = self.engine(pad("p1", 0), item_zone(e=30, r=3), rng=FixedRng(0.7), fw="kart-0.2.4")
+        g = self.engine(pad("p1", 0), item_zone(e=30, r=3), rng=FixedRng(0.40), fw="kart-0.2.4")
         g.on_self(fx(0, 0), 1.0)
         r = g.on_self(fx(30, 0), 2.0)
         self.assertEqual(lines(r), ["slow 5 4"])
@@ -1686,7 +1773,7 @@ class BoostStacking(unittest.TestCase):
 
 class MudSlow(unittest.TestCase):
     def item_mud(self, fw, **kw):
-        g = kc.GameEngine(rng=FixedRng(0.7), **kw)
+        g = kc.GameEngine(rng=FixedRng(0.40), **kw)
         g.set_zones(zones_doc(item_zone()), 0.0)
         g.set_fw(fw)
         g.on_self(fx(-20, 0), 1.0)
@@ -1809,12 +1896,13 @@ class Multiplayer(unittest.TestCase):
         self.assertAlmostEqual(sum(p for _, p, _, _ in kc.MULTI_ITEM_TABLE), 1.0)
         self.assertAlmostEqual(sum(p for _, p, _, _ in kc.ITEM_TABLE), 1.0)
         self.assertEqual({n: (sec, sc) for n, _, sec, sc in kc.ITEM_TABLE if sec},
-                         {"boost": (7, 0.75), "rocket": (10, 1.0), "mud": (kc.MUD_SLOW_SECS, 0.5)})
+                         {"boost": (7, 0.75), "rocket": (10, 1.0), "mud": (kc.MUD_SLOW_SECS, 0.5),
+                          "boost3": (7, 0.75), "star": (kc.STAR_S, 1.0)})
         rng, n, counts = random.Random(20261109), 20000, {}
         for _ in range(n):
             name, secs, _ = kc.roll_item(rng, kc.MULTI_ITEM_TABLE)
             counts[name] = counts.get(name, 0) + 1
-            self.assertEqual(secs is None, name in ("shell", "lightning", "empty"))
+            self.assertEqual(secs is None, name in ("shell", "lightning", "shield", "magnet", "empty"))
         for name, p, _, _ in kc.MULTI_ITEM_TABLE:
             self.assertAlmostEqual(counts[name] / n, p, delta=0.012, msg=name)
         self.assertEqual(kc.roll_item(FixedRng(0.999))[0], "empty")      # default table unchanged
@@ -1827,16 +1915,16 @@ class Multiplayer(unittest.TestCase):
         return g.on_self(fix(-4, 0), 1.5)
 
     def test_roll_uses_the_multi_table_only_for_freeplay_boxes_in_a_session(self):
-        for x, item in ((0.10, "boost"), (0.40, "shell"), (0.70, "lightning"), (0.85, "rocket"), (0.95, "empty")):
+        for x, item in ((0.10, "boost"), (0.30, "shell"), (0.50, "lightning"), (0.60, "rocket"), (0.95, "empty")):
             r = self.engine_roll(x, kc.MULTI_ITEM_TABLE)
             it = evs(r, "item")[0]
             self.assertEqual((it["item"], it["table"], it["held"]), (item, "multi", item in ("shell", "lightning")))
             want = {"boost": ["boost 7 0.75"], "rocket": ["boost 10 1.00"]}.get(item, [])
             self.assertEqual(lines(r), want, item)                     # a held roll sends NOTHING
-        r = self.engine_roll(0.40, None)                                # not in a session: single-player table
+        r = self.engine_roll(0.10, None)                                # not in a session: single-player table
         self.assertEqual((evs(r, "item")[0]["item"], lines(r)), ("boost", ["boost 7 0.75"]))
         self.assertNotIn("table", evs(r, "item")[0])
-        r = self.engine_roll(0.40, kc.MULTI_ITEM_TABLE, source=None)    # the pit's own boxes: single-player
+        r = self.engine_roll(0.10, kc.MULTI_ITEM_TABLE, source=None)    # the pit's own boxes: single-player
         self.assertEqual(evs(r, "item")[0]["item"], "boost")
         fp, disp = self.fp()
         self.assertIsNone(fp.item_table())

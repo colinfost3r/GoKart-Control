@@ -77,10 +77,10 @@ DEFAULTS = {
     "map_poll_s": 30,
     "beginner_mode": False,             # hides driver-facing fault alerts only (docs/requirements.md)
     "map_orientation": "heading_up",    # "heading_up" | "north_up" (heading-up only while following)
-    "follow_span_m": 70,                # metres shown across the map height while following
+    "follow_span_m": 50,                # metres shown across the map height while following
     "follow_resume_s": 10,              # auto-follow resumes this long after the last touch
     "mode_hold_ms": 500,                # press-and-hold to request a mode (0 = plain tap)
-    "map_fps": 10,                      # max redraw rate while something moves
+    "map_fps": 15,                      # max redraw rate while something moves
     "bind": "0.0.0.0",
     "http_port": 8081,
     "remote_cmd": False,                # allow POST /cmd from other machines (debug only)
@@ -658,7 +658,7 @@ class App:
     # -- carried items (Core2 item screen / dash chips; kartcore inventory + multiplayer held) ----
     def _inv_names(self):
         """Carried item names, engine inventory first (oldest first), then the multiplayer held item."""
-        names = [i["item"] for i in self.game.inventory]
+        names = [i["item"] + (f"*{i['charges']}" if i.get("charges") else "") for i in self.game.inventory]
         if self.freeplay.held:
             names.append(self.freeplay.held["item"])
         return names

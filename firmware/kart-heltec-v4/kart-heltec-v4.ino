@@ -1201,7 +1201,8 @@ static void serviceWifi() {
 // The kart Pi pushes the carried items over USB (`inv boost rocket` / `inv -`); we broadcast them
 // once a second (and at once on change) as a tiny frame any Core2 on our WiFi channel can show.
 // The Core2 answers with a "use slot" frame, relayed to the Pi as a {"t":"invuse",...} line.
-// Item codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud.
+// Item codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud, 6 boost3, 7 star, 8 magnet,
+// 9 hotlap, 10 shield. A frame byte is code | (charges-1)<<4 ("boost3*2" from the Pi).
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
 static const uint8_t ESPNOW_BCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -1211,13 +1212,18 @@ static volatile uint8_t useSlotRx = 0, useSeqRx = 0; static volatile bool usePen
 static uint8_t useSeqDone = 0xFF;
 
 static const char* invName(uint8_t c) {
-  switch (c) { case 1: return "boost"; case 2: return "rocket"; case 3: return "shell";
-               case 4: return "lightning"; case 5: return "mud"; default: return "?"; }
+  switch (c & 0x0F) { case 1: return "boost"; case 2: return "rocket"; case 3: return "shell";
+               case 4: return "lightning"; case 5: return "mud"; case 6: return "boost3";
+               case 7: return "star"; case 8: return "magnet"; case 9: return "hotlap";
+               case 10: return "shield"; default: return "?"; }
 }
 static uint8_t invCode(const char* n) {
   if (!strcmp(n, "boost")) return 1; if (!strcmp(n, "rocket")) return 2;
   if (!strcmp(n, "shell")) return 3; if (!strcmp(n, "lightning")) return 4;
-  if (!strcmp(n, "mud")) return 5; return 0;
+  if (!strcmp(n, "mud")) return 5; if (!strcmp(n, "boost3")) return 6;
+  if (!strcmp(n, "star")) return 7; if (!strcmp(n, "magnet")) return 8;
+  if (!strcmp(n, "hotlap")) return 9; if (!strcmp(n, "shield")) return 10;
+  return 0;
 }
 
 static void espnowOnRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
@@ -1323,8 +1329,11 @@ static void usbCommand(char* line) {
     invN = 0;
     for (char* t = arg ? strtok(arg, " ") : NULL; t && invN < 3; t = strtok(NULL, " ")) {
       if (!strcmp(t, "-")) break;
+      uint8_t charges = 1;
+      char* star = strchr(t, '*');
+      if (star) { *star = 0; int c = atoi(star + 1); if (c >= 1 && c <= 4) charges = (uint8_t)c; }
       uint8_t c = invCode(t);
-      if (c) invItems[invN++] = c;
+      if (c) invItems[invN++] = c | (uint8_t)((charges - 1) << 4);
     }
     invSeq++; invTxMs = 0;                                // broadcast at once
     logf("inv: %u item(s) [%s %s %s]", invN, invN > 0 ? invName(invItems[0]) : "-",
