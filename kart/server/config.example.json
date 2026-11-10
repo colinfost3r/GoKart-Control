@@ -29,6 +29,7 @@
     "freeplay": "Allow FREEPLAY (map button under SUN, or POST /api/freeplay from the kart): a kart-local item-box game that needs no pit. Drive one lap to set the course, then random item boxes appear on it. The pit's own game (enabled, with zones) always wins and pauses it. Needs game true. On/off and the course are kept in freeplay.json next to game-state.json.",
     "freeplay_boxes": "Item boxes kept on the freeplay course at once (1-6).",
     "mud_slow_secs": "Seconds each mud command lasts (zone repeat every 2 s, MUD item once), 1-30. Heltec kart-0.2.4+: `slow 5 N` (a real 5 mph cap that ends by itself); older or unknown firmware: `boost N 0.5`.",
+    "item_reveal_s": "Seconds an item-box prize waits before it is sent, so the boost/slow lands as the dash prize-wheel finishes instead of the instant you hit the box, 0-5. 0 = instant.",
     "rotate": "0 or 180. Read by install.sh only: 180 = panel mounted ports-down (kernel video= rotate + touch calibration udev rule; reboot). Kart 2 runs 0.",
     "health_period_s": "Seconds between Pi power/thermal samples (vcgencmd get_throttled + CPU temperature, 0.2-3600). The driver page shows UNDERVOLT / THROTTLED / HAD UNDERVOLT only when something is wrong; transitions are logged.",
     "health_file": "Tests/dev only: read the get_throttled text from this file instead of vcgencmd (null on a kart)."
@@ -64,6 +65,7 @@
   "freeplay": true,
   "freeplay_boxes": 3,
   "mud_slow_secs": 4,
+  "item_reveal_s": 1.4,
   "rotate": 0,
   "health_period_s": 10.0,
   "health_file": null

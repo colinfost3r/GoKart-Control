@@ -100,6 +100,7 @@ DEFAULTS = {
     "freeplay": True,                   # allow freeplay (FREEPLAY map button / POST /api/freeplay): kart-local item boxes, no pit
     "freeplay_boxes": 3,                # item boxes kept on the freeplay course (1-6)
     "mud_slow_secs": 4,                 # each mud command (zone repeat / MUD item): `slow 5 N` on Heltec kart-0.2.4+, else `boost N 0.5`
+    "item_reveal_s": 1.4,               # hold an item-box prize this long so it lands as the dash prize-wheel finishes (owner 2026-11-10); 0 = instant
     "rotate": 0,                        # install.sh only: 180 = panel mounted ports-down (kernel + touch rotation)
     "health_period_s": health.PERIOD_S, # vcgencmd get_throttled + CPU temp sample period (Pi only)
     "health_file": None,                # tests/dev: read the get_throttled text from this file instead of vcgencmd
@@ -111,7 +112,7 @@ CONFIG_RULES = {
     "http_port": (int, 1, 65535), "status_poll_s": (float, 5, 3600), "max_log_mb": (float, 10, 100000),
     "demo_max_s": (float, 10, 3600), "sound_volume": (float, 0, 1), "rotate": (int, 0, 180),
     "health_period_s": (float, 0.2, 3600), "freeplay_boxes": (int, 1, 6),
-    "mud_slow_secs": (int, 1, 30),
+    "mud_slow_secs": (int, 1, 30), "item_reveal_s": (float, 0, 5),
 }
 CONFIG_BOOLS = ("beginner_mode", "remote_cmd", "game", "gps_correction", "demo", "sound", "sun_mode", "freeplay")
 CONFIG_CHOICES = {"map_orientation": ("heading_up", "north_up"), "rotate": (0, 180)}
@@ -328,7 +329,8 @@ class App:
         self.cmds = kartcore.CommandTracker()
         self.game = kartcore.GameEngine(local_enabled=bool(self.cfg.get("game", True)),
                                         gps_correction=bool(self.cfg.get("gps_correction", False)),
-                                        mud_secs=int(self.cfg.get("mud_slow_secs", kartcore.MUD_SLOW_SECS)))
+                                        mud_secs=int(self.cfg.get("mud_slow_secs", kartcore.MUD_SLOW_SECS)),
+                                        item_reveal_s=float(self.cfg.get("item_reveal_s", kartcore.ITEM_REVEAL_S)))
         # multiplayer freeplay: the engine rolls the multiplayer table on freeplay boxes while in a session, and
         # freeplay reads peers / distances / scores from the display's fleet table
         self.game.freeplay_items = self.freeplay.item_table

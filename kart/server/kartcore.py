@@ -480,6 +480,7 @@ FW_TIMED_SLOW = (0, 2, 4)    # first firmware with `slow MPH SECS`; older ones r
 BOOST_STACK_MAX_S = 30       # stacked boosts: firmware `boost` SECS limit
 BOOST_DEFAULTS = {"secs": 5, "scale": 1.0, "cooldown_s": 20.0}
 ITEM_COOLDOWN_S = 15.0
+ITEM_REVEAL_S = 1.4            # an item box's effect waits this long after the roll so it lands when the dash prize-wheel finishes (owner 2026-11-10: boost was applying the instant you hit the box)
 # Item box roll (ZONES.md "Item boxes"): (name, probability, secs, scale); empty = nothing sent
 # (mud: secs is the engine's mud_secs, MUD_SLOW_SECS by default; the scale is only used on firmware < 0.2.4)
 # 2026-11-09 (owner): a BOOST item is NORMAL's scale (0.75: from ECO the firmware lifts the cap to NORMAL's 25 mph)
@@ -1046,8 +1047,9 @@ class GameEngine:
     is used up, not saved for later); mud wins over boost when they overlap or while a mud
     is still running; a boost during a running boost stacks (remaining + new, <= 30 s)."""
 
-    def __init__(self, local_enabled=True, gps_correction=False, rng=None, mud_secs=MUD_SLOW_SECS):
+    def __init__(self, local_enabled=True, gps_correction=False, rng=None, mud_secs=MUD_SLOW_SECS, item_reveal_s=0.0):
         self.local_enabled = bool(local_enabled)
+        self.item_reveal_s = max(0.0, float(item_reveal_s))   # hold an item-box prize this long for the dash prize-wheel; 0 = fire at once
         self.mud_secs = int(max(1, min(30, int(mud_secs))))
         self.fw = None              # Heltec firmware string from its status reply (None = unknown)
         self.rng = rng or random.Random()
@@ -1070,6 +1072,7 @@ class GameEngine:
         self.areas, self.lapline, self.ignored = [], None, []
         self.inside = {}            # zone id -> entered mono
         self.zst = {}               # zone id -> {"fired": bool, "cool_until": mono}
+        self.pending_items = []     # item-box prizes rolled but not yet sent: wait ITEM_REVEAL_S for the prize-wheel reveal
         self.next_mud = None
         self.prev_fix = None        # (lat, lon, mono)
         self.last_fix_mono = None
@@ -1171,6 +1174,7 @@ class GameEngine:
             return recs
         old_lap = self.lapline.raw if self.lapline else None
         was_active = self.active()
+        self.pending_items = []
         self.doc = doc
         self.version = doc.get("version") if isinstance(doc, dict) else None
         src = doc.get("source") if isinstance(doc, dict) else None
@@ -1257,6 +1261,7 @@ class GameEngine:
         if not self.active():
             return recs
         self._timeouts(now, recs)
+        self._fire_pending(now, recs)
         self._mud(now, recs, entered=False)
         return recs
 
@@ -1316,10 +1321,10 @@ class GameEngine:
                 self._rec(recs, "item", now, zone=z.id, name=z.name, item=name,
                           **({"table": "multi", "held": name in MULTI_HELD_ITEMS} if table else {}))
                 if secs is not None:
-                    fire.append((z, "mud" if name == "mud" else "boost", secs, scale))
+                    fire.append((z, "mud" if name == "mud" else "boost", secs, scale, True))   # True = from a box (prize-wheel)
             else:
                 st["fired"] = True
-                fire.append((z, "boost", z.secs, z.scale))
+                fire.append((z, "boost", z.secs, z.scale, False))
         if fire:
             # overlapping boost pad + item box entered on the same fix: both are used up (cooldowns, item
             # roulette), but only the strongest effect is sent (highest scale, then longest), so two
@@ -1328,7 +1333,12 @@ class GameEngine:
             for f in fire:
                 if f is not best:
                     self._rec(recs, "suppressed", now, zone=f[0].id, why=f"overlaps {best[0].id}")
-            self._cmd(recs, now, *best)
+            z, kind, secs, scale, from_box = best
+            if from_box and self.item_reveal_s > 0:
+                self.pending_items.append({"due": now + self.item_reveal_s, "zone": z, "kind": kind, "secs": secs, "scale": scale})
+            else:
+                self._cmd(recs, now, z, kind, secs, scale)
+        self._fire_pending(now, recs)
         self._mud(now, recs, entered=any(z.type == "mud" for z in entered))
         if self.lapline is not None:
             if not self.lap_armed and self.lapline.line_dist_m(lat, lon) > LAP_REARM_M:
@@ -1339,6 +1349,23 @@ class GameEngine:
                     self._cross(self.prev_fix[2] + t * (now - self.prev_fix[2]), now, recs)
         self.prev_fix = (lat, lon, now)
         self.last_fix_mono = now
+
+    def _fire_pending(self, now, recs):
+        """Send item-box prizes whose prize-wheel reveal time has arrived (ITEM_REVEAL_S after the roll).
+        Re-checks the safety gates at fire time: a STOP or grid hold during the reveal suppresses it."""
+        if not self.pending_items:
+            return
+        due = [p for p in self.pending_items if now >= p["due"]]
+        if not due:
+            return
+        self.pending_items = [p for p in self.pending_items if now < p["due"]]
+        for p in due:
+            if self.stopped is True:
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="kart STOPPED")
+            elif self.race["hold"]:
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="grid hold")
+            else:
+                self._cmd(recs, now, p["zone"], p["kind"], p["secs"], p["scale"])
 
     def _mud(self, now, recs, entered):
         muds = [z for z in self.areas if z.type == "mud" and z.id in self.inside]

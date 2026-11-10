@@ -912,17 +912,18 @@ document.querySelectorAll(".mbtn").forEach((btn) => {
   ["pointerup", "pointercancel", "lostpointercapture"].forEach((ev) => chip.addEventListener(ev, () => { if (raf) reset(); }));
 })();
 
-/* FREEPLAY button: tap = on/off, hold 2 s = forget the course and record a new one */
+/* FREEPLAY button: tap = on/off, hold 1 s = forget the course and record a new lap (the label flips to NEW LAP while holding so it is discoverable) */
 (function setupFreeButton() {
   const b = $("freeBtn");
   let raf = null, t0 = 0;
-  const reset = () => { if (raf) cancelAnimationFrame(raf); raf = null; b.classList.remove("holding"); b.style.setProperty("--hp", 0); };
+  const lbl = b.querySelector("b");
+  const reset = () => { if (raf) cancelAnimationFrame(raf); raf = null; b.classList.remove("holding"); b.style.setProperty("--hp", 0); if (lbl) lbl.textContent = "FREEPLAY"; };
   b.addEventListener("pointerdown", (e) => {
     if (!S) return;
     try { b.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-    t0 = performance.now(); b.classList.add("holding");
+    t0 = performance.now(); b.classList.add("holding"); if (lbl) lbl.textContent = "NEW LAP";
     const tick = () => {
-      const p = Math.min(1, (performance.now() - t0) / 2000);
+      const p = Math.min(1, (performance.now() - t0) / 1000);
       b.style.setProperty("--hp", p);
       if (p >= 1) {
         reset();
