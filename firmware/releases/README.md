@@ -1,6 +1,6 @@
 # Prebuilt images
 
-> **Current images: kart 0.2.4, base and repeater 0.2.1** (2026-11-07, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
+> **Current images: kart 0.3.0, base and repeater 0.2.2, Core2 item screen 0.1.0** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy
 > `build/<sketch>/<sketch>.ino.merged.bin` here under a new version name, add the row and the
@@ -13,6 +13,8 @@ check what you got.
 
 | File | Board | Build | SHA-256 |
 | --- | --- | --- | --- |
+| `kart-heltec-v4-ble-0.3.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node 0.3.0: 0.2.7 + ESP-NOW Core2 item-screen bridge (`inv` line in, broadcast out, `invuse` relay) | `76f38e10ccc228ae6729db796d8f506811ad2550e6e3f438413d17f5335549f1` |
+| `core2-items-0.1.0.merged.bin` | M5Stack Core2 | bar-mounted item screen: ESP-NOW channel hunt, swipe/tap to use, fixed rotation for the cradle | `667a1aa214b991d51231cc2c1658c48ea0b63744db050b5551a24fefc0e5e502` |
 | `kart-heltec-v4-ble-0.1.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node, VESC over BLE (MTU-chunked writes), per-controller limits, SLOW + brake request, 2 Hz, 16777216 bytes | `9f2994756dc42af61051fbd7cfc24a81caafd142c01f7f0955c53c4353a30799` |
 
 ## Flash with esptool (PlatformIO's or pip's)
@@ -90,3 +92,15 @@ Radio unchanged (interoperates with the 0.2.1 base and repeater).
   mode should actually make the kart go into slow mode". START and a pit mode command still clear every
   SLOW. Flashed to kart 2 by OTA 2026-11-09.
   SHA-256 `2dfc5913466da0c4762649b516dc305920029c2c811645e9caac4caa764c0969`
+
+## 0.3.0 kart + core2-items 0.1.0 (2026-11-10, Core2 item screen)
+
+- `kart-heltec-v4-ble-0.3.0.merged.bin` — 0.2.7 plus the ESP-NOW bridge for the bar-mounted Core2
+  item screen: the Pi pushes carried items with the USB `inv a b c` / `inv -` line, the Heltec
+  broadcasts them once a second (12-byte frame, current WiFi channel), and a Core2 "use" frame
+  comes back as a `{"t":"invuse","slot":N,"seq":Q}` line for the Pi (seq de-duplicated). No LoRa,
+  BLE or drive-path changes. **Flashed on kart 2** 2026-11-10 over WiFi (espota).
+- `core2-items-0.1.0.merged.bin` — M5Stack Core2 "your items" screen: hops channels until it hears
+  a kart's inventory broadcast, then shows the carried prizes (swipe to pick, tap to use, slot
+  dots, battery + link header). Rotation fixed for the bar cradle; no WiFi join, no credentials.
+  Needs the kart Pi's `item_hold` config (default true) and kart 0.3.0.

@@ -303,6 +303,7 @@ function renderFree(f) {
   show("freeBtn", !!f && f.allowed !== false);
   b.classList.toggle("sel", !!f && !!f.on);
   renderMulti(f, m);
+  renderInv();
 }
 
 /* freeplay multiplayer (docs/freeplay-multiplayer.md section 5): S.freeplay.multi from the kart server.
@@ -943,6 +944,29 @@ document.querySelectorAll(".mbtn").forEach((btn) => {
 })();
 
 /* freeplay multiplayer taps: chip = HOST, or (in a game) tap twice within 3 s = LEAVE; JOIN rows; USE */
+/* carried items (game.inventory, config item_hold): chips above the mode row, tap = use now */
+const invUi = { key: "", busy: false };
+function renderInv() {
+  const inv = (S.game && S.game.inventory) || [];
+  show("invRow", inv.length > 0);
+  if (!inv.length) { if (invUi.key) { $("invRow").innerHTML = ""; invUi.key = ""; } return; }
+  const key = inv.map((i) => i.item).join(",");
+  if (invUi.key === key) return;
+  invUi.key = key;
+  $("invRow").innerHTML = inv.map((i, n) =>
+    `<button class="invchip" data-useslot="${n}"><span class="invglyph" style="color:${ITEM_COLOR[i.item] || "#fff"}">`
+    + `${ITEM_SVG[i.item] || ""}</span><b>${ITEM_NAME[i.item] || i.item}</b></button>`).join("");
+}
+$("invRow").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-useslot]");
+  if (!b || invUi.busy) return;
+  invUi.busy = true; b.disabled = true;
+  post("/api/item", { use: Number(b.dataset.useslot) }).then((j) => {
+    if (!j || !j.ok) mpNote(`use: ${(j && j.error) || "failed"}`, 3);
+    invUi.busy = false; invUi.key = ""; renderDirty = true; requestDraw();
+  });
+});
+
 function mpPost(body, what) {
   return post("/api/freeplay", body).then((j) => {
     if (!j || !j.ok) mpNote(`${what}: ${(j && j.error) || "failed"}`, 3);

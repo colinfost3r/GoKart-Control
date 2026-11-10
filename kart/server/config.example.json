@@ -30,6 +30,7 @@
     "freeplay_boxes": "Item boxes kept on the freeplay course at once (1-6).",
     "mud_slow_secs": "Seconds each mud command lasts (zone repeat every 2 s, MUD item once), 1-30. Heltec kart-0.2.4+: `slow 5 N` (a real 5 mph cap that ends by itself); older or unknown firmware: `boost N 0.5`.",
     "item_reveal_s": "Seconds an item-box prize waits before it is sent, so the boost/slow lands as the dash prize-wheel finishes instead of the instant you hit the box, 0-5. 0 = instant.",
+    "item_hold": "true = freeplay BOOST/ROCKET prizes are carried (up to 3) and used later from the Core2 item screen or the dash chips; false = they fire at the prize-wheel reveal. Mud always applies at once.",
     "rotate": "0 or 180. Read by install.sh only: 180 = panel mounted ports-down (kernel video= rotate + touch calibration udev rule; reboot). Kart 2 runs 0.",
     "health_period_s": "Seconds between Pi power/thermal samples (vcgencmd get_throttled + CPU temperature, 0.2-3600). The driver page shows UNDERVOLT / THROTTLED / HAD UNDERVOLT only when something is wrong; transitions are logged.",
     "health_file": "Tests/dev only: read the get_throttled text from this file instead of vcgencmd (null on a kart)."
@@ -66,6 +67,7 @@
   "freeplay_boxes": 3,
   "mud_slow_secs": 4,
   "item_reveal_s": 1.4,
+  "item_hold": true,
   "rotate": 0,
   "health_period_s": 10.0,
   "health_file": null

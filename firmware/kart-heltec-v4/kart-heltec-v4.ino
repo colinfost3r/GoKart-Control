@@ -44,6 +44,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include <esp_now.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <SPI.h>
@@ -1196,6 +1197,63 @@ static void serviceWifi() {
   if (!up && millis() - wifiRetryMs > 30000) { wifiRetryMs = millis(); WiFi.reconnect(); }
 }
 
+// ------------------------------------------------- Core2 item screen (ESP-NOW)
+// The kart Pi pushes the carried items over USB (`inv boost rocket` / `inv -`); we broadcast them
+// once a second (and at once on change) as a tiny frame any Core2 on our WiFi channel can show.
+// The Core2 answers with a "use slot" frame, relayed to the Pi as a {"t":"invuse",...} line.
+// Item codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud.
+struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
+struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
+static const uint8_t ESPNOW_BCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static uint8_t invItems[3]; static uint8_t invN = 0; static uint8_t invSeq = 0;
+static uint32_t invTxMs = 0; static bool espnowUp = false;
+static volatile uint8_t useSlotRx = 0, useSeqRx = 0; static volatile bool usePending = false;
+static uint8_t useSeqDone = 0xFF;
+
+static const char* invName(uint8_t c) {
+  switch (c) { case 1: return "boost"; case 2: return "rocket"; case 3: return "shell";
+               case 4: return "lightning"; case 5: return "mud"; default: return "?"; }
+}
+static uint8_t invCode(const char* n) {
+  if (!strcmp(n, "boost")) return 1; if (!strcmp(n, "rocket")) return 2;
+  if (!strcmp(n, "shell")) return 3; if (!strcmp(n, "lightning")) return 4;
+  if (!strcmp(n, "mud")) return 5; return 0;
+}
+
+static void espnowOnRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+  if (len != (int)sizeof(GkUseFrame)) return;
+  const GkUseFrame* f = (const GkUseFrame*)data;
+  if (f->m0 != 'G' || f->m1 != 'U' || f->ver != 1 || f->kart != kartId) return;
+  useSlotRx = f->slot; useSeqRx = f->seq; usePending = true;     // handled in loop (serial from ISR = no)
+}
+
+static void serviceEspnow() {
+  if (!espnowUp) {
+    if (WiFi.getMode() == WIFI_MODE_NULL) { WiFi.mode(WIFI_STA); WiFi.setSleep(false); }
+    if (esp_now_init() != ESP_OK) return;                        // retried next pass
+    esp_now_peer_info_t peer = {};
+    memcpy(peer.peer_addr, ESPNOW_BCAST, 6);
+    peer.channel = 0; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
+    esp_now_add_peer(&peer);
+    esp_now_register_recv_cb(espnowOnRecv);
+    espnowUp = true;
+    logf("espnow up (Core2 item screen)");
+  }
+  if (usePending) {
+    usePending = false;
+    if (useSeqRx != useSeqDone) {
+      useSeqDone = useSeqRx;
+      Serial.printf("{\"t\":\"invuse\",\"kart\":%u,\"slot\":%u,\"seq\":%u}\n", kartId, useSlotRx, useSeqRx);
+    }
+  }
+  if (millis() - invTxMs >= 1000) {
+    invTxMs = millis();
+    GkInvFrame f = {'G', 'I', 1, kartId, invSeq, invN, {0, 0, 0}};
+    for (uint8_t i = 0; i < invN && i < 3; i++) f.items[i] = invItems[i];
+    esp_now_send(ESPNOW_BCAST, (const uint8_t*)&f, sizeof f);
+  }
+}
+
 // ---------------------------------------------------------------- usb
 static void usbReport() {
   GkTelemetry t; fillTelemetry(t, false);
@@ -1260,6 +1318,17 @@ static void usbCommand(char* line) {
     if (arg) { secs = atoi(arg); char* a2 = strchr(arg, ' '); if (a2) sc = atof(a2 + 1); }
     if (secs < 1 || secs > 30 || sc < 0.1f || sc > 1.0f) logf("usage: boost SECS(1-30) SCALE(0.10-1.00)");
     else { boostSecs = (uint8_t)secs; handleCommand(0xFE, ++usbSeq, GK_CMD_BOOST, (uint8_t)lroundf(sc * 100), 0, 0); }
+  }
+  else if (!strcmp(line, "inv")) {                        // inv a b c | inv -   carried items for the Core2 screen
+    invN = 0;
+    for (char* t = arg ? strtok(arg, " ") : NULL; t && invN < 3; t = strtok(NULL, " ")) {
+      if (!strcmp(t, "-")) break;
+      uint8_t c = invCode(t);
+      if (c) invItems[invN++] = c;
+    }
+    invSeq++; invTxMs = 0;                                // broadcast at once
+    logf("inv: %u item(s) [%s %s %s]", invN, invN > 0 ? invName(invItems[0]) : "-",
+         invN > 1 ? invName(invItems[1]) : "-", invN > 2 ? invName(invItems[2]) : "-");
   }
   else if (!strcmp(line, "wifi") && arg) {
     char* pw = strchr(arg, ' '); if (pw) { *pw++ = 0; }
@@ -1355,7 +1424,7 @@ static void usbCommand(char* line) {
     else gameAttack(to, item);
   }
   else if (!strcmp(line, "reboot")) { logf("rebooting"); delay(100); ESP.restart(); }
-  else if (!strcmp(line, "help")) logf("commands: status | id N | mode 0..2 | stop | start | slow [mph] | boost SECS SCALE | race [secs] | ping | rate 1|2 | wifi SSID PASS | otapw PASS | vescmac XX:XX:XX:XX:XX:XX|clear | blescan | vescuuid <24 hex>|now|clear | gpsline on|off | txpower 0..22 | gpsreset | gpsrecover | gpscold | gpspin | gpsdump | gpstest BAUD | speedcal X|clear | slow [MPH] [SECS] | session host|join N|leave | attack N|all shell|lightning | reboot");
+  else if (!strcmp(line, "help")) logf("commands: status | id N | mode 0..2 | stop | start | slow [mph] | boost SECS SCALE | race [secs] | ping | rate 1|2 | wifi SSID PASS | otapw PASS | vescmac XX:XX:XX:XX:XX:XX|clear | blescan | vescuuid <24 hex>|now|clear | gpsline on|off | txpower 0..22 | gpsreset | gpsrecover | gpscold | gpspin | gpsdump | gpstest BAUD | speedcal X|clear | slow [MPH] [SECS] | session host|join N|leave | attack N|all shell|lightning | inv a b c|- | reboot");
   else logf("unknown command '%s'", line);
 }
 
@@ -1500,6 +1569,7 @@ void loop() {
   serviceLoraRx();
   serviceLoraTx();
   serviceWifi();
+  serviceEspnow();
   serviceOled();
   serviceLoraRx();                       // again after the slow OLED/WiFi work
   delay(1);

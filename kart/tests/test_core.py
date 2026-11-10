@@ -915,6 +915,45 @@ class Items(unittest.TestCase):
         g3.set_zones(zones_doc(item_zone(), enabled=False), 1.7)
         self.assertEqual(lines(g3.tick(3.0)), [])
 
+    def test_item_hold_carries_boost_and_rocket_for_later(self):
+        # owner 2026-11-10: with item_hold the freeplay prize goes to a carried inventory (Core2
+        # screen / dash chips) instead of firing at the reveal; use_item fires it later.
+        g = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4, item_hold=True)
+        d = zones_doc(item_zone()); d["source"] = "freeplay"
+        g.set_zones(d, 0.0)
+        g.on_self(fix(-20, 0), 1.0)
+        r = g.on_self(fix(-4, 0), 1.5)
+        self.assertEqual(evs(r, "item")[0]["item"], "boost")
+        r2 = g.tick(3.0)                                            # reveal: held, nothing sent
+        self.assertEqual(lines(r2), [])
+        self.assertEqual(evs(r2, "item_held")[0]["item"], "boost")
+        self.assertEqual([i["item"] for i in g.inventory], ["boost"])
+        r3 = g.use_item(10.0, 0)                                    # used much later
+        self.assertEqual(lines(r3), ["boost 7 0.75"])
+        self.assertEqual(g.inventory, [])
+        with self.assertRaises(kc.CommandError):                    # empty slot refused
+            g.use_item(11.0, 0)
+        # STOPPED: use refused, item kept (second box after the 15 s zone cooldown)
+        g.on_self(fix(-20, 0), 20.0); g.on_self(fix(-4, 0), 36.0); g.tick(38.0)
+        self.assertEqual(len(g.inventory), 1)
+        g.on_self(fix(-4, 0, stopped=True), 39.0)
+        with self.assertRaises(kc.CommandError):
+            g.use_item(39.5, 0)
+        self.assertEqual(len(g.inventory), 1)
+
+    def test_item_hold_full_inventory_fires_at_once_and_pit_game_never_holds(self):
+        g = kc.GameEngine(rng=FixedRng(0.1), item_hold=True)        # reveal 0: prize gate at entry
+        d = zones_doc(item_zone()); d["source"] = "freeplay"
+        g.set_zones(d, 0.0)
+        g.inventory = [{"item": "boost", "secs": 7, "scale": 0.75, "zone": "x", "mono": 0.0}] * 3
+        r = g.on_self(fix(0, 0), 1.0)                               # 4th prize: fires immediately
+        self.assertEqual(lines(r), ["boost 7 0.75"])
+        self.assertEqual(len(g.inventory), 3)
+        pit = kc.GameEngine(rng=FixedRng(0.1), item_hold=True)      # pit-game zones (no freeplay source)
+        pit.set_zones(zones_doc(item_zone()), 0.0)
+        self.assertEqual(lines(pit.on_self(fix(0, 0), 1.0)), ["boost 7 0.75"])
+        self.assertEqual(pit.inventory, [])
+
     def test_cooldown_15_and_gates(self):
         g = kc.GameEngine(rng=FixedRng(0.1))
         g.set_zones(zones_doc(item_zone()), 0.0)

@@ -6,6 +6,7 @@
 #   ./build.sh repeater                  compile repeater-tbeam-s3 (plug-anywhere LoRa repeater)
 #   ./build.sh kart-uart                 compile the kart with the wired UART VESC transport instead
 #   ./build.sh all                       compile kart, base and repeater (stops at the first failure)
+#   ./build.sh core2                     compile core2-items (bar-mounted item screen, ESP-NOW)
 #   ./build.sh test                      host-side protocol tests (python3, no board, no arduino-cli)
 #   ./build.sh kart upload /dev/cu.usbmodemXXXX
 #   ./build.sh base upload /dev/cu.usbmodemXXXX
@@ -25,7 +26,8 @@ case "$TARGET" in
   kart-uart) SKETCH=kart-heltec-v4; FQBN="esp32:esp32:heltec_wifi_lora_32_V4:CDCOnBoot=cdc,PSRAM=disabled,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB"; EXTRA="--build-property compiler.cpp.extra_flags=-DVESC_TRANSPORT_UART=1"; BUILD_SUFFIX="-uart" ;;
   repeater) SKETCH=repeater-tbeam-s3; FQBN="esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PartitionScheme=default_8MB,PSRAM=disabled,FlashMode=qio,USBMode=hwcdc" ;;
   base) SKETCH=base-tbeam-s3;  FQBN="esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PartitionScheme=default_8MB,PSRAM=disabled,FlashMode=qio,USBMode=hwcdc" ;;
-  *) echo "target must be kart, kart-uart, base, repeater, all or test"; exit 2 ;;
+  core2) SKETCH=core2-items; FQBN="esp32:esp32:m5stack_core2" ;;
+  *) echo "target must be kart, kart-uart, base, repeater, core2, all or test"; exit 2 ;;
 esac
 BUILD="build/$SKETCH$BUILD_SUFFIX"
 mkdir -p "$BUILD"

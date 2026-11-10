@@ -405,3 +405,11 @@ body.sun .itembtn.off { color: #d0d0d0; border-color: #fff; box-shadow: none; }
 body.sun .itembtn.fb.sent { color: #fff; }
 body.sun .itembtn.fb.hit { background: #ffd400; color: #000; }
 body.sun .itembtn.fb.miss { color: #ffd400; }
+
+/* carried items (config item_hold): tap a chip to use it; the Core2 bar screen mirrors these */
+.invheld { position: absolute; bottom: 96px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 6; }
+.invchip { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border: 3px solid #000; border-radius: 10px;
+           background: #fff; color: #000; font-size: 17px; font-weight: 900; letter-spacing: .04em; }
+.invchip .invglyph svg { width: 26px; height: 26px; display: block; }
+.invchip:active { transform: scale(.96); }
+body.sun .invchip { background: #000; color: #fff; border-color: #fff; }
