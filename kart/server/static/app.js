@@ -996,8 +996,8 @@ $("itemBtn").addEventListener("click", () => {
 
 /* ------------------------------------------------------------------ map */
 const R_EARTH = 6371000;
-const view = { follow: false, pausedUntil: 0, all: false, scale: null, cx: 0, cy: 0, rot: 0, overview: true, northUp: false, cameraKey: null };
-const userFollow = false;            // default camera is fixed to the course, not to a moving kart
+const view = { follow: true, pausedUntil: 0, all: false, scale: null, cx: 0, cy: 0, rot: 0, overview: false, northUp: false, cameraKey: null };
+let userFollow = true;               // the FOLLOW button; touching the map pauses it
 let mapImg = null, mapImgSrc = null, mapImgReady = null;
 function isSonoMap(pkg) { return !!(pkg && pkg.image && pkg.image.endsWith("/sono-light.png")); }
 function mapImageSource(pkg) {
@@ -1068,19 +1068,41 @@ function drawMap() {
   const meGood = meFresh && (!mf || !mf.quality || mf.quality === "good");    // poor / outlier: drawn greyed
   const mePos = mf ? drPosition("self", mf, now, en, meFresh) : null;
 
-  // Fit only when the course, viewport or orientation changes. Telemetry never moves the camera.
-  const cameraKey = JSON.stringify([S.game && S.game.track, pkg && pkg.course, pkg && pkg.version, W, H, view.northUp]);
-  if (view.overview && view.cameraKey !== cameraKey) {
-    fitTrack(en, pkg, W, H); view.cameraKey = cameraKey;
-  } else if (view.scale === null || view.all) {
-    fitAll(en, pkg, mapClearWidth(W), H); view.all = false;
-  }
-  show("resumeNote", false);
-  $("followBtn").classList.toggle("sel", view.overview);
+  // FOLLOW (default): the kart-centred driving camera; it resumes follow_resume_s after the last touch.
+  // Follow off: the fitted course overview (course-up, or north-up via N; it refits only when the
+  // course, viewport or orientation changes - telemetry never moves it).
+  if (userFollow && !view.follow && Date.now() >= view.pausedUntil) { view.follow = true; view.all = false; view.scale = null; }
+  const resumeIn = userFollow && !view.follow ? Math.ceil((view.pausedUntil - Date.now()) / 1000) : 0;
+  show("resumeNote", resumeIn > 0);
+  if (resumeIn > 0) txt("resumeNote", `follow in ${resumeIn} s`);
+  $("followBtn").classList.toggle("sel", userFollow);
   $("northBtn").classList.toggle("sel", view.northUp);
   $("northBtn").setAttribute("aria-pressed", String(view.northUp));
-  const headingUp = false, cyS = H / 2, cxS = mapClearWidth(W) / 2;
-  view.cyS = cyS; view.cxS = cxS; view.slewing = false;
+  const cameraKey = JSON.stringify([S.game && S.game.track, pkg && pkg.course, pkg && pkg.version, W, H, view.northUp]);
+  if (view.all) {
+    fitAll(en, pkg, mapClearWidth(W), H); view.all = false; view.cameraKey = null;
+  } else if (view.scale === null || ((view.overview || (view.follow && !mePos)) && view.cameraKey !== cameraKey)) {
+    fitTrack(en, pkg, W, H); view.cameraKey = cameraKey;
+  }
+  if (view.follow && mePos) {
+    view.cx = mePos[0]; view.cy = mePos[1];
+    view.scale = view.followScale || H / cfg("follow_span_m", 70);
+  }
+  // heading-up: slew at most 120 deg/s; below 1.5 m/s hold the last heading (Doppler heading is noise)
+  const headingUp = view.follow && cfg("map_orientation", "heading_up") === "heading_up" && !!mePos;
+  const tNow = performance.now(), dtS = view.lastT ? Math.min(0.5, (tNow - view.lastT) / 1000) : 0;
+  view.lastT = tNow;
+  if (headingUp) {
+    const tgt = meFresh && !nul(mf.heading) && (mf.gps_kph || 0) / 3.6 >= 1.5 ? mf.heading : null;
+    const prev = view.hdg;
+    view.hdg = slewHeading(view.hdg, tgt, dtS, 120);
+    view.slewing = !nul(tgt) && !nul(view.hdg) && Math.abs(angleDiffDeg(tgt, view.hdg)) > 0.5;
+    view.rot = nul(view.hdg) ? 0 : view.hdg * Math.PI / 180;
+    if (prev === undefined) view.slewing = true;
+  } else { view.hdg = null; view.slewing = false; if (view.follow) view.rot = 0; }  // overview/free keep their course-up rot
+  const cyS = headingUp && view.rot !== 0 ? H * 0.6 : H / 2;     // own kart ~60 % down: more track ahead
+  const cxS = mapClearWidth(W) / 2;
+  view.cyS = cyS; view.cxS = cxS;
   const cr = Math.cos(view.rot), sr = Math.sin(view.rot);
   const px = (p) => {
     const dx = (p[0] - view.cx) * view.scale, dy = (p[1] - view.cy) * view.scale;
@@ -1357,6 +1379,7 @@ $("areaBtn").addEventListener("click", () => {
   if (!isSonoMap(pkg) || !pkg.bounds || !en) return;
   const b = pkg.bounds, nw = en(b.north, b.west), se = en(b.south, b.east);
   const W = $("map").clientWidth, H = $("map").clientHeight;
+  touched();                                   // pauses follow; it resumes follow_resume_s later
   view.scale = Math.max(W / (se[0] - nw[0]), H / (nw[1] - se[1])) * 1.04;
   view.cx = (nw[0] + se[0]) / 2;
   view.cy = nw[1] * .4 + se[1] * .6; // favor southern SoNo, including the simulator's shop loop
@@ -1365,6 +1388,7 @@ $("areaBtn").addEventListener("click", () => {
 });
 function touched() {
   view.follow = false; view.all = false; view.overview = false;
+  view.pausedUntil = Date.now() + cfg("follow_resume_s", 10) * 1000;
 }
 (function setupMapInput() {
   const cv = $("map");
@@ -1437,9 +1461,12 @@ document.querySelector(".mapctl").addEventListener("click", (e) => {
   }
   if (!b || !S) return;
   if (b.id === "followBtn") {
-    view.overview = true; view.cameraKey = null; view.all = false;
+    userFollow = !userFollow;
+    try { localStorage.setItem("gk_follow", userFollow ? "1" : "0"); } catch (err) { /* ignore */ }
+    if (userFollow) { view.follow = true; view.all = false; view.overview = false; view.pausedUntil = 0; }
+    else { view.follow = false; view.overview = true; view.cameraKey = null; }
   } else if (b.id === "northBtn") {
-    view.northUp = !view.northUp; view.overview = true; view.cameraKey = null; view.all = false;
+    view.northUp = !view.northUp; touched(); view.overview = true; view.cameraKey = null;
   } else if (b.dataset.zoom === "all") { touched(); view.all = true; view.rot = 0; view.northUp = true; }
   else {
     if (view.scale === null) return;
@@ -1450,7 +1477,7 @@ document.querySelector(".mapctl").addEventListener("click", (e) => {
   requestDraw();
 });
 sunApply();                                      // before the first frame: no flash of the night theme
-// Course overview and North up off are intentional defaults on every page load.
+try { if (localStorage.getItem("gk_follow") === "0") { userFollow = false; view.follow = false; view.overview = true; } } catch (err) { /* ignore */ }
 
 /* -------------------------------------------------------------- wiring */
 /* One draw scheduler: SSE frames, touches and dead reckoning only mark the map dirty; it is drawn at

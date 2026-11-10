@@ -42,13 +42,17 @@ map/zone presets are unchanged.
   readings shrink to preserve clearance inside the arc. ECO is green,
   NORMAL blue and SPORT pink; a solid fill identifies the active mode.
   Full-width alerts remain above it. At narrow phone widths the panels stack.
-- The default is a stationary, zoomed-out view of the whole course. The camera
-  fits the track into the clear map area and does not chase or rotate with karts.
-  **North up** starts off: the course's first straight sets a fixed orientation.
-  The toggle switches to geographic north; **TRACK** restores the course framing.
-  **AREA** opens a north-up South Norwalk overview; **ALL** frames the fleet once.
-  Manual pan and pinch zoom preserve the selected orientation. These controls
-  affect presentation only.
+- **FOLLOW** (the default) is the kart-centred driving camera: heading-up, the own
+  kart about 60 % down the clear map area, slewed at <= 120 deg/s, with the
+  track-ahead band and chevrons. Touching the map pauses it and it resumes
+  `follow_resume_s` (10 s) later; the FOLLOW button toggles it per device.
+- Follow off is Hunter's stationary course overview: the camera fits the track
+  into the clear map area and does not chase or rotate with karts. **North up**
+  starts off: the course's first straight sets a fixed orientation; the toggle
+  switches to geographic north. **AREA** opens a north-up South Norwalk overview
+  (a 10 s peek while following); **ALL** frames the fleet once. Manual pan and
+  pinch zoom preserve the selected orientation. These controls affect
+  presentation only.
 - Buildings use thin, subdued outlines and faint fills from the same OSM extract.
   Place labels stay at a fixed screen size; rail corridors use two thin, lightly dashed lines. All kart trails
   draw before all numbered circles, so a later trail cannot cross over a label.
@@ -72,7 +76,8 @@ map/zone presets are unchanged.
 - Brightness adjusts page rendering from 30–100% (80% is neutral). It does not
   operate the physical backlight. The settings panel stays readable when dimmed.
 - Existing mode press-and-hold, game actions, alerts and sound are retained.
-  The map camera follows Hunter's stationary-view preference. No server, firmware
+  The stationary course overview is Hunter's; the integration keeps the original
+  FOLLOW driving camera as the default on top of it. No server, firmware
   or telemetry code is changed. No kart has been connected or deployed to for this
   graphics work.
 
