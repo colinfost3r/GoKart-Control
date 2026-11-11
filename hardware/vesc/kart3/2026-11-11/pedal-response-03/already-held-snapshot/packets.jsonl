@@ -1,0 +1,196 @@
+{"kind": "tx_attempt", "action": "identity", "frame_hex": "020100000003", "elapsed_s": 4.625000000001156e-06}
+{"kind": "tx_return", "action": "identity", "count": 6, "elapsed_s": 0.00016991700000000207}
+{"kind": "rx", "command": 0, "payload_hex": "00060237355f3330305f52320037004e00095134303735373900000000010000006e6f5f68775f6c696d69747300", "elapsed_s": 0.0005610420000000012}
+{"kind": "tx_attempt", "action": "foc_state", "frame_hex": "020a14666f635f73746174653e6e03", "elapsed_s": 0.0007380000000000025}
+{"kind": "tx_return", "action": "foc_state", "count": 15, "elapsed_s": 0.0007962500000000018}
+{"kind": "rx", "command": 21, "payload_hex": "152d3e20666f635f7374617465200a", "text": "-> foc_state \n", "elapsed_s": 0.001252167000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15464f432053746174653a", "text": "FOC State:", "elapsed_s": 0.0013545000000000015}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f6420643a20202020202d302e3030", "text": "Mod d:     -0.00", "elapsed_s": 0.0015052500000000031}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f6420713a20202020202d302e3030", "text": "Mod q:     -0.00", "elapsed_s": 0.001587792000000001}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f64207120666c743a20302e3030", "text": "Mod q flt: 0.00", "elapsed_s": 0.001749083000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15447574793a202020202020302e3030", "text": "Duty:      0.00", "elapsed_s": 0.0019175420000000012}
+{"kind": "rx", "command": 21, "payload_hex": "1556643a2020202020202020302e3031", "text": "Vd:        0.01", "elapsed_s": 0.0019927080000000028}
+{"kind": "rx", "command": 21, "payload_hex": "1556713a2020202020202020302e3031", "text": "Vq:        0.01", "elapsed_s": 0.002109917000000003}
+{"kind": "rx", "command": 21, "payload_hex": "1550686173653a2020202020312e3438", "text": "Phase:     1.48", "elapsed_s": 0.0024101670000000013}
+{"kind": "rx", "command": 21, "payload_hex": "15565f616c7068613a202020302e3037", "text": "V_alpha:   0.07", "elapsed_s": 0.002447167}
+{"kind": "rx", "command": 21, "payload_hex": "15565f626574613a202020202d302e3031", "text": "V_beta:    -0.01", "elapsed_s": 0.0025269580000000028}
+{"kind": "rx", "command": 21, "payload_hex": "1569643a2020202020202020302e3030", "text": "id:        0.00", "elapsed_s": 0.0026533330000000008}
+{"kind": "rx", "command": 21, "payload_hex": "1569713a2020202020202020302e3030", "text": "iq:        0.00", "elapsed_s": 0.0027243330000000024}
+{"kind": "rx", "command": 21, "payload_hex": "1569645f66696c7465723a20302e3030", "text": "id_filter: 0.00", "elapsed_s": 0.002802917000000002}
+{"kind": "rx", "command": 21, "payload_hex": "1569715f66696c7465723a20302e3030", "text": "iq_filter: 0.00", "elapsed_s": 0.0028967080000000013}
+{"kind": "rx", "command": 21, "payload_hex": "1569645f7461726765743a20302e3030", "text": "id_target: 0.00", "elapsed_s": 0.003066875}
+{"kind": "rx", "command": 21, "payload_hex": "1569715f7461726765743a20302e3030", "text": "iq_target: 0.00", "elapsed_s": 0.0031575000000000006}
+{"kind": "rx", "command": 21, "payload_hex": "15695f6162733a2020202020302e3030", "text": "i_abs:     0.00", "elapsed_s": 0.003227667}
+{"kind": "rx", "command": 21, "payload_hex": "15695f6162735f666c743a20302e3030", "text": "i_abs_flt: 0.00", "elapsed_s": 0.003397375000000001}
+{"kind": "rx", "command": 21, "payload_hex": "154f62735f78313a202020202d302e3031", "text": "Obs_x1:    -0.01", "elapsed_s": 0.0034361670000000004}
+{"kind": "rx", "command": 21, "payload_hex": "154f62735f78323a202020202d302e3033", "text": "Obs_x2:    -0.03", "elapsed_s": 0.0035770420000000025}
+{"kind": "rx", "command": 21, "payload_hex": "156c616d6264615f6573743a302e30323633", "text": "lambda_est:0.0263", "elapsed_s": 0.0036556250000000026}
+{"kind": "rx", "command": 21, "payload_hex": "1576645f696e743a202020202d302e3035", "text": "vd_int:    -0.05", "elapsed_s": 0.0038264580000000013}
+{"kind": "rx", "command": 21, "payload_hex": "1576715f696e743a20202020302e3031", "text": "vq_int:    0.01", "elapsed_s": 0.003971500000000003}
+{"kind": "rx", "command": 21, "payload_hex": "156f66665f64656c61793a20302e3030", "text": "off_delay: 0.00", "elapsed_s": 0.0040995000000000024}
+{"kind": "rx", "command": 21, "payload_hex": "1520", "text": " ", "elapsed_s": 0.004191667000000003}
+{"kind": "tx_attempt", "action": "events", "frame_hex": "0207146576656e7473d53303", "elapsed_s": 0.384049958}
+{"kind": "tx_return", "action": "events", "count": 12, "elapsed_s": 0.384305167}
+{"kind": "rx", "command": 21, "payload_hex": "152d3e206576656e7473200a", "text": "-> events \n", "elapsed_s": 0.384987167}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033392e38382073", "text": "Age    : 39.88 s", "elapsed_s": 0.385344208}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.385433958}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.385522667}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.385613333}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3636390a", "text": "Param  : 0.669\n", "elapsed_s": 0.385796958}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033382e37322073", "text": "Age    : 38.72 s", "elapsed_s": 0.385877458}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.385958292}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.386094708}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.386305417}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.386397083}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033382e32382073", "text": "Age    : 38.28 s", "elapsed_s": 0.386484417}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.386574167}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.386719833}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.387211667}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3132330a", "text": "Param  : 0.123\n", "elapsed_s": 0.38739625}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033362e36352073", "text": "Age    : 36.65 s", "elapsed_s": 0.387530875}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.387628542}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.387722}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.388221875}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.38838137500000003}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033362e31342073", "text": "Age    : 36.14 s", "elapsed_s": 0.3886875}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.388797667}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.388898083}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.388989542}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3938370a", "text": "Param  : 0.987\n", "elapsed_s": 0.3890795}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033342e33332073", "text": "Age    : 34.33 s", "elapsed_s": 0.389167292}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.389255}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.389399292}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.3895015}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.389599208}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033322e34322073", "text": "Age    : 32.42 s", "elapsed_s": 0.389699167}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.389795125}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.389884625}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.38997325}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3331300a", "text": "Param  : 0.310\n", "elapsed_s": 0.390061208}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033312e35352073", "text": "Age    : 31.55 s", "elapsed_s": 0.390322917}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.390408375}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.390488167}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.390571292}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.390648083}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033312e32332073", "text": "Age    : 31.23 s", "elapsed_s": 0.390726917}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.3908075}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.390886042}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.39096325}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3037390a", "text": "Param  : 0.079\n", "elapsed_s": 0.391042958}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033302e34392073", "text": "Age    : 30.49 s", "elapsed_s": 0.391123625}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.391204958}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.391286583}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.39136525}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.391446625}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033302e30352073", "text": "Age    : 30.05 s", "elapsed_s": 0.391526458}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.391755792}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.391836375}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.391916292}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3032300a", "text": "Param  : 0.020\n", "elapsed_s": 0.391994667}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032382e33362073", "text": "Age    : 28.36 s", "elapsed_s": 0.392074917}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.392157625}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.392276792}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.392359542}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.392439583}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032372e39302073", "text": "Age    : 27.90 s", "elapsed_s": 0.392521583}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.392601708}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.392680792}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.3927585}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3136360a", "text": "Param  : 0.166\n", "elapsed_s": 0.392835875}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032362e33342073", "text": "Age    : 26.34 s", "elapsed_s": 0.392914083}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.39315975}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.393248792}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.393330375}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.393407542}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032352e38382073", "text": "Age    : 25.88 s", "elapsed_s": 0.393485042}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.3935655}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.393642917}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.393720917}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3431380a", "text": "Param  : 0.418\n", "elapsed_s": 0.393798375}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032342e30382073", "text": "Age    : 24.08 s", "elapsed_s": 0.393880917}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.3939615}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.394037708}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.394124042}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.394206583}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032332e36332073", "text": "Age    : 23.63 s", "elapsed_s": 0.394618542}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.394721375}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.394797708}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.394870458}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3531390a", "text": "Param  : 0.519\n", "elapsed_s": 0.394938167}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032312e33382073", "text": "Age    : 21.38 s", "elapsed_s": 0.395007708}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.39507325}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.395145417}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.395253042}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.395315083}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032302e39322073", "text": "Age    : 20.92 s", "elapsed_s": 0.39537954200000003}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.395442625}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.395505542}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.395564583}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030320a", "text": "Param  : 0.002\n", "elapsed_s": 0.395628542}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2031382e30382073", "text": "Age    : 18.08 s", "elapsed_s": 0.39587575}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.3959415}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.396340917}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.3965645}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.396669667}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2031372e36312073", "text": "Age    : 17.61 s", "elapsed_s": 0.396751667}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.396825708}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.396902875}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.397179542}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3031320a", "text": "Param  : 0.012\n", "elapsed_s": 0.397308167}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2031352e37352073", "text": "Age    : 15.75 s", "elapsed_s": 0.397396708}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.397473292}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.397541875}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.397828542}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.397903917}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2031352e33342073", "text": "Age    : 15.34 s", "elapsed_s": 0.397970667}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.398037667}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.398102875}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.398165792}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3531310a", "text": "Param  : 0.511\n", "elapsed_s": 0.398229375}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2031332e32392073", "text": "Age    : 13.29 s", "elapsed_s": 0.398290208}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.398353542}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.398417333}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.398521083}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.398586333}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2031322e35342073", "text": "Age    : 12.54 s", "elapsed_s": 0.398647708}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.3987075}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.398770083}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.398832208}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3133390a", "text": "Param  : 0.139\n", "elapsed_s": 0.39889420800000003}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2031302e32342073", "text": "Age    : 10.24 s", "elapsed_s": 0.398956333}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.399017458}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.399288125}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.399355792}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.399418708}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a20392e38302073", "text": "Age    : 9.80 s", "elapsed_s": 0.399480208}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.399549167}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.399610458}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.3996715}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3039330a", "text": "Param  : 0.093\n", "elapsed_s": 0.399732583}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a20382e37392073", "text": "Age    : 8.79 s", "elapsed_s": 0.399794167}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.399856042}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.399916208}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.399975333}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.400037208}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a20362e35312073", "text": "Age    : 6.51 s", "elapsed_s": 0.40009225}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.400147792}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.400202708}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.400433292}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3230380a", "text": "Param  : 0.208\n", "elapsed_s": 0.400495917}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a20302e30302073", "text": "Age    : 0.00 s", "elapsed_s": 0.400553583}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.40060775}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.400661583}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.40074}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.400795208}
+{"kind": "rx", "command": 21, "payload_hex": "154576656e747320746f74616c3a2033300a", "text": "Events total: 30\n", "elapsed_s": 0.400851}
+{"kind": "tx_attempt", "action": "faults", "frame_hex": "0207146661756c74730d9a03", "elapsed_s": 0.783998083}
+{"kind": "tx_return", "action": "faults", "count": 12, "elapsed_s": 0.784522708}
+{"kind": "rx", "command": 21, "payload_hex": "152d3e206661756c7473200a", "text": "-> faults \n", "elapsed_s": 0.785398708}
+{"kind": "rx", "command": 21, "payload_hex": "154e6f206661756c747320726567697374657265642073696e636520737461727475700a", "text": "No faults registered since startup\n", "elapsed_s": 0.785618833}
+{"kind": "tx_attempt", "action": "output-disabled", "frame_hex": "023d8a287072696e7420286c6973742027676b2d6f75747075742d64697361626c656420286170702d69732d6f75747075742d64697361626c65642929290006ff03", "elapsed_s": 1.1617770420000002}
+{"kind": "tx_return", "action": "output-disabled", "count": 66, "elapsed_s": 1.161923958}
+{"kind": "rx", "command": 135, "payload_hex": "8728676b2d6f75747075742d64697361626c6564206e696c29", "text": "(gk-output-disabled nil)", "elapsed_s": 1.1685955}
+{"kind": "rx", "command": 135, "payload_hex": "873e2074", "text": "> t", "elapsed_s": 1.168665125}
+{"kind": "tx_attempt", "action": "identity", "frame_hex": "020100000003", "elapsed_s": 1.5460524580000001}
+{"kind": "tx_return", "action": "identity", "count": 6, "elapsed_s": 1.5465109579999998}
+{"kind": "rx", "command": 0, "payload_hex": "00060237355f3330305f52320037004e00095134303735373900000000010000006e6f5f68775f6c696d69747300", "elapsed_s": 1.547293625}

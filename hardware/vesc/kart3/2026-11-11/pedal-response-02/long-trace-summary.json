@@ -1,0 +1,34 @@
+{
+  "owner_pressed_pedal_during_long_trace": "awaiting_owner_answer",
+  "complete": true,
+  "sample_count": 1686,
+  "sample_span_seconds": 179.911431542,
+  "adc_decoded_range": [
+    0.084994,
+    0.090198
+  ],
+  "adc_voltage_range": [
+    0.853281,
+    0.871757
+  ],
+  "erpm_range": [
+    0,
+    0
+  ],
+  "fault_codes": [
+    0
+  ],
+  "any_timeout": false,
+  "any_kill": false,
+  "filter_states": [
+    [
+      true,
+      true,
+      0,
+      1
+    ]
+  ],
+  "app_unchanged": true,
+  "motor_unchanged": true,
+  "conclusion": "Only released-pedal electrical levels were recorded; no repeated-throttle acceptance or diagnosis of the reported missed start."
+}

@@ -1,0 +1,1018 @@
+{
+  "scope": "Independent offline audit of existing evidence; no serial or hardware access",
+  "session": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01",
+  "sample_count": 1658,
+  "raw_adc_and_values_redecoded_and_equal_to_recorded_fields": true,
+  "first_sample_seconds": 0.0007415829999999901,
+  "last_sample_seconds": 179.96499708300001,
+  "sample_span_seconds": 179.9642555,
+  "maximum_sample_gap_seconds": 0.14247641700000457,
+  "pedal_windows": {
+    "definition": "Contiguous sampled decodedADC1 > 0.15; not independent starts from full rest",
+    "analysis_threshold": 0.15,
+    "native_app_hyst": 0.15000000596046448,
+    "threshold_classification_disagreement_count": 0,
+    "count": 78,
+    "above_threshold_sample_count": 454,
+    "windows_with_observed_absolute_erpm_above_50": 78,
+    "smallest_window_peak_absolute_erpm": 2306,
+    "windows": [
+      {
+        "first_row_zero_based": 39,
+        "last_row_zero_based": 41,
+        "start_seconds": 4.306943833,
+        "end_seconds": 4.556520083,
+        "sample_count": 3,
+        "peak_absolute_erpm": 5331,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 54,
+        "last_row_zero_based": 59,
+        "start_seconds": 5.960764290999999,
+        "end_seconds": 6.5239845,
+        "sample_count": 6,
+        "peak_absolute_erpm": 10132,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 75,
+        "last_row_zero_based": 79,
+        "start_seconds": 8.273955458,
+        "end_seconds": 8.734178958,
+        "sample_count": 5,
+        "peak_absolute_erpm": 8742,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 83,
+        "last_row_zero_based": 85,
+        "start_seconds": 9.16912225,
+        "end_seconds": 9.388462,
+        "sample_count": 3,
+        "peak_absolute_erpm": 8766,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 104,
+        "last_row_zero_based": 107,
+        "start_seconds": 11.481919416,
+        "end_seconds": 11.83708925,
+        "sample_count": 4,
+        "peak_absolute_erpm": 7325,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 125,
+        "last_row_zero_based": 134,
+        "start_seconds": 13.8450755,
+        "end_seconds": 14.840437041,
+        "sample_count": 10,
+        "peak_absolute_erpm": 16513,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 147,
+        "last_row_zero_based": 153,
+        "start_seconds": 16.271681458,
+        "end_seconds": 16.948163791,
+        "sample_count": 7,
+        "peak_absolute_erpm": 38681,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 183,
+        "last_row_zero_based": 186,
+        "start_seconds": 20.242956916,
+        "end_seconds": 20.56420675,
+        "sample_count": 4,
+        "peak_absolute_erpm": 9438,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 202,
+        "last_row_zero_based": 211,
+        "start_seconds": 22.307074375,
+        "end_seconds": 23.314826125,
+        "sample_count": 10,
+        "peak_absolute_erpm": 17952,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 228,
+        "last_row_zero_based": 234,
+        "start_seconds": 25.18256925,
+        "end_seconds": 25.861261374999998,
+        "sample_count": 7,
+        "peak_absolute_erpm": 23708,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 251,
+        "last_row_zero_based": 253,
+        "start_seconds": 27.757168749999998,
+        "end_seconds": 27.961181541,
+        "sample_count": 3,
+        "peak_absolute_erpm": 10550,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 261,
+        "last_row_zero_based": 264,
+        "start_seconds": 28.848017083,
+        "end_seconds": 29.171890208,
+        "sample_count": 4,
+        "peak_absolute_erpm": 6386,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 276,
+        "last_row_zero_based": 280,
+        "start_seconds": 30.487276375,
+        "end_seconds": 30.909888625,
+        "sample_count": 5,
+        "peak_absolute_erpm": 17961,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 298,
+        "last_row_zero_based": 318,
+        "start_seconds": 32.914611041,
+        "end_seconds": 35.119384666,
+        "sample_count": 21,
+        "peak_absolute_erpm": 40845,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 338,
+        "last_row_zero_based": 339,
+        "start_seconds": 37.319917166,
+        "end_seconds": 37.457884875,
+        "sample_count": 2,
+        "peak_absolute_erpm": 13191,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 360,
+        "last_row_zero_based": 363,
+        "start_seconds": 39.763393541,
+        "end_seconds": 40.090897583,
+        "sample_count": 4,
+        "peak_absolute_erpm": 10343,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 381,
+        "last_row_zero_based": 385,
+        "start_seconds": 42.083554,
+        "end_seconds": 42.505173041,
+        "sample_count": 5,
+        "peak_absolute_erpm": 17269,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 412,
+        "last_row_zero_based": 416,
+        "start_seconds": 45.50766225,
+        "end_seconds": 45.927658208,
+        "sample_count": 5,
+        "peak_absolute_erpm": 15959,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 437,
+        "last_row_zero_based": 447,
+        "start_seconds": 48.270147416,
+        "end_seconds": 49.380853125,
+        "sample_count": 11,
+        "peak_absolute_erpm": 32530,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 478,
+        "last_row_zero_based": 482,
+        "start_seconds": 52.802137375,
+        "end_seconds": 53.237178625,
+        "sample_count": 5,
+        "peak_absolute_erpm": 4003,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 485,
+        "last_row_zero_based": 496,
+        "start_seconds": 53.585475166,
+        "end_seconds": 54.798825291,
+        "sample_count": 12,
+        "peak_absolute_erpm": 3495,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 506,
+        "last_row_zero_based": 509,
+        "start_seconds": 55.89987925,
+        "end_seconds": 56.222647958,
+        "sample_count": 4,
+        "peak_absolute_erpm": 6828,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 524,
+        "last_row_zero_based": 527,
+        "start_seconds": 57.877974625,
+        "end_seconds": 58.201386541,
+        "sample_count": 4,
+        "peak_absolute_erpm": 11163,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 545,
+        "last_row_zero_based": 549,
+        "start_seconds": 60.187190208,
+        "end_seconds": 60.615581583,
+        "sample_count": 5,
+        "peak_absolute_erpm": 18524,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 576,
+        "last_row_zero_based": 581,
+        "start_seconds": 63.598810708,
+        "end_seconds": 64.132188333,
+        "sample_count": 6,
+        "peak_absolute_erpm": 18374,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 603,
+        "last_row_zero_based": 607,
+        "start_seconds": 66.588228375,
+        "end_seconds": 67.017264791,
+        "sample_count": 5,
+        "peak_absolute_erpm": 8030,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 620,
+        "last_row_zero_based": 626,
+        "start_seconds": 68.448235666,
+        "end_seconds": 69.121864958,
+        "sample_count": 7,
+        "peak_absolute_erpm": 31005,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 654,
+        "last_row_zero_based": 656,
+        "start_seconds": 72.225700291,
+        "end_seconds": 72.442978666,
+        "sample_count": 3,
+        "peak_absolute_erpm": 5972,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 665,
+        "last_row_zero_based": 669,
+        "start_seconds": 73.443804916,
+        "end_seconds": 73.898575791,
+        "sample_count": 5,
+        "peak_absolute_erpm": 25322,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 695,
+        "last_row_zero_based": 703,
+        "start_seconds": 76.763405875,
+        "end_seconds": 77.660257208,
+        "sample_count": 9,
+        "peak_absolute_erpm": 24981,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 714,
+        "last_row_zero_based": 717,
+        "start_seconds": 78.876888291,
+        "end_seconds": 79.22367475,
+        "sample_count": 4,
+        "peak_absolute_erpm": 24710,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 745,
+        "last_row_zero_based": 747,
+        "start_seconds": 82.327374291,
+        "end_seconds": 82.546251291,
+        "sample_count": 3,
+        "peak_absolute_erpm": 9485,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 760,
+        "last_row_zero_based": 762,
+        "start_seconds": 83.959240083,
+        "end_seconds": 84.176396041,
+        "sample_count": 3,
+        "peak_absolute_erpm": 5876,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 780,
+        "last_row_zero_based": 792,
+        "start_seconds": 86.107007708,
+        "end_seconds": 87.389860916,
+        "sample_count": 13,
+        "peak_absolute_erpm": 25398,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 816,
+        "last_row_zero_based": 819,
+        "start_seconds": 89.977867875,
+        "end_seconds": 90.285528291,
+        "sample_count": 4,
+        "peak_absolute_erpm": 3610,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 826,
+        "last_row_zero_based": 842,
+        "start_seconds": 91.040305166,
+        "end_seconds": 92.719561541,
+        "sample_count": 17,
+        "peak_absolute_erpm": 18528,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 866,
+        "last_row_zero_based": 868,
+        "start_seconds": 95.303181333,
+        "end_seconds": 95.511885625,
+        "sample_count": 3,
+        "peak_absolute_erpm": 5678,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 880,
+        "last_row_zero_based": 884,
+        "start_seconds": 96.781900291,
+        "end_seconds": 97.235242458,
+        "sample_count": 5,
+        "peak_absolute_erpm": 15158,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 887,
+        "last_row_zero_based": 890,
+        "start_seconds": 97.549799333,
+        "end_seconds": 97.861395833,
+        "sample_count": 4,
+        "peak_absolute_erpm": 21026,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 913,
+        "last_row_zero_based": 918,
+        "start_seconds": 100.306574375,
+        "end_seconds": 100.856853541,
+        "sample_count": 6,
+        "peak_absolute_erpm": 31605,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 934,
+        "last_row_zero_based": 936,
+        "start_seconds": 102.578108333,
+        "end_seconds": 102.782202666,
+        "sample_count": 3,
+        "peak_absolute_erpm": 17086,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 962,
+        "last_row_zero_based": 964,
+        "start_seconds": 105.536608666,
+        "end_seconds": 105.778412541,
+        "sample_count": 3,
+        "peak_absolute_erpm": 8373,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 990,
+        "last_row_zero_based": 994,
+        "start_seconds": 108.540762791,
+        "end_seconds": 108.990646875,
+        "sample_count": 5,
+        "peak_absolute_erpm": 27082,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1013,
+        "last_row_zero_based": 1015,
+        "start_seconds": 110.992344083,
+        "end_seconds": 111.232180791,
+        "sample_count": 3,
+        "peak_absolute_erpm": 9513,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1029,
+        "last_row_zero_based": 1031,
+        "start_seconds": 112.713694666,
+        "end_seconds": 112.915006791,
+        "sample_count": 3,
+        "peak_absolute_erpm": 7869,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1047,
+        "last_row_zero_based": 1049,
+        "start_seconds": 114.642710791,
+        "end_seconds": 114.851875958,
+        "sample_count": 3,
+        "peak_absolute_erpm": 6292,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1054,
+        "last_row_zero_based": 1056,
+        "start_seconds": 115.406238541,
+        "end_seconds": 115.6152415,
+        "sample_count": 3,
+        "peak_absolute_erpm": 12262,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1070,
+        "last_row_zero_based": 1073,
+        "start_seconds": 117.107600666,
+        "end_seconds": 117.419299458,
+        "sample_count": 4,
+        "peak_absolute_erpm": 6934,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1075,
+        "last_row_zero_based": 1077,
+        "start_seconds": 117.661622375,
+        "end_seconds": 117.867329166,
+        "sample_count": 3,
+        "peak_absolute_erpm": 13151,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1093,
+        "last_row_zero_based": 1097,
+        "start_seconds": 119.561660041,
+        "end_seconds": 120.013784875,
+        "sample_count": 5,
+        "peak_absolute_erpm": 19025,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1120,
+        "last_row_zero_based": 1123,
+        "start_seconds": 122.473936458,
+        "end_seconds": 122.78625875,
+        "sample_count": 4,
+        "peak_absolute_erpm": 9228,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1128,
+        "last_row_zero_based": 1130,
+        "start_seconds": 123.336117333,
+        "end_seconds": 123.540451958,
+        "sample_count": 3,
+        "peak_absolute_erpm": 10132,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1148,
+        "last_row_zero_based": 1151,
+        "start_seconds": 125.477046666,
+        "end_seconds": 125.787164,
+        "sample_count": 4,
+        "peak_absolute_erpm": 10497,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1166,
+        "last_row_zero_based": 1173,
+        "start_seconds": 127.407646333,
+        "end_seconds": 128.133859083,
+        "sample_count": 8,
+        "peak_absolute_erpm": 26050,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1188,
+        "last_row_zero_based": 1190,
+        "start_seconds": 129.75742483300002,
+        "end_seconds": 129.96561845800002,
+        "sample_count": 3,
+        "peak_absolute_erpm": 6876,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1205,
+        "last_row_zero_based": 1208,
+        "start_seconds": 131.593703,
+        "end_seconds": 131.904986666,
+        "sample_count": 4,
+        "peak_absolute_erpm": 10490,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1210,
+        "last_row_zero_based": 1212,
+        "start_seconds": 132.112677625,
+        "end_seconds": 132.320449208,
+        "sample_count": 3,
+        "peak_absolute_erpm": 17959,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1227,
+        "last_row_zero_based": 1231,
+        "start_seconds": 133.93659383300002,
+        "end_seconds": 134.35320825000002,
+        "sample_count": 5,
+        "peak_absolute_erpm": 24969,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1249,
+        "last_row_zero_based": 1258,
+        "start_seconds": 136.282281541,
+        "end_seconds": 137.25707500000001,
+        "sample_count": 10,
+        "peak_absolute_erpm": 32394,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1282,
+        "last_row_zero_based": 1289,
+        "start_seconds": 139.81584445800002,
+        "end_seconds": 140.58048904100002,
+        "sample_count": 8,
+        "peak_absolute_erpm": 23209,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1302,
+        "last_row_zero_based": 1307,
+        "start_seconds": 141.961076208,
+        "end_seconds": 142.512954666,
+        "sample_count": 6,
+        "peak_absolute_erpm": 21287,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1309,
+        "last_row_zero_based": 1313,
+        "start_seconds": 142.72043875000003,
+        "end_seconds": 143.131266291,
+        "sample_count": 5,
+        "peak_absolute_erpm": 27702,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1327,
+        "last_row_zero_based": 1341,
+        "start_seconds": 144.654495125,
+        "end_seconds": 146.14057675,
+        "sample_count": 15,
+        "peak_absolute_erpm": 22525,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1356,
+        "last_row_zero_based": 1361,
+        "start_seconds": 147.76485083300003,
+        "end_seconds": 148.28134920800002,
+        "sample_count": 6,
+        "peak_absolute_erpm": 21066,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1378,
+        "last_row_zero_based": 1383,
+        "start_seconds": 150.103716875,
+        "end_seconds": 150.618504083,
+        "sample_count": 6,
+        "peak_absolute_erpm": 20398,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1395,
+        "last_row_zero_based": 1400,
+        "start_seconds": 151.930918875,
+        "end_seconds": 152.44841283300002,
+        "sample_count": 6,
+        "peak_absolute_erpm": 22485,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1403,
+        "last_row_zero_based": 1405,
+        "start_seconds": 152.76062429100003,
+        "end_seconds": 153.000979666,
+        "sample_count": 3,
+        "peak_absolute_erpm": 26222,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1423,
+        "last_row_zero_based": 1427,
+        "start_seconds": 154.902157291,
+        "end_seconds": 155.35564541600002,
+        "sample_count": 5,
+        "peak_absolute_erpm": 20759,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1451,
+        "last_row_zero_based": 1453,
+        "start_seconds": 157.915744625,
+        "end_seconds": 158.12344345800003,
+        "sample_count": 3,
+        "peak_absolute_erpm": 6597,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1468,
+        "last_row_zero_based": 1481,
+        "start_seconds": 159.74080037500002,
+        "end_seconds": 161.12271062500002,
+        "sample_count": 14,
+        "peak_absolute_erpm": 29068,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1494,
+        "last_row_zero_based": 1499,
+        "start_seconds": 162.54527066600002,
+        "end_seconds": 163.05902937500002,
+        "sample_count": 6,
+        "peak_absolute_erpm": 20159,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1521,
+        "last_row_zero_based": 1531,
+        "start_seconds": 165.402929666,
+        "end_seconds": 166.47777016600003,
+        "sample_count": 11,
+        "peak_absolute_erpm": 24199,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1545,
+        "last_row_zero_based": 1549,
+        "start_seconds": 167.99891025000002,
+        "end_seconds": 168.41483216600002,
+        "sample_count": 5,
+        "peak_absolute_erpm": 17315,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1568,
+        "last_row_zero_based": 1574,
+        "start_seconds": 170.44843608300002,
+        "end_seconds": 171.10266091600002,
+        "sample_count": 7,
+        "peak_absolute_erpm": 13716,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1599,
+        "last_row_zero_based": 1606,
+        "start_seconds": 173.760831375,
+        "end_seconds": 174.520144291,
+        "sample_count": 8,
+        "peak_absolute_erpm": 23342,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1623,
+        "last_row_zero_based": 1625,
+        "start_seconds": 176.30553229100002,
+        "end_seconds": 176.54757175,
+        "sample_count": 3,
+        "peak_absolute_erpm": 2306,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1628,
+        "last_row_zero_based": 1633,
+        "start_seconds": 176.85632379100002,
+        "end_seconds": 177.38055587500003,
+        "sample_count": 6,
+        "peak_absolute_erpm": 21391,
+        "rotation_observed_above_50_erpm": true
+      },
+      {
+        "first_row_zero_based": 1647,
+        "last_row_zero_based": 1652,
+        "start_seconds": 178.893900833,
+        "end_seconds": 179.41264075,
+        "sample_count": 6,
+        "peak_absolute_erpm": 14358,
+        "rotation_observed_above_50_erpm": true
+      }
+    ]
+  },
+  "missed_start_trigger": {
+    "instantaneous_condition": "decodedADC1 > 0.20 and abs(ERPM) <= 50 and abs(Iq) < 8 A",
+    "actual_archived_recorder_hash_matches_manifest": true,
+    "sustained_condition": "Condition maintained in sampled data for >=0.20 s; sample gaps >0.35 s reset qualification",
+    "instantaneous_qualifying_sample_count": 17,
+    "instantaneous_qualifying_rows_zero_based": [
+      104,
+      183,
+      381,
+      524,
+      576,
+      603,
+      695,
+      780,
+      866,
+      962,
+      1166,
+      1188,
+      1205,
+      1282,
+      1395,
+      1451,
+      1494
+    ],
+    "sustained_qualifying_sample_count": 0,
+    "recorded_internal_diagnostic_snapshot_count": 0,
+    "limitation": "Zero sustained triggers does not prove absence of every shorter hesitation or unsampled event."
+  },
+  "faults": {
+    "code_counts": {
+      "0": 1658
+    },
+    "timeout_active_samples": 0,
+    "kill_switch_active_samples": 0,
+    "terminal_history_response": [
+      "-> faults",
+      "No faults registered since startup"
+    ]
+  },
+  "bus_voltage_observation": {
+    "minimum_v": 72.2,
+    "maximum_v": 84.4,
+    "sample_count_above_84_v": 1,
+    "maximum_row_zero_based": 995,
+    "peak_and_three_surrounding_rows_each_side": [
+      {
+        "row_zero_based": 992,
+        "adc_timestamp_seconds_from_recording_start": 108.748875958,
+        "values_timestamp_seconds_from_recording_start": 108.75006283300002,
+        "decoded_pedal": 0.523483,
+        "pedal_voltage_v": 1.725039,
+        "input_voltage_v": 76.9,
+        "battery_current_a": 18.92,
+        "motor_current_a": 49.75,
+        "iq_a": 49.55,
+        "erpm": 9330,
+        "duty": 0.652,
+        "fault_code": 0
+      },
+      {
+        "row_zero_based": 993,
+        "adc_timestamp_seconds_from_recording_start": 108.852651875,
+        "values_timestamp_seconds_from_recording_start": 108.85367224999999,
+        "decoded_pedal": 0.502836,
+        "pedal_voltage_v": 1.685566,
+        "input_voltage_v": 75.3,
+        "battery_current_a": 34.52,
+        "motor_current_a": 49.9,
+        "iq_a": 49.24,
+        "erpm": 17472,
+        "duty": 0.946,
+        "fault_code": 0
+      },
+      {
+        "row_zero_based": 994,
+        "adc_timestamp_seconds_from_recording_start": 108.990646875,
+        "values_timestamp_seconds_from_recording_start": 108.99143166599998,
+        "decoded_pedal": 0.46371,
+        "pedal_voltage_v": 1.589824,
+        "input_voltage_v": 72.4,
+        "battery_current_a": 47.28,
+        "motor_current_a": 67.79,
+        "iq_a": 46.65,
+        "erpm": 27082,
+        "duty": 0.93,
+        "fault_code": 0
+      },
+      {
+        "row_zero_based": 995,
+        "adc_timestamp_seconds_from_recording_start": 109.096917875,
+        "values_timestamp_seconds_from_recording_start": 109.09771408300001,
+        "decoded_pedal": 0.108822,
+        "pedal_voltage_v": 0.903671,
+        "input_voltage_v": 84.4,
+        "battery_current_a": 2.96,
+        "motor_current_a": 4.24,
+        "iq_a": -0.49,
+        "erpm": 30385,
+        "duty": 0.949,
+        "fault_code": 0
+      },
+      {
+        "row_zero_based": 996,
+        "adc_timestamp_seconds_from_recording_start": 109.197495875,
+        "values_timestamp_seconds_from_recording_start": 109.198039916,
+        "decoded_pedal": 0.107898,
+        "pedal_voltage_v": 0.904511,
+        "input_voltage_v": 80.5,
+        "battery_current_a": 6.05,
+        "motor_current_a": 20.24,
+        "iq_a": 4.85,
+        "erpm": 28408,
+        "duty": 0.647,
+        "fault_code": 0
+      },
+      {
+        "row_zero_based": 997,
+        "adc_timestamp_seconds_from_recording_start": 109.302868625,
+        "values_timestamp_seconds_from_recording_start": 109.30361629100001,
+        "decoded_pedal": 0.107589,
+        "pedal_voltage_v": 0.903671,
+        "input_voltage_v": 80.7,
+        "battery_current_a": -4.51,
+        "motor_current_a": -12.85,
+        "iq_a": -6.34,
+        "erpm": 26061,
+        "duty": 0.812,
+        "fault_code": 0
+      },
+      {
+        "row_zero_based": 998,
+        "adc_timestamp_seconds_from_recording_start": 109.408591875,
+        "values_timestamp_seconds_from_recording_start": 109.409703791,
+        "decoded_pedal": 0.108055,
+        "pedal_voltage_v": 0.903671,
+        "input_voltage_v": 81.1,
+        "battery_current_a": -0.57,
+        "motor_current_a": -3.68,
+        "iq_a": -0.95,
+        "erpm": 23801,
+        "duty": 0.822,
+        "fault_code": 0
+      }
+    ],
+    "capture_manifest_started_utc": "2026-11-11T18:35:19.137618+00:00",
+    "timestamp_scope": "Exact elapsed sample timestamps are supplied. The manifest start precedes preflight and is not the recording-start UTC; no exact UTC peak time is inferred.",
+    "interpretation_limit": "The 84.4 V peak is an observed bus reading after a pedal release. Its same-record battery current is +2.96 A, while negative readings occur later. Current fields are telemetry averages; these samples do not establish a causal mechanism, continuous regenerative braking, or an overvoltage fault. Treat this as a charged-pack/regen validation item."
+  },
+  "settings": {
+    "apply": {
+      "motor": {
+        "field_count": 189,
+        "changed": {
+          "l_current_min": {
+            "before": 0.0,
+            "after": -5.0
+          }
+        },
+        "byte_identical": false
+      },
+      "app": {
+        "field_count": 187,
+        "changed": {},
+        "byte_identical": true
+      }
+    },
+    "trace": {
+      "motor": {
+        "field_count": 189,
+        "changed": {},
+        "byte_identical": true
+      },
+      "app": {
+        "field_count": 187,
+        "changed": {},
+        "byte_identical": true
+      }
+    },
+    "restore-zero": {
+      "motor": {
+        "field_count": 189,
+        "changed": {
+          "l_current_min": {
+            "before": -5.0,
+            "after": 0.0
+          }
+        },
+        "byte_identical": false
+      },
+      "app": {
+        "field_count": 187,
+        "changed": {},
+        "byte_identical": true
+      }
+    }
+  },
+  "trace_end": {
+    "sample_erpm": -12072,
+    "filter_status_after": {
+      "run": true,
+      "active": true,
+      "pid": 1507,
+      "applied": 1,
+      "rx": 0,
+      "adc": 0.087299,
+      "erpm": -7313.352539,
+      "fault": 0
+    },
+    "caveat": "Recording ended while the wheels were still coasting in reverse; later restore preflight is separate stop evidence."
+  },
+  "measurement_limits": "Operator-controlled wheels-up test at approximately 9 Hz. Contiguous pedal windows can occur while wheels are already rotating. Does not establish loaded/fleet reliability or permanence.",
+  "input_artifacts": [
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/trace/samples.jsonl",
+      "bytes": 1696743,
+      "sha256": "1d3f8e06f19fb55d684f47d615b1ebaa8aa140f5b34e89709b0d410e64c2f981"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/trace/manifest.json",
+      "bytes": 2330,
+      "sha256": "d3533e04b1a2c45d1c15e184f23cc333fb0f8efd996745889d18e81bbf074c55"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/host-tools/triggered_brake5_trace.py",
+      "bytes": 9970,
+      "sha256": "0ea2a81d363a09b3deeb41f82e2034d89636c8ea0ed2c4909da184582696d0d6"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/apply/motor_before.bin",
+      "bytes": 482,
+      "sha256": "166f7e6fae318c1dd04d9adf9ebc36358ade8c92b8148574c48118c4b4dd9bee"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/apply/motor_after.bin",
+      "bytes": 482,
+      "sha256": "990e8c1e3de05ddde44d76252d696b144e49b455205d2fc4817d1b5371c7a35c"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/apply/app_before.bin",
+      "bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/apply/app_after.bin",
+      "bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/trace/motor_before.bin",
+      "bytes": 482,
+      "sha256": "990e8c1e3de05ddde44d76252d696b144e49b455205d2fc4817d1b5371c7a35c"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/trace/motor_after.bin",
+      "bytes": 482,
+      "sha256": "990e8c1e3de05ddde44d76252d696b144e49b455205d2fc4817d1b5371c7a35c"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/trace/app_before.bin",
+      "bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/trace/app_after.bin",
+      "bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/restore-zero/motor_before.bin",
+      "bytes": 482,
+      "sha256": "990e8c1e3de05ddde44d76252d696b144e49b455205d2fc4817d1b5371c7a35c"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/restore-zero/motor_after.bin",
+      "bytes": 482,
+      "sha256": "166f7e6fae318c1dd04d9adf9ebc36358ade8c92b8148574c48118c4b4dd9bee"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/restore-zero/app_before.bin",
+      "bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    },
+    {
+      "file": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/restore-zero/app_after.bin",
+      "bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    }
+  ],
+  "decoder_provenance": {
+    "tools/vesc/decode.py": "01e8c220118bfb7bce96cb42145a476aad6220ab230ccf03d99234a27d2bdfde",
+    "third_party/vesc_tool/6.00/parameters_mcconf.xml": "b7cc767487bac6fc7526e29b4f71f54db4da0b29b9110b5de23d67fff74255b0",
+    "third_party/vesc_tool/6.00/parameters_appconf.xml": "33c64b9db644b524f5a90a85d3fc76130950cb7247c33cd915aa5bd0414f2436"
+  },
+  "audit_script_sha256": "359dc49762c4780c62d336ee7b09391ccbb850d7b4ea4dd387126c7e70e022c1"
+}

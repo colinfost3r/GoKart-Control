@@ -30,6 +30,11 @@
   calibration-preserving tune trial. Twelve named motor fields were applied once with persistent
   SET_MCCONF and exact 376-field readback; all app/calibration bytes preserved. Do not rerun the
   old trial or infer permission for arbitrary future tuning. Supervisory writes remain temporary.
+- Explicit maintenance exception 2026-11-11: owner requested persistent motor `l_current_min`
+  0 to -5 A after a successful supervised RAM trial; only this field changed and all other
+  375 fields were preserved. Consult HANDOFF for cold-boot/Heltec acceptance. Karts 4/5 are
+  the next copies of kart 3; karts 1/2 remain Eamon's test units. Preserve each target
+  calibration/identity; fleet preparation is offline and does not authorize blind imports.
 - Driver messages and future safety geofence enforcement remain deferred. M5 game-zone UI parity
   is separate from enabling the existing Heltec/base command implementation.
 - The owner now explicitly authorizes ongoing commits/pushes at coherent, checked

@@ -1,6 +1,51 @@
 # Collaborator handoff
 
-## Kart 3 persistent reverse filter — November 11, 2026 (latest)
+## Kart 3 −5 A save and fleet replication — November 11, 2026 (latest)
+
+**−5 A is active; an acknowledged persistent save has exact runtime readback.**
+The earlier temporary trial was restored to zero, then the owner explicitly requested
+making the change permanent. One guarded command 13 save completed at 18:51:50 UTC:
+only `l_current_min` changed, all other 375 fields identical. Filter remains active,
+forward / raw RX 1, released pedal, stationary / fault 0; Heltec off. **Cold-boot persistence
+and Heltec coexistence are pending.** ACK/runtime reads alone do not prove flash
+survival. No automatic retry, restore or motor test is queued.
+[Save evidence and exact helper](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/README.md).
+
+The temporary −5 A trial recorded 1,658 ADC/telemetry pairs over ~180 seconds with
+no stall trigger and no sampled fault/timeout/kill. Owner reported consistent starts
+and confirmed intentional reverse near the end. After forward/released/rest was
+confirmed, the zero-limit restore was verified before the later permanent save.
+[Temporary trial](hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/README.md).
+Independent replay found 78 pedal windows with rotation (including coasting reapplications),
+17 instantaneous <8 A trigger samples but zero sustained triggers. One bus reading was
+84.4 V after release, without fault; charged-pack/BMS validation remains open.
+
+Diagnosis: native APP_ADC accepted 45.776 A while FOC iq_target was +0.05 A and
+Mod q flt −0.01. Paired ADC/telemetry 53.7 ms apart bracketed the stationary high-pedal
+condition. The zero motor-braking limit is floored to −cc_min_current (−0.05 A);
+negative modulation selects the opposite +0.05 A current clamp. Sequential rounded
+snapshots are not cycle-atomic. Raw RX harness chatter remains a separate issue;
+the filter held forward during the captured miss.
+[Current target evidence](hardware/vesc/kart3/2026-11-11/pedal-response-03/README.md),
+[earlier pedal recordings](hardware/vesc/kart3/2026-11-11/pedal-response-02/README.md).
+
+Owner assigns **karts 4 and 5** as copies of kart3; **1 and2 remain Eamon's test karts**.
+Replication must preserve each unit's Hall/pedal calibration and unique controller,
+BLE and ESP-NOW identities. Do not clone NVS or flash a kart3-UUID-pinned filter onto
+another controller. The [offline preparation tool and runbook](docs/kart4-kart5-replication.md) are ready; no kart 4/5 writes
+have occurred. The saved-filter + nonzero-limit combination is not yet fleet or
+endurance accepted. Next: verify cold boot, then reconnect Heltec/Core2 and verify
+telemetry, modes and supervised pedal operation while preserving the −5 A limit.
+
+Validation: the full project suite now passes **469 tests across seven suites,
+zero skipped**, including 12 fleet-preparation cases. Independent replay of all 1,658
+trial samples matches the archived audit; persistent-writer framing/freshness/no-retry
+checks and 26 pinned-interpreter guard cases also pass. This branch checkpoint includes
+the diagnosis, authorized save and offline fleet package; pending hardware acceptance
+is explicitly retained above. Eamon’s six commits through a5a4c22 remain separate
+integration work and were not deployed by this motor-limit change.
+
+## Kart 3 persistent reverse filter — November 11, 2026 (earlier installation)
 
 **Installed at the owner's explicit request; normal cold-boot checks passed.** The owner
 confirmed wheels lifted, pedal released, Heltec off and cutoff accessible. Joined stop and

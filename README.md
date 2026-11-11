@@ -10,8 +10,9 @@ is enabled, with separate physical pit-control acceptance still pending.
 All 376 kart-3 VESC settings were captured; the calibration-preserving 12-setting motor trial
 was applied and read back exactly. See the [tune review](docs/kart3-tune-comparison.md) and
 [mode commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
-Two additional M5/Heltec karts are planned, with IDs still unassigned; follow the
-[per-kart bring-up guide](firmware/m5-core2/BRINGUP.md).
+Karts **4 and 5** will copy the kart-3 M5/Heltec setup; **1 and 2 remain Eamon’s test karts**. Follow the
+[per-kart bring-up guide](firmware/m5-core2/BRINGUP.md) and
+[calibration-preserving tune/filter preparation](docs/kart4-kart5-replication.md).
 Kart 3 now has a [persistently saved VESC-local reverse filter](hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).
 The earlier wheels-up trial passed forward and smooth reverse despite 152 raw RX transitions
 during forward. The owner then requested installation: exact stored-code readback passed,
@@ -22,6 +23,16 @@ The final verified state is active/forward/fault0. This is a kart-3 bench commis
 not fleet or endurance acceptance. Raw input precedes script startup, and watchdog boot can
 skip scripts; keep the pedal released until readiness is verified.
 [Procedure and limitations](firmware/vesc-lisp/reverse-input/README.md).
+
+**November 11 missed-start fix:** the native pedal app requested 45.776 A while
+FOC was limited to 0.05 A with the motor-braking minimum set to zero. A supervised
+three-minute temporary −5 A trial had no recorded stall trigger and the owner
+reported consistent starts. At the owner's request, **−5 A is now active following
+an acknowledged persistent save**, with all other 375 settings preserved. Cold-boot
+persistence and Heltec coexistence are still pending; this is not fleet/endurance
+acceptance. [Diagnosis](hardware/vesc/kart3/2026-11-11/pedal-response-03/README.md),
+[trial](hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/README.md),
+[save and current status](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/README.md).
 
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor
 board on every kart, a shared LoRa radio network, a pit station with touch kiosk and

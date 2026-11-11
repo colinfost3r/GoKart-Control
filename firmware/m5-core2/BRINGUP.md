@@ -15,7 +15,10 @@ and Core2 reported `mode_ready:true`. See the
 Pit MODE/STOP/START/SLOW/BOOST/RACE/game physical acceptance, loaded driving and fleet/range tests
 remain pending; a received `rate 1` command does not establish motor-command acceptance.
 
-**The next two M5 karts are not commissioned and their IDs are unassigned.** For each, begin
+**The next two M5 karts are assigned IDs 4 and 5 and are not commissioned.** IDs 1 and 2
+remain Eamon's test karts; kart 3 is the reference. Follow the
+[kart-4/5 tune and reverse-filter preparation guide](../../docs/kart4-kart5-replication.md).
+For each, begin
 with `m5-demo`, then `m5-espnow` + `kart-m5-espnow-readonly` (or `m5` + `kart-m5-readonly` for UART).
 Both initial Heltec targets keep every VESC write disabled. Use the repeat-build checklist below;
 do not downgrade/re-pair the working kart 3 simply to repeat first-unit steps.
@@ -31,8 +34,8 @@ do not downgrade/re-pair the working kart 3 simply to repeat first-unit steps.
   map need no SD card. GPS map checks need sky view; peer checks also need another kart
   transmitting. A USB-only bench inside may show no GPS fix.
 - Optional access to the existing pit dashboard to confirm the intended kart is received.
-  Kart 3 is the commissioned M5 unit; Eamon remains kart 2 and kart 1 is the older development
-  kart. Coordinate new unique IDs before provisioning. A display does not get a second fleet ID.
+  Kart 3 is the commissioned M5 reference; IDs 1 and 2 remain Eamon's test karts.
+  The next units are kart 4 and kart 5. A display does not get a second fleet ID.
 
 The base station is optional for own VESC telemetry and directly received peer positions.
 Central pit monitoring, commands and pit-managed race features need the base station. Kart 3's
@@ -122,7 +125,7 @@ board/port; build success alone does not establish that an image is installed.
 
 For each new ESP-NOW pair, install the initial read-only targets, provision and verify its
 confirmed unique kart ID with `writes:false`, then run this from the repository root using Python
-with `pyserial` installed. Replace `N` with the assigned ID; the next two IDs are still unassigned:
+with `pyserial` installed. Replace `N` with **4 or 5** for the new unit; leave Eamon's IDs 1/2 and kart 3 unchanged:
 
 ```sh
 python3 tools/m5/pair_espnow.py \
@@ -258,8 +261,10 @@ part of these instructions.
 
 Use the working kart-3 design, with a separate record for each new physical kart:
 
-1. **Assign identity with Eamon.** Both new IDs are currently unassigned. Record the confirmed
-   fleet ID, Core2/Heltec revisions and board MACs; never duplicate kart 3 or another live ID.
+1. **Record the assigned identity with Eamon.** Use ID **4** or **5** for these new units;
+   IDs 1/2 remain Eamon's test karts. Record Core2/Heltec revisions and board MACs; never
+   duplicate another live ID. Prepare the named-field tune and UUID-bound reverse filter
+   with the [replication guide](../../docs/kart4-kart5-replication.md); preparation does not apply it.
 2. **Back up that unit.** Retain its own board flash/NVS recovery data privately. Capture all
    motor/app settings (189 + 187 on the verified 6.02 schema) from its own VESC using the [capture guide](../../tools/vesc/README.md).
    A runtime capture is not a verified saved-flash image. Keep Hall tables, motor R/L/flux,

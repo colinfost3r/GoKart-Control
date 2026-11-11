@@ -1,0 +1,89 @@
+{
+  "started_utc": "2026-11-11T18:35:19.137618+00:00",
+  "complete": true,
+  "motor_or_settings_or_lifecycle_commands": false,
+  "fixed_diagnostics": [
+    "events",
+    "foc_state",
+    "faults",
+    "output-disabled"
+  ],
+  "trigger": "decodedADC1>.20, absERPM<=50, absIq<8 A for >=.20s; samples gaps>.35s reset",
+  "snapshot_limit": 3,
+  "maximum_trace_seconds": 180,
+  "post_first_trigger_seconds": 10,
+  "script_sha256": "0ea2a81d363a09b3deeb41f82e2034d89636c8ea0ed2c4909da184582696d0d6",
+  "dependency_sha256": {
+    "pedal_trace_180s.py": "51f0bfd945fdd51b7470d2b8e820d767a4f919533fc4eb5241ce7d83de41aa65",
+    "extra_diagnostics.py": "373a33d72cd03afd4320286232887cb7fc1eb4f6501d938846f4147a9b7b44f0"
+  },
+  "snapshots_are_nonatomic": true,
+  "snapshots": [],
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "status_before": {
+    "run": true,
+    "active": true,
+    "pid": 1507,
+    "applied": 0,
+    "rx": 1,
+    "adc": 0.087522,
+    "erpm": -1.4e-05,
+    "fault": 0
+  },
+  "rows": 1658,
+  "fault_history": {
+    "expected_output_seen": true,
+    "terminal_lines": [
+      "-> faults",
+      "No faults registered since startup"
+    ],
+    "lisp_lines": [],
+    "atomic_snapshot": false,
+    "protocol_end_marker_available": false,
+    "started_monotonic": 180.232936916,
+    "finished_monotonic": 180.273881791,
+    "quiet_tail_seconds": 0.04035954200000447
+  },
+  "status_after": {
+    "run": true,
+    "active": true,
+    "pid": 1507,
+    "applied": 1,
+    "rx": 0,
+    "adc": 0.087299,
+    "erpm": -7313.352539,
+    "fault": 0
+  },
+  "app_unchanged": true,
+  "motor_unchanged": true,
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T18:38:19.527830+00:00"
+}
