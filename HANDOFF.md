@@ -47,14 +47,44 @@ whole VESC configuration. [Bring-up procedure](firmware/m5-core2/BRINGUP.md).
 
 **Reverse investigation:** latest owner correction is **throttle ADC1; reverse RX**, using a
 maintained mechanical switch to VESC signal GND and a believed **10 kΩ pull-up RX→3.3 V**.
-It remains intermittent even from a complete stop with the pedal released. RX is the expected
+It remains intermittent even from a complete stop with the pedal released. The owner confirms
+this predates the November 10 tune, so that tune did not introduce the original fault. RX is the expected
 pin for the unchanged ADC / Current Reverse Button configuration; the former TX diagnosis is
 superseded. Measure RX high/low stability and inspect switch/harness/ground before choosing a
 filter or changing ADC settings. Resistor placement and measured levels remain unknown.
 [Current reverse notes](docs/reverse-input.md). No reverse-related setting or wiring change was made.
 Stock-source review also found a testable interaction between the zero braking limit and FOC
 direction-dependent limiting: about 0.05 A may be available during part of a reverse transition.
-This is a hypothesis, not a measured cause; no additional tune or motor test was performed.
+This is a secondary hypothesis for present behavior, not the origin of the pre-existing symptom
+or a measured cause. Prioritize electrical/input checks; no additional tune or motor test was performed.
+
+## Reverse conditioner design and sourcing — 2026-11-10 (proposed only)
+
+Owner confirms kart 3 is **Flipsky 75100 Pro V2.0**, the reverse fault spans eight karts/two
+switch types, and the supplied Nilight SPST switch's **LED is unused**. The shared firmware
+name `75_300_R2` is documented by Flipsky; it is not sufficient evidence of a firmware mismatch.
+[Updated investigation](docs/reverse-input.md).
+
+The [prototype guide](docs/reverse-input/prototype-v1/README.md) supplies a per-kart BOM,
+exact IC wiring and an SVG/PNG diagram for a regulated 5 V optocoupler switch loop, MAX6817
+hardware debounce and 3.3 V PPM output. Build/test one before considering the fleet. ADC+UART
+would select PPM reverse; kart 3 is still ADC/RX and no app/calibration/hardware change was made.
+The design is not an interlock or a verified reliability fix. A generic Amazon optocoupler
+module is only a candidate substitute for the input stage, not an established debounce board.
+
+The owner asked whether the Heltec could replace the debounce chip. It could, but its reset
+can release reverse; existing BLE/GPS operations also block the main loop. A separate task and
+resolved reset/maintenance behavior would be needed. Core2/ESP-NOW is not proposed in the
+direction-control path. The standing no-driving-state-change-on-accessory-loss policy remains.
+
+Fetched Eamon's branch through `a5a4c22` while preparing these docs. The newer carried-item and
+ESP-NOW reconnect changes are **not integrated in this documentation milestone**; the last
+integrated upstream remains `a9c8459`. Review them as the next M5 software task. No board was
+flashed or controller commanded for this design/sourcing work.
+
+Diagram polarity/pins were independently reviewed and the PNG visually checked. Offline checks
+passed **356 tests / seven suites / zero skipped**; JSON parsing and whitespace checks passed.
+These checks do not validate the physical conditioner.
 
 ## Earlier checkpoint: complete capture, tune preparation and upstream integration — 2026-11-10
 

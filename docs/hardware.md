@@ -6,7 +6,7 @@
 | Kart computer | Raspberry Pi 3 Model B V1.2 | Board silkscreen in photo 5; OS/runtime not inspected |
 | Pit computer | Raspberry Pi 4 | Owner selected; not configured |
 | VESC | Firmware 6.00, `75_100_V2`, `no_hw_limits`, controller ID 69 | USB read on one baseline kart |
-| Commercial controller model | Unknown | Need physical label/product link; firmware ID is insufficient |
+| Commercial controller model | Fleet reported as Flipsky 75100; kart 3 specifically 75100 Pro V2.0 | Owner confirmed November 10; physical harness orientation still needs checking |
 | VESC USB | Accessible, read successfully on Mac | Verified |
 | VESC BLE | Preferred existing link; original code uses Nordic UART Service | Owner report + historical code; Heltec link/module identity unverified |
 | Driver input | ADC and UART / Current Reverse Button | Configuration verified; physical wiring owner reported |
@@ -65,3 +65,13 @@ the sensor is unwired despite the controller still being configured for NTC. Thi
 no settings and is runtime evidence, not a saved-flash image. See the [all-settings review](kart3-tune-comparison.md).
 
 The later [12-setting trial](../hardware/vesc/kart3/2026-11-10/tune-applied-v1/README.md) was applied at 19:58:55 UTC and fully read back. Sensor selection is now Disabled; input calibration/configuration stayed unchanged.
+
+## Reverse switch and proposed interface — 2026-11-10
+
+Owner identifies the Nilight three-terminal maintained SPST toggle and confirms the LED is
+not used. Existing reverse is on RX with an approximately 10 kΩ pull-up to 3.3 V; throttle is
+on ADC1. Intermittence predates the tune and spans eight karts/two switch types. No cause has
+been measured. See [reverse investigation](reverse-input.md) and the separate
+[proposed conditioner BOM/diagram](reverse-input/prototype-v1/README.md). No reverse hardware
+or app change is installed. The Heltec alternative remains a concept with unresolved reset
+behavior, not a change to the vehicle reliability requirement.

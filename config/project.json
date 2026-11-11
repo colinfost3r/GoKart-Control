@@ -189,7 +189,7 @@
     "latest_eamon_integrated": "a9c8459",
     "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
     "current_usb_state": "Connected; one authorizedSET13 acknowledged and fullreadbackexact",
-    "reverse_input_owner_report": "Latest correction: throttle ADC1, maintained reverse switch RX to VESC signal GND; believed10k pull-up RX to3.3V. Intermittent even from rest. App settings preserved; electrical measurements pending.",
+    "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 k\u03a9 pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; measurements pending.",
     "tune_applied_at_utc": "2026-11-10T19:58:55+00:00",
     "tune_applied_path": "hardware/vesc/kart3/2026-11-10/tune-applied-v1",
     "tune_verified_fields": 376,
@@ -198,7 +198,18 @@
     "mode_commissioning_path": "hardware/m5/2026-11-10-kart3/mode-commissioning",
     "installed_heltec_app_sha256": "11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2",
     "installed_core2_app_sha256": "996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a",
-    "core2_busy_notice_candidate_installed": false
+    "core2_busy_notice_candidate_installed": false,
+    "reverse_fault_predates_tune_owner_confirmed": true,
+    "kart3_physical_model_owner_report": "Flipsky 75100 Pro V2.0",
+    "reverse_conditioner_proposal": {
+      "status": "documented_not_built_or_installed",
+      "guide": "docs/reverse-input/prototype-v1/README.md",
+      "input": "5V_optocoupler_switch_loop_LED_terminal_unused",
+      "debounce": "MAX6817",
+      "output": "3.3V_PPM_requires_ADC_and_UART",
+      "current_input_still": "ADC_RX",
+      "heltec_alternative": "concept_only_reset_behavior_conflicts_with_reliability_requirement"
+    }
   },
   "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending"
 }
