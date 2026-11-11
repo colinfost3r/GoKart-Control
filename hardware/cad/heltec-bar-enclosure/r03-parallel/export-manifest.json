@@ -1,0 +1,87 @@
+[
+  {
+    "file": "GoKart-Heltec-Compact-Parallel-R03.f3d",
+    "bytes": 6314277,
+    "sha256": "829ef085d38aa49f51243e804512a971a4d3ba1bc63d59959a23e7dafc9bfff1"
+  },
+  {
+    "file": "README.md",
+    "bytes": 7084,
+    "sha256": "19860965b455948828ac0c863bdd503efd75e600c038debff4886b430794af08"
+  },
+  {
+    "file": "antenna-insert-15deg.step",
+    "bytes": 21053,
+    "sha256": "b04ea797567d5a26bf590ebc18ba6791f5c767fd80c4f3afdde6a53cd49d62d9"
+  },
+  {
+    "file": "antenna-insert-15deg.stl",
+    "bytes": 111484,
+    "sha256": "c297d8878af710a4d7336cd3547ba438f58f0f0fa96018784412ad251852b32e"
+  },
+  {
+    "file": "assembled-preview.png",
+    "bytes": 25046,
+    "sha256": "5171c8a52782cd1d51fd838ffed251852d65bd8b77f6b394b9ad0b4c45163c84"
+  },
+  {
+    "file": "build_model.py",
+    "bytes": 16988,
+    "sha256": "f6efc7d2d868e4cf8496a5c24feb84209e174a2b5bf9443ebfa626149bf337a5"
+  },
+  {
+    "file": "case-upper-collar.step",
+    "bytes": 158932,
+    "sha256": "6eb3089f1de54d9cbc2ea95f9fa93a0a281c976e99cdebb30428ef75b53ecfd0"
+  },
+  {
+    "file": "case-upper-collar.stl",
+    "bytes": 229784,
+    "sha256": "a98d049c1a2f330bc35cb1c0b4a6258bf57b38f8431eab79d09ee687d3658f47"
+  },
+  {
+    "file": "exploded-preview.png",
+    "bytes": 42635,
+    "sha256": "cc977d5cb705b4bbd235ce6c13daa5250d9986a27be45a4fa587a2dcf40dfab3"
+  },
+  {
+    "file": "export-verification.json",
+    "bytes": 3347,
+    "sha256": "0df4b3a46cf3b38503b1006f3833e97117524f66dc7042293d878b5eb6a261f4"
+  },
+  {
+    "file": "export_model.py",
+    "bytes": 3056,
+    "sha256": "47ca4ca2a8a3b7f7f8bf9ede8a90037e38ce930edf6e31da6c855e7dc8c28169"
+  },
+  {
+    "file": "lid-gps-retainers.step",
+    "bytes": 82276,
+    "sha256": "e995426d26e66935f43f0a99e5a399f8a697b44136c533ad7d7888aa8cf589ce"
+  },
+  {
+    "file": "lid-gps-retainers.stl",
+    "bytes": 202484,
+    "sha256": "a7daa3c631f9b93d6e6521e7988cc20366ec38aa72405930d63c5abb0e0b51a7"
+  },
+  {
+    "file": "lower-collar.step",
+    "bytes": 23727,
+    "sha256": "4c6990e201281a67ad45fc428d55b59e197a573d7186fb0d6427921777b3c5a3"
+  },
+  {
+    "file": "lower-collar.stl",
+    "bytes": 138084,
+    "sha256": "7057e38f0004c68141c052af38ef01551bc846b1af600faf954d93cdc07713d2"
+  },
+  {
+    "file": "model-audit.json",
+    "bytes": 5910,
+    "sha256": "4769c53668cf4e19f0b4f18f981dcc9ecd58ca6c07e5d52271acff0ff38e9a4b"
+  },
+  {
+    "file": "reference-source-hashes.json",
+    "bytes": 299,
+    "sha256": "58d8b2e6d7ccfbe8267d69fccd496925d23af17208880cdbc411ac0246954697"
+  }
+]

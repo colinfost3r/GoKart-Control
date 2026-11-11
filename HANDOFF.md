@@ -1,5 +1,42 @@
 # Collaborator handoff
 
+## Compact Heltec/GPS bar enclosure — November 11, 2026
+
+The mechanical branch `mechanical/kart-mounts` adds a new Fusion prototype for the
+owner's **25.273 mm / 0.995 in horizontal tube**. The **66 × 36 × 30 mm case runs
+parallel to the tube**; the collar ears make the complete footprint **66 × 50 mm**.
+Four installation screws total: two M4 clamp bolts and two M3 lid screws. Molded
+features retain the Heltec and stacked, sky-facing GPS without separate keeper screws.
+The captured antenna insert is **15 degrees outward** and indexes in 45-degree yaw
+steps; another printed insert changes its tilt. The **50.8 mm antenna is a reference**,
+with assumed diameter/base geometry, not a printable antenna or verified purchased part.
+
+[CAD source, print files and assembly/fit notes](hardware/cad/heltec-bar-enclosure/r03-parallel/)
+are coordinated through the [mechanical handoff](docs/mechanical/README.md). The owner
+selected ASA or PETG. Official Heltec V4.3.1 and L76K references were used; the GPS
+STEP/dimension drawing disagree, and the V4 STEP omits the photographed OLED cover.
+The model includes those documented allowances rather than assuming the references
+perfectly describe the installed boards.
+
+Independent CAD review verified the actual board/reference poses, four connected
+printed solids, parallel tube/case axes, coaxial 15-degree SMA passages and modeled
+PCB-edge GPS retention without material interference. **This is prototype geometry,
+not a physical fit or outdoor acceptance result.** Actual GPS revision, SMA/pigtail,
+USB plug, harness, clip/clamp fit, print supports and radio/GPS operation still need
+checking. Do not force the ceramic patch against a printed retainer. No kart hardware,
+VESC setting or firmware was changed by this mechanical work. Existing charger-holder
+CAD and the owner's other Fusion documents were preserved.
+
+The mechanical branch starts from software checkpoint `e77d19b`; all **492 offline
+tests passed across eight suites, zero skipped**, before publishing. CAD verification
+is separate from those software tests. Next: print the small mating parts/fit features,
+check actual hardware, then print and bench-test the complete assembly.
+
+The final fetch also found Eamon’s `c21baf8` (Heltec motion-aware Wi-Fi recovery
+and Pi freeplay/persistent inventory). It has no mechanical interface changes and
+is not merged into this milestone. The next software integration should reconcile
+its inventory restoration with our course/session/epoch clearing rules.
+
 ## M5 follow map and Eamon integration — November 11, 2026 (source ready, not deployed)
 
 The no-Pi Core2 implementation now boots into a simple north-up line map following

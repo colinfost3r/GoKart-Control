@@ -69,6 +69,27 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - These presentation changes do not change VESC settings or LoRa packet formats.
   On-device acceptance and the actual course package remain open.
 
+## Heltec bar enclosure — November 11, 2026
+
+- Owner requests a new Fusion design for the Heltec V4 plus cabled L76K GPS,
+  attached at the kart's front-right horizontal bar. Measured bar diameter is
+  **0.995 in / 25.273 mm**.
+- Keep the case close to the board footprint and use **at most four installation
+  screws total**, including the collar. The earlier wide side-by-side layout was
+  rejected. Stack GPS inside the shell with the ceramic patch facing the sky.
+- The enclosure's long axis must run **parallel to the tube**, rotated 90 degrees
+  from the first compact layout. Keep the antenna canted toward the kart's outside.
+- Owner requested less than the initial 30-degree antenna tilt; the revised design
+  uses **15 degrees from vertical**. Add a **2 in / 50.8 mm antenna reference** for
+  clearance visualization. Only that antenna length is confirmed; its diameter,
+  base and the actual SMA bulkhead dimensions remain fit assumptions.
+- Use a small captured/indexed insert for antenna orientation without additional
+  screws. Printed alternatives can change the tilt; do not claim a freely tilting
+  joint if the physical design requires a replacement insert.
+- Intended materials: **ASA or PETG**. Printer, connector fit, cable routing,
+  printed clamp/clip fit and outdoor GPS/radio acceptance remain to be checked.
+  This is an accessory prototype, not a validated environmental or structural rating.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.
