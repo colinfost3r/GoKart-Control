@@ -127,6 +127,20 @@ This explicit persistent maintenance tune is separate from temporary supervisory
   plain rectangular exterior and four installation screws maximum. Lengthen the
   rectangle only as needed for connector clearance and internal routing.
 
+## FDM GPS supports and external clamp screw clearance — November 11, 2026
+
+- The internal GPS supports must extend to the case floor for FDM printing.
+  Preserve the central wire route and clearance to the Heltec PCB/components;
+  use floor-backed ribs with printable sloped transitions where a direct post
+  would cross the board. Retain a working flexible end clip.
+- Move the two tube-clamp mounting bolts outward so their hardware and straight
+  tool access clear the case. Update both clamp halves and matching nut/head
+  seats together. Keep the main rectangular enclosure compact.
+- Retain the two lid screws, three printed parts, four installation screws total,
+  owner hardware placement and the previously confirmed internal cable clearance.
+  Floor-backed GPS features do not establish that the complete clamp/case can be
+  printed without any supports; assess the chosen print orientation separately.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.

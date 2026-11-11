@@ -1,0 +1,140 @@
+{
+  "revision": "R07",
+  "files": [
+    {
+      "path": "GoKart-Heltec-FDM-Supports-R07.f3d",
+      "bytes": 8331237,
+      "sha256": "f17840887ecbda737f0afa3fc051d6e7b8bb69bb845eceaf72a0858e86e6cc60"
+    },
+    {
+      "path": "README.md",
+      "bytes": 6179,
+      "sha256": "e2dfd4777c00e7ddcadc5e36995aeb252f52c98da8f39453860202a3f2b98d80"
+    },
+    {
+      "path": "apply_owner_lid_relief.py",
+      "bytes": 2680,
+      "sha256": "9afe7e1558b19f747f5a4254d949fb1884e9f47d1d60119d050e66255c663e37"
+    },
+    {
+      "path": "assembled-preview.png",
+      "bytes": 37447,
+      "sha256": "08d707f28054bb2ea0c78c80f37839d96aa4ffeed5d0fa10965716a7a9925dc0"
+    },
+    {
+      "path": "build_fdm_revision.py",
+      "bytes": 5912,
+      "sha256": "919db7d1c78c3d5af2e05cb6402b10679271c2947fafa6ebc1a57ba1ee235df0"
+    },
+    {
+      "path": "case-upper-collar.step",
+      "bytes": 305876,
+      "sha256": "b19310f799e96077df926074b85d200cb5996d54aad88e0efea4e5a8abea6508"
+    },
+    {
+      "path": "case-upper-collar.stl",
+      "bytes": 222384,
+      "sha256": "fe03a7624305769ab8f5d60281870f7dd2ada05ece71074f3726b16d1e9b1994"
+    },
+    {
+      "path": "export-verification.json",
+      "bytes": 3683,
+      "sha256": "7a560d1d00b16807ca0f041dcd9ca82bb9f31acb62280353bdc53684136728c6"
+    },
+    {
+      "path": "export_revision.py",
+      "bytes": 6521,
+      "sha256": "ea347b6772555f1d9dbecbad6d955eb5a8dafec434edc7c23c6f77bfdf6b1a9f"
+    },
+    {
+      "path": "independent-review.json",
+      "bytes": 13691,
+      "sha256": "246a882f992453290526fc721777e712589decc0801e21c5e15c2d63e65486d5"
+    },
+    {
+      "path": "independent_clamp_review.py",
+      "bytes": 2072,
+      "sha256": "8a92e31750708ca7c3df2bb9b0bd658774f3f2d18fe65e2d84a774fb27478428"
+    },
+    {
+      "path": "independent_review.py",
+      "bytes": 3363,
+      "sha256": "54b6f4487dc4f4ee286beec7f1726dddc6a4481c6f5a7998017bc0b95fd92d07"
+    },
+    {
+      "path": "input/current-R06-before-R07.f3d",
+      "bytes": 9717667,
+      "sha256": "9d5496c9fc1d58e477435f98e43ce76814b4bfa5450021c1210f834b3df3e060"
+    },
+    {
+      "path": "input/input-view.png",
+      "bytes": 46472,
+      "sha256": "1c8e82b9d1745b56a76b95f974fe25a523e5a2abf82602ec2745e61fe704f02e"
+    },
+    {
+      "path": "input/owner-edited-R07-timeline-667.f3d",
+      "bytes": 8374911,
+      "sha256": "ab723bbb94d14b9d5ff5ec61c6f3af513fe6a9b987072d64190c3202fc76d4ac"
+    },
+    {
+      "path": "input/owner-edited-R07-timeline-667.json",
+      "bytes": 26968,
+      "sha256": "19c8a5c8f711e3134c5d44c97f612d839ef325b9f2990120756d0384a57b2723"
+    },
+    {
+      "path": "input/owner-edited-R07-timeline-667.png",
+      "bytes": 33210,
+      "sha256": "f353f7e28cea71745e6abdd3ea43f7250f375817654ac87960b011bbd6351723"
+    },
+    {
+      "path": "input/owner-layout.json",
+      "bytes": 10290,
+      "sha256": "5ebb742b24c740d21b10282889711d9457b16e784f9ac3a3b5468219dc2345a2"
+    },
+    {
+      "path": "lid-integral-antenna.step",
+      "bytes": 106396,
+      "sha256": "5cb7a046dd0da63b84524a47f96b3000d6abbec98c6c97334c51193a7996820c"
+    },
+    {
+      "path": "lid-integral-antenna.stl",
+      "bytes": 754684,
+      "sha256": "9828d0133ade2a3c6e9ff33cd75c3a8ce9a862d01fc1ddb7f8be126b6e007cce"
+    },
+    {
+      "path": "lower-collar.step",
+      "bytes": 24523,
+      "sha256": "46171f550b9697a367e4b320f9824c41bb1f8885f19c45251e5438260e4ab2c2"
+    },
+    {
+      "path": "lower-collar.stl",
+      "bytes": 117984,
+      "sha256": "ff9da4afcb06467b3f8ed5b63d5e19970501499ce401d659d9e5664beabfaeac"
+    },
+    {
+      "path": "make_previews.py",
+      "bytes": 2037,
+      "sha256": "4b3623926750e54cb71271871019fe2976436e66a7e6e72781ce04a5123f281b"
+    },
+    {
+      "path": "model-audit.json",
+      "bytes": 19614,
+      "sha256": "18d483e30678b99797d8b7c3d45d9303220dc4dc959fff6ce521dc22edd608b3"
+    },
+    {
+      "path": "open-case-supports-preview.png",
+      "bytes": 69733,
+      "sha256": "6b392abfed005edebf85eef286a5ffe2865654985a8873cc6443c1643066b3ac"
+    },
+    {
+      "path": "owner-edit-provenance.json",
+      "bytes": 1889,
+      "sha256": "31f31dae377b9f8b2675e3c6c74edb0afaebe55e7da0e22f2be05a008873646a"
+    },
+    {
+      "path": "repository-validation.txt",
+      "bytes": 1429,
+      "sha256": "422dafd19763ef54aa9c58ff3bfc87a10551ae43412240e3c470bd3658221ab7"
+    }
+  ]
+}

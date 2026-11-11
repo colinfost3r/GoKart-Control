@@ -1,6 +1,38 @@
 # Collaborator handoff
 
-## Internal GPS harness and side-supported socket R06 — November 11, 2026
+## FDM GPS supports and outboard clamp bolts R07 — November 11, 2026
+
+The owner requested GPS supports that reach the case floor for FDM printing and
+mounting screws moved clear of the enclosure. [R07](hardware/cad/heltec-bar-enclosure/r07-fdm-supports/README.md)
+retains the **79 × 36 mm shell**, internal harness, OLED opening and owner board/
+antenna positions. Rear GPS supports extend to the floor; supports near the Heltec
+use floor-backed ribs and sloped transitions around the board. The clip root is
+supported. The owner then edited the GPS support/retention geometry directly;
+those edits are authoritative and must not be overwritten by regenerating the base.
+Clip flex and retention remain physical-fit checks.
+
+The two M4 tube-clamp bolt axes move from **±18.5 to ±26 mm**, with both clamp halves
+updated together. The clamp is **66 mm wide**. A 12 mm diameter straight tool
+envelope is reserved at each axis; the two M3 lid screws remain in place, keeping
+four installation screws total. This is a CAD fit prototype; use the revision's
+audit/export reports for final validation and physical-fit limitations. The
+4.247 mm bare-GPS-socket rear gap and fully internal cable route are retained.
+
+
+The owner's seven completed features (OffsetFaces1 and Extrude19–24) were archived
+before a small lid-only relief. All remain in the final native model; the case
+volume is unchanged. The generated-base script does not reproduce those manual
+edits and must not replace the final native file. See the owner-edit provenance.
+
+Independent checks passed all eight sampled floor-support paths, retained wire/
+plug clearances, nominal M4 hardware fit and 2 mm clearance from each 12 mm tool
+envelope to the case and lid. The inherited small GPS-to-cover proxy uncertainty
+remains a physical-fit check. All 492 offline repository tests passed in eight
+suites, zero skipped; these do not establish physical print or kart acceptance.
+All three final STL meshes are closed, consistently wound and connected. Native
+Fusion, STEP/STL parts, previews, owner input snapshots and hashes are included.
+
+## R06 internal GPS harness checkpoint — November 11, 2026
 
 The latest owner requirement keeps the GPS-to-Heltec harness entirely inside the
 same rectangular enclosure. [R06](hardware/cad/heltec-bar-enclosure/r06-internal-harness/README.md)

@@ -1,0 +1,908 @@
+{
+  "status": "physical fit prototype",
+  "nominal_shell_mm": [
+    79,
+    36,
+    30
+  ],
+  "bar_mm": 25.273,
+  "bore_mm": 25.523,
+  "installation_screws": 4,
+  "printed_parts": 3,
+  "gps_socket": {
+    "rear_bare_connector_y_mm": -39.752710246011276,
+    "inner_rear_wall_y_mm": -44,
+    "bare_connector_rear_clearance_mm": 4.247289753988724,
+    "clearance_reference": "Owner confirmed4mm behind bare board socket",
+    "pcb_support_z_mm": 15.6,
+    "pcb_top_z_mm": 17.2,
+    "upper_capture_z_mm": 17.5,
+    "retention": "Fixed rear PCB lips and one front end clip; serviced with lid removed"
+  },
+  "harness": {
+    "destination": "Heltec P3 SH1.25 8-pin GNSS connector under PCB; rearward mating approach",
+    "P3_bounds_mm": [
+      [
+        -7.499499445799438,
+        -17.34389755641854,
+        3.3412281448183734
+      ],
+      [
+        7.500500898161686,
+        -12.043896972273727,
+        6.941229407575513
+      ]
+    ],
+    "wire_envelope_mm": [
+      8,
+      2
+    ],
+    "GPS_plug_envelope_assumed_mm": [
+      12,
+      3,
+      2.5
+    ],
+    "P3_plug_envelope_assumed_mm": [
+      12,
+      5,
+      2.7
+    ],
+    "under_PCB_wire_center_z_mm": 5.1,
+    "route_reference_rear_wall_gap_mm": 0.25,
+    "route": "Behind GPS bare socket, downward behind boards, forward beneath Heltec PCB into P3",
+    "actual_harness": "Unmeasured plug sizes, wire thickness, length and bend radius; square-corner envelope is clearance reference only"
+  },
+  "antenna": {
+    "mount_center_mm": [
+      12.48894797741298,
+      24.091377231888114,
+      33.31736793577977
+    ],
+    "axis": [
+      0.409576022144496,
+      0.2867882181755233,
+      0.8660254037844386
+    ],
+    "cant_from_vertical_deg": 30.000000000000004,
+    "SMA_panel_mm": 2,
+    "SMA_bore_mm": 6.6,
+    "rear_access_mm": 13.2,
+    "reference_antenna_length_mm": 50.8,
+    "reference_diameter_assumed_mm": 7
+  },
+  "OLED": {
+    "lower_opening_mm": [
+      14.4,
+      25
+    ],
+    "upper_opening_mm": [
+      18.4,
+      29
+    ],
+    "full_display_view_angle_deg_estimate": 12
+  },
+  "known_fit_limits": [
+    "Preserved GPS receiver overlaps conservative rectangular OLED cover proxy approximately0.0845mm inY and0.3mm inZ; check actual hardware without forcing.",
+    "Actual GPS accessory revision differs between official drawing and STEP.",
+    "Physical clip flex, harness route and RF performance remain unvalidated."
+  ],
+  "document": "GoKart Heltec FDM Supports R07",
+  "timeline_count": 670,
+  "owner_input": "Owner-edited R07 timeline 667 is authoritative; exact archive input/owner-edited-R07-timeline-667.f3d. Earlier R06 input is also retained.",
+  "source_status": "build_fdm_revision.py reproduces the generated base only. Final native includes all manual owner features plus the approved local lid-only relief.",
+  "owner_features_retained": [
+    {
+      "timeline_index": 660,
+      "name": "OffsetFaces1",
+      "type": "adsk::fusion::OffsetFacesFeature",
+      "component": "R07 OLED and antenna lid",
+      "warning": "",
+      "distance": "-18.00 mm",
+      "current_face_bounds_mm": []
+    },
+    {
+      "timeline_index": 661,
+      "name": "Extrude19",
+      "type": "adsk::fusion::ExtrudeFeature",
+      "component": "R07 Case with floor-backed GPS supports",
+      "warning": "",
+      "operation": 0,
+      "distance": "2.50 mm",
+      "current_face_bounds_mm": [
+        [
+          [
+            7.949999999999999,
+            -21.5,
+            18.1
+          ],
+          [
+            16.0,
+            -21.349999999999998,
+            18.1
+          ]
+        ],
+        [
+          [
+            7.199999999999999,
+            -21.5,
+            14.400000000000002
+          ],
+          [
+            16.0,
+            -21.5,
+            18.1
+          ]
+        ]
+      ]
+    },
+    {
+      "timeline_index": 662,
+      "name": "Extrude20",
+      "type": "adsk::fusion::ExtrudeFeature",
+      "component": "R07 Case with floor-backed GPS supports",
+      "warning": "",
+      "operation": 0,
+      "distance": "0.05 mm",
+      "current_face_bounds_mm": [
+        [
+          [
+            7.95,
+            -21.5,
+            17.200000000000003
+          ],
+          [
+            7.95,
+            -20.55,
+            18.1
+          ]
+        ],
+        [
+          [
+            7.199999999999999,
+            -21.5,
+            14.400000000000002
+          ],
+          [
+            9.299999999999999,
+            -20.55,
+            14.400000000000002
+          ]
+        ],
+        [
+          [
+            7.199999999999999,
+            -21.5,
+            14.400000000000002
+          ],
+          [
+            7.199999999999999,
+            -20.55,
+            15.600000000000001
+          ]
+        ]
+      ]
+    },
+    {
+      "timeline_index": 663,
+      "name": "Extrude21",
+      "type": "adsk::fusion::ExtrudeFeature",
+      "component": "R07 Case with floor-backed GPS supports",
+      "warning": "",
+      "operation": 0,
+      "distance": "0.80 mm",
+      "current_face_bounds_mm": [
+        [
+          [
+            6.550000000000001,
+            -22.15,
+            17.5
+          ],
+          [
+            6.550000000000001,
+            -20.55,
+            19.5
+          ]
+        ],
+        [
+          [
+            6.550000000000001,
+            -21.35,
+            19.5
+          ],
+          [
+            16.0,
+            -20.55,
+            19.5
+          ]
+        ],
+        [
+          [
+            6.550000000000001,
+            -22.15,
+            17.5
+          ],
+          [
+            7.95,
+            -20.55,
+            17.5
+          ]
+        ],
+        [
+          [
+            6.45,
+            -20.55,
+            10.300000000000002
+          ],
+          [
+            16.0,
+            -20.55,
+            19.5
+          ]
+        ]
+      ]
+    },
+    {
+      "timeline_index": 664,
+      "name": "Extrude22",
+      "type": "adsk::fusion::ExtrudeFeature",
+      "component": "R07 Case with floor-backed GPS supports",
+      "warning": "",
+      "operation": 0,
+      "distance": "0.05 mm",
+      "current_face_bounds_mm": []
+    },
+    {
+      "timeline_index": 665,
+      "name": "Extrude23",
+      "type": "adsk::fusion::ExtrudeFeature",
+      "component": "R07 Case with floor-backed GPS supports",
+      "warning": "",
+      "operation": 0,
+      "distance": "0.75 mm",
+      "current_face_bounds_mm": [
+        [
+          [
+            -7.199999999999999,
+            -21.5,
+            14.400000000000002
+          ],
+          [
+            -7.199999999999999,
+            -19.8,
+            15.600000000000001
+          ]
+        ],
+        [
+          [
+            -16.0,
+            -19.8,
+            2.5
+          ],
+          [
+            -6.45,
+            -19.8,
+            17.200000000000003
+          ]
+        ],
+        [
+          [
+            -13.399999999999999,
+            -22.199999999999996,
+            10.300000000000002
+          ],
+          [
+            -8.25,
+            -19.8,
+            15.45
+          ]
+        ],
+        [
+          [
+            -9.299999999999997,
+            -21.5,
+            14.400000000000002
+          ],
+          [
+            -7.199999999999999,
+            -19.8,
+            14.400000000000002
+          ]
+        ],
+        [
+          [
+            -6.45,
+            -21.550000000000004,
+            15.600000000000001
+          ],
+          [
+            -6.45,
+            -19.8,
+            17.200000000000003
+          ]
+        ],
+        [
+          [
+            -16.0,
+            -21.5,
+            15.600000000000001
+          ],
+          [
+            -7.95,
+            -19.8,
+            15.600000000000001
+          ]
+        ],
+        [
+          [
+            -7.95,
+            -21.550000000000004,
+            15.600000000000001
+          ],
+          [
+            -7.95,
+            -19.8,
+            17.200000000000003
+          ]
+        ],
+        [
+          [
+            -7.95,
+            -21.550000000000004,
+            15.600000000000001
+          ],
+          [
+            -6.45,
+            -19.8,
+            15.600000000000001
+          ]
+        ],
+        [
+          [
+            -7.95,
+            -21.550000000000004,
+            17.200000000000003
+          ],
+          [
+            -6.45,
+            -19.8,
+            17.200000000000003
+          ]
+        ]
+      ]
+    },
+    {
+      "timeline_index": 666,
+      "name": "Extrude24",
+      "type": "adsk::fusion::ExtrudeFeature",
+      "component": "R07 Case with floor-backed GPS supports",
+      "warning": "",
+      "operation": 0,
+      "distance": "1.20 mm",
+      "current_face_bounds_mm": [
+        [
+          [
+            7.199999999999999,
+            -41.7,
+            2.5
+          ],
+          [
+            16.0,
+            -41.7,
+            15.600000000000001
+          ]
+        ],
+        [
+          [
+            7.199999999999999,
+            -41.7,
+            15.600000000000001
+          ],
+          [
+            16.0,
+            -40.300000000000004,
+            15.600000000000001
+          ]
+        ],
+        [
+          [
+            7.199999999999999,
+            -41.7,
+            2.5
+          ],
+          [
+            7.199999999999999,
+            -40.099999999999994,
+            15.600000000000001
+          ]
+        ]
+      ]
+    }
+  ],
+  "owner_edit_provenance": {
+    "authoritative_owner_archive": "input/owner-edited-R07-timeline-667.f3d",
+    "owner_timeline_count": 667,
+    "owner_features_retained": [
+      "OffsetFaces1",
+      "Extrude19",
+      "Extrude20",
+      "Extrude21",
+      "Extrude22",
+      "Extrude23",
+      "Extrude24"
+    ],
+    "final_timeline_count": 670,
+    "owner_case_volume_before_cm3": 39.939555021424,
+    "owner_case_volume_after_cm3": 39.939555021424,
+    "case_volume_delta_cm3": 0.0,
+    "lid_volume_before_cm3": 8.043762191119303,
+    "lid_volume_after_cm3": 8.038140223952666,
+    "approved_change": "Local lid-only relief; owner case geometry and completed features untouched",
+    "relief_bounds_mm": [
+      [
+        -8.8,
+        -20.55,
+        14.1
+      ],
+      [
+        -6.15,
+        -19.5,
+        17.5
+      ]
+    ],
+    "lid_connected_solids": 1,
+    "remaining_capture_faces_z14p3_mm": [
+      {
+        "area_mm2": 4.17856082659073,
+        "bounds_mm": [
+          [
+            5.499999999999999,
+            -20.25,
+            14.3
+          ],
+          [
+            8.5,
+            -18.5345,
+            14.3
+          ]
+        ]
+      },
+      {
+        "area_mm2": 2.4344818881106822,
+        "bounds_mm": [
+          [
+            -8.401538351241236,
+            -20.25,
+            14.3
+          ],
+          [
+            -5.499999999999999,
+            -18.5345,
+            14.3
+          ]
+        ]
+      },
+      {
+        "area_mm2": 7.068583470577036,
+        "bounds_mm": [
+          [
+            5.499999999999999,
+            7.4655000000000005,
+            14.3
+          ],
+          [
+            8.5,
+            10.4655,
+            14.3
+          ]
+        ]
+      },
+      {
+        "area_mm2": 7.068583470577036,
+        "bounds_mm": [
+          [
+            -8.5,
+            7.4655000000000005,
+            14.3
+          ],
+          [
+            -5.499999999999999,
+            10.4655,
+            14.3
+          ]
+        ]
+      }
+    ],
+    "source_status": "build_fdm_revision.py is generated base only; final native is authoritative"
+  },
+  "owner_pose_comparison": [
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF OLED protective cover missing from STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF OLED protective cover missing from STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "component": "R07 Case with floor-backed GPS supports",
+      "file": "case-upper-collar",
+      "connected_solids": 1,
+      "volume_cm3": 39.939555021424,
+      "assembly_bounds_mm": [
+        [
+          -33.0,
+          -46.0,
+          -16.250000000000004
+        ],
+        [
+          33.0,
+          33.0,
+          27.5
+        ]
+      ]
+    },
+    {
+      "component": "R07 OLED and antenna lid",
+      "file": "lid-integral-antenna",
+      "connected_solids": 1,
+      "volume_cm3": 8.038140223952666,
+      "assembly_bounds_mm": [
+        [
+          -18.0,
+          -46.0,
+          14.3
+        ],
+        [
+          19.38969553462584,
+          33.0,
+          39.50271411896337
+        ]
+      ]
+    },
+    {
+      "component": "R07 Outboard lower collar",
+      "file": "lower-collar",
+      "connected_solids": 1,
+      "volume_cm3": 19.318110435221925,
+      "assembly_bounds_mm": [
+        [
+          -33.0,
+          -12.0,
+          -34.0
+        ],
+        [
+          33.0,
+          12.0,
+          -17.75
+        ]
+      ]
+    }
+  ],
+  "clamp": {
+    "overall_width_mm": 66,
+    "bolt_centers_mm": [
+      [
+        -26,
+        0
+      ],
+      [
+        26,
+        0
+      ]
+    ],
+    "bolt_pitch_mm": 52,
+    "shaft_clearance_diameter_mm": 4.5,
+    "socket_screw_nominal_mm": {
+      "thread_diameter": 4,
+      "under_head_length": 30,
+      "head_diameter": 7,
+      "head_height": 4
+    },
+    "head_counterbore_mm": [
+      8,
+      2
+    ],
+    "nut_pocket_mm": {
+      "across_flats": 7.3,
+      "height": 3.4,
+      "insertion_slot_width": 7.5
+    },
+    "driver_envelope_diameter_mm": 12,
+    "case_and_lid_side_clearance_mm": 2,
+    "split_gap_mm": 1.5,
+    "original_holes": "Filled before new outboard passages were cut"
+  },
+  "floor_supports": {
+    "floor_z_mm": 2.5,
+    "sample_columns_xy_mm": [
+      [
+        -11.6,
+        -40.9
+      ],
+      [
+        11.6,
+        -40.9
+      ],
+      [
+        -11.375,
+        -32.55
+      ],
+      [
+        11.375,
+        -32.55
+      ],
+      [
+        -11.375,
+        -27.1
+      ],
+      [
+        11.375,
+        -27.1
+      ],
+      [
+        -14.7,
+        -21
+      ],
+      [
+        14.7,
+        -21
+      ]
+    ],
+    "generated_base_reference_only": {
+      "forward_ledge_ramp_yz_mm": [
+        [
+          -26.4,
+          13
+        ],
+        [
+          -25.3,
+          14.1
+        ]
+      ],
+      "front_ramp_abs_xz_mm": [
+        [
+          16,
+          7.7
+        ],
+        [
+          8.25,
+          15.45
+        ]
+      ],
+      "front_ramp_y_extent_mm": [
+        -22.2,
+        -20.55
+      ],
+      "transition_angle_deg": 45
+    },
+    "owner_changes": "Extrude19 through Extrude24 add material around front supports/end clip and right rear capture. Refer to exact final native and owner snapshot; generated-base dimensions are not a complete final specification.",
+    "end_clip": "Owner-edited retention geometry preserved. Physical clip movement/flex is unvalidated and is not claimed unchanged.",
+    "print_limit": "Short capture lips/clip overhangs and external case/clamp overhangs still require slicer review"
+  },
+  "inherited_reference_fields": "GPS, harness, antenna, OLED and fit-limit fields retain R06 design context. Hardware poses are verified unchanged; manual owner lid/support geometry is authoritative in the final native.",
+  "feature_warnings": []
+}
