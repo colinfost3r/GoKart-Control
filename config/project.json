@@ -192,7 +192,7 @@
     "reference_is_current_kart2": false,
     "latest_eamon_integrated": "a9c8459",
     "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
-    "current_usb_state": "2026-11-11 19:01 UTC: -5 A motor minimum persisted through owner-confirmed cold boot. All app/Hall/pedal/tune settings preserved; five native measurement offsets refreshed. Active filter/PID1507, forward/rawRX1, pedal released, rest/fault0; Heltec coexistence pending.",
+    "current_usb_state": "2026-11-11 19:31 UTC: Heltec/Core2 coexistence bench passed, stationary/fault0; -5 A motor minimum/minscale1 preserved. Current temporary mode ECO. Owner confirms smooth F/R and now forward, pedal released and stopped. Both accessories live/mode-ready/channel6 aligned. Internal Lisp state not polled during BLE.",
     "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 k\u03a9 pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; original branch noise measured. Persistent VESC-local filter bench trial installed; wiring cause/reliability still unresolved.",
     "tune_applied_at_utc": "2026-11-10T19:58:55+00:00",
     "tune_applied_path": "hardware/vesc/kart3/2026-11-10/tune-applied-v1",
@@ -239,7 +239,7 @@
         "lisp_autostart_cases_passed": 14,
         "hardware_validation_scope": "single_kart_wheels_up_RAM_motion_and_persistent_stationary_normal_boots; not_fleet_endurance_or_abnormal_reset"
       },
-      "next": "longer_supervised_acceptance_and_harness_repair_startup_abnormal_reset_Heltec_coexistence_review",
+      "next": "harness_repair_and_longer_loaded_acceptance_charged_pack_BMS_abnormal_reset_and_fleet_checks",
       "monitor_observation": {
         "date": "2026-11-11",
         "samples": 13415,
@@ -299,11 +299,13 @@
         "watchdog_boot_can_skip_Lisp",
         "pedal_released_until_active_correct_direction_verified"
       ],
-      "direction_change": "stable_RX_50ms_and_pedal_le_0.12_abs_ERPM_le_50_fault0_for_250ms; hold_previous_direction_during_throttle_or_coasting"
+      "direction_change": "stable_RX_50ms_and_pedal_le_0.12_abs_ERPM_le_50_fault0_for_250ms; hold_previous_direction_during_throttle_or_coasting",
+      "heltec_coexistence_bench_verified": true,
+      "heltec_coexistence_evidence": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01"
     },
     "tune_persistence_powercycle_evidence": "hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01; only native startup measurement offsets changed",
     "pedal_response_investigation": {
-      "status": "minus5_saved_normal_coldboot_verified_heltec_pending",
+      "status": "minus5_saved_coldboot_and_local_heltec_coexistence_bench_verified",
       "evidence": "hardware/vesc/kart3/2026-11-11/pedal-response-03",
       "native_current_request_a": 45.776,
       "foc_iq_target_a": 0.05,
@@ -311,12 +313,12 @@
       "motor_brake_limit_a": -5,
       "settings_changed": true,
       "measurement_limit": "sequential rounded print/event snapshots; not cycle-atomic",
-      "next_step": "reconnect Heltec/Core2, verify telemetry/mode coexistence and perform supervised pedal test",
+      "next_step": "per-target kart4/5 captures and preparation; separate road/load/endurance/pit/range and charged-pack validation",
       "motor_brake_limit_at_missed_start_a": 0,
       "changed_field": "l_current_min",
       "other_375_fields_preserved": true,
       "persistence_powercycle_verified": true,
-      "heltec_coexistence_verified": false,
+      "heltec_coexistence_verified": true,
       "temporary_trial_path": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01",
       "persistent_save_path": "hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01",
       "offline_validation": {
@@ -326,7 +328,15 @@
         "independent_raw_sample_replay": true,
         "fleet_preparation_tests": 12
       },
-      "persistence_powercycle_evidence": "hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/coldboot-forward/verification.json"
+      "persistence_powercycle_evidence": "hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/coldboot-forward/verification.json",
+      "heltec_coexistence_scope": [
+        "stationary_ECO_NORMAL_SPORT_readbacks",
+        "wired_forward_ECO_wheels_up",
+        "wired_reverse_ECO_wheels_up",
+        "stable_BLE_ESPNOW_LoRa_during_recordings"
+      ],
+      "heltec_coexistence_evidence": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01",
+      "current_temporary_profile": "ECO"
     }
   },
   "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending"

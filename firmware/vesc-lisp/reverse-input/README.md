@@ -164,7 +164,10 @@ strict16KB loader harness passed all24 steps with no mock output calls plus five
 Portable Python checks add 12 loader, seven plan and 21 lifecycle-controller tests. These are
 offline tests with mocked hardware; native load and first F/R trial are separate recorded results.
 
-Next evaluate the physical switch branch and repeat controlled acceptance, then validate longer-duration behavior, abnormal-reset/startup handling and Heltec
-coexistence before wider deployment. Normal forward/reverse cold boots and stationary
+Kart3 subsequently passed Heltec/Core2 mode readbacks and ECO forward/reverse
+coexistence on the stand with the saved −5 A motor minimum; see the
+[dated evidence](../../../hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/README.md).
+Next evaluate the physical switch branch, longer loaded behavior and abnormal-reset/
+startup handling before wider deployment. Normal forward/reverse cold boots and stationary
 stop/rollback passed; persistent removal and abnormal-reset behavior remain separate checks. Do not combine with the uninstalled `gokart_brake.lisp` experiment. Other karts
 need their own identity/settings/electrical checks; this pinned trial is not a fleet installer.

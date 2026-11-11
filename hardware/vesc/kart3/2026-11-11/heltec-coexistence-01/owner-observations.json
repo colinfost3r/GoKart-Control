@@ -1,0 +1,15 @@
+{
+  "recorded_utc": "2026-11-11T19:18:16.406604+00:00",
+  "modes_owner_report": "All three verified",
+  "motion_followup": "Yes\u2014I tried the throttle; now released and stopped",
+  "mode_recorder_outcome": "Stationary-only recorder intentionally aborted48.69s after detecting4756ERPM; owner subsequently confirmed intentional throttle. Preserve incomplete manifest.",
+  "all_three_modes_observed_with_minus5": true,
+  "latest_selected_mode": "ECO",
+  "next_step": "Separate supervised120second pedal capture with accessories online; nohostmotorcommands",
+  "first_pedal_trace_clarification": "Owner clarified: I tested before this recording. First120s trace is idle/stationary evidence, not a captured pedal test.",
+  "repeat_recording": "New120s synchronized recording started in pedal-trace-02; owner cued after fresh preflight.",
+  "forward_trace02_result": "Only forward; it worked smoothly",
+  "reverse_test": "Separate60s capture started after fresh rest/released checks; owner cued after recorderstarted",
+  "reverse_result": "Smooth reverse; now stopped in forward",
+  "no_more_throttle_tests_requested": true
+}

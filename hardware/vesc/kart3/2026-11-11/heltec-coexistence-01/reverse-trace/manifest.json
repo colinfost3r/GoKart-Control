@@ -1,0 +1,153 @@
+{
+  "complete": true,
+  "started_utc": "2026-11-11T19:28:33.560428+00:00",
+  "commands": [
+    0,
+    4,
+    14,
+    17,
+    32
+  ],
+  "host_motor_config_reset_lifecycle_commands": false,
+  "lisp_polled": false,
+  "sample_seconds": 60,
+  "rows": 579,
+  "stall_candidates": [],
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "limits_before": {
+    "l_current_min": -5.0,
+    "l_current_min_scale": 1.0,
+    "l_current_max_scale": 0.5,
+    "l_min_erpm": -21661.400390625,
+    "l_max_erpm": 21661.400390625
+  },
+  "preflight": [
+    {
+      "adc": {
+        "decoded1": 0.086783,
+        "voltage1": 0.862519,
+        "decoded2": 0.009334,
+        "voltage2": 0.357773
+      },
+      "telemetry": {
+        "mosfet_temp_c": 20.1,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": -0.001,
+        "erpm": 0,
+        "input_voltage_v": 80.9,
+        "amp_hours": 0.0173,
+        "amp_hours_charged": 0.0,
+        "watt_hours": 1.3876,
+        "watt_hours_charged": 0.0,
+        "tachometer": 21175,
+        "tachometer_absolute": 34213,
+        "fault_code": 0,
+        "pid_position": 243.0,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 20.0,
+        "mosfet_temp_2_c": -273.1,
+        "mosfet_temp_3_c": -273.1,
+        "vd_v": 0.027,
+        "vq_v": -0.006,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      }
+    },
+    {
+      "adc": {
+        "decoded1": 0.086504,
+        "voltage1": 0.86,
+        "decoded2": 0.010124,
+        "voltage2": 0.361972
+      },
+      "telemetry": {
+        "mosfet_temp_c": 20.0,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": 0.0,
+        "erpm": 0,
+        "input_voltage_v": 80.9,
+        "amp_hours": 0.0173,
+        "amp_hours_charged": 0.0,
+        "watt_hours": 1.3876,
+        "watt_hours_charged": 0.0,
+        "tachometer": 21175,
+        "tachometer_absolute": 34213,
+        "fault_code": 0,
+        "pid_position": 243.0,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 20.0,
+        "mosfet_temp_2_c": -94.8,
+        "mosfet_temp_3_c": -273.1,
+        "vd_v": 0.049,
+        "vq_v": -0.018,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      }
+    },
+    {
+      "adc": {
+        "decoded1": 0.087067,
+        "voltage1": 0.862519,
+        "decoded2": 0.009426,
+        "voltage2": 0.357773
+      },
+      "telemetry": {
+        "mosfet_temp_c": 20.0,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": -0.002,
+        "erpm": 0,
+        "input_voltage_v": 80.9,
+        "amp_hours": 0.0173,
+        "amp_hours_charged": 0.0,
+        "watt_hours": 1.3876,
+        "watt_hours_charged": 0.0,
+        "tachometer": 21175,
+        "tachometer_absolute": 34213,
+        "fault_code": 0,
+        "pid_position": 243.0,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 19.9,
+        "mosfet_temp_2_c": -94.8,
+        "mosfet_temp_3_c": -273.1,
+        "vd_v": 0.046,
+        "vq_v": -0.016,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      }
+    }
+  ],
+  "finished_utc": "2026-11-11T19:29:33.939953+00:00",
+  "script_sha256": "2b0062339539c2ae9a57363827ec29871ee76638a42f905bdc3e9788505e70be"
+}

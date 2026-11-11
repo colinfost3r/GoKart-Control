@@ -1,0 +1,1745 @@
+{
+  "generated_utc": "2026-11-11T19:32:05.582519+00:00",
+  "scope": "Independent offline evidence audit; no hardware I/O or settings changes by reviewer. Kart3 lifted-wheel bench only.",
+  "source_root": "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5",
+  "controller_uuid": "37004e000951343037353739",
+  "mode_check": {
+    "manifest": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/mode-readback/manifest.json",
+      "sha256": "70d5dcf2bd6d08fa1bb674f53c34c16d238caac7ba34122ccedcb3a39cd249ca"
+    },
+    "samples": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/mode-readback/samples.jsonl",
+      "sha256": "5a482f70b85d747ce994db5af3cc4c50660f185202f393c5ca93c04cfc533138"
+    },
+    "complete": false,
+    "error": "ValueError('Motion during pedal-released mode test; monitoring stopped')",
+    "rows": 94,
+    "observed_limits": [
+      {
+        "seconds": 0.007105124999999997,
+        "limits": {
+          "l_current_min": -5.0,
+          "l_current_min_scale": 1.0,
+          "l_current_max": 140.0,
+          "l_current_max_scale": 1.0,
+          "l_min_erpm": -150000.0,
+          "l_max_erpm": 150000.0,
+          "l_in_current_min": -12.0
+        },
+        "erpm": 0
+      },
+      {
+        "seconds": 23.568528125,
+        "limits": {
+          "l_current_min": -5.0,
+          "l_current_min_scale": 1.0,
+          "l_current_max": 140.0,
+          "l_current_max_scale": 0.5,
+          "l_min_erpm": -21661.400390625,
+          "l_max_erpm": 21661.400390625,
+          "l_in_current_min": -12.0
+        },
+        "erpm": 0
+      },
+      {
+        "seconds": 33.000202583000004,
+        "limits": {
+          "l_current_min": -5.0,
+          "l_current_min_scale": 1.0,
+          "l_current_max": 140.0,
+          "l_current_max_scale": 0.75,
+          "l_min_erpm": -36102.3359375,
+          "l_max_erpm": 36102.3359375,
+          "l_in_current_min": -12.0
+        },
+        "erpm": 0
+      },
+      {
+        "seconds": 38.738491375,
+        "limits": {
+          "l_current_min": -5.0,
+          "l_current_min_scale": 1.0,
+          "l_current_max": 140.0,
+          "l_current_max_scale": 1.0,
+          "l_min_erpm": -150000.0,
+          "l_max_erpm": 150000.0,
+          "l_in_current_min": -12.0
+        },
+        "erpm": 0
+      },
+      {
+        "seconds": 45.564380042,
+        "limits": {
+          "l_current_min": -5.0,
+          "l_current_min_scale": 1.0,
+          "l_current_max": 140.0,
+          "l_current_max_scale": 0.5,
+          "l_min_erpm": -21661.400390625,
+          "l_max_erpm": 21661.400390625,
+          "l_in_current_min": -12.0
+        },
+        "erpm": 0
+      }
+    ],
+    "configuration": {
+      "motor_fields": 189,
+      "app_fields": 187,
+      "motor_reply_count": 95,
+      "app_reply_count": 94,
+      "motor_changed_fields": [
+        "l_current_max_scale",
+        "l_max_erpm",
+        "l_min_erpm"
+      ],
+      "motor_changes_outside_allowed": [],
+      "all_app_replies_byte_identical": true,
+      "limits_before": {
+        "l_current_min": -5.0,
+        "l_current_min_scale": 1.0,
+        "l_current_max": 140.0,
+        "l_current_max_scale": 1.0,
+        "l_min_erpm": -150000.0,
+        "l_max_erpm": 150000.0,
+        "l_in_current_min": -12.0
+      },
+      "motor_after_present": false,
+      "app_after_present": false
+    },
+    "interpretation": "All three intended Core2 mode changes were observed; stationary recorder aborted correctly at48.691s when owner intentionally applied wired throttle. This is not a completed90s stationary test. Owner later confirmed that throttle was intentional."
+  },
+  "idle_trace": {
+    "manifest": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-trace/manifest.json",
+      "sha256": "be389650a630a62bf00e812325976ed059977415cad7802468118b0eab74ce95"
+    },
+    "samples": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-trace/samples.jsonl",
+      "sha256": "90deeea742a97bde42e6192e242545a43347070a9f6cb293ccf05539ccc82f44"
+    },
+    "wire": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-trace/wire.jsonl",
+      "sha256": "c01851b411939016806210d6ba38d4343d61aae73ead380a97530e6af818435e"
+    },
+    "complete": true,
+    "started_utc": "2026-11-11T19:19:17.785526+00:00",
+    "finished_utc": "2026-11-11T19:21:18.198820+00:00",
+    "rows": 1158,
+    "elapsed_last_sample_s": 119.96934225,
+    "maximum_sample_gap_s": 0.11128308400000009,
+    "fault_codes": [
+      0
+    ],
+    "timeout_samples": 0,
+    "kill_samples": 0,
+    "manifest_stall_candidates": 0,
+    "filter_internals_sampled": false,
+    "adc_decoded1_range": [
+      0.085105,
+      0.089258
+    ],
+    "adc_voltage1_range": [
+      0.853281,
+      0.870918
+    ],
+    "erpm_range": [
+      0,
+      0
+    ],
+    "iq_a_range": [
+      0.0,
+      0.0
+    ],
+    "battery_v_range": [
+      80.9,
+      81.0
+    ],
+    "tachometer_range": [
+      9882,
+      9882
+    ],
+    "tachometer_absolute_range": [
+      17074,
+      17074
+    ],
+    "direction_sample_counts": {
+      "forward_gt50": 0,
+      "reverse_ltminus50": 0,
+      "rest_abs_lte50": 1158
+    },
+    "pedal_demand_windows": [],
+    "window_count": 0,
+    "windows_with_motion": 0,
+    "windows_after_at_least_half_second_neutral_rest": 0,
+    "window_count_limit": "Intervals are contiguous samples above ADC0.15, not physical pedal-attempt counts. Rapid/coasting reapplications are included. Single-sample intervals cannot establish a missed start.",
+    "independent_sustained_stall_qualifying_samples": 0,
+    "stall_criterion": "ADC>0.20 and abs(ERPM)<=50 and abs(Iq)<8A for>=0.20s; reset qualification on observation gap>0.35s. Sequential ADC/telemetry samples, not atomic internal-state proof.",
+    "final_sample": {
+      "adc": 0.087239,
+      "erpm": 0,
+      "iq_a": 0.0,
+      "fault_code": 0,
+      "tachometer": 9882,
+      "tachometer_absolute": 17074
+    },
+    "configuration": {
+      "motor_fields": 189,
+      "app_fields": 187,
+      "motor_reply_count": 59,
+      "app_reply_count": 2,
+      "motor_changed_fields": [],
+      "motor_changes_outside_allowed": [],
+      "all_app_replies_byte_identical": true,
+      "limits_before": {
+        "l_current_min": -5.0,
+        "l_current_min_scale": 1.0,
+        "l_current_max": 140.0,
+        "l_current_max_scale": 0.5,
+        "l_min_erpm": -21661.400390625,
+        "l_max_erpm": 21661.400390625,
+        "l_in_current_min": -12.0
+      },
+      "motor_after_present": true,
+      "app_after_present": true,
+      "motor_final_byte_identical": true,
+      "app_final_byte_identical": true,
+      "actual_host_command_counts": {
+        "0": 2,
+        "14": 59,
+        "17": 2,
+        "32": 1161,
+        "4": 1161
+      },
+      "actual_host_commands_only_fixed_getters": true
+    }
+  },
+  "forward_trace": {
+    "manifest": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-trace-02/manifest.json",
+      "sha256": "ad892afaa90d33faf6127708035cb80041258effca5e2026207e48753e7a326f"
+    },
+    "samples": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-trace-02/samples.jsonl",
+      "sha256": "a0e92fafd21c296f9dc9e8a525ed81a70c6c8082292efe48f731eecc1112a8be"
+    },
+    "wire": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-trace-02/wire.jsonl",
+      "sha256": "feef5ea80710d47e133da640a7f4314677282a364875ee37fd086c14d93f078e"
+    },
+    "complete": true,
+    "started_utc": "2026-11-11T19:22:46.037165+00:00",
+    "finished_utc": "2026-11-11T19:24:46.454739+00:00",
+    "rows": 1158,
+    "elapsed_last_sample_s": 119.975627416,
+    "maximum_sample_gap_s": 0.11490479200000436,
+    "fault_codes": [
+      0
+    ],
+    "timeout_samples": 0,
+    "kill_samples": 0,
+    "manifest_stall_candidates": 0,
+    "filter_internals_sampled": false,
+    "adc_decoded1_range": [
+      0.0757,
+      0.432705
+    ],
+    "adc_voltage1_range": [
+      0.839843,
+      1.55455
+    ],
+    "erpm_range": [
+      0,
+      15276
+    ],
+    "iq_a_range": [
+      0.0,
+      19.72
+    ],
+    "battery_v_range": [
+      79.4,
+      81.0
+    ],
+    "tachometer_range": [
+      9882,
+      19759
+    ],
+    "tachometer_absolute_range": [
+      17074,
+      30887
+    ],
+    "direction_sample_counts": {
+      "forward_gt50": 196,
+      "reverse_ltminus50": 0,
+      "rest_abs_lte50": 962
+    },
+    "pedal_demand_windows": [
+      {
+        "start_s": 25.910080875,
+        "end_s": 27.042672958,
+        "sample_count": 12,
+        "preceding_sampled_neutral_rest_s": 25.807394792,
+        "adc_peak": 0.38927,
+        "erpm_range": [
+          0,
+          14819
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 17.07,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10094304100000073
+      },
+      {
+        "start_s": 29.028767332999998,
+        "end_s": 29.340013374999998,
+        "sample_count": 4,
+        "preceding_sampled_neutral_rest_s": 0.20933070799999953,
+        "adc_peak": 0.432705,
+        "erpm_range": [
+          0,
+          4880
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 19.72,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10239862500000285
+      },
+      {
+        "start_s": 30.479888583,
+        "end_s": 30.787549916,
+        "sample_count": 4,
+        "preceding_sampled_neutral_rest_s": 0.10214262499999904,
+        "adc_peak": 0.391291,
+        "erpm_range": [
+          0,
+          4502
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 17.48,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10678149999999675
+      },
+      {
+        "start_s": 31.920175708,
+        "end_s": 32.235356208000006,
+        "sample_count": 4,
+        "preceding_sampled_neutral_rest_s": 0.20608449999999934,
+        "adc_peak": 0.381556,
+        "erpm_range": [
+          0,
+          3480
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 16.77,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10477404200000606
+      },
+      {
+        "start_s": 33.271138666000006,
+        "end_s": 33.580838125,
+        "sample_count": 4,
+        "preceding_sampled_neutral_rest_s": 0.30516458400000346,
+        "adc_peak": 0.405309,
+        "erpm_range": [
+          0,
+          4387
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 18.13,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10355766699999691
+      },
+      {
+        "start_s": 34.516639666,
+        "end_s": 34.728397166,
+        "sample_count": 3,
+        "preceding_sampled_neutral_rest_s": 0.10532370800000024,
+        "adc_peak": 0.350758,
+        "erpm_range": [
+          347,
+          2931
+        ],
+        "first_erpm": 347,
+        "iq_abs_peak_a": 14.68,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 35.559432041,
+        "end_s": 36.279700958,
+        "sample_count": 8,
+        "preceding_sampled_neutral_rest_s": 0.10411587500000508,
+        "adc_peak": 0.307302,
+        "erpm_range": [
+          0,
+          5813
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 11.86,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10059445899999986
+      },
+      {
+        "start_s": 38.146703,
+        "end_s": 39.383260750000005,
+        "sample_count": 13,
+        "preceding_sampled_neutral_rest_s": 0.8280484579999978,
+        "adc_peak": 0.293305,
+        "erpm_range": [
+          0,
+          6093
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 11.17,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.30938050000000317
+      },
+      {
+        "start_s": 40.940396250000006,
+        "end_s": 42.391764291,
+        "sample_count": 15,
+        "preceding_sampled_neutral_rest_s": 0.6293724590000025,
+        "adc_peak": 0.296245,
+        "erpm_range": [
+          0,
+          7968
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 11.15,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10442016599999704
+      },
+      {
+        "start_s": 44.055856208,
+        "end_s": 44.881074083,
+        "sample_count": 9,
+        "preceding_sampled_neutral_rest_s": 0.5199797500000045,
+        "adc_peak": 0.422694,
+        "erpm_range": [
+          0,
+          14912
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 19.12,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10372666700000366
+      },
+      {
+        "start_s": 48.081478166000004,
+        "end_s": 48.290496416,
+        "sample_count": 3,
+        "preceding_sampled_neutral_rest_s": 1.4464128329999966,
+        "adc_peak": 0.359814,
+        "erpm_range": [
+          0,
+          1885
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 14.91,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10475545899999616
+      },
+      {
+        "start_s": 49.018508666,
+        "end_s": 49.646313291000006,
+        "sample_count": 7,
+        "preceding_sampled_neutral_rest_s": 0.0,
+        "adc_peak": 0.414532,
+        "erpm_range": [
+          0,
+          12534
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 19.24,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10313062499999859
+      },
+      {
+        "start_s": 64.398105125,
+        "end_s": 65.122408833,
+        "sample_count": 8,
+        "preceding_sampled_neutral_rest_s": 13.096192124999988,
+        "adc_peak": 0.399352,
+        "erpm_range": [
+          0,
+          12088
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 17.85,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.09916712499999392
+      }
+    ],
+    "window_count": 13,
+    "windows_with_motion": 13,
+    "windows_after_at_least_half_second_neutral_rest": 6,
+    "window_count_limit": "Intervals are contiguous samples above ADC0.15, not physical pedal-attempt counts. Rapid/coasting reapplications are included. Single-sample intervals cannot establish a missed start.",
+    "independent_sustained_stall_qualifying_samples": 0,
+    "stall_criterion": "ADC>0.20 and abs(ERPM)<=50 and abs(Iq)<8A for>=0.20s; reset qualification on observation gap>0.35s. Sequential ADC/telemetry samples, not atomic internal-state proof.",
+    "final_sample": {
+      "adc": 0.086588,
+      "erpm": 0,
+      "iq_a": 0.0,
+      "fault_code": 0,
+      "tachometer": 19759,
+      "tachometer_absolute": 30887
+    },
+    "configuration": {
+      "motor_fields": 189,
+      "app_fields": 187,
+      "motor_reply_count": 59,
+      "app_reply_count": 2,
+      "motor_changed_fields": [],
+      "motor_changes_outside_allowed": [],
+      "all_app_replies_byte_identical": true,
+      "limits_before": {
+        "l_current_min": -5.0,
+        "l_current_min_scale": 1.0,
+        "l_current_max": 140.0,
+        "l_current_max_scale": 0.5,
+        "l_min_erpm": -21661.400390625,
+        "l_max_erpm": 21661.400390625,
+        "l_in_current_min": -12.0
+      },
+      "motor_after_present": true,
+      "app_after_present": true,
+      "motor_final_byte_identical": true,
+      "app_final_byte_identical": true,
+      "actual_host_command_counts": {
+        "0": 2,
+        "14": 59,
+        "17": 2,
+        "32": 1161,
+        "4": 1161
+      },
+      "actual_host_commands_only_fixed_getters": true
+    }
+  },
+  "reverse_trace": {
+    "manifest": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/reverse-trace/manifest.json",
+      "sha256": "4a32c66749c6244c0586513603ef381300abbb3b168357ef9781cce2804847bb"
+    },
+    "samples": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/reverse-trace/samples.jsonl",
+      "sha256": "8b4b03e1d58fc94516746a15ba95e4fc7ae5036fe20ac018c24ef1f63df8af99"
+    },
+    "wire": {
+      "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/reverse-trace/wire.jsonl",
+      "sha256": "035883df0c99c4ab1d120cbb3324e18c8e5ec4b6d2f3bfb6044df5fb546c61c1"
+    },
+    "complete": true,
+    "started_utc": "2026-11-11T19:28:33.560428+00:00",
+    "finished_utc": "2026-11-11T19:29:33.939953+00:00",
+    "rows": 579,
+    "elapsed_last_sample_s": 59.897323291999996,
+    "maximum_sample_gap_s": 0.10829779200000189,
+    "fault_codes": [
+      0
+    ],
+    "timeout_samples": 0,
+    "kill_samples": 0,
+    "manifest_stall_candidates": 0,
+    "filter_internals_sampled": false,
+    "adc_decoded1_range": [
+      0.075942,
+      0.860237
+    ],
+    "adc_voltage1_range": [
+      0.839003,
+      2.384316
+    ],
+    "erpm_range": [
+      -19019,
+      0
+    ],
+    "iq_a_range": [
+      -42.31,
+      0.0
+    ],
+    "battery_v_range": [
+      77.9,
+      81.0
+    ],
+    "tachometer_range": [
+      8961,
+      21175
+    ],
+    "tachometer_absolute_range": [
+      34213,
+      49093
+    ],
+    "direction_sample_counts": {
+      "forward_gt50": 0,
+      "reverse_ltminus50": 226,
+      "rest_abs_lte50": 353
+    },
+    "pedal_demand_windows": [
+      {
+        "start_s": 23.559064,
+        "end_s": 24.600519417,
+        "sample_count": 11,
+        "preceding_sampled_neutral_rest_s": 23.453076542,
+        "adc_peak": 0.501086,
+        "erpm_range": [
+          -19019,
+          -85
+        ],
+        "first_erpm": -85,
+        "iq_abs_peak_a": 24.18,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 25.736654959,
+        "end_s": 25.941219917,
+        "sample_count": 3,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.46723,
+        "erpm_range": [
+          -7357,
+          -5094
+        ],
+        "first_erpm": -5094,
+        "iq_abs_peak_a": 21.12,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 26.672421,
+        "end_s": 26.777582959,
+        "sample_count": 2,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.375207,
+        "erpm_range": [
+          -3825,
+          -3303
+        ],
+        "first_erpm": -3303,
+        "iq_abs_peak_a": 13.35,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 27.291160375,
+        "end_s": 28.022225959,
+        "sample_count": 8,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.356848,
+        "erpm_range": [
+          -9136,
+          -17
+        ],
+        "first_erpm": -17,
+        "iq_abs_peak_a": 15.63,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10518945899999821
+      },
+      {
+        "start_s": 29.054629709,
+        "end_s": 29.887392042000002,
+        "sample_count": 9,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.404462,
+        "erpm_range": [
+          -13648,
+          -1201
+        ],
+        "first_erpm": -1319,
+        "iq_abs_peak_a": 19.47,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 31.638088209,
+        "end_s": 32.467365875,
+        "sample_count": 9,
+        "preceding_sampled_neutral_rest_s": 0.10307079199999691,
+        "adc_peak": 0.363454,
+        "erpm_range": [
+          -12012,
+          -129
+        ],
+        "first_erpm": -129,
+        "iq_abs_peak_a": 22.05,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 34.53042025,
+        "end_s": 35.150303541999996,
+        "sample_count": 7,
+        "preceding_sampled_neutral_rest_s": 0.5148211670000009,
+        "adc_peak": 0.352962,
+        "erpm_range": [
+          -8064,
+          -161
+        ],
+        "first_erpm": -161,
+        "iq_abs_peak_a": 14.81,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 36.177267709,
+        "end_s": 36.69532225,
+        "sample_count": 6,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.563782,
+        "erpm_range": [
+          -15629,
+          -1190
+        ],
+        "first_erpm": -1190,
+        "iq_abs_peak_a": 28.6,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 38.865812667,
+        "end_s": 39.174817041999994,
+        "sample_count": 4,
+        "preceding_sampled_neutral_rest_s": 0.30950937499999753,
+        "adc_peak": 0.41982,
+        "erpm_range": [
+          -4788,
+          -103
+        ],
+        "first_erpm": -103,
+        "iq_abs_peak_a": 19.49,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 41.241990459,
+        "end_s": 41.346964959,
+        "sample_count": 2,
+        "preceding_sampled_neutral_rest_s": 1.029822291000002,
+        "adc_peak": 0.244178,
+        "erpm_range": [
+          -543,
+          -56
+        ],
+        "first_erpm": -56,
+        "iq_abs_peak_a": 7.05,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 41.658213958999994,
+        "end_s": 41.762133917,
+        "sample_count": 2,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.257049,
+        "erpm_range": [
+          -265,
+          0
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 6.67,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10391995800000586
+      },
+      {
+        "start_s": 42.07031825,
+        "end_s": 42.07031825,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0.0,
+        "adc_peak": 0.239287,
+        "erpm_range": [
+          0,
+          0
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 1.74,
+        "contains_motion_abs_gt50": false,
+        "observed_first_motion_delay_s": null
+      },
+      {
+        "start_s": 42.382658459,
+        "end_s": 42.483782874999996,
+        "sample_count": 2,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.360017,
+        "erpm_range": [
+          -472,
+          0
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 13.57,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10112441599999755
+      },
+      {
+        "start_s": 43.002969291999996,
+        "end_s": 43.314023416999994,
+        "sample_count": 4,
+        "preceding_sampled_neutral_rest_s": 0.10124125000000106,
+        "adc_peak": 0.368022,
+        "erpm_range": [
+          -3320,
+          0
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 16.71,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10171199999999914
+      },
+      {
+        "start_s": 44.142708,
+        "end_s": 44.349519791999995,
+        "sample_count": 3,
+        "preceding_sampled_neutral_rest_s": 0.10573212500000295,
+        "adc_peak": 0.323783,
+        "erpm_range": [
+          -2293,
+          -103
+        ],
+        "first_erpm": -103,
+        "iq_abs_peak_a": 12.82,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 44.971193584,
+        "end_s": 44.971193584,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.223765,
+        "erpm_range": [
+          0,
+          0
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 0.96,
+        "contains_motion_abs_gt50": false,
+        "observed_first_motion_delay_s": null
+      },
+      {
+        "start_s": 45.487099875,
+        "end_s": 45.487099875,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0.3081971249999995,
+        "adc_peak": 0.45848,
+        "erpm_range": [
+          -447,
+          -447
+        ],
+        "first_erpm": -447,
+        "iq_abs_peak_a": 10.16,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 46.009667916999994,
+        "end_s": 46.009667916999994,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0.0,
+        "adc_peak": 0.44347,
+        "erpm_range": [
+          -497,
+          -497
+        ],
+        "first_erpm": -497,
+        "iq_abs_peak_a": 10.06,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 46.320333874999996,
+        "end_s": 46.425856499999995,
+        "sample_count": 2,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.257777,
+        "erpm_range": [
+          -951,
+          -86
+        ],
+        "first_erpm": -86,
+        "iq_abs_peak_a": 7.75,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 46.841910375,
+        "end_s": 46.841910375,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.432851,
+        "erpm_range": [
+          -221,
+          -221
+        ],
+        "first_erpm": -221,
+        "iq_abs_peak_a": 11.11,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 47.257935167,
+        "end_s": 47.257935167,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0.0,
+        "adc_peak": 0.419016,
+        "erpm_range": [
+          -23,
+          -23
+        ],
+        "first_erpm": -23,
+        "iq_abs_peak_a": 4.07,
+        "contains_motion_abs_gt50": false,
+        "observed_first_motion_delay_s": null
+      },
+      {
+        "start_s": 47.776051124999995,
+        "end_s": 47.878961042,
+        "sample_count": 2,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.412622,
+        "erpm_range": [
+          -986,
+          0
+        ],
+        "first_erpm": 0,
+        "iq_abs_peak_a": 18.23,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.10290991700000518
+      },
+      {
+        "start_s": 48.18931575,
+        "end_s": 48.18931575,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.387966,
+        "erpm_range": [
+          -1001,
+          -1001
+        ],
+        "first_erpm": -1001,
+        "iq_abs_peak_a": 7.04,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 48.707968916999995,
+        "end_s": 48.707968916999995,
+        "sample_count": 1,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.480921,
+        "erpm_range": [
+          -270,
+          -270
+        ],
+        "first_erpm": -270,
+        "iq_abs_peak_a": 11.18,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      },
+      {
+        "start_s": 49.230057124999995,
+        "end_s": 49.542438458999996,
+        "sample_count": 4,
+        "preceding_sampled_neutral_rest_s": 0,
+        "adc_peak": 0.860237,
+        "erpm_range": [
+          -12312,
+          -59
+        ],
+        "first_erpm": -59,
+        "iq_abs_peak_a": 42.31,
+        "contains_motion_abs_gt50": true,
+        "observed_first_motion_delay_s": 0.0
+      }
+    ],
+    "window_count": 25,
+    "windows_with_motion": 22,
+    "windows_after_at_least_half_second_neutral_rest": 3,
+    "window_count_limit": "Intervals are contiguous samples above ADC0.15, not physical pedal-attempt counts. Rapid/coasting reapplications are included. Single-sample intervals cannot establish a missed start.",
+    "independent_sustained_stall_qualifying_samples": 0,
+    "stall_criterion": "ADC>0.20 and abs(ERPM)<=50 and abs(Iq)<8A for>=0.20s; reset qualification on observation gap>0.35s. Sequential ADC/telemetry samples, not atomic internal-state proof.",
+    "final_sample": {
+      "adc": 0.087443,
+      "erpm": 0,
+      "iq_a": 0.0,
+      "fault_code": 0,
+      "tachometer": 8961,
+      "tachometer_absolute": 49093
+    },
+    "configuration": {
+      "motor_fields": 189,
+      "app_fields": 187,
+      "motor_reply_count": 30,
+      "app_reply_count": 2,
+      "motor_changed_fields": [],
+      "motor_changes_outside_allowed": [],
+      "all_app_replies_byte_identical": true,
+      "limits_before": {
+        "l_current_min": -5.0,
+        "l_current_min_scale": 1.0,
+        "l_current_max": 140.0,
+        "l_current_max_scale": 0.5,
+        "l_min_erpm": -21661.400390625,
+        "l_max_erpm": 21661.400390625,
+        "l_in_current_min": -12.0
+      },
+      "motor_after_present": true,
+      "app_after_present": true,
+      "motor_final_byte_identical": true,
+      "app_final_byte_identical": true,
+      "actual_host_command_counts": {
+        "0": 2,
+        "14": 30,
+        "17": 2,
+        "32": 582,
+        "4": 582
+      },
+      "actual_host_commands_only_fixed_getters": true
+    },
+    "single_sample_demand_context": [
+      {
+        "window_start_s": 42.07031825,
+        "context_samples": [
+          {
+            "seconds": 41.967572167,
+            "adc": 0.086427,
+            "erpm": -1,
+            "iq_a": 0.0
+          },
+          {
+            "seconds": 42.07031825,
+            "adc": 0.239287,
+            "erpm": 0,
+            "iq_a": -1.74
+          },
+          {
+            "seconds": 42.175589834,
+            "adc": 0.103773,
+            "erpm": -79,
+            "iq_a": -3.92
+          },
+          {
+            "seconds": 42.280352625,
+            "adc": 0.077606,
+            "erpm": -133,
+            "iq_a": 0.0
+          }
+        ]
+      },
+      {
+        "window_start_s": 44.971193584,
+        "context_samples": [
+          {
+            "seconds": 44.86609025,
+            "adc": 0.079958,
+            "erpm": -185,
+            "iq_a": 0.0
+          },
+          {
+            "seconds": 44.971193584,
+            "adc": 0.223765,
+            "erpm": 0,
+            "iq_a": -0.96
+          },
+          {
+            "seconds": 45.075007209,
+            "adc": 0.1291,
+            "erpm": -11,
+            "iq_a": -3.11
+          },
+          {
+            "seconds": 45.179273042,
+            "adc": 0.076631,
+            "erpm": 0,
+            "iq_a": 0.0
+          }
+        ]
+      },
+      {
+        "window_start_s": 47.257935167,
+        "context_samples": [
+          {
+            "seconds": 47.151542541999994,
+            "adc": 0.098748,
+            "erpm": -12,
+            "iq_a": 0.0
+          },
+          {
+            "seconds": 47.257935167,
+            "adc": 0.419016,
+            "erpm": -23,
+            "iq_a": -4.07
+          },
+          {
+            "seconds": 47.361632291999996,
+            "adc": 0.14817,
+            "erpm": -1063,
+            "iq_a": -12.12
+          },
+          {
+            "seconds": 47.467608166999995,
+            "adc": 0.080973,
+            "erpm": -1284,
+            "iq_a": 0.0
+          }
+        ]
+      }
+    ],
+    "single_sample_context_note": "Two of the three single-sample demand intervals show reverse motion in the immediately following sample, after ADC falls below0.15. The44.971s interval reaches only\u221211ERPM in the following sample; its brief request does not meet the sustained missed-start criterion. Do not classify these as three proven missed starts."
+  },
+  "board_checks": {
+    "mode-board-status": {
+      "manifest": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/mode-board-status/manifest.json",
+        "sha256": "eb5cae194648042513367aa2f3cbd4254c8d62b1f708fee110c0c1d435901260"
+      },
+      "responses": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/mode-board-status/responses.jsonl",
+        "sha256": "38838f1fce5a5e09d16c905ab9aa7fbe29c6597c1eec512931dc173b15fe06f2"
+      },
+      "complete": true,
+      "types": {
+        "core2/espnow": {
+          "count": 48,
+          "first_seconds": 0.052011875000000006,
+          "last_seconds": 94.9859805,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 194,
+            "tx_packets": 383,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 669,
+            "rx_packets": 2097,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -50,
+            -38
+          ]
+        },
+        "core2/m5_status": {
+          "count": 48,
+          "first_seconds": 0.025836167,
+          "last_seconds": 94.95960066699999,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "live": [
+              true
+            ],
+            "vesc": [
+              true
+            ],
+            "mode_ready": [
+              false,
+              true
+            ]
+          },
+          "counter_deltas": {}
+        },
+        "heltec/espnow": {
+          "count": 48,
+          "first_seconds": 0.0063234589999999966,
+          "last_seconds": 94.942030667,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 859,
+            "tx_packets": 2098,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 4,
+            "rx_packets": 383,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -57,
+            -34
+          ]
+        },
+        "heltec/status": {
+          "count": 48,
+          "first_seconds": 0.005863500000000001,
+          "last_seconds": 94.941467875,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "vesc_uuid": [
+              "37004e000951343037353739"
+            ],
+            "id_ok": [
+              true
+            ],
+            "limits_ok": [
+              true
+            ],
+            "baseline_suspect": [
+              false
+            ],
+            "scale_min": [
+              1.0
+            ],
+            "scale_max": [
+              0.5,
+              0.75,
+              1.0
+            ],
+            "max_erpm": [
+              150000,
+              21661,
+              36102
+            ],
+            "speed_cal": [
+              2.48
+            ],
+            "session": [
+              0
+            ]
+          },
+          "counter_deltas": {
+            "vesc_packets": 674,
+            "vesc_crc_err": 0,
+            "lora_tx": 95,
+            "lora_rx": 285,
+            "lora_rx_bad": 0
+          }
+        }
+      }
+    },
+    "pedal-board-status": {
+      "manifest": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-board-status/manifest.json",
+        "sha256": "3ce53f10a3fde89a1678cd9d70971447877fcba261112d7855c4d95502f6e2ca"
+      },
+      "responses": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-board-status/responses.jsonl",
+        "sha256": "c12295d0b56646a8ac441baba656f08a1b7070e2bd0c7dd9f5c9b6e482e7ae98"
+      },
+      "complete": true,
+      "types": {
+        "core2/espnow": {
+          "count": 62,
+          "first_seconds": 0.052329542,
+          "last_seconds": 123.16113825,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 245,
+            "tx_packets": 491,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 863,
+            "rx_packets": 2709,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -50,
+            -40
+          ]
+        },
+        "core2/m5_status": {
+          "count": 62,
+          "first_seconds": 0.025790917000000003,
+          "last_seconds": 123.13448333299999,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "live": [
+              true
+            ],
+            "vesc": [
+              true
+            ],
+            "mode_ready": [
+              true
+            ]
+          },
+          "counter_deltas": {}
+        },
+        "heltec/espnow": {
+          "count": 62,
+          "first_seconds": 0.0065212080000000006,
+          "last_seconds": 123.115147833,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 1109,
+            "tx_packets": 2708,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 0,
+            "rx_packets": 492,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -56,
+            -43
+          ]
+        },
+        "heltec/status": {
+          "count": 62,
+          "first_seconds": 0.006012,
+          "last_seconds": 123.114859625,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "vesc_uuid": [
+              "37004e000951343037353739"
+            ],
+            "id_ok": [
+              true
+            ],
+            "limits_ok": [
+              true
+            ],
+            "baseline_suspect": [
+              false
+            ],
+            "scale_min": [
+              1.0
+            ],
+            "scale_max": [
+              0.5
+            ],
+            "max_erpm": [
+              21661
+            ],
+            "speed_cal": [
+              2.48
+            ],
+            "session": [
+              0
+            ]
+          },
+          "counter_deltas": {
+            "vesc_packets": 859,
+            "vesc_crc_err": 0,
+            "lora_tx": 123,
+            "lora_rx": 369,
+            "lora_rx_bad": 0
+          }
+        }
+      }
+    },
+    "pedal-board-status-02": {
+      "manifest": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-board-status-02/manifest.json",
+        "sha256": "e3bfddde9500247ba0983d4971c664cf1b4c2bc239dd75ba9f871e49e4703501"
+      },
+      "responses": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/pedal-board-status-02/responses.jsonl",
+        "sha256": "1ac90802fdee69160683b9ec3d8824e523822b1a4f572138ca2324383212cc4d"
+      },
+      "complete": true,
+      "types": {
+        "core2/espnow": {
+          "count": 62,
+          "first_seconds": 0.052175124999999996,
+          "last_seconds": 123.04652425,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 246,
+            "tx_packets": 492,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 859,
+            "rx_packets": 2700,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -49,
+            -41
+          ]
+        },
+        "core2/m5_status": {
+          "count": 62,
+          "first_seconds": 0.025647457999999998,
+          "last_seconds": 123.02012866700001,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "live": [
+              true
+            ],
+            "vesc": [
+              true
+            ],
+            "mode_ready": [
+              true
+            ]
+          },
+          "counter_deltas": {}
+        },
+        "heltec/espnow": {
+          "count": 62,
+          "first_seconds": 0.007073666999999999,
+          "last_seconds": 122.96162562500001,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 1105,
+            "tx_packets": 2701,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 0,
+            "rx_packets": 492,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -51,
+            -41
+          ]
+        },
+        "heltec/status": {
+          "count": 62,
+          "first_seconds": 0.0063871250000000004,
+          "last_seconds": 122.961222917,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "vesc_uuid": [
+              "37004e000951343037353739"
+            ],
+            "id_ok": [
+              true
+            ],
+            "limits_ok": [
+              true
+            ],
+            "baseline_suspect": [
+              false
+            ],
+            "scale_min": [
+              1.0
+            ],
+            "scale_max": [
+              0.5
+            ],
+            "max_erpm": [
+              21661
+            ],
+            "speed_cal": [
+              2.48
+            ],
+            "session": [
+              0
+            ]
+          },
+          "counter_deltas": {
+            "vesc_packets": 861,
+            "vesc_crc_err": 0,
+            "lora_tx": 123,
+            "lora_rx": 369,
+            "lora_rx_bad": 0
+          }
+        }
+      }
+    },
+    "reverse-board-status": {
+      "manifest": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/reverse-board-status/manifest.json",
+        "sha256": "e557d3191e6fffe9784d2d45a38b4a4273df36cc7e10e576389d3ff3681eea99"
+      },
+      "responses": {
+        "path": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/reverse-board-status/responses.jsonl",
+        "sha256": "18f95a0ffdae6ee6804abffbc4f619fd1efb249c15a8be01ffc107d3871c9540"
+      },
+      "complete": true,
+      "types": {
+        "core2/espnow": {
+          "count": 33,
+          "first_seconds": 0.052325500000000004,
+          "last_seconds": 64.482831833,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 128,
+            "tx_packets": 257,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 449,
+            "rx_packets": 1412,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -43,
+            -37
+          ]
+        },
+        "core2/m5_status": {
+          "count": 32,
+          "first_seconds": 2.049041208,
+          "last_seconds": 64.456419458,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "live": [
+              true
+            ],
+            "vesc": [
+              true
+            ],
+            "mode_ready": [
+              true
+            ]
+          },
+          "counter_deltas": {}
+        },
+        "heltec/espnow": {
+          "count": 33,
+          "first_seconds": 0.0074883749999999985,
+          "last_seconds": 64.44090212500001,
+          "observed_values": {
+            "ready": [
+              true
+            ],
+            "linked": [
+              true
+            ],
+            "channel": [
+              6
+            ],
+            "rx_channel": [
+              6
+            ],
+            "peer_channel": [
+              6
+            ],
+            "channel_aligned": [
+              true
+            ]
+          },
+          "counter_deltas": {
+            "tx_lines": 578,
+            "tx_packets": 1413,
+            "tx_failed": 0,
+            "tx_dropped": 0,
+            "rx_lines": 0,
+            "rx_packets": 257,
+            "rx_dropped": 0,
+            "rx_invalid": 0,
+            "channel_hops": 0
+          },
+          "rssi_range": [
+            -44,
+            -36
+          ]
+        },
+        "heltec/status": {
+          "count": 33,
+          "first_seconds": 0.006903292000000002,
+          "last_seconds": 64.440544042,
+          "observed_values": {
+            "kart": [
+              3
+            ],
+            "vesc_uuid": [
+              "37004e000951343037353739"
+            ],
+            "id_ok": [
+              true
+            ],
+            "limits_ok": [
+              true
+            ],
+            "baseline_suspect": [
+              false
+            ],
+            "scale_min": [
+              1.0
+            ],
+            "scale_max": [
+              0.5
+            ],
+            "max_erpm": [
+              21661
+            ],
+            "speed_cal": [
+              2.48
+            ],
+            "session": [
+              0
+            ]
+          },
+          "counter_deltas": {
+            "vesc_packets": 451,
+            "vesc_crc_err": 0,
+            "lora_tx": 64,
+            "lora_rx": 193,
+            "lora_rx_bad": 0
+          }
+        }
+      }
+    }
+  },
+  "idle_timing_resolution": {
+    "owner_clarification": "Owner confirmed earlier pedal testing happened before the first120s recording. Preserve that recording as stationary coexistence evidence only.",
+    "mode_capture_finished_utc": "2026-11-11T19:15:36.092500+00:00",
+    "idle_capture_started_utc": "2026-11-11T19:19:17.785526+00:00",
+    "gap_s": 221.693026,
+    "mode_last_tachometer": 3862,
+    "mode_last_tachometer_absolute": 7916,
+    "idle_tachometer_constant": 9882,
+    "idle_tachometer_absolute_constant": 17074
+  },
+  "owner_observations": {
+    "forward": "Owner confirmed forward-only test was smooth.",
+    "reverse": "Awaiting owner physical smooth-reverse and return-to-forward confirmation at time of this audit."
+  },
+  "acceptance_limitations": [
+    "Forward and reverse telemetry was captured in ECO only; mode-setting readbacks covered ECO/NORMAL/SPORT without loaded-road acceptance.",
+    "No sustained missed-start candidate was observed by the stated criterion; this is not proof that every physical press succeeded or that intermittent failure is eliminated.",
+    "Reverse has25 sampled demand intervals,22 with motion and3 single-sample intervals without absERPM>50. Do not label25 independent successful starts.",
+    "USB capture intentionally did not poll Lisp/filter internals; no worker-health/physical-direction-switch-state claim follows from these traces.",
+    "Accessory statuses were sampled about every2s, so no observed link outage does not rule out shorter interruptions. Cumulative counters had no new errors/drops during the forward/reverse windows.",
+    "No full-fleet, road, range, loaded thermal/current, or safety certification is established."
+  ]
+}

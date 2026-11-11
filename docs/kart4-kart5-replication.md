@@ -80,7 +80,9 @@ the operating tune equivalent; do not expand the copy list casually.
    The November 11 verified cold-boot reference is
    [brake-limit-persistent-01/coldboot-forward/raw](../hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/coldboot-forward/raw).
    Read the neighboring `verification.json` and consult [HANDOFF](../HANDOFF.md)
-   for outstanding Heltec and broader acceptance. The
+   for completed Heltec/Core2 ECO bench coexistence and outstanding broader acceptance.
+   The later coexistence session ends in temporary ECO; keep the linked full-scale
+   cold-boot source for this preparation tool. The
    tool never infers that acceptance from a folder name or a runtime capture alone.
 
    Use kart 5's own capture, UUID, ID and new output path for the second unit. The

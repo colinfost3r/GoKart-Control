@@ -1,6 +1,53 @@
 # Collaborator handoff
 
-## Kart 3 −5 A save and fleet replication — November 11, 2026 (latest)
+## Kart 3 Heltec/Core2 coexistence — November 11, 2026 (latest)
+
+**Bench checks passed with the saved −5 A limit and persistent reverse filter.**
+Owner confirmed all three Core2 modes verified, smooth forward and smooth reverse.
+Final capture at 19:31 UTC: correct kart3 UUID, zero ERPM/Iq, fault/timeout/kill clear,
+−5 A motor minimum, min scale 1, battery minimum −12 A. Both accessories are live and
+mode-ready on aligned channel 6. Owner confirmed physical switch forward, pedal
+released and wheels stopped. **Current temporary profile is ECO**, deliberately
+selected on the Core2; no profile was restored automatically. Monitoring has ended
+and no further pedal test, reset, flash or configuration write is queued.
+[Complete evidence](hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/README.md).
+
+- Reconnect preserved all motor/app bytes before mode selection. ECO/NORMAL/SPORT
+  readbacks changed only max-current scale 0.50/0.75/1.00 and ERPM pair ±21661.4 /
+  ±36102.3 /±150000; brake remained −5/min scale 1. Owner confirmed all verified.
+- Forward ECO: 1,158 sample pairs over 120 s, 13 demand intervals all with rotation,
+  zero sustained missed-start candidates and faults; owner reported smooth motion.
+- Reverse ECO: 579 pairs over 60 s, negative rotation only, zero sustained candidates
+  and faults; owner reported smooth motion. 25 demand intervals included rapid
+  reapplications and brief crossings, not 25 independent fully stopped starts.
+- All 376 settings were identical across each pedal capture. Core2 stayed live and
+  ready; during those captures both ESP-NOW peers remained aligned on channel 6 with
+  no new failure/drop/invalid/hop counters, no BLE CRC errors, and ongoing LoRa traffic.
+
+Preserve scope: the first stationary mode recorder aborted when the owner deliberately
+tried the pedal; its incomplete manifest remains. The first 120 s pedal capture was idle;
+owner confirmed presses occurred before it. The second capture is the actual forward
+check. Internal Lisp/raw RX was not polled during BLE operation, so final direction is
+an owner confirmation plus recorded signed rotation, not a fresh worker/GPIO snapshot.
+This is one kart's wheels-up ECO coexistence acceptance, not road/load/endurance,
+eight-kart/range, physical pit-command or abnormal-reset acceptance. The switch harness
+issue and charged-pack/BMS validation remain separate. No host motor/settings/reset
+command or accessory firmware update was sent during this session.
+
+**Replication:** the offline kart4/5 package and runbook are ready. Keep using the
+[verified full-scale cold-boot source](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/coldboot-forward/raw),
+not this final temporary ECO capture as a full-scale baseline. Each new unit still
+needs its own capture, preserved Hall/pedal/electrical calibration, unique BLE/UUID/
+ESP-NOW identities and supervised per-target application. No kart4/5 write has occurred;
+karts1/2 remain Eamon's units. Existing kart3-only installers must not be repurposed by
+bypassing their pins. [Preparation guide](docs/kart4-kart5-replication.md).
+
+**Validation:** 469 tests passed across seven suites, zero skipped. Independent audits
+redecoded the captured payloads, verified fixed read-only command scope and configuration
+preservation. Eamon’s six commits through a5a4c22 remain separate integration work; none
+were silently merged or flashed by this motor/filter acceptance session.
+
+## Kart 3 −5 A save and fleet replication — November 11, 2026 (earlier save)
 
 **−5 A is active and verified after a normal cold boot.**
 The earlier temporary trial was restored to zero, then the owner explicitly requested
@@ -342,8 +389,8 @@ fixes remain intact. This changes browser presentation and illustrative assets, 
 LoRa/ESP-NOW contracts or the native Core2 UI. No shared Pi/pit deployment or additional board
 flash was performed here. The SoNo demo is not a surveyed Manresa course.
 
-**Next two karts:** the owner plans two more Core2/Heltec assemblies. Their fleet IDs are not yet
-assigned. Use the same firmware architecture, with unique fleet IDs, physical BLE MAC/VESC UUID
+**Next two karts:** subsequently assigned IDs **4 and 5** on November 11; **1 and 2
+remain Eamon’s test karts**. See the latest section and [replication guide](docs/kart4-kart5-replication.md). Use the same firmware architecture, with unique fleet IDs, physical BLE MAC/VESC UUID
 pins, ESP-NOW peers/private pair keys and OTA credentials. Capture each VESC before tuning and
 preserve that unit’s Hall, pedal and electrical calibration. Never clone another unit’s NVS or
 whole VESC configuration. [Bring-up procedure](firmware/m5-core2/BRINGUP.md).

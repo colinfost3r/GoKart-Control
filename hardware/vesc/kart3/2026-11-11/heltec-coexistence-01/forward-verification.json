@@ -1,0 +1,72 @@
+{
+  "source": "pedal-trace-02",
+  "scope": "forward ECO wheels-up bench; reverse not captured",
+  "raw_payload_redecode_verified": true,
+  "samples": 1158,
+  "span_seconds": 119.97479983299999,
+  "demand_windows_above_0_15": 13,
+  "all_windows_contain_positive_rotation": true,
+  "not_all_windows_independent_starts_from_complete_rest": true,
+  "negative_erpm_samples": 0,
+  "stall_candidates": [],
+  "fault_samples": 0,
+  "timeout_samples": 0,
+  "kill_samples": 0,
+  "peak_erpm": 15276,
+  "voltage_range_v": [
+    79.4,
+    81.0
+  ],
+  "all_376_fields_unchanged": true,
+  "allowed_host_command_ids": [
+    0,
+    4,
+    14,
+    17,
+    32
+  ],
+  "last_telemetry": {
+    "mosfet_temp_c": 20.1,
+    "motor_temp_c": 0.0,
+    "motor_current_a": 0.0,
+    "battery_current_a": 0.0,
+    "id_a": 0.0,
+    "iq_a": 0.0,
+    "duty": 0.0,
+    "erpm": 0,
+    "input_voltage_v": 80.9,
+    "amp_hours": 0.0165,
+    "amp_hours_charged": 0.0,
+    "watt_hours": 1.3199,
+    "watt_hours_charged": 0.0,
+    "tachometer": 19759,
+    "tachometer_absolute": 30887,
+    "fault_code": 0,
+    "pid_position": 243.0,
+    "controller_id": 19,
+    "mosfet_temp_1_c": 20.0,
+    "mosfet_temp_2_c": -94.8,
+    "mosfet_temp_3_c": -273.1,
+    "vd_v": 0.048,
+    "vq_v": -0.017,
+    "status_raw": 0,
+    "timeout_active": false,
+    "kill_switch_active": false,
+    "bytes_consumed": 74
+  },
+  "last_adc": {
+    "decoded1": 0.086588,
+    "voltage1": 0.862519,
+    "decoded2": 0.009283,
+    "voltage2": 0.358613
+  },
+  "filter_internal_state_sampled": false,
+  "input_sha256": {
+    "pedal-trace-02/samples.jsonl": "a0e92fafd21c296f9dc9e8a525ed81a70c6c8082292efe48f731eecc1112a8be",
+    "pedal-trace-02/manifest.json": "ad892afaa90d33faf6127708035cb80041258effca5e2026207e48753e7a326f",
+    "pedal-trace-02/motor_before.bin": "60cd92059ad0a19d2dbe5111993c3070ab0af0637675e698433ba577489e4bc3",
+    "pedal-trace-02/motor_after.bin": "60cd92059ad0a19d2dbe5111993c3070ab0af0637675e698433ba577489e4bc3",
+    "pedal-trace-02/app_before.bin": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d",
+    "pedal-trace-02/app_after.bin": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+  }
+}

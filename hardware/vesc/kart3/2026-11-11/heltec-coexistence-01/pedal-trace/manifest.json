@@ -1,0 +1,153 @@
+{
+  "complete": true,
+  "started_utc": "2026-11-11T19:19:17.785526+00:00",
+  "commands": [
+    0,
+    4,
+    14,
+    17,
+    32
+  ],
+  "host_motor_config_reset_lifecycle_commands": false,
+  "lisp_polled": false,
+  "sample_seconds": 120,
+  "rows": 1158,
+  "stall_candidates": [],
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "limits_before": {
+    "l_current_min": -5.0,
+    "l_current_min_scale": 1.0,
+    "l_current_max_scale": 0.5,
+    "l_min_erpm": -21661.400390625,
+    "l_max_erpm": 21661.400390625
+  },
+  "preflight": [
+    {
+      "adc": {
+        "decoded1": 0.087681,
+        "voltage1": 0.863359,
+        "decoded2": 0.009351,
+        "voltage2": 0.356093
+      },
+      "telemetry": {
+        "mosfet_temp_c": 20.0,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": 0.0,
+        "erpm": 0,
+        "input_voltage_v": 81.0,
+        "amp_hours": 0.0102,
+        "amp_hours_charged": 0.0,
+        "watt_hours": 0.8158,
+        "watt_hours_charged": 0.0,
+        "tachometer": 9882,
+        "tachometer_absolute": 17074,
+        "fault_code": 0,
+        "pid_position": 201.599984,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 20.0,
+        "mosfet_temp_2_c": -273.1,
+        "mosfet_temp_3_c": -273.1,
+        "vd_v": 0.053,
+        "vq_v": 0.015,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      }
+    },
+    {
+      "adc": {
+        "decoded1": 0.088076,
+        "voltage1": 0.865039,
+        "decoded2": 0.009535,
+        "voltage2": 0.358613
+      },
+      "telemetry": {
+        "mosfet_temp_c": 20.0,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": 0.001,
+        "erpm": 0,
+        "input_voltage_v": 81.0,
+        "amp_hours": 0.0102,
+        "amp_hours_charged": 0.0,
+        "watt_hours": 0.8158,
+        "watt_hours_charged": 0.0,
+        "tachometer": 9882,
+        "tachometer_absolute": 17074,
+        "fault_code": 0,
+        "pid_position": 201.599984,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 20.0,
+        "mosfet_temp_2_c": -101.1,
+        "mosfet_temp_3_c": -94.8,
+        "vd_v": 0.053,
+        "vq_v": 0.019,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      }
+    },
+    {
+      "adc": {
+        "decoded1": 0.087861,
+        "voltage1": 0.864199,
+        "decoded2": 0.00951,
+        "voltage2": 0.357773
+      },
+      "telemetry": {
+        "mosfet_temp_c": 20.0,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": 0.001,
+        "erpm": 0,
+        "input_voltage_v": 81.0,
+        "amp_hours": 0.0102,
+        "amp_hours_charged": 0.0,
+        "watt_hours": 0.8158,
+        "watt_hours_charged": 0.0,
+        "tachometer": 9882,
+        "tachometer_absolute": 17074,
+        "fault_code": 0,
+        "pid_position": 201.599984,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 19.9,
+        "mosfet_temp_2_c": -101.1,
+        "mosfet_temp_3_c": -90.9,
+        "vd_v": 0.063,
+        "vq_v": 0.022,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      }
+    }
+  ],
+  "finished_utc": "2026-11-11T19:21:18.198820+00:00",
+  "script_sha256": "f816787d13b6b54675d2e357c9a4aa8b12b66f8a387caebb3e995ec99c98deb5"
+}

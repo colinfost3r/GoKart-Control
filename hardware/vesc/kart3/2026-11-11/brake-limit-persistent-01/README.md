@@ -6,8 +6,9 @@ changed **only `l_current_min`: 0 → −5 A**. The controller acknowledged the 
 full runtime readback matched exactly, preserving all other 375 motor/app fields.
 The reverse filter remained active/forward, pedal released, stationary and fault-free.
 
-**Current status: −5 A persisted through the owner-confirmed cold boot. Heltec
-coexistence remains pending.**
+**Current status: −5 A persisted through the owner-confirmed cold boot. Subsequent
+Heltec/Core2 mode and ECO forward/reverse bench coexistence checks passed.**
+[Coexistence evidence](../heltec-coexistence-01/README.md).
 Command 13 acknowledges after attempting storage, without reporting flash-store
 success. A runtime readback alone does not establish persistence. Do not resend
 this one-shot helper or restore the old setting automatically.
