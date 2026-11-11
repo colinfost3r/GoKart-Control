@@ -1,6 +1,60 @@
 # Collaborator handoff
 
-## Kart 3 reverse filter — November 11, 2026 (latest, volatile trial 01)
+## Kart 3 persistent reverse filter — November 11, 2026 (latest)
+
+**Installed at the owner's explicit request; normal cold-boot checks passed.** The owner
+confirmed wheels lifted, pedal released, Heltec off and cutoff accessible. Joined stop and
+matching-RX rollback of the temporary filter both passed on hardware before installation.
+Existing code read exposed no valid blob. The fixed installer sent one Lisp-sector erase and
+17 writes (16 body chunks then the eight-byte header), with exact ACKs and full stored-payload
+readback. It sent no SET_RUNNING133, motor-output, motor/app configuration or firmware-image
+command. [Persistent commissioning evidence](hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).
+
+Saved source is the exact tested compact core plus one UUID/fw/app-guarded start call: source
+3981B SHA30981ff45663d254153009ec0f6258b400126afd74a66a6caa2a70c56ac96700; canonical code blob
+3984B SHAa2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801. Readback matched again
+after two owner-confirmed power cycles. This source is pinned to kart3 UUID37004e000951343037353739,
+6.02/test0 and ADC application 2 / control type 3. It is not an eight-kart installer.
+
+Forward cold boot: active/run=true, applied0/raw1, PID 1507 positively listed, rest/fault0.
+Reverse cold boot: applied1/raw0; initial context snapshots omitted the running task. Returning
+the switch to forward changed applied1→0, and a final fixed context inspection positively
+listed sleeping PID 1507 (max stack44). **Final verified state: persistent filter running,
+forward selected, pedal released/rest/fault0; Heltec off.** The user was invited to continue
+gentle wheels-up checks, releasing the pedal/stopping completely before changing direction.
+Post-install manual motion outcomes have not been independently recorded in this checkpoint.
+
+All 376 settings were identical across the script save itself. Across cold boots,
+all187 app fields and all motor fields except native current/phase-voltage measurement offsets
+remained equal. The existing `foc_offsets_cal_on_boot=1` recomputes those runtime offsets at
+startup. No tune/Hall/pedal configuration was written and no offset was restored or disabled.
+Do not claim every motor byte stays identical across power cycles. See exact field comparisons.
+
+Normal VESC6.02 boot runs valid stored Lisp; its header flags do not select autostart. Native ADC
+starts before Lisp can qualify input, and watchdog-reset boot skips Lisp. There is no new
+startup throttle interlock. Keep the pedal released until active/correct-direction readiness
+is verified. A long wrong RX level can still qualify at rest; worker failure can hold direction.
+These are material limits of this supervised persistent trial, not a repaired harness or a
+production failover guarantee. The earlier 152-edge forward trace still warrants wiring work.
+
+Removal: stationary/wheels-up, first use the reviewed joined stop and matching-direction raw
+rollback. To prevent future autostart, separately erase only the known filter's Lisp storage
+after exact stored-payload/identity verification; merely stopping the worker does not remove
+saved code. Persistent erase has not been commissioned as a general removal tool. No automatic
+cleanup, retry, fallback or interpreter reset is authorized after an ambiguous response.
+
+The explicit installer refuses nonempty valid stored code and pins the exact pre-install app
+and motor payloads. It is session-specific: native boot offset changes will make its motor
+hash check refuse a later run. Do not weaken pins or rerun it over the installed filter. Portable
+installer/tests and the 14-case autostart interpreter runner are included for review/reproduction.
+All **457 project tests passed across seven suites, zero skipped**, plus 33 core and 14 startup
+interpreter cases. The later owner report of retained direction with slight throttle/coasting
+matches the guard; no settings changed. Latest read-only snapshot again showed active forward,
+raw RX=1, livePID 1507/rest/fault0. Operator instructions: release, stop fully, select direction,
+pause about half a second, then gently apply throttle. No event trace proves that specific
+reported behavior; preserve it as an owner report consistent with the implementation.
+
+## Kart 3 reverse filter — November 11, 2026 (earlier volatile trial 01)
 
 **First bench pass in both directions; not a permanent repair or fleet deployment.**
 After the owner chose the filter trial, they restored the original switch/pull-up, removed

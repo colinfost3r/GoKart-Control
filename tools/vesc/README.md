@@ -77,6 +77,17 @@ an existing/ambiguous copy. `stop` joins the worker and holds direction; it is n
 the held direction. No automatic rollback/reset or start replay exists. See the
 [complete procedure and flags](../../firmware/vesc-lisp/reverse-input/README.md).
 
+## Fixed persistent reverse-filter installation
+
+`install_rx_filter.py` defaults to an offline plan and only permits the exact reviewed kart3
+autostart source. Its explicit `--apply --supervised` path requires completed stationary
+stop/rollback evidence, exact identity/full settings, no valid stored code and fresh input
+checks. It writes only Lisp storage, verifies ACKs/readback/settings, and sends no activation
+or motor/configuration command. Erase does reset Lisp; flash operations briefly inhibit motor
+output. The installed script runs on normal boot, with the startup/watchdog limits described
+in the [persistent runbook](../../docs/reverse-input/persistent-filter.md). It is not a general
+updater or remover; valid existing code and changed runtime offsets cause refusal.
+
 ## Capture
 
 Use Python 3.9+ on macOS/Linux. Close VESC Tool or other serial clients. Have the

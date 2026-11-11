@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fixed volatile RX-filter lifecycle controller — OFFLINE REVIEW, no motor commands.
+"""Fixed RX-filter lifecycle controller; no motor commands.
 
 Requires separately reviewed/loaded definitions. Never loads/redefines, resets,
 writes flash/configuration, retries, or performs automatic cleanup. STOP stops
@@ -189,6 +189,8 @@ def run(port, output, action, *, setup_confirmed=False, loaded_reviewed=False, e
     output.mkdir(parents=True, exist_ok=False)
     manifest = {'action': action, 'uuid_pin': UUID, 'firmware_pin': '6.02', 'app_sha256': APP_SHA256,
                 'candidate_sha256': CANDIDATE_SHA256, 'deployment_sha256': DEPLOYMENT_SHA256,
+                'deployment_sha256_scope': 'Exact compact candidate core; optional persistent startup wrapper is verified separately',
+                'stored_program_verified_here': False,
                 'loaded_source_readback_verified_here': False, 'complete': False, 'lifecycle_sent': False,
                 'setup_confirmed': setup_confirmed, 'loaded_reviewed': loaded_reviewed,
                 'expected_rx': expected_rx, 'native_detach_independently_readable': False,

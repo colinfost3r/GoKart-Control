@@ -12,14 +12,16 @@ was applied and read back exactly. See the [tune review](docs/kart3-tune-compari
 [mode commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
 Two additional M5/Heltec karts are planned, with IDs still unassigned; follow the
 [per-kart bring-up guide](firmware/m5-core2/BRINGUP.md).
-The first [VESC-local reverse-filter bench trial](hardware/vesc/kart3/2026-11-11/reverse-filter-trial-01/README.md)
-passed on kart 3 with the original reverse-switch branch restored. The owner confirmed forward
-and smooth reverse. Forward recorded **152 raw RX transitions** while sampled motor rotation
-remained forward; reverse recorded zero input transitions. Both returned to rest without a
-sampled fault. All **376 settings remained byte-identical**. The filter is active **in RAM only**
-at the last observation, with forward selected; no flash/autostart install was performed.
-A power cycle removes it. The wiring fault is not repaired and fleet reliability is unproven.
-[Current procedure and limits](firmware/vesc-lisp/reverse-input/README.md).
+Kart 3 now has a [persistently saved VESC-local reverse filter](hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).
+The earlier wheels-up trial passed forward and smooth reverse despite 152 raw RX transitions
+during forward. The owner then requested installation: exact stored-code readback passed,
+normal cold boots selected both forward and reverse correctly, and the live worker was verified.
+Tune and Hall/pedal settings are unchanged. Native current/voltage measurement offsets recomputed
+on boot under the existing calibration setting; those are documented separately from the tune.
+The final verified state is active/forward/fault0. This is a kart-3 bench commissioning result,
+not fleet or endurance acceptance. Raw input precedes script startup, and watchdog boot can
+skip scripts; keep the pedal released until readiness is verified.
+[Procedure and limitations](firmware/vesc-lisp/reverse-input/README.md).
 
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor
 board on every kart, a shared LoRa radio network, a pit station with touch kiosk and
@@ -67,7 +69,7 @@ Details, evidence and open decisions: [HANDOFF.md](HANDOFF.md).
 | Pit station | Raspberry Pi 4 + HDMI touch panel | [pit/](pit/README.md) | Fleet state, command delivery with per-kart outcomes, race/laps, zones editor, session logs; touch kiosk, password-protected operator page, phone page at `/m` |
 | Kart display | Raspberry Pi 3 B + LESOWN L7 7" 1024x600 | [kart/](kart/README.md) | Display only (never talks to the VESC): speed, mode, banners, map from the pit, own geofence engine for the game, sounds |
 | M5 v1.5 display (alternative) | M5Stack Core2 320x240 | [firmware/m5-core2](firmware/m5-core2/README.md) | Telemetry, guarded mode requests and fleet/course outline over paired ESP-NOW or UART; kart 3 live telemetry, Core2 OTA and local mode readbacks verified; full pit-control hardware checks remain open |
-| On-VESC scripts | VESC LispBM | [firmware/vesc-lisp](firmware/vesc-lisp/README.md) | Kart 3 reverse filter: volatile bench trial passed, no persistent install. Separate regen-on-STOP experiment remains uninstalled |
+| On-VESC scripts | VESC LispBM | [firmware/vesc-lisp](firmware/vesc-lisp/README.md) | Kart 3 reverse filter: saved and normal cold-boot checked in both switch positions. Separate regen-on-STOP experiment remains uninstalled |
 
 **Game layer** (off by default; contract [pit/server/map/ZONES.md](pit/server/map/ZONES.md)).
 The pit draws zones and a track on the operator page and serves them with the map package.

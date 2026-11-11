@@ -1,0 +1,55 @@
+{
+  "scope": "scratch-only portable integration; no hardware or repository edits",
+  "destination_worktree": "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5",
+  "files": {
+    "docs/reverse-input/persistent-filter.md": {
+      "bytes": 6453,
+      "sha256": "179e9ba024bd37ea3cafb443abc10743044d0441b4a6bafd3727a7ea2e83bd57"
+    },
+    "tests/test_vesc_install_rx_filter.py": {
+      "bytes": 15164,
+      "sha256": "9df24a22fe428a96abaf65bcc8acf57af3a9f10e79f9f8bcd045e9c94f442d23"
+    },
+    "tools/vesc/install_rx_filter.py": {
+      "bytes": 16566,
+      "sha256": "55a6216e4a59a47e0a4bd70278f079ef7400490dfeb1391bae23b66195607dbc"
+    }
+  },
+  "frozen_original_installer_sha256": "81e449b70d9b1cbd1e9d7617125850dc0b2e789bf7fc7e4ddee5f06127001b72",
+  "installer_function_or_class_ast_changes": [
+    "package"
+  ],
+  "other_changes": [
+    "module-relative repository/dependency/source paths",
+    "docstring no longer calls tool scratch prototype",
+    "tests use tracked RAM-trial payloads and explicitly synthetic temporary rollback evidence",
+    "operator runbook added"
+  ],
+  "validation": {
+    "command": "python -I -B -m unittest discover -s validation/tests -p test_vesc_*.py",
+    "tests": 43,
+    "installer_tests": 22,
+    "lifecycle_tests": 21,
+    "skipped": 0,
+    "result": "PASS",
+    "default_cli": "offline plan PASS; no port opened"
+  },
+  "source_sha256": "30981ff45663d254153009ec0f6258b400126afd74a66a6caa2a70c56ac96700",
+  "blob_sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801",
+  "image_sha256": "428657a58bc6d4a2a0e85df858e36fc7d34972007d7df436ed236632a9a19495",
+  "independent_reviews": [
+    {
+      "agent": "vesc_reverse_paths",
+      "result": "PASS",
+      "tests_rerun": 43,
+      "findings": "All 10 non-package functions/classes AST-identical; canonical derived blob and full image byte-identical; packet/ACK/preflight/write-order/no-retry behavior unchanged; no hardware."
+    },
+    {
+      "agent": "m5_review",
+      "result": "PASS",
+      "tests_rerun": 43,
+      "findings": "Narrow package/path/hash delta, exact offline plan, tests and final operator runbook confirmed. Startup raw-RX gap and temporary stop/rollback limitations explicit. No remaining material issue; no hardware."
+    }
+  ],
+  "publish_requirement": "Root must integrate into repository and run all required tools/run_tests.sh suites before push."
+}

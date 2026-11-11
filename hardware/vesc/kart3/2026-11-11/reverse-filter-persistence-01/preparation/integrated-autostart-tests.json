@@ -1,0 +1,98 @@
+{
+  "recorded_at": "2026-11-11T17:37:04.712920+00:00",
+  "firmware_source_commit": "f7c2b34e1cff2234cae98be3abf0cd50e249558f",
+  "host_runner_sha256": "b7e9f62ea33d75a17ddfee1eab6ac283c9f0f0bc2b02ca572dbd0ca6efad2ab1",
+  "heap_cons_cells": 2464,
+  "source_sha256": "30981ff45663d254153009ec0f6258b400126afd74a66a6caa2a70c56ac96700",
+  "source_bytes": 3981,
+  "unchanged_base_compact_sha256": "d530aeb20c81c185e25ba9b4954473a8bd7069fe5b59b1babeca3ca2b89e94dc",
+  "canonical_code_blob_sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801",
+  "canonical_code_blob_bytes": 3984,
+  "limitation": "Mocked host interpreter. Does not prove filter-first MCU startup, watchdog behavior, real deadlines or physical safety.",
+  "results": [
+    {
+      "case": "boot-forward",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "daf014acea1f3a62ad7bd69a0374ad0ef28766caae3b11ce8a767d0dd6d77069"
+    },
+    {
+      "case": "boot-reverse",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "cb7a1cb1da4544d5259b0b2a9749e0652dcb9f153924ad61b5d05d25e4a324e2"
+    },
+    {
+      "case": "pedal-high-refuses-arm",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "071e3c57abc806d692475a188d6f14edb764a826823d5f08f99e0c5852def579"
+    },
+    {
+      "case": "rpm-high-refuses-arm",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "3eb09fcb0859493b67d382b22e058a27e3e5a91502dd03b8210b64eaab28d45f"
+    },
+    {
+      "case": "fault-refuses-arm",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "35d0005cf7e91ac37721661ee8413b726c6cc24d5ea5f620cba27426a85be37f"
+    },
+    {
+      "case": "chatter-refuses-arm",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "f7a232fbf1d2537bf6fe0e83d32c043a47526c61a0eec6d67f21237730cdc4fe"
+    },
+    {
+      "case": "wrong-uuid-refused",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "c18058e5a4219f58e2a4ae8295e7b72df27a9a05692d7f13086e13180781a39a"
+    },
+    {
+      "case": "wrong-firmware-refused",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "d8c184b9b5876743a2cee4b16b06346088d5b4078311b1aadc1bad7153603da1"
+    },
+    {
+      "case": "wrong-test-firmware-refused",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "3c191ac190a7dee365d30419db94710feec3ea1a7a1803129bc08d056b8fa56b"
+    },
+    {
+      "case": "wrong-app-refused",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "a6813489093a37e42d869257c03589d7eb029eb321f8019c781382d1113ec002"
+    },
+    {
+      "case": "wrong-control-type-refused",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "407581b6521e2649b0c1e16fba5cee90eabb727e9ffea0ac318e057749a40431"
+    },
+    {
+      "case": "pedal-release-then-reverse-qualifies",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "56bca9234d6a4693dfc1d6529df4c778c1017b8fc4cfa486932b3b8b9c0ae84f"
+    },
+    {
+      "case": "rpm-stops-then-forward-qualifies",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "47ac1d70043e72784c03b9a011a9c17a14bc4b16fc1132f9618e2657affaa8e0"
+    },
+    {
+      "case": "spawn-failure-no-retry",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "d89425ef5c0bb469e8b5aa1946c8cf2c60229592aed092fb651e39262a832997"
+    }
+  ]
+}

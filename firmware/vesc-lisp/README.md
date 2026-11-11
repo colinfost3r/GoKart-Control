@@ -1,11 +1,13 @@
 # VESC-local experiments
 
-The [kart 3 reverse-input filter](reverse-input/README.md) passed its first supervised
-forward/reverse bench trial with the original switch wiring. It is active in RAM at the last
-observation, with forward selected; no persistent upload or autostart was installed. A power
-cycle removes it. The physical input fault and fleet reliability remain unresolved. All tune,
-Hall and pedal settings are unchanged. This is separate from the uninstalled braking experiment
-below. Never overwrite/redefine an active script or ignore existing runtime ownership.
+The [kart 3 reverse-input filter](reverse-input/README.md) is now saved in VESC Lisp storage
+at the owner's request. The earlier wheels-up forward/reverse trial passed; normal cold boots
+with each switch position and subsequent switch response were verified. The final state was
+active/forward. This is a kart-specific commissioning trial; startup gaps, watchdog suppression,
+held-direction failure behavior and the unresolved physical input fault remain documented.
+Tune/Hall/pedal settings were preserved; native measurement offsets recomputed on boot.
+The separate braking experiment below remains uninstalled. Never overwrite an existing script
+without reviewing its exact stored contents, runtime ownership and removal procedure.
 
 ## On-VESC brake script (regen on STOP)
 

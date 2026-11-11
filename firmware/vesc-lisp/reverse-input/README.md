@@ -1,17 +1,43 @@
-# Kart 3 reverse-input filter — volatile bench trial
+# Kart 3 reverse-input filter — persistent commissioning trial
 
-The November 11 [first filter trial](../../../hardware/vesc/kart3/2026-11-11/reverse-filter-trial-01/README.md)
-passed at-rest forward/reverse/forward selection, then operator-confirmed forward and smooth
-reverse using the wired pedal. The original reverse-switch branch was connected. Forward had
-152 raw RX transitions while captured motor rotation stayed forward; reverse had zero raw
-transitions. Both returned to rest with no sampled fault. All 376 motor/app settings were
-byte-identical to preflight. This demonstrates useful mitigation on one bench trial, not an
-identified/repaired electrical fault or permanent fleet acceptance.
+The owner requested saving the successful filter after the RAM-only forward/reverse trial.
+The [persistent installation](../../../hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md)
+verified every stored byte, automatic normal startup with forward and reverse selected, a
+subsequent switch change, and live workerPID 1507. The saved program is the exact tested compact
+core plus one UUID/fw/app-guarded start. Final verified state: active/forward/rest/fault0,
+Heltec off. No host motor command or tune/Hall/pedal configuration write was sent.
 
-**Last recorded state:** filter active in RAM, PID 1244, forward applied=0/raw RX=1,
-released-region pedal, near-zero ERPM and fault0. Heltec was off. No stop, rollback or power-off
-has been recorded. **Do not reload an active copy.** No flash/autostart install was made;
-a whole VESC restart removes this trial and restores the original raw reverse input.
+**The filter now survives normal power cycles.** Startup still has a raw-input interval before
+Lisp qualifies direction; watchdog-reset boot skips Lisp. Keep the pedal released until the
+filter's active state and selected direction are verified. No startup throttle interlock or
+fleet/endurance acceptance is implied. Do not reload definitions over the active copy.
+The physical input fault is not repaired: the earlier successful forward trace still counted
+152 raw RX transitions. All configuration bytes matched during save; native current/voltage
+measurement offsets recomputed across reboot under the already-enabled startup setting.
+
+## Persistent source and installation record
+
+[`rx-filter-autostart.lisp`](rx-filter-autostart.lisp) is3981bytes, SHA256
+`30981ff45663d254153009ec0f6258b400126afd74a66a6caa2a70c56ac96700`.
+The canonical3984-byte stored payload is ASCII source +NUL +BEuint16 zero imports, SHA256
+`a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801`.
+The prefix3732bytes exactly matches the RAM-tested core. Existing UUID/fw/app checks gate a
+single start; refusal/spawn failure does not trigger retries or a default direction write.
+Fourteen pinned-interpreter startup cases passed separately from the33 core cases.
+
+VESC6.02 boots any valid stored Lisp on normal boot; header flags0 do not mean disabled. The
+fixed installer writes only this script's storage, body first/header last, and verifies exact
+payload plus all376 settings. Erase resets Lisp, and flash operations temporarily release
+motor output, so installation requires stationary maintenance. No133 activation was sent;
+the owner physically power-cycled the controller for acceptance. This is a session-specific
+installer with pinned runtime config: do not rerun it over valid code or relax its motor hash
+because native boot offsets changed. Persistent removal requires explicit joined stop/raw
+rollback, then a separately reviewed erase of the verified filter-only stored program at rest.
+Stopping the worker alone does not prevent the next normal boot from starting it again.
+
+The RAM-only procedure retained below is for a separately reviewed empty/fresh runtime, not
+this installed copy. See the persistent evidence for exact preflight, source hashes, ACKs,
+readback, normal cold-boot results, and remaining acceptance work.
 
 ## Scope and hardware
 
@@ -119,14 +145,15 @@ The candidate handles a failed spawn and a stale worker ID reused by the calling
 
 Rollback is a separate explicit supervised operation after the worker is joined:
 `rx_filter_control.py rollback --loaded-reviewed --setup-confirmed --expected-rx 1
---port ... --out ...` for a held-forward state with rawRX1. It requires pedal release, rest,
+--port ... --out ...` for a held-forward state with raw RX=1. It requires pedal release, rest,
 fault0 and raw direction agreeing with the held direction continuously for 250 ms, then
 reattaches the physical button. Use raw0 only for a verified held-reverse state. A mismatch,
 gap, unknown state or ambiguous reply must not cause automatic reset or retry.
 
-Joined stop/rollback passed pinned-interpreter tests but **have not been exercised on this
-controller**. A deliberate later power-off removes the volatile filter, returning to the
-original raw-input behavior; USB absence alone cannot prove battery power is off.
+Joined stop/rollback passed both pinned-interpreter tests and the stationary hardware
+removal check immediately before this persistent installation. A power-off removes only a RAM-only trial. This installed program starts again on normal
+boot; use the persistent removal procedure above to remove it. USB absence alone cannot prove
+battery power is off.
 
 ## Validation and next step
 
@@ -137,7 +164,7 @@ strict16KB loader harness passed all24 steps with no mock output calls plus five
 Portable Python checks add 12 loader, seven plan and 21 lifecycle-controller tests. These are
 offline tests with mocked hardware; native load and first F/R trial are separate recorded results.
 
-Next evaluate the physical switch branch and repeat controlled acceptance, then explicitly
-validate stop/rollback, boot/power loss and Heltec coexistence before deciding on persistent
-installation. Do not combine with the uninstalled `gokart_brake.lisp` experiment. Other karts
+Next evaluate the physical switch branch and repeat controlled acceptance, then validate longer-duration behavior, abnormal-reset/startup handling and Heltec
+coexistence before wider deployment. Normal forward/reverse cold boots and stationary
+stop/rollback passed; persistent removal and abnormal-reset behavior remain separate checks. Do not combine with the uninstalled `gokart_brake.lisp` experiment. Other karts
 need their own identity/settings/electrical checks; this pinned trial is not a fleet installer.

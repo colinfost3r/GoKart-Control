@@ -72,6 +72,9 @@ Owner identifies the Nilight three-terminal maintained SPST toggle and confirms 
 not used. Existing reverse is on RX with an approximately 10 kΩ pull-up to 3.3 V; throttle is
 on ADC1. Intermittence predates the tune and spans eight karts/two switch types. No cause has
 been measured. See [reverse investigation](reverse-input.md) and the separate
-[proposed conditioner BOM/diagram](reverse-input/prototype-v1/README.md). No reverse hardware
-or app change is installed. The Heltec alternative remains a concept with unresolved reset
+[proposed conditioner BOM/diagram](reverse-input/prototype-v1/README.md). No reverse conditioning hardware or saved ADC-app configuration change is installed.
+A VESC-local reverse filter was subsequently saved on kart3 and normal cold-boot checked in
+both switch positions on November11; see the [persistent commissioning evidence](../hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).
+It holds the previous direction during throttle/coasting and changes only after release/rest
+qualification. Native raw-input startup and watchdog limitations remain. The Heltec alternative remains a concept with unresolved reset
 behavior, not a change to the vehicle reliability requirement.

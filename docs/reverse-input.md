@@ -1,15 +1,16 @@
 # Kart 3 reverse input — wiring investigation
 
-**Latest: first volatile filter trial passed in both directions.** With the original switch
-branch restored, the owner confirmed forward and smooth reverse. Forward had 152 raw RX
-transitions yet sampled rotation remained forward; reverse had zero transitions. All 376
-settings were unchanged. The filter was left running in RAM with forward applied; no persistent
-install was made. [Trial evidence](../hardware/vesc/kart3/2026-11-11/reverse-filter-trial-01/README.md)
-and [current procedure](../firmware/vesc-lisp/reverse-input/README.md).
+**Latest: filter saved on kart 3 and normal startup checked in both switch positions.** The
+owner requested persistent installation after the successful wheels-up forward/reverse trial.
+Exact stored code matched after upload and two cold boots; the final live worker selected forward.
+Tune/Hall/pedal settings remain unchanged. Native current/voltage offsets recomputed at boot under
+the existing setting. [Persistent evidence](../hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md)
+and [procedure](../firmware/vesc-lisp/reverse-input/README.md).
 
-Earlier local-contact isolation showed stable inputs and smooth forward with the long branch
-removed. The external branch remains the leading suspect; software has not repaired it. The
-historical instructions below describe the investigation before the authorized filter trial.
+The prior trial observed152 raw RX transitions during successful filtered forward motion; the
+external fault is still present. Native ADC runs before Lisp starts, watchdog boot may skip
+Lisp, and a stable wrong input can qualify at rest. This is supervised kart-3 testing, not fleet
+or permanent wiring-repair acceptance. Historical investigation notes below remain dated context.
 
 Latest owner correction, November 10: **throttle ADC1; reverse switch RX**. The switch is a
 maintained mechanical switch connected to VESC signal GND. The owner added an external pull-up

@@ -37,7 +37,7 @@ SD supplies an optional course outline, while the base provides central pit/race
 
 | Component | Owns | Does not imply |
 | --- | --- | --- |
-| VESC | Hardwired throttle/reverse, motor control, configured protection | A tested guarantee of accessory-failure isolation |
+| VESC | Hardwired throttle/reverse, motor control, configured protection; kart3 now has a local persistent reverse-filter commissioning trial | A tested guarantee of accessory-failure isolation |
 | Kart Pi | Touchscreen rendering, map assets, presentation cache and UI requests | Ownership of the VESC link or control policy |
 | Heltec V4.3 + L76K | VESC BLE client, telemetry, GPS, LoRa, validation/serialization of supervisory requests | Verified timing, fault isolation or implemented profile writes |
 | Pit Pi 4 | Fleet/race state, authentication, command arbitration, radio session | An internet/cloud dependency |

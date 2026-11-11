@@ -1,0 +1,27 @@
+{
+  "reviewed_utc": "2026-11-11T17:42:41.595883+00:00",
+  "installer": "/tmp/gokart-rx-filter-persist-20261111/install_rx_filter.py",
+  "installer_sha256": "81e449b70d9b1cbd1e9d7617125850dc0b2e789bf7fc7e4ddee5f06127001b72",
+  "test_sha256": "da948fc97dbfcf270f2247773453385658863c05c684d840e8af975be5fad89e",
+  "tests_passed": 22,
+  "tests_skipped": 0,
+  "sha_unchanged_during_independent_run": true,
+  "fixed_image_bytes": 3992,
+  "fixed_image_sha256": "428657a58bc6d4a2a0e85df858e36fc7d34972007d7df436ed236632a9a19495",
+  "body_writes": 16,
+  "final_header_writes": 1,
+  "header_bytes": 8,
+  "review_result": "PASS under stated exclusive-client and fresh supervised setup",
+  "hardware_accessed_by_reviewer": false,
+  "checks": [
+    "Exact commands/layout and transport CRC verified against pinned6.02",
+    "Full image independently reconstructed from framed fixed writes",
+    "Offsets restricted to exact body positions plus final0; sector bounded",
+    "Exact ACK success and offset required",
+    "Partial/uncertain send aborts; no append/retry/reset/activation",
+    "Final status/telemetry/empty-code checks share750ms erase deadline",
+    "Motor/app configuration fully pinned and preserved",
+    "Stored payload exact byte/hash readback required",
+    "Normal physical reboot acceptance remains separate"
+  ]
+}

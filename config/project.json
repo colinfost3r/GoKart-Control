@@ -188,13 +188,13 @@
     "reference_is_current_kart2": false,
     "latest_eamon_integrated": "a9c8459",
     "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
-    "current_usb_state": "Session03 final81.7V zeroERPM/current fault0; user asked to power off before further wiring, off not yet confirmed",
-    "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 k\u03a9 pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; measurements pending.",
+    "current_usb_state": "2026-11-11 persistent reverse filter active; normal forward/reverse cold boots verified; last rawRX1/appliedforward, released pedal, rest/fault0, livePID1507. Heltec off.",
+    "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 k\u03a9 pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; original branch noise measured. Persistent VESC-local filter bench trial installed; wiring cause/reliability still unresolved.",
     "tune_applied_at_utc": "2026-11-10T19:58:55+00:00",
     "tune_applied_path": "hardware/vesc/kart3/2026-11-10/tune-applied-v1",
     "tune_verified_fields": 376,
     "tune_changed_motor_fields": 12,
-    "tune_persistence_powercycle_verified": false,
+    "tune_persistence_powercycle_verified": true,
     "mode_commissioning_path": "hardware/m5/2026-11-10-kart3/mode-commissioning",
     "installed_heltec_app_sha256": "11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2",
     "installed_core2_app_sha256": "996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a",
@@ -211,29 +211,31 @@
       "heltec_alternative": "concept_only_reset_behavior_conflicts_with_reliability_requirement"
     },
     "reverse_next_test": {
-      "status": "isolated_input_and_forward_passed_external_switch_branch_leading_suspect",
+      "status": "persistent_kart3_filter_installed_normal_coldboots_passed_supervised_trial",
       "guide": "firmware/vesc-lisp/reverse-input/README.md",
-      "first": "bounded_read_only_RX_monitor_after_fresh_identity_config_and_Lisp_backup",
-      "candidate": "VESC_local_buttons_only_filter_not_installed",
+      "first": "completed_RAM_trial_forward_reverse_then_stop_rollback_and_persistent_install",
+      "candidate": "VESC_local_buttons_only_filter_saved_with_guarded_autostart",
       "firmware_upgrade_required": false,
       "existing_kart3_firmware": "6.02_no_hw_limits",
       "wiring_change_for_monitor": false,
       "atom_model_confirmed": false,
       "earliest_owner_hardware_session": "2026-11-11",
       "monitor": "firmware/vesc-lisp/reverse-input/rx-monitor-compact.repl",
-      "filter_source": "firmware/vesc-lisp/reverse-input/rx-filter-candidate.lisp",
-      "filter_installed": false,
-      "filter_loader_implemented": false,
+      "filter_source": "firmware/vesc-lisp/reverse-input/rx-filter-autostart.lisp",
+      "filter_installed": true,
+      "filter_loader_implemented": true,
       "offline_validation": {
-        "project_tests_passed": 395,
+        "project_tests_passed": 457,
         "project_suites": 7,
         "project_tests_skipped": 0,
-        "lisp_mock_cases_passed": 29,
+        "lisp_mock_cases_passed": 33,
         "lisp_host_heap_cons_cells": 2464,
-        "hardware_verified": false,
-        "fixed_monitor_sender_cases_passed": 24
+        "hardware_verified": true,
+        "fixed_monitor_sender_cases_passed": 24,
+        "lisp_autostart_cases_passed": 14,
+        "hardware_validation_scope": "single_kart_wheels_up_RAM_motion_and_persistent_stationary_normal_boots; not_fleet_endurance_or_abnormal_reset"
       },
-      "next": "inspect_repair_or_substitute_original_reverse_branch_then_repeat_acceptance",
+      "next": "longer_supervised_acceptance_and_harness_repair_startup_abnormal_reset_Heltec_coexistence_review",
       "monitor_observation": {
         "date": "2026-11-11",
         "samples": 13415,
@@ -285,8 +287,17 @@
         "owner_confirms_smooth_forward": true,
         "all_376_fields_unchanged": true,
         "repair_complete": false
-      }
-    }
+      },
+      "persistent_evidence": "hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01",
+      "persistent_code_sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801",
+      "startup_limits": [
+        "native_ADC_reads_raw_RX_before_Lisp_qualifies",
+        "watchdog_boot_can_skip_Lisp",
+        "pedal_released_until_active_correct_direction_verified"
+      ],
+      "direction_change": "stable_RX_50ms_and_pedal_le_0.12_abs_ERPM_le_50_fault0_for_250ms; hold_previous_direction_during_throttle_or_coasting"
+    },
+    "tune_persistence_powercycle_evidence": "hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01; only native startup measurement offsets changed"
   },
   "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending"
 }

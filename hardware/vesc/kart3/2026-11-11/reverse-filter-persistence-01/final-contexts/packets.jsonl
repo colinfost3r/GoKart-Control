@@ -1,0 +1,9 @@
+{"monotonic": 0.028111375, "command": 134, "payload_hex": "860b020c4d0ec8000000676b2d72782d66696c7465722d6170706c6965640000000000676b2d72782d66696c7465722d7069640044bc6000"}
+{"monotonic": 1.032616041, "command": 135, "payload_hex": "872a2a2a2a2a2a2052756e6e696e6720636f6e7465787473202a2a2a2a2a2a", "text": "****** Running contexts ******"}
+{"monotonic": 1.03306175, "command": 135, "payload_hex": "872a2a2a2a2a2a20426c6f636b656420636f6e7465787473202a2a2a2a2a2a", "text": "****** Blocked contexts ******"}
+{"monotonic": 1.033254958, "command": 135, "payload_hex": "872a2a2a2a2a2a20536c656570696e6720636f6e7465787473202a2a2a2a2a2a", "text": "****** Sleeping contexts ******"}
+{"monotonic": 1.033340625, "command": 135, "payload_hex": "872d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d", "text": "--------------------------------"}
+{"monotonic": 1.033390625, "command": 135, "payload_hex": "87436f6e7465787449443a2031353037", "text": "ContextID: 1507"}
+{"monotonic": 1.033471625, "command": 135, "payload_hex": "87537461636b2053503a203130", "text": "Stack SP: 10"}
+{"monotonic": 1.03351375, "command": 135, "payload_hex": "87537461636b205350206d61783a203434", "text": "Stack SP max: 44"}
+{"monotonic": 1.03354575, "command": 135, "payload_hex": "8756616c75653a2074", "text": "Value: t"}

@@ -1,0 +1,107 @@
+{
+  "scope": "Supervised persistent trial; not production/fleet acceptance. Existing raw-input boot gap and watchdog suppression remain. Pedal must stay released until active/PID/matching direction is verified.",
+  "base_compact_sha256": "d530aeb20c81c185e25ba9b4954473a8bd7069fe5b59b1babeca3ca2b89e94dc",
+  "base_bytes": 3732,
+  "source_bytes": 3981,
+  "source_sha256": "30981ff45663d254153009ec0f6258b400126afd74a66a6caa2a70c56ac96700",
+  "code_blob_bytes": 3984,
+  "code_blob_sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801",
+  "code_blob_format": "ASCII source followed by one NUL and big-endian uint16 zero import count, matching VESC Tool6.02 lispPackImports. No eight-byte flash size/CRC/flags header is included.",
+  "uuid_guard": "37004e000951343037353739",
+  "fw_guard": [
+    6,
+    2,
+    0
+  ],
+  "app_guard": [
+    2,
+    3
+  ],
+  "all_pass": true,
+  "tests": [
+    {
+      "case": "boot-forward",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.056
+    },
+    {
+      "case": "boot-reverse",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.056
+    },
+    {
+      "case": "pedal-high-refuses-arm",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.056
+    },
+    {
+      "case": "rpm-high-refuses-arm",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.056
+    },
+    {
+      "case": "fault-refuses-arm",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.057
+    },
+    {
+      "case": "chatter-refuses-arm",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.057
+    },
+    {
+      "case": "wrong-uuid-refused",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.006
+    },
+    {
+      "case": "wrong-firmware-refused",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.006
+    },
+    {
+      "case": "wrong-test-firmware-refused",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.005
+    },
+    {
+      "case": "wrong-app-refused",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.005
+    },
+    {
+      "case": "wrong-control-type-refused",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.006
+    },
+    {
+      "case": "pedal-release-then-reverse-qualifies",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.057
+    },
+    {
+      "case": "rpm-stops-then-forward-qualifies",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.056
+    },
+    {
+      "case": "spawn-failure-no-retry",
+      "pass": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.008
+    }
+  ]
+}

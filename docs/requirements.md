@@ -386,3 +386,21 @@ Store command history with telemetry for later inspection.
 - Exact V4.3 schematic: https://resource.heltec.cn/download/WiFi_LoRa_32_V4/Schematic/HTIT-WB32LAF_V4.3.pdf
 - Heltec expansion kit reference (not an identification of the owner's assembly):
   https://heltec.org/project/wifi-lora-32-v4-expansion-housing/
+
+## Owner-authorized reverse filter trial — November 11, 2026
+
+After a successful wheels-up forward/reverse RAM trial, the owner requested saving the VESC-local
+filter for continued testing. Kart3 now stores a UUID/fw/app-guarded autostart program; normal
+forward/reverse cold boots and switch response were verified. This is separate from tune/Hall/
+pedal configuration and does not make the Heltec or display responsible for wired driver inputs.
+
+Direction changes require stable RX50ms, pedal in the <=0.12 zero-demand region and |ERPM|<=50
+with fault0 for250ms. During slight throttle/coasting, the existing direction remains applied.
+The owner later reported that behavior and confirmed slight throttle/coasting was still present;
+retain the guard and instruct release, full stop, select direction, then pause before throttle.
+No threshold or torque setting was changed in response.
+
+Native ADC precedes Lisp at startup; watchdog boot can skip scripts. Keep the pedal released
+until active/correct-direction readiness is verified. The filter does not repair the measured
+external switch instability or establish fleet/endurance acceptance. See the
+[persistent handoff](../hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).
