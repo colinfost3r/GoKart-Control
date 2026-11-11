@@ -12,7 +12,10 @@ was applied and read back exactly. See the [tune review](docs/kart3-tune-compari
 [mode commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
 Two additional M5/Heltec karts are planned, with IDs still unassigned; follow the
 [per-kart bring-up guide](firmware/m5-core2/BRINGUP.md).
-Reverse-switch intermittence remains unresolved. A [standalone conditioner parts list and wiring diagram](docs/reverse-input/prototype-v1/README.md) is documented for one bench prototype; it is not installed or validated.
+Reverse-switch intermittence remains unresolved. The [next check](firmware/vesc-lisp/reverse-input/README.md)
+is a bounded RX monitor on the existing VESC firmware; a separate filter candidate is staged
+without installation. The [standalone conditioner](docs/reverse-input/prototype-v1/README.md)
+remains an unbuilt fallback. No firmware upgrade or reverse wiring change has been made.
 
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor
 board on every kart, a shared LoRa radio network, a pit station with touch kiosk and

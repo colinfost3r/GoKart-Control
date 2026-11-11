@@ -1,4 +1,11 @@
-# On-VESC brake script (regen on STOP)
+# VESC-local experiments
+
+The [kart 3 reverse-input diagnostic](reverse-input/README.md) is the current next test: a
+bounded input monitor and a separate disarmed filter candidate, prepared offline only. It needs
+no firmware upgrade and does not change the braking experiment below. Never upload one script
+over another without capturing/reviewing the existing code and ownership first.
+
+## On-VESC brake script (regen on STOP)
 
 `gokart_brake.lisp` runs inside the VESC (firmware 6.00 LispBM). When the pit presses
 STOP, the kart's Heltec ramps the drive current limit to zero AND sends this script a

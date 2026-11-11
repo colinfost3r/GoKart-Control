@@ -9,6 +9,25 @@ explicitly opted-in **persistent motor-configuration writer** for that reviewed 
 [guarded application](#guarded-kart-3-tune-trial). It defaults to offline validation and never
 writes application settings, commands motor current/speed, resets, detects or flashes firmware.
 
+## Read stored Lisp code without executing it
+
+`read_lisp.py` separately permits only identity (0) and stored-code read (130), requires an
+explicit expected controller UUID and supports only the pinned 6.02 layout. It never evaluates,
+starts, stops, erases or writes Lisp, and does not expand `capture.py`'s original allowlist.
+Use a new output directory and inspect `manifest.json` before treating a capture as complete.
+
+```sh
+python3 -B tools/vesc/read_lisp.py --port /dev/cu.usbmodemACTUAL_PORT \
+  --expected-uuid 37004e000951343037353739 --out /absolute/path/to/new/lisp-backup
+```
+
+The binary contains the valid stored code/import blob exposed by firmware, excluding its eight-byte
+size/CRC/flags header. Autostart flags and current execution state are unknown; this is not a raw
+flash backup. `no_valid_blob` is not proof of blank flash. CRC-checked replies, hashes, partial data
+and failure metadata are preserved. Size/identity are checked again, but same-size concurrent
+changes cannot be excluded: close other clients and do not edit code while reading.
+[Next supervised reverse-input session](../../firmware/vesc-lisp/reverse-input/README.md).
+
 ## Capture
 
 Use Python 3.9+ on macOS/Linux. Close VESC Tool or other serial clients. Have the

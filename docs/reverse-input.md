@@ -63,6 +63,29 @@ to forward. That conflicts with the standing accessory-loss requirement. Existin
 can block the main loop, so direction logic would require its own bounded task; adding a poll
 in `loop()` is insufficient. A generic optocoupler module alone does not provide debounce.
 
+## First test selected: existing-VESC input monitor — November 10 evening
+
+The owner wants the quickest workable option using existing boards and is away from the kart
+until November 11. USB inventory currently shows no VESC or ATOM. ATOM identification, extra
+CAN hardware and buying debounce boards are deferred for the first check.
+
+Source review found that stock 6.02 supplies button-only override APIs; the installed build
+still needs a live API check.
+Prepare a **bounded RX monitor first**, then consider a separate volatile debounce candidate
+only if the measurements support it. [Exact wiring, backup and test guide](../firmware/vesc-lisp/reverse-input/README.md).
+No firmware upgrade is needed. Kart 3's recorded `no_hw_limits` build was operating at 82.1 V,
+fault 0; Flipsky's documented 72 V default-build restriction does not establish a problem with
+that existing build. The physical 75100 Pro V2.0 rating remains 84 V; its recorded 90 V software
+cutoff is not a hardware rating.
+
+Keep the existing RX/GND/3.3 V pull-up wiring for this diagnostic, with throttle on ADC1.
+The standalone PPM conditioner remains a fallback proposal; it is not wired or commissioned.
+The small VESC script is also **not installed or proven**. It can filter observed transitions,
+not repair a persistent bad voltage/ground/contact. A stopped filter can leave the last direction
+selected; worker exit and explicit button reattachment must be verified during rollback. A full
+controller reset returns to the configured raw input; stock Lisp autostart is suppressed after
+a watchdog reset. Physical acceptance remains necessary.
+
 ## Zero-braking-limit hypothesis — not a diagnosis
 
 The tune changed `l_current_min` from -50 A to 0 A to match the no-motor-braking intent.

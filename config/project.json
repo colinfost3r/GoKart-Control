@@ -209,6 +209,29 @@
       "output": "3.3V_PPM_requires_ADC_and_UART",
       "current_input_still": "ADC_RX",
       "heltec_alternative": "concept_only_reset_behavior_conflicts_with_reliability_requirement"
+    },
+    "reverse_next_test": {
+      "status": "offline_preparation_no_hardware_connected",
+      "guide": "firmware/vesc-lisp/reverse-input/README.md",
+      "first": "bounded_read_only_RX_monitor_after_fresh_identity_config_and_Lisp_backup",
+      "candidate": "VESC_local_buttons_only_filter_not_installed",
+      "firmware_upgrade_required": false,
+      "existing_kart3_firmware": "6.02_no_hw_limits",
+      "wiring_change_for_monitor": false,
+      "atom_model_confirmed": false,
+      "earliest_owner_hardware_session": "2026-11-11",
+      "monitor": "firmware/vesc-lisp/reverse-input/rx-monitor-compact.repl",
+      "filter_source": "firmware/vesc-lisp/reverse-input/rx-filter-candidate.lisp",
+      "filter_installed": false,
+      "filter_loader_implemented": false,
+      "offline_validation": {
+        "project_tests_passed": 371,
+        "project_suites": 7,
+        "project_tests_skipped": 0,
+        "lisp_mock_cases_passed": 22,
+        "lisp_host_heap_cons_cells": 2464,
+        "hardware_verified": false
+      }
     }
   },
   "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending"

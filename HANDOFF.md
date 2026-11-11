@@ -1,6 +1,59 @@
 # Collaborator handoff
 
-## Kart 3 M5 modes commissioned; two additional M5 karts planned — 2026-11-10 (current)
+## Reverse input: offline preparation for November 11 — 2026-11-10 (latest)
+
+The owner is at home and cannot test hardware until tomorrow. No controller/ATOM was connected
+for this preparation, and nothing was flashed, reset, configured or driven. Existing Core2,
+Heltec, VESC tune and commissioned modes below are unchanged. The immediate next step supersedes
+buying/building a conditioner: [use the existing VESC to observe RX](firmware/vesc-lisp/reverse-input/README.md)
+before choosing a filter. No ATOM identity, CAN interface or wiring change is needed for that check.
+
+Kart 3 already reports **6.02 / 75_300_R2 / no_hw_limits**, UUID
+`37004e000951343037353739`; the November 10 capture recorded **82.1 V, fault 0**.
+Flipsky's documented default-build 72 V limit does not mean that this installed build needs
+replacement. The confirmed 75100 Pro V2.0 is rated to 84 V; its 90 V software setting does not
+raise that hardware rating. Preserve the current firmware and all calibration/tune settings.
+
+New offline artifacts:
+
+- `tools/vesc/read_lisp.py`: separate UUID-pinned 6.02 stored-code reader, commands **0 and 130
+  only**, 256-byte chunks, CRC-checked responses and retained partial evidence. It leaves
+  `capture.py`'s allowlist unchanged. The code blob excludes the flash size/CRC/flags header;
+  runtime/autostart remain unknown and an empty result does not prove blank flash or no active
+  overrides. Capture current identity/configuration and inspect existing script ownership first.
+- `rx-monitor-compact.repl`: bounded 30-second read-only GPIO/ADC/ERPM/fault observation;
+  **405-byte framed payload** fits the stock 512-byte limit. It neither changes GPIO mode nor
+  detaches/overrides inputs. Reports about once per second; nominal 2 ms sampling cannot rule
+  out faster glitches. REPL evaluation may initialize Lisp if it was not running.
+- `rx-filter-candidate.lisp`: **definitions only, disarmed and not installed**. Native throttle
+  remains active. Stable RX plus released pedal/rest/fault-free conditions qualify a direction
+  change; long sample gaps invalidate qualification. Stop joins the worker but holds its last
+  C-side direction; explicit at-rest rollback reattaches physical RX only when it agrees.
+  A full controller reset returns to raw input. Unknown live scripts/overrides must be resolved
+  before a trial. This is not a permanent solution or proof of the fault's cause.
+- The detailed monitor and candidate exceed a single REPL packet. A reviewed volatile stream
+  loader using `restart=0` is still needed before those larger files can be tested; none is
+  supplied in this milestone. Do not use flash upload or interpreter reset as a shortcut.
+
+Validation: **371 project tests, seven suites, zero skipped**, including 15 new stored-code
+reader cases; offline baseline decode verified both schemas/all 376 fields. The three staged
+Lisp files passed **22/22 mocked cases** in the interpreter vendored in pinned 6.02 source,
+with 2,464 cons cells. Tests were independently reviewed/rerun and reproduced from the saved
+project files. [Reproduction and limitations](firmware/vesc-lisp/reverse-input/tests/README.md).
+The host's remaining memory pools, timing and hardware extensions differ from the MCU. No
+physical filter, API availability, voltage margin or reverse operation has been accepted yet.
+
+Tomorrow: fresh operator readiness, VESC USB data connection, existing **ADC1 throttle / RX
+switch to signal GND / approximately 10 kΩ RX→3.3 V pull-up** unchanged. Back up fresh state,
+then hold forward/reverse/forward for roughly ten seconds each with pedal released during the
+monitor. Measure high/low voltage as well. Stable RX during failed reverse redirects diagnosis
+away from debounce; the original fault predates the tune. The separate hardware conditioner
+and zero-braking-limit hypothesis below remain proposals, not findings.
+
+This milestone does not integrate or deploy unrelated Eamon updates; last integrated remains
+`a9c8459`. Continue to reconcile newer upstream work separately without overwriting collaborators.
+
+## Kart 3 M5 modes commissioned; two additional M5 karts planned — 2026-11-10 (installed state)
 
 **Working hardware:** matching Core2 `m5-espnow` and Heltec `kart-m5-espnow` from source
 `4a582f0` are installed. Each segmented USB upload verified four segments and preserved NVS.
