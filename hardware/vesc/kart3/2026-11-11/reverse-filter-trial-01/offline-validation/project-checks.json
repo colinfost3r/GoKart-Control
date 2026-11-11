@@ -1,0 +1,67 @@
+{
+  "command": "ARDUINOJSON_DIR=/tmp/gokart-arduino/user/libraries/ArduinoJson/src tools/run_tests.sh",
+  "result": "ALL PASSED",
+  "test_count": 435,
+  "skipped": 0,
+  "suites": [
+    {
+      "name": "vesc-tools",
+      "tests": 135,
+      "skipped": 0,
+      "result": "PASS",
+      "log_sha256": "ac7c361125cb4706e1ab83cb08c50c9fea37cee647fd5d93ecdaacc681e08a31"
+    },
+    {
+      "name": "pit-core",
+      "tests": 74,
+      "skipped": 0,
+      "result": "PASS",
+      "log_sha256": "a31122000a68d171faa39bf9e4917abc45caf5be85ddb21a481f3f0fddc7b4d4"
+    },
+    {
+      "name": "pit-e2e",
+      "tests": 7,
+      "skipped": 0,
+      "result": "PASS",
+      "log_sha256": "ea79deba301aa6fd92ef864a6c0fe57a75a7ae4da6e5d2475515859efd7ad2d4"
+    },
+    {
+      "name": "kart-core",
+      "tests": 133,
+      "skipped": 0,
+      "result": "PASS",
+      "log_sha256": "1ba8f3cd623ef99f15d1e03b21f88bf961988e7003e1d514c2cf7f05e84c691d"
+    },
+    {
+      "name": "kart-mapsync",
+      "tests": 9,
+      "skipped": 0,
+      "result": "PASS",
+      "log_sha256": "e4e0ddf7fdda4b45046caf9fa181b7db24250b4839d1c726b7f929f6095d3a67"
+    },
+    {
+      "name": "kart-e2e",
+      "tests": 18,
+      "skipped": 0,
+      "result": "PASS",
+      "log_sha256": "91842438c0d8728313367a8cda3377c8ed75049b320280ad876b31d86b2d3ff3"
+    },
+    {
+      "name": "firmware",
+      "tests": 59,
+      "skipped": 0,
+      "result": "PASS",
+      "log_sha256": "3fb50e3a160dc0a88a6a0b74b21853aa253e83c77ee260bf4b2aa4a12c66ba84"
+    }
+  ],
+  "lisp_mock_cases": 33,
+  "lisp_mock_manifest": "integrated-33-results.json",
+  "baseline_decode": {
+    "firmware": "6.00",
+    "motor_fields": 189,
+    "app_fields": 187,
+    "both_schema_signatures_verified": true
+  },
+  "evidence_replay": "Matches independent summary after excluding review timestamp",
+  "no_hardware_in_tests": true
+}

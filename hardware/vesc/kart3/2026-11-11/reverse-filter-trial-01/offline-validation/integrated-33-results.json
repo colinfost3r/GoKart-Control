@@ -1,0 +1,212 @@
+{
+  "recorded_at": "2026-11-11T17:21:20.608729+00:00",
+  "firmware_source_commit": "f7c2b34e1cff2234cae98be3abf0cd50e249558f",
+  "host_runner_sha256": "b7e9f62ea33d75a17ddfee1eab6ac283c9f0f0bc2b02ca572dbd0ca6efad2ab1",
+  "heap_cons_cells": 2464,
+  "limitation": "Host interpreter with mocked hardware; other memory pools and timing differ from MCU.",
+  "sources": {
+    "rx-monitor-compact.repl": "6ba5d52cec8608cf295b5a98a96b26a9bd6fea9ddd364db3dbc9a25150610e1f",
+    "rx-monitor-30s.lisp": "ca469674fa39fd3c767b6de65a951a23c122fe5baa3c3ef97988391148849ba5",
+    "rx-filter-candidate.lisp": "1f49ab2370b5a5960723efd3e0a0b62dd1a9fd5549a2ed21ba9b1281b2def21f"
+  },
+  "results": [
+    {
+      "case": "test-adc-uart-config-refused.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "74c0310c96e43d3a42c3533372049f4672dd5424d3678504bddb3620fed1adbc"
+    },
+    {
+      "case": "test-boot-reverse-seed-before-detach.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "328e6d29fe7a707dea342092ea4d637bc5540248913964c0583b0ff364be9371"
+    },
+    {
+      "case": "test-chatter-during-motion-holds-applied-direction.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "7aab791fd3635752d98deadba2d73678505ebe1826a4ff81edb3a72cb7787987"
+    },
+    {
+      "case": "test-config-change-holds-last.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "25af8f2969265205657781524585aa06e74bdab4886acce9d8ee1999c941e5ff"
+    },
+    {
+      "case": "test-continuous-chatter-does-not-arm.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "e715933b7e15d00d1b1479a0566df17c0c6fb2c2c7771796137f5794aec9dfad"
+    },
+    {
+      "case": "test-fault-blocks-initial-arm.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "addae3e08c1e0b635fbc7f39da6e547bc32070fbb508fdb8382f096e802e862b"
+    },
+    {
+      "case": "test-fresh-check-stall-restarts-qualification.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "d0b00b00b0e04f1a65dd0fa19fe00b0b36a01d0b2c9cd42ec55de2721126e6cc"
+    },
+    {
+      "case": "test-fresh-pedal-check-restarts-qualification.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "98b6d1390c94d010e7d3c287c02d7c2ec0b3ca6706cd778344a5862d283d12e1"
+    },
+    {
+      "case": "test-glitch-rejected-sustained-accepted.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "3a9f7ae466e0e2fbb6dad6f854db409c3e1ce510d178acea914f6bf3a8372996"
+    },
+    {
+      "case": "test-latest-current-switch-state-after-motion.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "817356f457ca8a5a40e3e84e36a1e01955407f54bd9c0f3f5b8fd41b1b7371a5"
+    },
+    {
+      "case": "test-load-is-disarmed.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "74a1e013c580671b6f966a5c3659c6b072951622d61ddfe6ef79648d239f15e7"
+    },
+    {
+      "case": "test-monitor-compact-readonly-bounded.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "f35540b097951098d9b1ef40ededb70b59f40fecddbe63a8e275701948d5dc01"
+    },
+    {
+      "case": "test-monitor-readonly-bounded.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "6100e88e0eeb1ebff3f1250feec4d32d2edc6b920dc856937776c24a722909de"
+    },
+    {
+      "case": "test-pedal-and-rpm-interlock.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "cf15c45c807f6bb065b5be5eb93cae5a55603ed329b9bb5cba964651531cdaad"
+    },
+    {
+      "case": "test-preflight-false-refused.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "09060513b7046396f2e8237245f41d67a03aac58b5a073a8a64881b271837b22"
+    },
+    {
+      "case": "test-rollback-at-rest-matching-rx.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "f31cd6b57fa18d0ad97315557c4635963761a59ab868bce2449dfa97215a0cd1"
+    },
+    {
+      "case": "test-rollback-body-helper-stall-refused.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "4668d491e1c6d682c4155de85307d28779f3023ececec6a828234fc612a16035"
+    },
+    {
+      "case": "test-rollback-final-helper-stall-refused.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "1b70c8a98cc41f877d3125b6d1160ccf1ee6f956dee36a27bd106014a4d4741b"
+    },
+    {
+      "case": "test-rollback-refused-pedal.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "ebf9b69bad05ec24f6fed68145b0a2aa40d27f08616e40d40c733bbca875b5e7"
+    },
+    {
+      "case": "test-rollback-refused-rx-mismatch.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "5ffb537361777f246fa7c163eba68555396bf169efeee09c1734ba2cb93c7a97"
+    },
+    {
+      "case": "test-rollback-refused-unjoined.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "f0717b532ad39b8a10f8a29ab5335053f1ba85cf3b02efcf82bd0eb7739f0cf2"
+    },
+    {
+      "case": "test-rollback-stall-crossing-deadline-refused.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "6253ebce109f6454228365d97756f0975d590560c5d5c953a0960e224159b409"
+    },
+    {
+      "case": "test-rollback-stall-refused.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "94d0edaf8da9a248ad21b04ced190912416c44f97be4bdd9086c2598dbddd491"
+    },
+    {
+      "case": "test-spawn-failure-clears-run.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "f6b10802a33c055dc40f73bfdbd54ffdabddcc3b749e556348b8d567cd7bc476"
+    },
+    {
+      "case": "test-spawn-real-allocation-failure-clears-run.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "1031a84bea52d6b1de521cd1111a95b1e0681f526cc1cc9b8e0d59b1618e7eb8"
+    },
+    {
+      "case": "test-stall-restarts-qualification.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "7950a57cde4fb41d32add9a366a5a3b5427015162ed30fe1432f371724dc9028"
+    },
+    {
+      "case": "test-start-stop-join-holds-last.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "8a28e0e549716dff9fb5793ef33927db95746b313c866fa99c6abb65871f216b"
+    },
+    {
+      "case": "test-stop-joins-live-worker-before-rollback.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "b373e5124ff14b9e23d2e626252f9243c07878f53448a95d7c7f3b09eaf98ece"
+    },
+    {
+      "case": "test-stop-stale-pid-is-self.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "021a4e81a4e991386b4f27b425c1348fa2a4cb7f39d0d5738f4c168ec5027bda"
+    },
+    {
+      "case": "test-trial-13-blocks-direction-change-until-requalified.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "1cc0db9bb3d2182b5c4f5211dc9d05c223c1423c594f40d0eee5817bae16ac89"
+    },
+    {
+      "case": "test-trial-13-refuses-initial-arm.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "7efe690e01ccc42955a5c008c985f2e5eaeb1563e05cc8acbc8039484d6a89b9"
+    },
+    {
+      "case": "test-trial-observed-rest-upper-106-accepted.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "4059b4cae567edd55109045b21ea5e2e0786ee9b3c25fdc46bcb0bcaf95bca30"
+    },
+    {
+      "case": "test-trial-rest-09-accepted.lisp",
+      "passed": true,
+      "returncode": 1,
+      "sha256": "983df4dfaab6f930eecaea352e66e0d06c09a46261cb8e5a2dca5677989cabda"
+    }
+  ]
+}

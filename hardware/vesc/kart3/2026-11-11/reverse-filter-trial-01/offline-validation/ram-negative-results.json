@@ -1,0 +1,27 @@
+[
+  {
+    "name": "wrong-offset",
+    "exit": 0,
+    "pass_": true
+  },
+  {
+    "name": "repeat-first-chunk",
+    "exit": 0,
+    "pass_": true
+  },
+  {
+    "name": "source-corrupt-before-eval",
+    "exit": 0,
+    "pass_": true
+  },
+  {
+    "name": "source-truncated-before-eval",
+    "exit": 0,
+    "pass_": true
+  },
+  {
+    "name": "nul-corrupt-before-eval",
+    "exit": 0,
+    "pass_": true
+  }
+]

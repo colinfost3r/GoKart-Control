@@ -1,0 +1,5 @@
+LISPBM := /tmp/gokart-lbm-602
+include $(LISPBM)/lispbm.mk
+all: host_repl
+host_repl: host_repl.c
+	clang -g -O2 -Wall -Wextra -std=c99 -DLBM64 -D_PRELUDE $(LISPBM_SRC) $(LISPBM)/platform/linux/src/platform_mutex.c host_repl.c -o host_repl -I$(LISPBM)/include -I$(LISPBM)/platform/linux/include -lm -lpthread

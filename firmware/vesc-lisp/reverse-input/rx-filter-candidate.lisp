@@ -97,12 +97,18 @@
         (progn
           (setvar 'gk-rx-filter-run t)
           (setvar 'gk-rx-filter-pid (spawn 256 gk-rx-filter-worker))
-          gk-rx-filter-pid))))
+          (if (< gk-rx-filter-pid 0)
+            (progn (setvar 'gk-rx-filter-run nil)
+                   (print 'gk-rx-filter-spawn-failed) nil)
+            gk-rx-filter-pid)))))
   (define gk-rx-filter-stop
     (lambda ()
       (progn
         (setvar 'gk-rx-filter-run nil)
-        (if (>= gk-rx-filter-pid 0) (wait gk-rx-filter-pid))
+        ; IDs are recycled context-memory addresses. A dead worker's ID may
+        ; now belong to this REPL context; waiting on self would never finish.
+        (if (and (>= gk-rx-filter-pid 0) (!= gk-rx-filter-pid (self)))
+          (wait gk-rx-filter-pid))
         (setvar 'gk-rx-filter-pid -1)
         (print (list 'gk-rx-filter-joined-holding gk-rx-filter-applied))
         t)))

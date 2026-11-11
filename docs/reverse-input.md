@@ -1,12 +1,15 @@
 # Kart 3 reverse input — wiring investigation
 
-**Latest isolation result:** [session 03](../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md) passed both local input states
-(closed 13,428 samples, open 13,364; zero transitions). With the long reverse-switch branch
-still disconnected, the operator confirmed smooth forward and RX remained high for 13,281
-samples with zero transitions. All 376 settings matched before/after. The removed branch is
-the leading suspect, not a proven specific component. The earlier isolation instructions below
-are retained for reproduction; the next step is branch inspection/repair/substitution followed
-by repeat acceptance. Filter remains uninstalled; no further motor test is queued.
+**Latest: first volatile filter trial passed in both directions.** With the original switch
+branch restored, the owner confirmed forward and smooth reverse. Forward had 152 raw RX
+transitions yet sampled rotation remained forward; reverse had zero transitions. All 376
+settings were unchanged. The filter was left running in RAM with forward applied; no persistent
+install was made. [Trial evidence](../hardware/vesc/kart3/2026-11-11/reverse-filter-trial-01/README.md)
+and [current procedure](../firmware/vesc-lisp/reverse-input/README.md).
+
+Earlier local-contact isolation showed stable inputs and smooth forward with the long branch
+removed. The external branch remains the leading suspect; software has not repaired it. The
+historical instructions below describe the investigation before the authorized filter trial.
 
 Latest owner correction, November 10: **throttle ADC1; reverse switch RX**. The switch is a
 maintained mechanical switch connected to VESC signal GND. The owner added an external pull-up
@@ -15,8 +18,8 @@ even when the wheels are fully stopped and the pedal is released before selectio
 confirms it was **already intermittent before the November 10 tune**; that tune did not introduce
 the original fault. Resistor placement, measured voltage levels and exact physical connector
 pinout are not yet verified.
-Earlier statements putting reverse on TX or ADC1/ADC2 are superseded. No wiring or input setting
-was changed by the agent.
+Earlier statements putting reverse on TX or ADC1/ADC2 are superseded. No saved input setting was changed by the agent; the later RAM-only filter changes
+the reverse-button path during the explicitly supervised trial.
 
 The latest complete USB readback reports `app_to_use=2` (ADC), `app_adc_conf.ctrl_type=3`
 (Current Reverse Button), `app_adc_conf.buttons=0` (no cruise/inversion bits), regular safe start,
@@ -33,7 +36,7 @@ For this stock 75_300_R2 definition, COMM RX is **PB11** while permanent NRF51/B
 **PC11/PC10**. `permanent_uart_enabled=1` therefore does not seize the reverse input; do not
 disable it on this evidence. [Pinned pin definitions](https://github.com/vedderb/bldc/blob/f7c2b34e1cff2234cae98be3abf0cd50e249558f/hwconf/trampa/75_300/hw_75_300_core.h#L185-L201).
 
-## November 11 measured input — isolate the long switch harness next
+## Earlier November 11 input investigation — superseded next-step instructions
 
 The [latest session](../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md)
 observed correct held-state snapshots after reconnection (reverse RX=0, forward RX=1), one good
@@ -57,7 +60,7 @@ with the pedal untouched. Stable local input followed by instability with the or
 would implicate the external path; instability even locally needs connector/pull-up/pin-mode
 investigation. No throttle test or filter activation is queued.
 
-The filter remains uninstalled. Its offline release guard is now 0.12, below the existing 0.15
+At this earlier checkpoint the filter was uninstalled. Its release guard is 0.12, below the existing 0.15
 native deadband; pedal calibration is unchanged. A wrong input held for at least 50 ms can still
 be accepted, so software is not a substitute for isolating this fault. Heltec BLE polling must
 remain absent for reliable USB Lisp prints; stock 6.02 routes asynchronous output to the most

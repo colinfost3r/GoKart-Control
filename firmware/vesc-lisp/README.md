@@ -1,10 +1,11 @@
 # VESC-local experiments
 
-The [kart 3 reverse-input diagnostic](reverse-input/README.md) now has a completed live monitor:
-RX stayed high while reverse was selected. Electrical voltage/contact verification is next;
-the separate filter candidate remains unloaded and disabled. No firmware upgrade is needed,
-and this work does not change the braking experiment below. Never upload one script
-over another without capturing/reviewing the existing code and ownership first.
+The [kart 3 reverse-input filter](reverse-input/README.md) passed its first supervised
+forward/reverse bench trial with the original switch wiring. It is active in RAM at the last
+observation, with forward selected; no persistent upload or autostart was installed. A power
+cycle removes it. The physical input fault and fleet reliability remain unresolved. All tune,
+Hall and pedal settings are unchanged. This is separate from the uninstalled braking experiment
+below. Never overwrite/redefine an active script or ignore existing runtime ownership.
 
 ## On-VESC brake script (regen on STOP)
 

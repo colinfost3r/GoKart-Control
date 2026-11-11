@@ -1,0 +1,203 @@
+{
+  "source_sha256": "d530aeb20c81c185e25ba9b4954473a8bd7069fe5b59b1babeca3ca2b89e94dc",
+  "cases": [
+    {
+      "name": "test-adc-uart-config-refused.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.005
+    },
+    {
+      "name": "test-boot-reverse-seed-before-detach.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.009
+    },
+    {
+      "name": "test-chatter-during-motion-holds-applied-direction.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.01
+    },
+    {
+      "name": "test-config-change-holds-last.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.009
+    },
+    {
+      "name": "test-continuous-chatter-does-not-arm.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.008
+    },
+    {
+      "name": "test-fault-blocks-initial-arm.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.008
+    },
+    {
+      "name": "test-fresh-check-stall-restarts-qualification.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.008
+    },
+    {
+      "name": "test-fresh-pedal-check-restarts-qualification.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.008
+    },
+    {
+      "name": "test-glitch-rejected-sustained-accepted.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.008
+    },
+    {
+      "name": "test-latest-current-switch-state-after-motion.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.009
+    },
+    {
+      "name": "test-load-is-disarmed.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.005
+    },
+    {
+      "name": "test-monitor-compact-readonly-bounded.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.033
+    },
+    {
+      "name": "test-monitor-readonly-bounded.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.045
+    },
+    {
+      "name": "test-pedal-and-rpm-interlock.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.009
+    },
+    {
+      "name": "test-preflight-false-refused.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.005
+    },
+    {
+      "name": "test-rollback-at-rest-matching-rx.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-rollback-body-helper-stall-refused.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-rollback-final-helper-stall-refused.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.005
+    },
+    {
+      "name": "test-rollback-refused-pedal.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-rollback-refused-rx-mismatch.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-rollback-refused-unjoined.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-rollback-stall-crossing-deadline-refused.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-rollback-stall-refused.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-spawn-failure-clears-run.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.006
+    },
+    {
+      "name": "test-spawn-real-allocation-failure-clears-run.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.007
+    },
+    {
+      "name": "test-stall-restarts-qualification.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.008
+    },
+    {
+      "name": "test-start-stop-join-holds-last.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.105
+    },
+    {
+      "name": "test-stop-joins-live-worker-before-rollback.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.314
+    },
+    {
+      "name": "test-stop-stale-pid-is-self.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.005
+    },
+    {
+      "name": "test-trial-13-blocks-direction-change-until-requalified.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.01
+    },
+    {
+      "name": "test-trial-13-refuses-initial-arm.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.007
+    },
+    {
+      "name": "test-trial-observed-rest-upper-106-accepted.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.008
+    },
+    {
+      "name": "test-trial-rest-09-accepted.lisp",
+      "exit": 1,
+      "pass_": true,
+      "seconds": 0.007
+    }
+  ]
+}

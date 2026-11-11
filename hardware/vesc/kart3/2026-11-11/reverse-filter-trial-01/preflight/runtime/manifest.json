@@ -1,0 +1,53 @@
+{
+  "started_utc": "2026-11-11T17:08:45.671619+00:00",
+  "mode": "inspect",
+  "uuid_pin": "37004e000951343037353739",
+  "plan_sha256": null,
+  "source_sha256": null,
+  "complete": true,
+  "activation_sent": false,
+  "stream_sent": false,
+  "flash_written": false,
+  "namespace_absence_machine_verified": false,
+  "steps_completed": 0,
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "contexts_before": {
+    "all_context_headings_seen_in_order": true,
+    "quiet_tail_at_least_250ms": true,
+    "no_partial_frame": true,
+    "context_id_lines": [],
+    "snapshot": "no_contexts_reported",
+    "atomic_or_future_ownership_proof": false
+  },
+  "memory_before": "--(LISP HEAP)--\nHeap size: 19712 Bytes\nUsed cons cells: 0\nFree cons cells: 2464\nGC counter: 0\nRecovered: 0\nRecovered arrays: 0\nMarked: 0\n--(Symbol and Array memory)--\nMemory size: 4096 Words\nMemory free: 3308 Words\nAllocated arrays: 0\nSymbol table size: 2832 Bytes\nExtensions: 222, max 250",
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T17:08:47.385455+00:00"
+}

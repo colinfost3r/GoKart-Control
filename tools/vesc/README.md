@@ -47,6 +47,36 @@ Pause the competing VESC Bluetooth client for reliable USB Lisp prints: 6.02 rou
 
 [Hardware observation and limitations](../../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md); [session procedure](../../firmware/vesc-lisp/reverse-input/README.md).
 
+## Fixed volatile RX-filter loading
+
+`prepare_rx_filter.py` checks and reproduces the reviewed kart-3 candidate, compact source and fixed load plan **offline**. It verifies the pinned hashes and every generated expression/CRC marker. Optional `--out` creates a new review directory; it never changes source or pins.
+
+```sh
+python3 -B tools/vesc/prepare_rx_filter.py
+python3 -B tools/vesc/prepare_rx_filter.py --out /path/to/new/offline-review
+python3 -B -m unittest discover -s tests -p 'test_vesc_rx_filter*.py' -v
+```
+
+`rx_filter_repl_load.py` is a separate, fixed **volatile Lisp-definition writer**, not part of `capture.py`'s read-only allowlist. It pins kart 3's UUID/firmware and sends 24 reviewed REPL138 expressions to assemble and CRC-check the 3,732-byte source in RAM, evaluate definitions and remove the temporary buffer. It never activates the filter, writes flash or uses STREAM139, and requests no Lisp reset. REPL may initialize a stopped interpreter. The November 11 native load completed disarmed; later supervised forward/reverse checks passed. No persistent/autostart installation was performed.
+
+A complete empty context snapshot is required, plus actual reviews of ownership and absence of an earlier copy/native override. Empty contexts alone cannot prove namespace or override absence. Keep competing VESC clients disconnected for reliable USB output. Loading requires explicit `--ownership-reviewed` and `--no-previous-copy-reviewed` flags, an actual `--port` and a new `--out` evidence directory. `--inspect` only observes fixed context/memory information. After a partial/uncertain send or missing completion, the tool stops without retry/reset/cleanup; do not infer that no definitions ran.
+
+The committed plan retains a historical scratch-source path only to preserve its deployed SHA-256; tools resolve executable dependencies relative to the repository. See the [loader review and hardware evidence](../../docs/reverse-input/volatile-loader-review.md) and [supervised reverse-input procedure](../../firmware/vesc-lisp/reverse-input/README.md). Filter activation, joined stop and guarded rollback are separate operations; stopping the worker holds its last direction and does not stop the motor.
+
+## Fixed reverse-filter lifecycle control
+
+`rx_filter_control.py` is separate from both the passive capture tool and definition loader.
+`status` reads the fixed lifecycle/input state, contexts and whole configuration. Explicit
+`start`, `stop` and `rollback` subcommands change the reverse-button path; they never command
+motor output or change tune/calibration. Identity, the entire app payload, source provenance,
+stationary checks and single-send/no-retry rules are pinned to this kart-3 trial.
+
+`start` requires the separately reviewed loaded source and fresh supervised setup. It refuses
+an existing/ambiguous copy. `stop` joins the worker and holds direction; it is not motor stop.
+`rollback` separately requires the worker joined, released pedal/rest, and raw RX agreeing with
+the held direction. No automatic rollback/reset or start replay exists. See the
+[complete procedure and flags](../../firmware/vesc-lisp/reverse-input/README.md).
+
 ## Capture
 
 Use Python 3.9+ on macOS/Linux. Close VESC Tool or other serial clients. Have the

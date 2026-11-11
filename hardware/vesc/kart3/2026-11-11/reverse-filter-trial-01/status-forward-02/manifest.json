@@ -1,0 +1,69 @@
+{
+  "action": "status",
+  "uuid_pin": "37004e000951343037353739",
+  "firmware_pin": "6.02",
+  "app_sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d",
+  "candidate_sha256": "1f49ab2370b5a5960723efd3e0a0b62dd1a9fd5549a2ed21ba9b1281b2def21f",
+  "deployment_sha256": "d530aeb20c81c185e25ba9b4954473a8bd7069fe5b59b1babeca3ca2b89e94dc",
+  "loaded_source_readback_verified_here": false,
+  "complete": true,
+  "lifecycle_sent": false,
+  "setup_confirmed": false,
+  "loaded_reviewed": false,
+  "expected_rx": null,
+  "native_detach_independently_readable": false,
+  "stop_meaning": "stop filter worker; hold last direction; NOT motor stop",
+  "started_utc": "2026-11-11T17:15:29.291387+00:00",
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "status_before": {
+    "run": true,
+    "active": true,
+    "pid": 1244,
+    "applied": 0,
+    "rx": 1,
+    "adc": 0.087514,
+    "erpm": -3e-06,
+    "fault": 0
+  },
+  "contexts_before": {
+    "all_context_headings_seen_in_order": true,
+    "quiet_tail_at_least_250ms": true,
+    "no_partial_frame": true,
+    "context_id_lines": [
+      "ContextID: 1244"
+    ],
+    "snapshot": "contexts_present",
+    "atomic_or_future_ownership_proof": false
+  },
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "after_settings_verified": true,
+  "finished_utc": "2026-11-11T17:15:31.337772+00:00"
+}

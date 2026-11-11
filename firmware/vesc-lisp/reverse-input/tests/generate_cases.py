@@ -239,6 +239,58 @@ scenarios = {
   (eq mock-calls '((250 detach 2 1) (250 override 2 1))))
 ''',
 }
+scenarios.update({
+'spawn-failure-clears-run': """
+(define memory-pressure (array-create (* (word-size) (- (mem-longest-free) 128))))
+(and (eq (gk-rx-filter-start t) nil)
+     (not gk-rx-filter-run) (= gk-rx-filter-pid -1)
+     (not gk-rx-filter-active) (= gk-rx-filter-applied -1)
+     (eq mock-calls nil)
+     (eq mock-output '(gk-rx-filter-spawn-failed)))
+""",
+'spawn-real-allocation-failure-clears-run': """
+(define memory-pressure (array-create (* (word-size) (- (mem-longest-free) 32))))
+(and (eq (gk-rx-filter-start t) nil)
+     (not gk-rx-filter-run) (= gk-rx-filter-pid -1)
+     (not gk-rx-filter-active) (= gk-rx-filter-applied -1)
+     (eq mock-calls nil)
+     (eq mock-output '(gk-rx-filter-spawn-failed)))
+""",
+'stop-stale-pid-is-self': """
+(setvar 'gk-rx-filter-pid (self))
+(setvar 'gk-rx-filter-run t)
+(setvar 'gk-rx-filter-active t)
+(setvar 'gk-rx-filter-applied 0)
+(and (eq (gk-rx-filter-stop) t)
+     (not gk-rx-filter-run) (= gk-rx-filter-pid -1)
+     gk-rx-filter-active (= gk-rx-filter-applied 0)
+     (eq mock-calls nil)
+     (eq (gk-rx-filter-rollback t) t)
+     (not gk-rx-filter-active) (= gk-rx-filter-applied -1)
+     (eq mock-calls '((250 detach 2 0))))
+""",
+'stop-joins-live-worker-before-rollback': """
+(setvar 'mock-pin (lambda () 0))
+(setvar 'sleep (lambda (seconds)
+  (progn (setvar 'mock-time (+ mock-time 2)) (yield 1000) t)))
+(define started-pid (gk-rx-filter-start t))
+(loopwhile (not gk-rx-filter-active) (yield 1000))
+(define before-stop mock-calls)
+(define stopped (gk-rx-filter-stop))
+(define joined-output (car mock-output))
+(define worker-output (car (cdr mock-output)))
+(define held-correct (and stopped (>= started-pid 0)
+                         (not gk-rx-filter-run) (= gk-rx-filter-pid -1)
+                         gk-rx-filter-active (= gk-rx-filter-applied 1)
+                         (eq before-stop mock-calls)
+                         (eq joined-output '(gk-rx-filter-joined-holding 1))
+                         (eq worker-output '(gk-rx-filter-stopped-holding 1))))
+(define rolled-back (gk-rx-filter-rollback t))
+(and held-correct rolled-back (not gk-rx-filter-active)
+     (= gk-rx-filter-applied -1) (= (length mock-calls) 3)
+     (eq (cdr (car mock-calls)) '(detach 2 0)))
+""",
+})
 for name, body in scenarios.items():
     (root/f'test-{name}.lisp').write_text(common+'\n'+filter_src+'\n'+body)
 monitor_setup = '''

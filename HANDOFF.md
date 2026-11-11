@@ -1,6 +1,55 @@
 # Collaborator handoff
 
-## Kart 3 local-contact isolation — November 11, 2026 (latest, session 03)
+## Kart 3 reverse filter — November 11, 2026 (latest, volatile trial 01)
+
+**First bench pass in both directions; not a permanent repair or fleet deployment.**
+After the owner chose the filter trial, they restored the original switch/pull-up, removed
+local jumpers, kept Heltec off and confirmed wheels lifted/pedal released/cutoff accessible.
+The pinned 6.02 controller received 24 acknowledged RAM-only REPL load steps, disarmed on load,
+then one explicit start. No STREAM139, flash/autostart, reset, tune/calibration write, throttle
+override or host motor command was sent. [Exact source, captures and limits](hardware/vesc/kart3/2026-11-11/reverse-filter-trial-01/README.md).
+
+Initial start verification was inconclusive because `:ctxs` omitted PID 1244. That failed
+manifest is retained. No retry/reload occurred. Subsequent at-rest F/R/F observations showed
+applied 0/1/0 and positively listed PID 1244, resolving the uncertainty before motor tests.
+The owner then confirmed **forward worked** and **smooth reverse** using the wired pedal.
+Forward: 304 telemetry replies, 152 raw RX transitions/12,453 samples, ERPM 0..29,491.
+Reverse: 303 replies, zero RX transitions/12,458 samples, ERPM -22,217..+45 (small near-stop
+reading). Every captured fault was zero. Both ended at rest. These are sampled observations,
+not continuous electrical validation; requested <=1s pedal pulses are not proven exact durations.
+
+All 189 motor + 187 app fields match preflight byte-for-byte. Final observation at 17:19:22 UTC:
+**filter running/active, PID 1244 present, forward applied=0, raw RX=1, released-region ADC,
+near-zero ERPM, fault 0**. The owner confirmed forward/pedal released. No further motor test is
+queued. **Filter remains active in RAM, not installed in flash.** Power cycling removes it and
+restores the original raw-input behavior. Do not reload/redefine an active copy. Heltec is off;
+reconnect coexistence has not been validated.
+
+The filter accepts stable RX after 50ms and requires pedal in the <=0.12 zero-demand region,
+|ERPM|<=50 and fault0 for 250ms before changing direction. It retains the last applied direction
+while moving. A stable wrong electrical level can still qualify at rest. A failed/paused worker
+can hold the previous direction while the wired pedal still works: this is a prototype boundary,
+not a production failover design. `stop` joins the filter and **holds direction**, not motor stop;
+explicit matching-RX/stationary rollback is separate and has not yet been exercised on hardware.
+
+Next: review wiring repair and controlled repeat acceptance, then separately validate joined
+stop/rollback, startup/power-cycle behavior and Heltec coexistence before any persistent/fleet
+install. Preserve the existing firmware build, tune and Hall/pedal calibration. The successful
+trial supports filtering as useful mitigation; it does not identify or fix the external fault.
+
+Portable tools: `prepare_rx_filter.py` (offline), `rx_filter_repl_load.py` (fixed disarmed RAM
+load), `rx_filter_control.py` (explicit lifecycle/status), all in `tools/vesc/`. Original capture
+allowlist remains unchanged. The 33 candidate cases pass in the pinned interpreter; loader,
+plan and controller add 40 offline transport/lifecycle tests. See current trial evidence for
+exact source hashes. All **435 project tests passed across seven suites, zero skipped**;
+the baseline decoder verified both signatures and all 376 fields. Offline evidence replay
+matched the independent review exactly. No radio/UI firmware was changed or flashed.
+
+Remote coordination: the final fetch found no changes on origin/v1.5/m5-core2. Eamon’s
+branch has six additional commits through a5a4c22 (items/map and ESP-NOW channel work); those
+are not merged or deployed by this reverse-filter milestone and remain separate integration work.
+
+## Kart 3 local-contact isolation — November 11, 2026 (earlier session 03)
 
 **Original reverse-switch branch is the leading suspect; kart is not yet repaired.**
 With the requested short local setup, closed RX stayed low for 13,428 samples with zero edges;

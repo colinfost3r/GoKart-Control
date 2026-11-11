@@ -1,0 +1,16 @@
+{
+  "plan_sha256": "c35588937d67f86bd90e67b40f59c2a60a1ed9bddc7edf168c564909ba264805",
+  "source_sha256": "d530aeb20c81c185e25ba9b4954473a8bd7069fe5b59b1babeca3ca2b89e94dc",
+  "steps": 24,
+  "max_payload_bytes": 397,
+  "loader_strict_16kb_host_pass": true,
+  "heap_cons": 2464,
+  "gc_stack": 160,
+  "print_stack": 128,
+  "behavior_cases_passed": 33,
+  "negative_cases_passed": 5,
+  "mock_override_calls": 0,
+  "mock_detach_calls": 0,
+  "hardware_tested": false,
+  "namespace_absence_machine_proven": false
+}
