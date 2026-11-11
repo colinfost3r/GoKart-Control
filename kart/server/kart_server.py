@@ -98,7 +98,7 @@ DEFAULTS = {
     "sound_volume": 0.8,                # master volume of those sounds, 0-1
     "sun_mode": True,                   # driver page: opaque high-contrast SUN theme (the SUN button overrides it per device)
     "freeplay": True,                   # allow freeplay (FREEPLAY map button / POST /api/freeplay): kart-local item boxes, no pit
-    "freeplay_boxes": 3,                # item boxes kept on the freeplay course (1-6)
+    "freeplay_boxes": 5,                # item boxes kept on the freeplay course (1-8)
     "mud_slow_secs": 4,                 # each mud command (zone repeat / MUD item): `slow 5 N` on Heltec kart-0.2.4+, else `boost N 0.5`
     "item_reveal_s": 1.4,
     "item_hold": True,                  # freeplay boost/rocket are carried (up to 3) and used later from the Core2 item screen or the dash; false = they fire at the prize-wheel reveal               # hold an item-box prize this long so it lands as the dash prize-wheel finishes (owner 2026-11-10); 0 = instant
@@ -112,7 +112,7 @@ CONFIG_RULES = {
     "follow_resume_s": (float, 1, 600), "mode_hold_ms": (int, 0, 5000), "map_fps": (int, 1, 30),
     "http_port": (int, 1, 65535), "status_poll_s": (float, 5, 3600), "max_log_mb": (float, 10, 100000),
     "demo_max_s": (float, 10, 3600), "sound_volume": (float, 0, 1), "rotate": (int, 0, 180),
-    "health_period_s": (float, 0.2, 3600), "freeplay_boxes": (int, 1, 6),
+    "health_period_s": (float, 0.2, 3600), "freeplay_boxes": (int, 1, 8),
     "mud_slow_secs": (int, 1, 30), "item_reveal_s": (float, 0, 5),
 }
 CONFIG_BOOLS = ("beginner_mode", "remote_cmd", "game", "gps_correction", "demo", "sound", "sun_mode", "freeplay",
@@ -125,6 +125,9 @@ MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=ut
 SSE_PERIOD_S = 0.2
 SSE_SKIP = ("heltec", "rx_lines", "rx_bad", "gps_lines", "kiosk")   # /api/state only (the page does not use them)
 DEMO_FINISH_LAPS = 3                    # demo mode: FINISH (P1) after this many laps
+# records that change the carried inventory/shields: game-state.json is rewritten on any of them
+INV_SAVE_EVENTS = ("item_held", "item_used", "shield_broke", "shield_on", "inventory_restored",
+                   "game_on", "game_off")
 PUBLIC_CFG = ("kart_id", "beginner_mode", "map_orientation", "follow_span_m", "follow_resume_s",
               "mode_hold_ms", "map_fps", "game", "sound", "sound_volume", "demo", "sun_mode", "freeplay",
               "freeplay_boxes", "item_hold")
@@ -290,6 +293,9 @@ class App:
         self.game_state_path = os.path.join(os.path.dirname(os.path.normpath(cache_dir)), "game-state.json")
         self._game_saved = None
         self._game_pending = self._load_game_state()
+        # carried items (Core2 inventory) also live in game-state.json but, unlike lap timing, survive
+        # power cycles: restored into the next running freeplay game while saved_wall is fresh
+        self._inv_pending = self._inv_restorable(self._game_pending)
         # freeplay (kart-local item game): on/off, course and the collected count survive restarts
         self.freeplay_path = os.path.join(os.path.dirname(os.path.normpath(cache_dir)), "freeplay.json")
         fp_ok = bool(cfg.get("freeplay", True)) and bool(cfg.get("game", True))
@@ -567,7 +573,8 @@ class App:
         if recs:
             self._state_cache = (0.0, b"{}")
             self._parts_cache = (0.0, {})
-            if not demo and self.demo is None and any(r["ev"] in kartcore.GAME_TIMING_EVENTS for r in recs):
+            if not demo and self.demo is None and any(
+                    r["ev"] in kartcore.GAME_TIMING_EVENTS or r["ev"] in INV_SAVE_EVENTS for r in recs):
                 self._save_game_state()
 
     # -- background ------------------------------------------------------------
@@ -615,6 +622,12 @@ class App:
                 if self._game_pending is not None and d is None:
                     game += self.game.import_state(self._game_pending, now)
                     self._game_pending = None
+                if self._inv_pending is not None and d is None and self.game.active():
+                    items, shields = self._inv_pending     # carried items survive power cycles (24 h)
+                    recs = self.game.restore_inventory(items, shields, now)
+                    if recs or self.game.source == "freeplay":    # freeplay running: restored or refused for good
+                        self._inv_pending = None
+                    game += recs
                 game += self.game.tick(now)
                 if d is None:
                     game += self.freeplay.multi_tick(now)      # re-send a session wish that is not in force
@@ -633,6 +646,18 @@ class App:
     # -- game timing across restarts -------------------------------------------
     def _load_game_state(self):
         return self._load_json(self.game_state_path)
+
+    @staticmethod
+    def _inv_restorable(doc):
+        """(items, shields) from a saved game state, or None (missing, stale, or nothing carried)."""
+        if not isinstance(doc, dict) or doc.get("v") != 1:
+            return None
+        wall = doc.get("saved_wall")
+        if not isinstance(wall, (int, float)) or not 0 <= time.time() - wall <= kartcore.INVENTORY_KEEP_S:
+            return None
+        items = doc.get("inventory") or []
+        shields = doc.get("shields") or 0
+        return (items, shields) if items or shields else None
 
     @staticmethod
     def _load_json(path):

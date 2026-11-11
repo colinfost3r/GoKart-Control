@@ -1195,7 +1195,15 @@ static void serviceWifi() {
     logf("wifi %s ota host %s.local", WiFi.localIP().toString().c_str(), host);
   }
   if (otaStarted) ArduinoOTA.handle();
-  if (!up && millis() - wifiRetryMs > 30000) { wifiRetryMs = millis(); WiFi.reconnect(); }
+  if (!up && millis() - wifiRetryMs > 30000) {
+    // never scan while the kart is moving: a reconnect scan drags the radio across channels for
+    // seconds, and every broadcast off espnowCh is one the Core2 (locked there) cannot hear.
+    // WiFi only matters at the pit (OTA), and the kart is stopped there.
+    float e1 = mphToErpm(1.5f);
+    bool moving = (vescUp() && e1 > 0 && fabsf((float)vesc.values().erpm) > e1)
+               || (gps.speed.isValid() && gps.speed.age() < 3000 && gps.speed.kmph() > 4.0);
+    if (!moving) { wifiRetryMs = millis(); WiFi.reconnect(); }
+  }
 }
 
 // ------------------------------------------------- Core2 item screen (ESP-NOW)
@@ -1252,7 +1260,7 @@ static void serviceEspnow() {
   if (WiFi.status() == WL_CONNECTED) {
     uint8_t ch = (uint8_t)WiFi.channel();                        // remember the AP's channel
     if (ch >= 1 && ch <= 13 && ch != espnowCh) { espnowCh = ch; prefs.putUChar("espch", ch); }
-  } else if (millis() - wifiRetryMs > 6000) {
+  } else if (millis() - wifiRetryMs > 2500) {
     // a reconnect scan hops the radio and parks it anywhere; once it is over, go back to our
     // channel so the Core2 (locked there) keeps hearing the broadcasts
     uint8_t cur; wifi_second_chan_t sc;

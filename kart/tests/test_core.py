@@ -1041,6 +1041,62 @@ class Items(unittest.TestCase):
         self.assertEqual(lines(pit.on_self(fix(0, 0), 1.0)), ["boost 7 0.75"])
         self.assertEqual(pit.inventory, [])
 
+    def test_restore_inventory_refills_an_empty_freeplay_inventory(self):
+        # owner 2026-11-11: carried boxes vanished every power cycle; they now live in game-state.json
+        # (export_state) and restore_inventory puts them back into the next running freeplay game.
+        g = self._fp_engine(0.1)
+        r = g.restore_inventory([{"item": "rocket", "secs": 10, "scale": 1.0},
+                                 {"item": "boost3", "secs": 7, "scale": 0.75, "charges": 2},
+                                 {"item": "junk", "secs": 1, "scale": 0.5}], 1, 2.0)
+        self.assertEqual(evs(r, "inventory_restored")[0]["items"], ["rocket", "boost3"])
+        self.assertEqual([i["item"] for i in g.inventory], ["rocket", "boost3"])
+        self.assertEqual(g.inventory[1]["charges"], 2)
+        self.assertEqual(g.shields, 1)
+        self.assertEqual(g.restore_inventory([{"item": "boost", "secs": 7, "scale": 0.75}], 0, 3.0), [])
+        self.assertEqual(len(g.inventory), 2)                       # non-empty inventory: refused
+        self.assertTrue(lines(g.use_item(5.0, 0))[0].startswith("boost 10"))
+        exp = g.export_state(6.0)                                   # the save side carries them + a wall clock
+        self.assertEqual([i["item"] for i in exp["inventory"]], ["boost3"])
+        self.assertEqual(exp["inventory"][0]["charges"], 2)
+        self.assertEqual(exp["shields"], 1)
+        self.assertGreater(exp["saved_wall"], 1e9)
+        pit = kc.GameEngine(rng=FixedRng(0.1), item_hold=True)      # a pit game never restores
+        pit.set_zones(zones_doc(item_zone()), 0.0)
+        self.assertEqual(pit.restore_inventory([{"item": "boost", "secs": 7, "scale": 0.75}], 0, 1.0), [])
+        self.assertEqual(pit.inventory, [])
+
+    def test_freeplay_doc_has_a_lapline_and_laps_count(self):
+        # owner 2026-11-11 ("timed laps would be great"): the freeplay document carries a synthesized
+        # start/finish line across the loop start, so laps time in freeplay and hotlap can resolve.
+        fp = kc.FreeplayGame(rng=__import__("random").Random(1))
+        fp.set_on(True, 0.0)
+        fp.set_course(fp_course(), "recorded", 1.0, [])
+        d = fp.doc()
+        laps = [z for z in d["zones"] if z["type"] == "lapline"]
+        self.assertEqual(len(laps), 1)
+        L = laps[0]
+        self.assertEqual((L["id"], L["shape"], L["min_lap_s"]), ("fp-lap", "line", kc.FP_LAP_MIN_S))
+        self.assertAlmostEqual(kc._dist_m(tuple(L["a"]), tuple(L["b"])), 18.0, delta=1.0)   # 2 * width 6 * 1.5
+        g = kc.GameEngine(item_hold=True)
+        g.set_zones(d, 0.0)
+        self.assertTrue(g.active())                                 # ... and keeps the game on, boxes or not
+        self.assertTrue(g.snapshot(0.0)["lapline"])
+        start = fp.course["points"][0]
+        self.assertAlmostEqual(kc._dist_m(tuple(L["a"]), tuple(start)), 9.0, delta=1.0)
+        # rect_path starts at (-30, -20) heading east: the line runs north-south there (n -29 to -11).
+        g.on_self(fix(-40, -20), 0.5)
+        r1 = g.on_self(fix(-26, -20), 1.0)                          # crossing 1: the clock starts
+        self.assertEqual(len(evs(r1, "lap_start")), 1)
+        for e, n, t in ((-12, -20, 2), (0, -20, 3), (0, -6, 5), (-14, -4, 7),   # around the line's end
+                        (-28, -4, 9), (-42, -4, 11), (-42, -16, 13), (-38, -20, 15)):
+            g.on_self(fix(e, n), float(t))
+        r2 = g.on_self(fix(-24, -20), 18.0)                         # crossing 2: a timed lap
+        lap = evs(r2, "lap")
+        self.assertEqual(len(lap), 1, [r["ev"] for r in r2])
+        self.assertAlmostEqual(lap[0]["lap_s"], 15.9, delta=1.5)        # crossings interpolate
+        self.assertEqual(g.snapshot(18.0)["lap"]["count"], 1)
+        self.assertIsNotNone(g.snapshot(18.0)["lap"]["best_s"])
+
     def test_cooldown_15_and_gates(self):
         g = kc.GameEngine(rng=FixedRng(0.1))
         g.set_zones(zones_doc(item_zone()), 0.0)
@@ -1464,7 +1520,9 @@ class Freeplay(unittest.TestCase):
                 for b in bs[i + 1:]:
                     self.assertGreaterEqual(fp.loop.arc(a["s"], b["s"]), 15.0)           # spacing along the loop
             zs = fp.doc()["zones"]
-            self.assertEqual({(z["type"], z["shape"], z["r_m"], z["cooldown_s"]) for z in zs}, {("item", "circle", 4.0, 15.0)})
+            self.assertEqual({(z["type"], z["shape"], z["r_m"], z["cooldown_s"]) for z in zs if z["type"] == "item"},
+                             {("item", "circle", 4.0, 15.0)})
+            self.assertEqual([z["id"] for z in zs if z["type"] == "lapline"], ["fp-lap"])
             self.assertEqual(len(evs(recs, "freeplay_spawn")), 3)
         fp, _ = self.ready(boxes=6)
         self.assertEqual(len(fp.boxes), 6)
@@ -1475,7 +1533,7 @@ class Freeplay(unittest.TestCase):
         fp.tick(1.0)
         self.assertLessEqual(len(fp.boxes), 4)
         self.assertGreaterEqual(len(fp.boxes), 1)
-        self.assertEqual(kc.FreeplayGame(boxes=99).n_boxes, 6)
+        self.assertEqual(kc.FreeplayGame(boxes=99).n_boxes, 8)
 
     def drive(self, fp, g, path, t, laps=1.0, dt=0.2, mps=6.0, pit=None):
         """The server's loop: gps sample -> engine -> freeplay on_pos/on_game; ticker every 0.25 s."""
@@ -1567,7 +1625,7 @@ class Freeplay(unittest.TestCase):
             doc, _ = fp.select(pit, 3.0)
             self.assertEqual(doc["source"], "freeplay", pit)
             self.assertEqual(fp.phase, "ready")
-            self.assertEqual(len(doc["zones"]), 3)
+            self.assertEqual(len([z for z in doc["zones"] if z["type"] == "item"]), 3)
         g = kc.GameEngine()
         g.set_zones(fp.select(None, 3.0)[0], 3.0)
         self.assertTrue(g.active())
@@ -1620,7 +1678,7 @@ class Freeplay(unittest.TestCase):
         self.assertEqual(fp2.course["source"], "recorded")
         fp2.select(None, 1.0)
         fp2.tick(1.0)
-        self.assertEqual((fp2.phase, len(fp2.boxes)), ("ready", 3))      # resumes with fresh boxes
+        self.assertEqual((fp2.phase, len(fp2.boxes)), ("ready", 5))      # resumes with fresh boxes
         fresh = kc.FreeplayGame()
         for bad in (None, {"v": 2}, "x", {"v": 1, "on": True, "course": {"points": [[1, 2]]}}):
             fresh = kc.FreeplayGame()
