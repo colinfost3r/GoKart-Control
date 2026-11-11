@@ -1,0 +1,51 @@
+{
+  "powercycle_owner_confirmed": true,
+  "owner_statement": "Power cycle complete; forward selected",
+  "powercycle_persistence_verified": true,
+  "verified_utc": "2026-11-11T19:01:00.467642+00:00",
+  "l_current_min_a": -5,
+  "l_in_current_min_a": -12,
+  "motor_tune_unchanged": true,
+  "all_187_app_fields_unchanged": true,
+  "hall_and_pedal_calibration_unchanged": true,
+  "automatic_boot_offset_changes": [
+    {
+      "field": "foc_offsets_current__0",
+      "reference": 2047.1669921875,
+      "candidate": 2045.822021484375,
+      "status": "different"
+    },
+    {
+      "field": "foc_offsets_current__1",
+      "reference": 2042.43505859375,
+      "candidate": 2041.615966796875,
+      "status": "different"
+    },
+    {
+      "field": "foc_offsets_current__2",
+      "reference": 2043.79296875,
+      "candidate": 2042.4139404296875,
+      "status": "different"
+    },
+    {
+      "field": "foc_offsets_voltage__1",
+      "reference": 0.0046,
+      "candidate": 0.0048,
+      "status": "different"
+    },
+    {
+      "field": "foc_offsets_voltage__2",
+      "reference": -0.0005,
+      "candidate": -0.0008,
+      "status": "different"
+    }
+  ],
+  "filter_active": true,
+  "filter_context_seen": 1507,
+  "applied_direction": "forward",
+  "pedal_released": true,
+  "stationary": true,
+  "fault_code": 0,
+  "heltec": "off for verification; coexistence pending",
+  "commands_during_verification": "read only; no save, motor, reset or lifecycle command"
+}

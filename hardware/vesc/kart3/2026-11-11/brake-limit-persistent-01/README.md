@@ -6,7 +6,8 @@ changed **only `l_current_min`: 0 → −5 A**. The controller acknowledged the 
 full runtime readback matched exactly, preserving all other 375 motor/app fields.
 The reverse filter remained active/forward, pedal released, stationary and fault-free.
 
-**Current status: −5 A active; cold-boot persistence and Heltec coexistence pending.**
+**Current status: −5 A persisted through the owner-confirmed cold boot. Heltec
+coexistence remains pending.**
 Command 13 acknowledges after attempting storage, without reporting flash-store
 success. A runtime readback alone does not establish persistence. Do not resend
 this one-shot helper or restore the old setting automatically.
@@ -33,3 +34,13 @@ its final 750 ms freshness gate includes the pedal/filter snapshot.
 
 See [temporary trial](../brake-limit-trial-01/README.md) and
 [internal-target diagnosis](../pedal-response-03/README.md).
+
+## Normal cold-boot verification
+
+At 19:00–19:01 UTC, after the owner confirmed the requested power cycle, all 376
+fields were recaptured. The −5 A motor minimum and −12 A battery minimum remained.
+All 187 app fields, Hall/pedal calibration and operating tune matched. Five current/
+voltage measurement offsets refreshed under the existing boot calibration; no stale
+offsets were written back. The filter was running/active with PID1507 listed,
+forward/rawRX1, pedal released, stationary and fault0. See `coldboot-forward/` for
+raw capture, decoded fields, complete comparison and verification record.

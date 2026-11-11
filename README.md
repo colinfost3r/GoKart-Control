@@ -28,8 +28,8 @@ skip scripts; keep the pedal released until readiness is verified.
 FOC was limited to 0.05 A with the motor-braking minimum set to zero. A supervised
 three-minute temporary −5 A trial had no recorded stall trigger and the owner
 reported consistent starts. At the owner's request, **−5 A is now active following
-an acknowledged persistent save**, with all other 375 settings preserved. Cold-boot
-persistence and Heltec coexistence are still pending; this is not fleet/endurance
+an acknowledged persistent save**, with all other 375 settings preserved. Normal cold-boot
+persistence is verified; Heltec coexistence is still pending. This is not fleet/endurance
 acceptance. [Diagnosis](hardware/vesc/kart3/2026-11-11/pedal-response-03/README.md),
 [trial](hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/README.md),
 [save and current status](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/README.md).

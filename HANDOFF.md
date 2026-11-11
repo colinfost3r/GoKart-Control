@@ -2,13 +2,14 @@
 
 ## Kart 3 −5 A save and fleet replication — November 11, 2026 (latest)
 
-**−5 A is active; an acknowledged persistent save has exact runtime readback.**
+**−5 A is active and verified after a normal cold boot.**
 The earlier temporary trial was restored to zero, then the owner explicitly requested
 making the change permanent. One guarded command 13 save completed at 18:51:50 UTC:
 only `l_current_min` changed, all other 375 fields identical. Filter remains active,
-forward / raw RX 1, released pedal, stationary / fault 0; Heltec off. **Cold-boot persistence
-and Heltec coexistence are pending.** ACK/runtime reads alone do not prove flash
-survival. No automatic retry, restore or motor test is queued.
+forward / raw RX 1, released pedal, stationary / fault 0; Heltec off. **Normal cold-boot persistence passed at 19:01 UTC** after owner confirmation.
+Only five automatic current/voltage offsets refreshed; all app, Hall/pedal and tune
+settings remained intact, and the active filter worker was listed. Heltec coexistence
+is pending; no automatic retry, restore or motor test is queued.
 [Save evidence and exact helper](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/README.md).
 
 The temporary −5 A trial recorded 1,658 ADC/telemetry pairs over ~180 seconds with
@@ -34,7 +35,7 @@ Replication must preserve each unit's Hall/pedal calibration and unique controll
 BLE and ESP-NOW identities. Do not clone NVS or flash a kart3-UUID-pinned filter onto
 another controller. The [offline preparation tool and runbook](docs/kart4-kart5-replication.md) are ready; no kart 4/5 writes
 have occurred. The saved-filter + nonzero-limit combination is not yet fleet or
-endurance accepted. Next: verify cold boot, then reconnect Heltec/Core2 and verify
+endurance accepted. Next: reconnect Heltec/Core2 and verify
 telemetry, modes and supervised pedal operation while preserving the −5 A limit.
 
 Validation: the full project suite now passes **469 tests across seven suites,

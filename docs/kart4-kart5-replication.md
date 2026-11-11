@@ -77,10 +77,10 @@ the operating tune equivalent; do not expand the copy list casually.
      --out hardware/vesc/kart4/YYYY-MM-DD/prepared
    ```
 
-   The November 11 post-write reference is
-   [brake-limit-persistent-01/apply/after](../hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/apply/after).
-   It is a validated runtime readback; prefer a subsequently reviewed cold-boot
-   capture and consult [HANDOFF](../HANDOFF.md) for persistence acceptance. The
+   The November 11 verified cold-boot reference is
+   [brake-limit-persistent-01/coldboot-forward/raw](../hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/coldboot-forward/raw).
+   Read the neighboring `verification.json` and consult [HANDOFF](../HANDOFF.md)
+   for outstanding Heltec and broader acceptance. The
    tool never infers that acceptance from a folder name or a runtime capture alone.
 
    Use kart 5's own capture, UUID, ID and new output path for the second unit. The
