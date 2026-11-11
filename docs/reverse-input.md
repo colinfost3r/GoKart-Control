@@ -25,6 +25,25 @@ For this stock 75_300_R2 definition, COMM RX is **PB11** while permanent NRF51/B
 **PC11/PC10**. `permanent_uart_enabled=1` therefore does not seize the reverse input; do not
 disable it on this evidence. [Pinned pin definitions](https://github.com/vedderb/bldc/blob/f7c2b34e1cff2234cae98be3abf0cd50e249558f/hwconf/trampa/75_300/hw_75_300_core.h#L185-L201).
 
+## November 11 measured input — next action is electrical verification
+
+The [completed live observation](../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md)
+recorded **13,415 samples, zero RX transitions, RX high throughout**, with the owner confirming
+reverse selection during the pass. All 376 settings matched before/after; motor remained at
+zero RPM/current with fault 0. This does not demonstrate switch bounce. Measure RX relative
+to VESC signal GND while reverse is held before selecting a conditioner or changing the tune.
+No such voltage measurement is recorded yet.
+
+The first USB pass had no monitor output; stock 6.02 sends asynchronous Lisp prints to the last
+command interface, so Heltec BLE polling can divert them. After confirming the context had
+exited, the owner powered off Heltec and a new pass completed. The same firmware maps native
+reverse and Lisp `pin-rx` to PB11; permanent BLE UART RX is separate PC11. Physical connector
+mapping/contact/ground still requires inspection. No hardware or input setting was changed.
+
+The compact monitor is tested on hardware; the staged filter is **not**. Released-pedal values
+are about 9% before the existing 15% deadband, so the proposed 1% filter guard would refuse to
+arm. Preserve calibration/tune and resolve the electrical observation before adapting that guard.
+
 ## Physical hardware and conditioner proposal — November 10
 
 The owner reports the issue across **all eight karts and two switch types**. All controllers
@@ -63,14 +82,14 @@ to forward. That conflicts with the standing accessory-loss requirement. Existin
 can block the main loop, so direction logic would require its own bounded task; adding a poll
 in `loop()` is insufficient. A generic optocoupler module alone does not provide debounce.
 
-## First test selected: existing-VESC input monitor — November 10 evening
+## Earlier plan: existing-VESC input monitor — November 10 evening
 
 The owner wants the quickest workable option using existing boards and is away from the kart
-until November 11. USB inventory currently shows no VESC or ATOM. ATOM identification, extra
+until November 11. USB inventory at that preparation checkpoint showed no VESC or ATOM. ATOM identification, extra
 CAN hardware and buying debounce boards are deferred for the first check.
 
 Source review found that stock 6.02 supplies button-only override APIs; the installed build
-still needs a live API check.
+needed a live API check; the November 11 monitor has since verified the read APIs only.
 Prepare a **bounded RX monitor first**, then consider a separate volatile debounce candidate
 only if the measurements support it. [Exact wiring, backup and test guide](../firmware/vesc-lisp/reverse-input/README.md).
 No firmware upgrade is needed. Kart 3's recorded `no_hw_limits` build was operating at 82.1 V,

@@ -1,8 +1,9 @@
 # VESC-local experiments
 
-The [kart 3 reverse-input diagnostic](reverse-input/README.md) is the current next test: a
-bounded input monitor and a separate disarmed filter candidate, prepared offline only. It needs
-no firmware upgrade and does not change the braking experiment below. Never upload one script
+The [kart 3 reverse-input diagnostic](reverse-input/README.md) now has a completed live monitor:
+RX stayed high while reverse was selected. Electrical voltage/contact verification is next;
+the separate filter candidate remains unloaded and disabled. No firmware upgrade is needed,
+and this work does not change the braking experiment below. Never upload one script
 over another without capturing/reviewing the existing code and ownership first.
 
 ## On-VESC brake script (regen on STOP)

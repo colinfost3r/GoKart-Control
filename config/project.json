@@ -211,7 +211,7 @@
       "heltec_alternative": "concept_only_reset_behavior_conflicts_with_reliability_requirement"
     },
     "reverse_next_test": {
-      "status": "offline_preparation_no_hardware_connected",
+      "status": "live_monitor_complete_RX_stayed_high_electrical_check_pending",
       "guide": "firmware/vesc-lisp/reverse-input/README.md",
       "first": "bounded_read_only_RX_monitor_after_fresh_identity_config_and_Lisp_backup",
       "candidate": "VESC_local_buttons_only_filter_not_installed",
@@ -225,12 +225,31 @@
       "filter_installed": false,
       "filter_loader_implemented": false,
       "offline_validation": {
-        "project_tests_passed": 371,
+        "project_tests_passed": 389,
         "project_suites": 7,
         "project_tests_skipped": 0,
         "lisp_mock_cases_passed": 22,
         "lisp_host_heap_cons_cells": 2464,
-        "hardware_verified": false
+        "hardware_verified": false,
+        "fixed_monitor_sender_cases_passed": 18
+      },
+      "next": "measure_RX_to_VESC_signal_ground_while_reverse_held",
+      "monitor_observation": {
+        "date": "2026-11-11",
+        "samples": 13415,
+        "rx_edges": 0,
+        "rx_values": [
+          1
+        ],
+        "owner_confirms_reverse_selected": true,
+        "heltec_off": true,
+        "all_376_settings_unchanged": true,
+        "voltage_measurement_pending": true,
+        "decoded_pedal_min": 0.089921,
+        "decoded_pedal_max": 0.090987,
+        "native_deadband": 0.15,
+        "filter_guard_requires_review": true,
+        "evidence": "hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md"
       }
     }
   },

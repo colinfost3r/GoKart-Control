@@ -1,6 +1,46 @@
 # Collaborator handoff
 
-## Reverse input: offline preparation for November 11 — 2026-11-10 (latest)
+## Kart 3 live reverse-input observation — November 11, 2026 (latest)
+
+**Observed:** with Heltec off, the fixed read-only 30-second monitor completed with **13,415
+samples, zero RX transitions, RX high throughout**. The owner confirms selecting reverse during
+that recording. No voltage measurement is available yet. This is not evidence that debounce
+will solve the fault; first verify the actual RX contact/connector/signal-ground path.
+[Complete evidence](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md).
+
+The owner freshly confirmed wheels lifted, pedal released and access to the cutoff. UUID and
+6.02 `no_hw_limits` match kart 3; initial 82.0 V, zero ERPM/current, fault 0. Active limits match
+NORMAL. All 376 settings were captured before and after and **match exactly within this
+session**. Throttle, reverse configuration, tune and calibration were not written. Final capture:
+81.9 V, zero ERPM/current, fault 0; tachometer counts unchanged. No motor command was sent.
+
+Stored Lisp read exposed no valid blob. Fixed `:ctxs` reported no running/blocked/sleeping
+contexts; this initialized Lisp as needed without starting stored code. The first monitor pass
+returned no USB text/completion. Source review found asynchronous prints use the most recent
+command interface, so concurrent Heltec BLE polling can divert them. We inspected contexts
+(empty), then the owner powered off Heltec before a deliberate second observation. That second
+pass completed normally. Preserve the first pass as **unknown**, not a successful sample.
+
+The native ADC reverse path and Lisp `pin-rx` both map to PB11 in the pinned source; permanent
+NRF/BLE UART RX is PC11. This is firmware mapping, not verification of the physical connector.
+The released pedal reports about 9% **before** its unchanged 15% native deadband, so native
+throttle demand remains zero. The candidate's provisional 1% release guard would refuse to arm.
+Do not alter pedal calibration/tune to accommodate the candidate; it remains unloaded/disabled
+until electrical diagnosis and an appropriate measured release guard are resolved.
+
+New portable host helper: `tools/vesc/rx_probe.py`, fixed `--inspect` or the SHA-pinned read-only
+monitor with explicit ownership review; identity/firmware pin, bounded capture, no generic eval,
+no uncertain-send retry. Eighteen new offline cases cover framing, gates, capture limits and
+completion/context evidence. The actual sender used is archived with the live evidence.
+Validation passed **389 tests across all seven project suites, zero skipped**, including all
+18 new sender cases; baseline decode also verified both signatures and all 376 fields.
+
+**Next:** owner was asked for DC voltage RX→VESC signal GND with reverse held. Expected closed
+contact is near 0 V. No measurement has arrived yet. Heltec remains off at the last confirmation;
+VESC is powered for that check. No firmware, reverse wiring, input override or tune change was
+made. Do not activate the staged filter or assume the kart is repaired.
+
+## Reverse input: offline preparation for November 11 — 2026-11-10 (earlier)
 
 The owner is at home and cannot test hardware until tomorrow. No controller/ATOM was connected
 for this preparation, and nothing was flashed, reset, configured or driven. Existing Core2,
