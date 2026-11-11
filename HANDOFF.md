@@ -1,6 +1,30 @@
 # Collaborator handoff
 
-## Owner-edited Heltec/GPS enclosure R05 — November 11, 2026
+## Internal GPS harness and side-supported socket R06 — November 11, 2026
+
+The latest owner requirement keeps the GPS-to-Heltec harness entirely inside the
+same rectangular enclosure. [R06](hardware/cad/heltec-bar-enclosure/r06-internal-harness/README.md)
+replaces R05's external tray opening with an internal side-supported GPS socket,
+a simple retaining clip, and open space below the module for the cable route.
+Access is through the removable lid. The owner's latest case/lid edits are
+preserved in the input snapshot before further changes.
+
+The owner confirmed **4 mm behind the bare GPS board socket** as the clearance reference;
+the supplied mated plug and wire bend have not been measured. The modeled clearance is
+**4.247 mm**, and the main rectangle is **79 × 36 mm**, retaining the four installation screws, OLED service
+opening, horizontal bar mount and owner-shaped antenna lid. The route must reach
+Heltec **P3**, its underside 1.25 mm eight-pin GPS socket, rather than the IPEX RF
+connector. Three connected printed solids provide the case/socket, lid and lower collar.
+Independent CAD checks found no route/plug-to-print intersections; the assumed wire
+envelope has a minimum 0.25 mm to printed material. The inherited tiny GPS-to-cover
+reference overlap remains an actual-fit check. All **492 repository tests passed**
+across eight suites with zero skipped; these are separate from mechanical validation.
+All three STL meshes passed closed-manifold, winding and connected-component checks.
+Native Fusion, STEP/STL parts, assembled/internal-route previews and the owner input
+archive are included. Refer to the R06 README and audit for assembly and fit limitations.
+No firmware, VESC settings or kart hardware are changed by this mechanical work.
+
+## R05 rectangular enclosure checkpoint — November 11, 2026
 
 The owner adjusted the Fusion model after R03. Those edits are the geometric
 reference for [R05](hardware/cad/heltec-bar-enclosure/r05-rectangular/README.md):

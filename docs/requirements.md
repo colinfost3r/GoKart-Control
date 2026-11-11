@@ -112,6 +112,21 @@ This explicit persistent maintenance tune is separate from temporary supervisory
   maximum, and ASA/PETG prototype material choice. Printed fit and outdoor use
   remain unvalidated.
 
+## Enclosed GPS wiring and side-supported socket — November 11, 2026
+
+- Keep the complete GPS-to-Heltec harness inside the same rectangular case.
+  The wires leave the GPS connector, turn downward and pass below the GPS to the
+  Heltec GPS port; they must not exit through a rear notch or external tray.
+- Provide at least **4 mm behind the GPS connector** for the cable turn. Measure
+  the modeled clearance from the bare socket body, as explicitly confirmed by
+  the owner, and distinguish it from the unmeasured mated plug and wire bend envelope.
+- Support the GPS PCB from the sides in an internal socket/cradle, leaving the
+  underside open for its components and wiring. Use a simple retaining clip;
+  no load on the ceramic patch. This supersedes the external slide-out tray.
+- Keep the antenna integrated into the lid, OLED opening, parallel tube mount,
+  plain rectangular exterior and four installation screws maximum. Lengthen the
+  rectangle only as needed for connector clearance and internal routing.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.

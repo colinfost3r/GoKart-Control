@@ -1,0 +1,426 @@
+{
+  "revision": "R06",
+  "operation": "independent_Fusion_geometry_review",
+  "date": "2026-11-11",
+  "physical_hardware_tested": false,
+  "scope": "Three printed parts, three assumed plug/harness envelopes, imported GPS, conservative OLED-cover envelope, and selected visible Heltec geometry at the route/P3/PCB. Pre-existing front/antenna/clamp features are inherited; this audit is not a full manufacturing qualification.",
+  "result": "No material intersections involving printed parts or harness envelopes, except nominal PCB-to-support contact from numeric rounding.",
+  "nominal_support_contact": [
+    {
+      "a": "Open CASCADE STEP translator 6.8 1.1.1/Body1",
+      "b": "R06 Case with internal GPS socket/Body1",
+      "volume_mm3": 0.000510976913711545,
+      "bounds_mm": [
+        [
+          -9.25,
+          -21.000000000000007,
+          6.94128074
+        ],
+        [
+          9.25,
+          11.2155,
+          6.9413
+        ]
+      ]
+    }
+  ],
+  "inherited_fit_uncertainty": [
+    {
+      "a": "GPS-Module1/Body3",
+      "b": "REF OLED protective cover missing from STEP/Body1",
+      "volume_mm3": 0.22057640606521983,
+      "bounds_mm": [
+        [
+          -4.415000000000028,
+          -22.034500000000005,
+          13.700000000000001
+        ],
+        [
+          4.4149999999999725,
+          -21.950000000000035,
+          14.000000000000002
+        ]
+      ]
+    }
+  ],
+  "interpretation": [
+    "Nominal PCB support contact is about 0.0000193 mm deep; this is not meaningful manufacturing clearance.",
+    "GPS receiver overlaps the conservative cover reference by 0.0845 mm along Y and 0.3 mm along Z. Owner hardware positions are preserved; actual fit remains unmeasured.",
+    "Other cover/reference intersections are the conservative rectangular cover envelope enclosing existing Heltec surface components, not clashes with printed parts.",
+    "Cable and mating-plug envelopes are assumptions. Positive geometric clearance does not validate actual wire bend radius, plug length, clip flex or assembly sequence."
+  ],
+  "raw_geometry_result": {
+    "document": "GoKart Heltec Internal Harness R06",
+    "timeline_count": 569,
+    "selected": {
+      "hardware_or_cover": 42,
+      "printed": 3,
+      "routing_reference": 3
+    },
+    "remaining_intersections": [
+      {
+        "a": "Open CASCADE STEP translator 6.8 1.1.1/Body1",
+        "b": "R06 Case with internal GPS socket/Body1",
+        "volume_mm3": 0.000510976913711545,
+        "bounds_mm": [
+          [
+            -9.25,
+            -21.000000000000007,
+            6.94128074
+          ],
+          [
+            9.25,
+            11.2155,
+            6.9413
+          ]
+        ]
+      },
+      {
+        "a": "R0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.14894999999999994,
+        "bounds_mm": [
+          [
+            3.3349528088961438,
+            -20.314214019899687,
+            8.500000010927852
+          ],
+          [
+            4.334952808896142,
+            -19.814214019899687,
+            8.800000010927851
+          ]
+        ]
+      },
+      {
+        "a": "L0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.24720363055417716,
+        "bounds_mm": [
+          [
+            -0.24997006992799392,
+            -20.84549447186688,
+            8.49999999038349
+          ],
+          [
+            0.2500299493050181,
+            -19.845494541805117,
+            9.000000009616508
+          ]
+        ]
+      },
+      {
+        "a": "L0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.24720363055417754,
+        "bounds_mm": [
+          [
+            -0.24986707310182155,
+            -18.483350001651885,
+            8.49999999038349
+          ],
+          [
+            0.25013294613119047,
+            -17.483350071590124,
+            9.000000009616508
+          ]
+        ]
+      },
+      {
+        "a": "L0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.24720363055417788,
+        "bounds_mm": [
+          [
+            1.5039514388611341,
+            -17.75220986493288,
+            8.49999999038349
+          ],
+          [
+            2.003951458094146,
+            -16.752209934871118,
+            9.000000009616508
+          ]
+        ]
+      },
+      {
+        "a": "L0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.24720363055417682,
+        "bounds_mm": [
+          [
+            2.4037852579365833,
+            -20.114293317476438,
+            8.49999999038349
+          ],
+          [
+            2.9037852771696,
+            -19.114293352445554,
+            9.000000009616508
+          ]
+        ]
+      },
+      {
+        "a": "L0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.24720363055417574,
+        "bounds_mm": [
+          [
+            4.035037485559628,
+            -18.552586791992,
+            8.49999999038349
+          ],
+          [
+            4.535037504792648,
+            -17.552586791992,
+            9.000000009616508
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.25556136004276075,
+        "bounds_mm": [
+          [
+            -0.9501042509089819,
+            -21.786631597083822,
+            8.5
+          ],
+          [
+            0.04989574909101846,
+            -21.266631587794343,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600427583,
+        "bounds_mm": [
+          [
+            -0.9500279569639813,
+            -19.42445660929083,
+            8.5
+          ],
+          [
+            0.04997204303601899,
+            -18.904456600001346,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600427577,
+        "bounds_mm": [
+          [
+            -0.9499516630179807,
+            -17.062304509681823,
+            8.5
+          ],
+          [
+            0.05004833698201955,
+            -16.54230450039234,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600521656,
+        "bounds_mm": [
+          [
+            -1.1596358559389397,
+            -18.483342449189927,
+            8.5
+          ],
+          [
+            -0.6396357197342624,
+            -17.483342449189937,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600521655,
+        "bounds_mm": [
+          [
+            2.394025490497061,
+            -17.75237778854493,
+            8.5
+          ],
+          [
+            2.914025626701738,
+            -16.75237778854494,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600427582,
+        "bounds_mm": [
+          [
+            1.7037157869330188,
+            -18.693423284095832,
+            8.5
+          ],
+          [
+            2.703715786933019,
+            -18.17342327480635,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.25556136004275826,
+        "bounds_mm": [
+          [
+            3.3346743440620186,
+            -19.562708867591823,
+            8.5
+          ],
+          [
+            4.334674344062019,
+            -19.04270885830234,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.25556136004275765,
+        "bounds_mm": [
+          [
+            3.3348498201360193,
+            -17.062457097571826,
+            8.5
+          ],
+          [
+            4.33484982013602,
+            -16.542457088282344,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600433795,
+        "bounds_mm": [
+          [
+            1.4937111706321728,
+            -20.11414072608853,
+            8.5
+          ],
+          [
+            2.0137112387345137,
+            -19.114140726088532,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600521658,
+        "bounds_mm": [
+          [
+            4.925111458514061,
+            -17.605267803192937,
+            8.5
+          ],
+          [
+            5.445111594718738,
+            -16.605267803192948,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "C0402-Heltec/Body1",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.2555613600521656,
+        "bounds_mm": [
+          [
+            5.70590750954006,
+            -17.605267803192937,
+            8.5
+          ],
+          [
+            6.225907645744738,
+            -16.605267803192948,
+            9.010000010490737
+          ]
+        ]
+      },
+      {
+        "a": "GPS-Module1/Body3",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.22057640606521983,
+        "bounds_mm": [
+          [
+            -4.415000000000028,
+            -22.034500000000005,
+            13.700000000000001
+          ],
+          [
+            4.4149999999999725,
+            -21.950000000000035,
+            14.000000000000002
+          ]
+        ]
+      }
+    ],
+    "bare_gps_socket_to_rear_inner_wall_mm": 4.247279753981701,
+    "route_reference_to_print_minimum_mm": {
+      "REF R06 internal wire route 8x2mm assumed": 0.25000000000000355,
+      "REF R06 GPS mating plug12x3x2p5 assumed": 0.7106335201775946,
+      "REF R06 Heltec P3 mating plug12x5x2p7 assumed": 0.7500000000000018
+    },
+    "print_solids": {
+      "R06 Case with internal GPS socket": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R06 OLED and antenna lid": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R06 Lower collar": {
+        "solid": true,
+        "lumps": 1
+      }
+    }
+  },
+  "repository_checks": {
+    "passed": 492,
+    "suites": 8,
+    "skipped": 0,
+    "source_log": "repository-validation.txt",
+    "scope": "Offline software checks; not mechanical or vehicle acceptance."
+  },
+  "owner_transform_max_deltas": {
+    "REF Heltec V4.3.1 official STEP": 0.0,
+    "REF GPS accessory alternate revision": 0.0,
+    "REF OLED protective cover missing from STEP": 0.0,
+    "REF 2inch antenna envelope diameter7mm assumed": 0.0,
+    "new ant mount": 0.0
+  },
+  "active_feature_warnings": [],
+  "export_validation": {
+    "report": "export-verification.json",
+    "closed_manifold_consistently_wound_single_component_STLs": 3,
+    "Fusion_archive_limit": "ZIP directory inspected; compression method 93 prevents standard-library CRC validation. No reopen/round-trip claim."
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "revision": "R06",
+  "files": [
+    {
+      "path": "GoKart-Heltec-Internal-Harness-R06.f3d",
+      "bytes": 9537812,
+      "sha256": "c5fefe59cb94224c9515c086d60ba933e3816a18d4956edde1bf8645f5083ace"
+    },
+    {
+      "path": "README.md",
+      "bytes": 6395,
+      "sha256": "1b6553f1669c6ef6f4c2e189387e8b919af9998a5a87b6040d28e55f2aab9fad"
+    },
+    {
+      "path": "assembled-preview.png",
+      "bytes": 37750,
+      "sha256": "302c9ea2a0b87d0fb6b5f7e9913c859b1e602f075bd43dff88d1bca9ed1604e9"
+    },
+    {
+      "path": "build_internal_harness.py",
+      "bytes": 6398,
+      "sha256": "13a13c3b5f7f49564d24f08b506e293903f16ee485c292ce703a0123bfb4c98a"
+    },
+    {
+      "path": "case-upper-collar.step",
+      "bytes": 280638,
+      "sha256": "dab29899f15b4439377f57bc855c422bf18cd9b6b67a95b4f3b7d33b2aa8a95c"
+    },
+    {
+      "path": "case-upper-collar.stl",
+      "bytes": 210584,
+      "sha256": "3c5ee51b6e5e1faadacf0e0c05fdd9539eab6d343908991ef6b1dfc8dc0339b9"
+    },
+    {
+      "path": "export-verification.json",
+      "bytes": 3327,
+      "sha256": "66ef70af36f18fe9b4fb8ed56e5f2609253234ab9bd00378b7e778beee324868"
+    },
+    {
+      "path": "export_revision.py",
+      "bytes": 5195,
+      "sha256": "54954a618026256ded4d6363ed2130efea0e68e860f15da2649d1faaf9ede0dc"
+    },
+    {
+      "path": "independent-review.json",
+      "bytes": 11738,
+      "sha256": "10e91c4a00c333d394a7c57407b5426b5aeef817b2e22742b7ef390547a88dfd"
+    },
+    {
+      "path": "independent_review.py",
+      "bytes": 2814,
+      "sha256": "c26dc1fe7815a97e64169e7bd5496756dac82d1d978d4cca8e4227b62b11b553"
+    },
+    {
+      "path": "input/owner-edited-R05-before-R06.f3d",
+      "bytes": 8952831,
+      "sha256": "7093a84d212add17479e7541a37378e010b5a19087c8fda4011140ee3653826c"
+    },
+    {
+      "path": "input/owner-layout.json",
+      "bytes": 7520,
+      "sha256": "25d126f9dafb98b0b3327c2571a93603e07380e98a80e30d4f6d9db64c91ec08"
+    },
+    {
+      "path": "input/owner-view.png",
+      "bytes": 25337,
+      "sha256": "90ef6fdb8b91fb6dd71b21ee64ec225c42a961df1d5f1d101e82ab85271a69b1"
+    },
+    {
+      "path": "internal-route-preview.png",
+      "bytes": 259986,
+      "sha256": "eaaf0b2db54d72f1d9fa2a43a0b8f2caa542f706a110c018813299388468c923"
+    },
+    {
+      "path": "lid-integral-antenna.step",
+      "bytes": 106695,
+      "sha256": "2b734a2310d0808eb49b4d33f6c8c2fe2a68eda4f1f780619c61b157da0822b7"
+    },
+    {
+      "path": "lid-integral-antenna.stl",
+      "bytes": 783784,
+      "sha256": "fb76107bfd9bd5097f817b85149df6e88d50e8fcfea8e0aab77ed1af91f5d063"
+    },
+    {
+      "path": "lower-collar.step",
+      "bytes": 24889,
+      "sha256": "526879c56f6ce7a8efbb1753fe6bc259e9f498c2aa17d6176ec9e1721f6b3c8f"
+    },
+    {
+      "path": "lower-collar.stl",
+      "bytes": 138084,
+      "sha256": "e2fc273fb886fb5176d1d7a8971c10b8a62f013f86b6a33f02d6a7163bd8e74a"
+    },
+    {
+      "path": "make_previews.py",
+      "bytes": 1961,
+      "sha256": "c294f2a01cd2e99a21497fabd661134d1ac18764439dfd5eb5eb4e1a40dcc02f"
+    },
+    {
+      "path": "model-audit.json",
+      "bytes": 5840,
+      "sha256": "bde91bd7b5741b5bf7e3575acdeb7a392971df1cabbee7df86cda766e869f509"
+    },
+    {
+      "path": "repository-validation.txt",
+      "bytes": 1430,
+      "sha256": "497c73c33f8f9593a65dc5f645c0f44990a74caa7d4de8571a3c7016123bfbc7"
+    }
+  ]
+}
