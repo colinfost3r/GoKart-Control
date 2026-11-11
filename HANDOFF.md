@@ -1,5 +1,45 @@
 # Collaborator handoff
 
+## M5 follow map and Eamon integration — November 11, 2026 (source ready, not deployed)
+
+The no-Pi Core2 implementation now boots into a simple north-up line map following
+its own fresh GPS position at a fixed 70 m vertical span. Distant peers do not zoom
+it out. DASH still provides mode selection, and the header maintenance gesture is
+preserved. Missing GPS and missing course data have separate status/diagnostics.
+
+**No SD required for an outline:** provision a validated course into Core2 NVS with
+`tools/m5/provision_course.py`; without `--port`, it only validates a file offline.
+The bounded USB transaction checks size/order/CRC/schema, stores one complete record,
+and verifies readback before changing the active course. Malformed/incomplete uploads
+preserve the old course. A storage/readback error leaves active RAM unchanged and
+reports uncertain persistent state; physical interruption testing remains open.
+Optional SD `/gokart/course.json` is still a fallback. The committed shop demo is
+not a surveyed Manresa route. [Course procedure](firmware/m5-core2/COURSE_MAP.md).
+
+**FIRE is visibly unavailable.** Eamon's new `core2-items` firmware depends on a kart
+Pi for inventory and game decisions; its `invuse` relay cannot provide firing on a
+no-Pi kart. Native item/session/target authority and an authenticated fresh request
+contract remain separate work. Do not replace this dashboard with the `core2` build.
+
+Merged Eamon's six commits through **a5a4c22**. His Pi items and closer map are retained.
+The independent raw item-screen ESP-NOW service is excluded from paired M5 builds so
+it cannot replace their encrypted receive callback. Last-AP-channel recovery is shared,
+with existing authenticated alignment and no command replay. Python integration retains
+prize freshness/epoch guards, clears carried items on real course/session changes,
+and does not retract an already-queued effect merely because later HUD/log processing
+sees changed state. Every command is still checked immediately before enqueue.
+
+**Validation:** all **492 tests passed across eight suites, zero skipped**. Three
+Core2 targets, six Heltec targets and the separate `core2` item target compile.
+Native map/storage/touch checks include ASan/UBSan; compiled stack-frame inspection
+caught and removed nested course-copy pressure. [Build/check manifest](docs/validation/m5-map-2026-11-11.json).
+
+**Hardware unchanged:** nothing was flashed or provisioned in this update; the earlier
+kart3 −5 A/filter/mode acceptance below remains the installed checkpoint. Next bench
+step is Core2-only update/course provisioning and verification of the new view/touch/
+flash persistence. Heltec channel-recovery deployment is a separate acceptance step.
+No VESC setting, calibration, motor command or LoRa packet format changed here.
+
 ## Kart 3 Heltec/Core2 coexistence — November 11, 2026 (latest)
 
 **Bench checks passed with the saved −5 A limit and persistent reverse filter.**

@@ -27,8 +27,8 @@ session the roll is: BOOST 35 % (instant, as now) / SHELL 30 % (held) / LIGHTNIN
 ROCKET 10 % (instant) / empty 10 %.
 
 Owner 2026-11-09 (applies to single-player too): freeplay starts in ECO; a BOOST puts the kart in NORMAL
-for 5 s (`boost 5 0.75`: scale 0.75 and, through the firmware's cap lift, NORMAL's 25 mph); a ROCKET (the
-item formerly called SUPER, rocket icon) puts it in SPORT for 8 s (`boost 8 1.0`: scale 1.0, uncapped).
+for 7 s (`boost 7 0.75`: scale 0.75 and, through the firmware's cap lift, NORMAL's 25 mph); a ROCKET (the
+item formerly called SUPER, rocket icon) puts it in SPORT for 10 s (`boost 10 1.0`: scale 1.0, uncapped).
 Firmware 0.2.5 lifts the cap to the highest mode whose scale the boost reaches (0.2.4 lifted exactly one
 mode, so a 1.0 boost in ECO was 140 A at 25 mph). A kart holds ONE item; a new held item replaces it. Held items are
 kept on the kart Pi (survive a dash restart within the session, cleared on leave).

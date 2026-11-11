@@ -296,7 +296,7 @@ class EndToEnd(unittest.TestCase):
             self.assertTrue([r for r in game if r["ev"] == "freeplay_collected"])
             tx = [r["line"] for r in recs if r["kind"] == "tx"]
             # the game sends boost (and slow for mud on 0.2.4+); freeplay sent ECO exactly once
-            self.assertFalse([x for x in tx if x.split()[0] not in ("boost", "slow", "mode", "status")], tx)
+            self.assertFalse([x for x in tx if x.split()[0] not in ("boost", "slow", "mode", "status", "inv")], tx)
             self.assertEqual([x for x in tx if x.split()[0] == "mode"], ["mode 0"], tx)
             self.assertFalse([x for x in tx if x.split()[0] == "slow" and x != "slow 5 4"], tx)
             fm = [r for r in game if r["ev"] == "freeplay_mode"]
@@ -436,7 +436,7 @@ class FakeLink:
     def stop(self):
         pass
 
-    def write_text(self, text):
+    def write_text(self, text, wait=True):
         self.writes.append(text)
         return True
 
@@ -609,7 +609,7 @@ class ServerPieces(unittest.TestCase):
                                               map_orientation="sideways", rotate=90, pit_urls="http://x",
                                               freeplay="on", freeplay_boxes=9))
         self.assertEqual((cfg["map_fps"], cfg["kart_id"], cfg["sound"], cfg["sun_mode"], cfg["map_orientation"], cfg["rotate"]),
-                         (10, 2, True, True, "heading_up", 0))
+                         (15, 2, True, True, "heading_up", 0))
         self.assertEqual((cfg["freeplay"], cfg["freeplay_boxes"]), (True, 3))
         self.assertEqual(cfg["pit_urls"], ["http://x"])
         self.assertEqual(len(w), 9, w)

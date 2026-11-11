@@ -40,8 +40,7 @@ acceptance; the currently installed applications above were uploaded over USB.
 [Earlier evidence](../../hardware/m5/2026-11-10-kart3/README.md) and
 [handoff](../../HANDOFF.md) retain the chronology.
 
-The next **two M5 karts have no assigned IDs yet**. Coordinate their unique fleet IDs with Eamon,
-then follow [repeat commissioning](BRINGUP.md#build-the-next-two-m5-karts). Each new unit starts
+The next two M5 karts are **4 and 5**; **1 and 2 remain Eamon's test karts**. Follow [repeat commissioning](BRINGUP.md#build-the-next-two-m5-karts). Each new unit starts
 with the read-only Heltec target and its own physical VESC identity, pairing and calibration.
 Do not copy kart 3's NVS, VESC tune, identity pins or secrets.
 
@@ -78,6 +77,9 @@ at the configured LoRa rate (currently 2 Hz direct / 1 Hz with a repeater). No p
 eight-kart UART or RF load test is claimed. Current Heltec `self` telemetry arrives at 2 Hz (500 ms);
 5 Hz is the screen redraw rate, not a promise of 5 new telemetry samples per second.
 
+The new [no-SD follow map](COURSE_MAP.md) is source/test work awaiting a separate display
+deployment. It does not change the installed acceptance checkpoint above.
+
 Neither an SD card nor a base station is required for own VESC telemetry or the live GPS map
 of directly heard peers. A peer must transmit a valid GPS fix to appear. Central pit monitoring,
 commands and pit-managed race features require the base station. Their physical acceptance
@@ -88,8 +90,9 @@ remains separate from kart 3's completed telemetry and driver-mode checks.
 - DASH: GPS MPH, pack volts, battery watts, motor/battery amps, ESC temperature, actual mode,
   VESC/link status, fault code, STOP/SLOW state and Heltec-reported speed calibration.
 - MAP: own kart plus up to seven other directly/repeater-heard kart positions, labeled by ID;
-  own kart gets a white ring. North up, automatic fit, optional offline course outline.
-  FRESH ONLY shows fresh positions. STALE TOO shows hollow last-known dots for at most 15 s.
+  own kart gets a white ring. North up, fixed 70 m own-follow view, optional internally stored or SD course outline.
+  Only fresh markers inside the current view are drawn; distant peers do not zoom the map out.
+  DASH opens the telemetry/mode screen. FIRE remains visibly unavailable and sends nothing.
   Missing GPS is unavailable, never an invented position at (0,0). This is not geofencing.
 - Hold ECO/NORMAL/SPORT for **650 ms** to request a mode on a commissioned write-capable
   companion; release before trying again. This works over ESP-NOW on kart 3 and is also supported by UART.
@@ -287,24 +290,18 @@ in the handoff. The ordered checks are in [BRINGUP](BRINGUP.md#core2-ota-check),
 
 ## Course outline
 
-An SD card is optional and used only for a local course outline. The dashboard and live
-own/peer GPS map work without one; no map image or SD card is needed to begin telemetry testing.
+The new Core2 source starts on a close-follow map and stores a course internally when
+provisioned over USB; **this change is not yet deployed or physically accepted**. No SD card
+or Pi is required. The map follows the own fresh fix at 70 m vertical span; distant karts do
+not change the zoom. DASH retains the existing telemetry/mode controls and the top-header
+hold still opens OTA. FIRE is visibly disabled because authoritative item data is not yet
+available; it sends no command.
 
-Draw or record the course with the existing pit editor, then export its `zones.json`:
-
-```sh
-python3 tools/m5/export_course.py --zones pit/server/map/zones.json \
-  --name 'Shop test course' --out /tmp/m5-course.json
-```
-
-Copy the resulting file to a FAT32 microSD card at `/gokart/course.json`, insert into the Core2,
-and restart the display. The exporter refuses an existing output and invalid or >128-point
-tracks; simplify a large route in the pit first. It exports the track only, no game effects.
-The repository's shop route is a demonstration, not a surveyed Manresa course.
-
-Without a valid file, the map fits heard GPS positions and says GPS only. A malformed/oversize
-file is ignored. Removing/rebooting the display never writes to the VESC. Course files contain
-only geographic geometry, never Wi-Fi credentials or motor limits.
+Follow [course provisioning, diagnostics and acceptance](COURSE_MAP.md) to export the pit's
+track, validate it offline, and install it on the intended Core2. Internal storage is preferred;
+the existing FAT32 SD `/gokart/course.json` remains an optional boot-time fallback. No valid
+course is removed by a malformed upload. The repository shop outline is a demonstration,
+not a surveyed Manresa course. With no course, fresh GPS still draws the own marker.
 
 ## Reliability and commissioning
 

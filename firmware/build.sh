@@ -13,6 +13,7 @@
 #   ./build.sh kart-m5-readonly         Heltec UART adapter, all VESC writes disabled
 #   ./build.sh kart-m5                  Heltec UART adapter with guarded mode requests
 #   ./build.sh all                       compile kart, base and repeater (stops at the first failure)
+#   ./build.sh core2                     compile core2-items (bar-mounted item screen, ESP-NOW)
 #   ./build.sh test                      host-side protocol tests (python3, no board, no arduino-cli)
 #   ./build.sh kart upload /dev/cu.usbmodemXXXX
 #   ./build.sh base upload /dev/cu.usbmodemXXXX
@@ -43,7 +44,8 @@ case "$TARGET" in
     [ "$TARGET" != "m5-demo" ] || FLAGS="-DM5_DEMO=1"
     [ "$TARGET" != "m5-espnow" ] || FLAGS="-DM5_USE_ESPNOW=1" ;;
   base) SKETCH=base-tbeam-s3;  FQBN="esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PartitionScheme=default_8MB,PSRAM=disabled,FlashMode=qio,USBMode=hwcdc" ;;
-  *) echo "target must be kart, kart-uart, kart-m5, kart-m5-readonly, kart-m5-espnow-readonly, kart-m5-espnow, m5, m5-demo, m5-espnow, base, repeater, all or test"; exit 2 ;;
+  core2) SKETCH=core2-items; FQBN="esp32:esp32:m5stack_core2" ;;
+  *) echo "target must be kart, kart-uart, kart-m5, kart-m5-readonly, kart-m5-espnow-readonly, kart-m5-espnow, m5, m5-demo, m5-espnow, base, repeater, core2, all or test"; exit 2 ;;
 esac
 # Keep a single compiler property argument even when the target has multiple flags.
 EXTRA_ARGS=(--warnings default)

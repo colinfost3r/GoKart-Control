@@ -5,6 +5,8 @@
 #include <esp_system.h>
 #include "config.h"
 #include "DisplayState.h"
+#include "MapView.h"
+#include "CourseStorage.h"
 #if M5_USE_ESPNOW
 #include <M5EspNowSettings.h>
 #include "DisplayMaintenance.h"
@@ -18,10 +20,11 @@ uint32_t headerHoldMs=0;
 
 M5Canvas canvas(&M5.Display);
 m5dash::State state;
-m5dash::Course course;
+m5dash::CourseManager courseManager;
+m5dash::Course& course=courseManager.active;
 m5link::Lines<1152> lines;
 SPIClass sdBus(VSPI);
-bool mapPage=false,onlineOnly=true;
+bool mapPage=true;
 struct TabRect {int x,y,w,h;bool contains(int px,int py)const{return px>=x&&px<x+w&&py>=y&&py<y+h;}};
 // Visible buttons and touch targets share exactly the same bounds.
 constexpr TabRect tabs[3]={{4,23,94,40},{103,23,94,40},{202,23,114,40}};
@@ -36,10 +39,13 @@ static void displayStatus(){
 #if M5_USE_ESPNOW
   modeReady=modeReady&&!maintenance.active()&&wireless.channelAligned(now);
 #endif
-  Serial.printf("{\"t\":\"m5_status\",\"fw\":\"m5-v1.5\",\"transport\":\"%s\",\"kart\":%d,\"live\":%s,\"vesc\":%s,\"mode_ready\":%s,\"page\":\"%s\",\"touch_enabled\":%s,\"touch_presses\":%lu,\"touch_x\":%d,\"touch_y\":%d,\"heap\":%lu}\n",
+  Serial.printf("{\"t\":\"m5_status\",\"fw\":\"m5-v1.5\",\"transport\":\"%s\",\"kart\":%d,\"live\":%s,\"vesc\":%s,\"mode_ready\":%s,\"page\":\"%s\",\"touch_enabled\":%s,\"touch_presses\":%lu,\"touch_x\":%d,\"touch_y\":%d,\"heap\":%lu,\"course_proto\":1,\"course_source\":\"%s\",\"course_points\":%u,\"course_error\":\"%s\",\"gps_reported_fix\":%s,\"gps_fresh\":%s,\"gps_has_position\":%s,\"gps_position_age_ms\":%ld,\"gps_sats\":%d,\"parse_errors\":%lu,\"map_follow\":%s}\n",
     M5_DEMO?"demo":M5_USE_ESPNOW?"espnow":"uart",state.self,state.live(now)?"true":"false",
     state.live(now)&&k.vesc?"true":"false",modeReady?"true":"false",mapPage?"map":"dash",
-    M5.Touch.isEnabled()?"true":"false",(unsigned long)touchPresses,touchX,touchY,(unsigned long)ESP.getFreeHeap());
+    M5.Touch.isEnabled()?"true":"false",(unsigned long)touchPresses,touchX,touchY,(unsigned long)ESP.getFreeHeap(),courseManager.source(),unsigned(course.count),courseManager.error(),
+    k.fixReported?"true":"false",k.positionFresh(now)?"true":"false",k.hasPosition?"true":"false",
+    k.hasPosition?(long)(now-k.fixReceived):-1L,k.sats,(unsigned long)state.errors,
+    m5dash::MapView::make(state,course,now).following?"true":"false");
 }
 static void displayUsb(){
   unsigned budget=160;
@@ -54,6 +60,11 @@ static void displayUsb(){
       continue;
     }
 #endif
+    bool courseBusy=false;
+#if M5_USE_ESPNOW
+    courseBusy=maintenance.active()||maintenance.updating()||maintenance.restarting();
+#endif
+    if(courseManager.command(line,Serial,millis(),courseBusy))continue;
     if(!strcmp(line,"status"))displayStatus();
     else if(!strcmp(line,"reboot")){Serial.flush();ESP.restart();}
   }
@@ -68,36 +79,47 @@ void metric(float v,const char* suffix,char* b,size_t n,int decimals=1) {
   if(!std::isfinite(v))snprintf(b,n,"-- %s",suffix);else snprintf(b,n,"%.*f %s",decimals,v,suffix);
 }
 void loadCourse() {
-  // Optional offline outline: export the pit's track with tools/m5/export_course.py.
+  courseManager.begin();
+  // Internal outline wins; SD remains an optional boot-time fallback.
   sdBus.begin(18,38,23,4);
   if(!SD.begin(4,sdBus,20000000))return;
   File f=SD.open("/gokart/course.json",FILE_READ);
-  if(!f || f.size()>24576)return;
-  JsonDocument d;
-  if(!deserializeJson(d,f,DeserializationOption::NestingLimit(5)))course.load(d.as<JsonVariantConst>());
+  if(!f)return;
+  if(f.size()>24576){courseManager.sdError("sd_oversize");f.close();return;}
+  JsonDocument d;m5dash::Course next;
+  bool valid=!deserializeJson(d,f,DeserializationOption::NestingLimit(5))&&next.load(d.as<JsonVariantConst>());
   f.close();
+  if(valid)courseManager.sdFallback(next);else courseManager.sdError("sd_invalid");
 }
 void drawMap(uint32_t now) {
-  auto b=state.bounds(course,now,onlineOnly);
-  if(!b.valid){text("Waiting for GPS / course",10,85,1,TFT_YELLOW);return;}
-  double spanX=std::max(40.0,b.maxX-b.minX),spanY=std::max(40.0,b.maxY-b.minY);
-  double scale=std::min(288.0/spanX,98.0/spanY);
-  double cx=(b.maxX+b.minX)/2,cy=(b.maxY+b.minY)/2;
-  auto px=[&](double lon){return 160+int((b.x(lon)-cx)*scale);};
-  auto py=[&](double lat){return 119-int((b.y(lat)-cy)*scale);};
-  canvas.drawRect(3,66,314,106,TFT_DARKGREY);
-  for(size_t i=1;i<course.count;++i)canvas.drawLine(px(course.lon[i-1]),py(course.lat[i-1]),px(course.lon[i]),py(course.lat[i]),TFT_CYAN);
-  if(course.closed&&course.count>2)canvas.drawLine(px(course.lon[course.count-1]),py(course.lat[course.count-1]),px(course.lon[0]),py(course.lat[0]),TFT_CYAN);
-  for(int i=1;i<=8;++i){
-    const auto& k=state.karts[i];
-    if(!k.hasPosition || uint32_t(now-k.fixReceived)>15000 || (onlineOnly&&!k.positionFresh(now)))continue;
-    int x=px(k.lon),y=py(k.lat); bool fresh=k.positionFresh(now);
-    uint16_t c=fresh?colors[i]:TFT_DARKGREY;
-    if(i==state.self)canvas.drawCircle(x,y,10,TFT_WHITE);
-    if(fresh)canvas.fillCircle(x,y,7,c);else canvas.drawCircle(x,y,7,c);
-    canvas.setTextColor(fresh?TFT_BLACK:TFT_WHITE);canvas.setTextSize(1);canvas.setCursor(x-3,y-3);canvas.print(i);
+  auto view=m5dash::MapView::make(state,course,now);
+  canvas.drawRect(view.left,view.top,view.width,view.height,TFT_DARKGREY);
+  if(!view.valid)text("Waiting for own GPS / course",12,92,1,TFT_YELLOW);
+  else {
+    auto segment=[&](size_t a,size_t b){double x0,y0,x1,y1;
+      if(view.project(course.lat[a],course.lon[a],x0,y0)&&view.project(course.lat[b],course.lon[b],x1,y1)&&view.clip(x0,y0,x1,y1))
+        canvas.drawLine(lround(x0),lround(y0),lround(x1),lround(y1),TFT_CYAN);
+    };
+    for(size_t i=1;i<course.count;++i)segment(i-1,i);
+    if(course.closed&&course.count>2)segment(course.count-1,0);
+    for(int i=1;i<=8;++i){
+      const auto& k=state.karts[i];
+      if(!k.positionFresh(now)||(i==state.self&&!state.live(now)))continue;
+      double x,y;if(!view.project(k.lat,k.lon,x,y)||!view.contains(x,y,11))continue;
+      int px=lround(x),py=lround(y);
+      if(i==state.self)canvas.drawCircle(px,py,10,TFT_WHITE);
+      canvas.fillCircle(px,py,7,colors[i]);
+      canvas.setTextColor(TFT_BLACK);canvas.setTextSize(1);canvas.setCursor(px-3,py-3);canvas.print(i);
+    }
   }
-  char label[50];snprintf(label,sizeof label,"N up | %.0f m wide | %s",288/scale,course.count?"course":"GPS only");text(label,5,175,1,TFT_LIGHTGREY);
+  // Navigation is an overlay, not another row shrinking the driving map.
+  canvas.fillRoundRect(5,26,55,24,4,TFT_BLACK);canvas.drawRoundRect(5,26,55,24,4,TFT_LIGHTGREY);text("DASH",13,34,1);
+  char label[60];
+  if(view.following)snprintf(label,sizeof label,"N up / 70 m / %s",course.count?courseManager.source():"GPS only");
+  else snprintf(label,sizeof label,"Own GPS unavailable / %s",course.count?"course overview":"no course");
+  text(label,5,190,1,TFT_LIGHTGREY);
+  canvas.drawRoundRect(2,203,316,35,5,TFT_DARKGREY);text("FIRE",16,211,2,TFT_DARKGREY);
+  text("UNAVAILABLE / NO ITEM DATA",91,216,1,TFT_LIGHTGREY);
 }
 void drawDash(uint32_t now) {
   const auto& k=state.karts[state.self]; bool live=state.live(now),vesc=live&&k.vesc;
@@ -148,13 +170,13 @@ void draw(uint32_t now) {
   else snprintf(b,sizeof b,"K%d  %s  PIT %s  %s",state.self,state.live(now)?"LINK":"NO LINK",meta?(state.pit?"OK":"LOST"):"?",meta?(state.radio?"RADIO OK":"RADIO FAIL"):"");
   text(b,5,5,1,state.live(now)?TFT_WHITE:TFT_YELLOW);
   canvas.drawFastHLine(0,20,320,TFT_DARKGREY);
+  if(mapPage){drawMap(now);canvas.pushSprite(0,0);return;}
   for(int i=0;i<2;++i){
     const auto& t=tabs[i];bool selected=(i==1)==mapPage;
     canvas.drawRoundRect(t.x,t.y,t.w,t.h,5,selected?TFT_CYAN:TFT_LIGHTGREY);
     text(i?"MAP":"DASH",t.x+14,t.y+12,2,selected?TFT_CYAN:TFT_WHITE);
   }
-  if(mapPage){const auto& t=tabs[2];canvas.drawRoundRect(t.x,t.y,t.w,t.h,5,TFT_YELLOW);text(onlineOnly?"FRESH ONLY":"STALE TOO",t.x+11,t.y+16,1,TFT_YELLOW);}
-  if(mapPage)drawMap(now);else drawDash(now);
+  drawDash(now);
   const char* note=!state.live(now)?"HELTEC LOST / no automatic commands":k.stopped?"PIT STOP ACTIVE":k.slow?"PIT SLOW ACTIVE":state.pending?"Mode requested; awaiting read-back":state.pendingUnknown?"Outcome unknown; no retry":state.result==2?"Mode applied / read-back received":state.result==4?"Request refused":state.result==3?"VESC unavailable":state.canRequest(now)?"Hold a mode button to request":state.live(now)?"Mode controls unavailable":"No commands on reconnect";
   if(localModeNotice&&uint32_t(now-localModeNoticeMs)<4000&&state.live(now)&&!state.pending&&!k.stopped&&!k.slow)note=localModeNotice;
 #if M5_USE_ESPNOW
@@ -215,10 +237,14 @@ void touch(uint32_t now) {
     if(uint32_t(now-headerHoldMs)>=1800){maintenanceMenu=true;heldMode=-1;return;}
   }else headerHolding=false;
 #endif
+  if(mapPage){
+    heldMode=-1;holdFired=false;
+    if(t.wasPressed()&&t.x>=5&&t.x<60&&t.y>=26&&t.y<50)mapPage=false;
+    return; // FIRE is deliberately unavailable: never a command, hold or replay.
+  }
   if(t.wasPressed()){
     if(tabs[0].contains(t.x,t.y))mapPage=false;
     else if(tabs[1].contains(t.x,t.y))mapPage=true;
-    else if(mapPage&&tabs[2].contains(t.x,t.y))onlineOnly=!onlineOnly;
   }
   int at=(t.isPressed()&&t.y>=202&&t.y<240&&t.x>=0&&t.x<320)?std::min(2,t.x/107):-1;
   if(at<0||at!=heldMode){heldMode=at;holdMs=now;holdFired=false;}

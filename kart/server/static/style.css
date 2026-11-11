@@ -318,6 +318,14 @@ body.racing .fault { position: fixed; left: 0; right: 0; bottom: 0; z-index: 31;
 .itembox.r-empty { background: #555; }
 .itembox.r-shell { background: #0b3a20; }
 .itembox.r-lightning { background: #161616; color: #ffe600; }
+.itembox.r-boost3 { background: var(--boost); color: #000; }
+.itembox.r-star { background: #ffd400; color: #000; }
+.itembox.r-magnet { background: #7a1f1f; }
+.itembox.r-hotlap { background: #7ad7ff; color: #000; }
+.itembox.r-shield { background: #124a86; }
+.invfx { display: flex; align-items: center; padding: 7px 12px; border-radius: 10px; background: #000;
+         color: #ffe600; font-size: 15px; font-weight: 900; letter-spacing: .04em; border: 3px solid #ffe600; }
+body.sun .invfx { background: #000; }
 
 /* race finish: full-screen checkered takeover (6 s, then 0.5 s fade) with the position, laps and
    best lap; then a small FINISHED chip on the map until the next countdown */
@@ -405,3 +413,11 @@ body.sun .itembtn.off { color: #d0d0d0; border-color: #fff; box-shadow: none; }
 body.sun .itembtn.fb.sent { color: #fff; }
 body.sun .itembtn.fb.hit { background: #ffd400; color: #000; }
 body.sun .itembtn.fb.miss { color: #ffd400; }
+
+/* carried items (config item_hold): tap a chip to use it; the Core2 bar screen mirrors these */
+.invheld { position: absolute; bottom: 96px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 6; }
+.invchip { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border: 3px solid #000; border-radius: 10px;
+           background: #fff; color: #000; font-size: 17px; font-weight: 900; letter-spacing: .04em; }
+.invchip .invglyph svg { width: 26px; height: 26px; display: block; }
+.invchip:active { transform: scale(.96); }
+body.sun .invchip { background: #000; color: #fff; border-color: #fff; }

@@ -26,12 +26,21 @@ The Core2 replaces the Pi/display assembly on a v1.5 kart. It does not replace t
 share BLE ownership. Firmware reuses the same radio protocol and motor policy; the optional
 UART/paired ESP-NOW adapters and [display contract](../firmware/m5-core2/SERIAL_PROTOCOL.md) isolate local UI
 requests. Both display versions can participate in the same eight-kart fleet. Local map
-outlines are display data, not geofence enforcement. Hardware acceptance remains pending. The owner selected ESP-NOW for the local Heltec/Core2
+outlines are display data, not geofence enforcement. New map acceptance remains pending. The owner selected ESP-NOW for the local Heltec/Core2
 link on November 10; UART remains available. Each pair uses private provisioned keys; the
 Core2 follows the Heltec's Wi-Fi channel. This changes neither LoRa nor VESC BLE ownership.
 The first wireless target is compile-time read-only, including pit/USB/game VESC writes.
 Neither a base station nor an SD card is needed for own telemetry/direct peer GPS positions;
-SD supplies an optional course outline, while the base provides central pit/race functions.
+a validated course can be provisioned to Core2 internal NVS over USB, with optional SD fallback.
+The north-up viewport follows a fresh own fix at a fixed local scale; distant peers do not
+change the zoom. Without a fresh own fix it shows the available course with explicit status.
+The base provides central pit/race functions. Neither it nor LoRa currently distributes course
+geometry to the Core2. See the [M5 guide](../firmware/m5-core2/README.md) for provisioning.
+
+Eamon's `core2-items` is a separate Pi-owned inventory accessory. Its raw ESP-NOW receive
+callback is excluded from paired M5 builds, preserving authenticated link ownership. The M5
+FIRE button remains unavailable until native inventory/game authority is ported; relaying
+`invuse` to an absent Pi would not implement firing.
 
 ## Boundaries
 

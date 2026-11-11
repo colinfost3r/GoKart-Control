@@ -170,7 +170,14 @@
       "eamon_test_kart_ids": [
         1,
         2
-      ]
+      ],
+      "map_revision_2026_11_11": {
+        "viewport": "north-up, own-kart follow at fixed local scale",
+        "course_storage": "validated internal NVS outline; optional SD fallback",
+        "course_provisioning": "explicit USB upload; no automatic LoRa course transfer",
+        "fire": "unavailable until native no-Pi inventory/game authority exists",
+        "hardware_verified": false
+      }
     },
     "pi_v2": {
       "hardware": "Pi 3 B + LESOWN L7",
@@ -193,7 +200,7 @@
     "latest_eamon_integrated": "a9c8459",
     "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
     "current_usb_state": "2026-11-11 19:31 UTC: Heltec/Core2 coexistence bench passed, stationary/fault0; -5 A motor minimum/minscale1 preserved. Current temporary mode ECO. Owner confirms smooth F/R and now forward, pedal released and stopped. Both accessories live/mode-ready/channel6 aligned. Internal Lisp state not polled during BLE.",
-    "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 k\u03a9 pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; original branch noise measured. Persistent VESC-local filter bench trial installed; wiring cause/reliability still unresolved.",
+    "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 kΩ pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; original branch noise measured. Persistent VESC-local filter bench trial installed; wiring cause/reliability still unresolved.",
     "tune_applied_at_utc": "2026-11-10T19:58:55+00:00",
     "tune_applied_path": "hardware/vesc/kart3/2026-11-10/tune-applied-v1",
     "tune_verified_fields": 376,

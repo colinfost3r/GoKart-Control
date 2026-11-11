@@ -7,8 +7,8 @@ The same logical lines can travel over paired encrypted ESP-NOW with `GK_M5_ESPN
 Core2 `M5_USE_ESPNOW=1`. UART and ESP-NOW are mutually exclusive build choices. See the
 [wireless transport](../libraries/M5EspNowLink/README.md) for framing, authentication, bounded
 queues and channel discovery. It removes the terminal newline, preserves receive age and
-never forwards wireless text to the USB maintenance parser. The first wireless build refuses
-write-enabled compilation; mode, pit and USB VESC writes remain disabled.
+never forwards wireless text to the USB maintenance parser. The `kart-m5-espnow-readonly` build keeps VESC writes disabled. The separately commissioned
+`kart-m5-espnow` control build retains guarded M5 modes and the existing pit controls.
 
 Core2 USB `status` reports display/link/touch diagnostics. On wireless targets, local USB
 `espnow status`, `espnow pair MAC LMK PMK` and `espnow clear` manage pairing; keys are never
@@ -19,7 +19,7 @@ Heltec -> M5:
 - `self` / `fleet`: unchanged output of `GoKartProtocol::gkTelemetryToJson`; `self` retains its
   USB extras. M5 ignores unknown additional fields. A zero sensor reading without the relevant
   `vesc_link` / `fix` flag is unavailable. Own data expires after 1.5 s; valid GPS after 3 s of reported fix age;
-  map ghosts expire after 15 s of reported fix age. Receipt does not reset the GPS age clock.
+  the map draws fresh positions only. Receipt does not reset the GPS age clock.
   Own `fix_age_ms` takes precedence when present; otherwise `gps_age_s` has one-second
   quantization, so exact physical fix age can be up to one second greater than reported. The base's RSSI zero sentinel is not used to infer connectivity:
   metadata's `pit` uses the actual time of the last beacon.
@@ -68,3 +68,18 @@ busy writing, OTA, baseline suspect, missing UUID pin or controller unavailable,
 rejects the request and does not remember a future action. The VESC write path and radio command
 acknowledgements remain Eamon's implementation. USB and M5 are alternatives for normal driver
 operation; simultaneous USB console inspection remains supported.
+
+## Core2-only course USB provisioning
+
+The new source adds `course status`, `course begin LENGTH CRC32`, `course chunk OFFSET HEX`,
+`course commit`, `course abort` and `course clear` to the Core2 physical USB parser only.
+These are not Heltec/display-wire requests and cannot reach the VESC. See [COURSE_MAP](COURSE_MAP.md)
+for bounds, readback and internal/SD precedence. The protocol remains `m5mode`-only over the
+paired display link; the disabled FIRE button has no command frame.
+
+Core2 USB `status` adds `course_proto:1`, `course_source`, `course_points`, `course_error`,
+`gps_reported_fix`, `gps_fresh`, `gps_has_position`, `gps_position_age_ms`, `gps_sats`,
+`parse_errors` and `map_follow`. `gps_position_age_ms:-1` means no retained valid position.
+A Heltec-reported fix is not accepted as fresh unless coordinates and source age validate.
+These additions diagnose absent course data separately from missing/stale GPS; they do not
+change incoming telemetry rates or any live motor-control contract.

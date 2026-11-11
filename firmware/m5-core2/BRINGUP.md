@@ -23,6 +23,11 @@ with `m5-demo`, then `m5-espnow` + `kart-m5-espnow-readonly` (or `m5` + `kart-m5
 Both initial Heltec targets keep every VESC write disabled. Use the repeat-build checklist below;
 do not downgrade/re-pair the working kart 3 simply to repeat first-unit steps.
 
+**New map source, awaiting deployment:** the [no-SD follow map](COURSE_MAP.md) starts on a
+70 m own-follow view with a disabled FIRE button. Internal course provisioning is ready for
+bench testing; installed kart-3 acceptance above remains the earlier application. Preserve
+its backup and record a separate display-only deployment before claiming the new UI works.
+
 ## Bring to the bench
 
 - M5Stack **Core2 v1.3 / K010-V13**, Heltec **WiFi LoRa 32 V4.3** with its GPS attached.
@@ -144,13 +149,13 @@ seconds for Core2's channel search. Pairing readback alone is not radio acceptan
 
 | Stage | Setup/action | Expected result |
 | --- | --- | --- |
-| 1. Display alone | Run `m5-demo`; Heltec link not needed | Screen says **DEMO / NO OUTPUT**. DASH/MAP tabs and FRESH ONLY/STALE TOO toggle respond; eight synthetic dots appear. Mode buttons send nothing. |
-| 2. Local telemetry | Run the paired ESP-NOW targets, or the UART targets with three wires connected; begin with VESC off | Demo label disappears. Kart ID is the unit's assigned ID and Heltec status reaches the display; VESC is disconnected while off. DASH/MAP and map filter respond. Mode controls remain unavailable. No base station or SD card is required. |
+| 1. Display alone | Run `m5-demo`; Heltec link not needed | Screen says **DEMO / NO OUTPUT**. Map follows the synthetic own kart; fresh synthetic peers within the view appear. DASH/MAP navigation responds and FIRE is visibly unavailable. Mode buttons send nothing. |
+| 2. Local telemetry | Run the paired ESP-NOW targets, or the UART targets with three wires connected; begin with VESC off | Demo label disappears. Kart ID is the unit's assigned ID and Heltec status reaches the display; VESC is disconnected while off. DASH/MAP navigation responds; FIRE sends nothing. Mode controls remain unavailable. No base station or SD card is required. |
 | 2b. VESC telemetry | Complete the per-unit identity check above, then turn on its intended VESC for a read-only check | Electrical values match Heltec USB `self` telemetry; no throttle or motor command is sent. |
 | 3. Identity/read-only | On Heltec USB console, request `status` | `writes:false`, `transport:"ble"`, intended `vescmac`/`vesc_uuid`, `id_ok:true` and `radio:true`. Before later mode testing, verify nonempty `uuid_pin` matches `vesc_uuid`; `id_ok` alone also allows address-only binding. No motor test or settings write is needed. |
-| 4. GPS/map | Allow an outdoor fix; power another transmitting kart for the peer check; install optional course SD before starting display | Own numbered dot gets a white ring; a directly received peer with a valid fix appears without a base station or SD card. Course outline is visible if loaded. With no fix, GPS speed is `--`, not a fabricated zero/location. |
+| 4. GPS/map | Allow an outdoor fix; power another transmitting kart for the peer check; provision the intended internal course, or install optional course SD before starting display | Own numbered dot gets a white ring; a directly received peer with a valid fix appears when within the close-follow view, without a base station or SD card. Course outline is visible if loaded. With no fix, GPS speed is `--`, not a fabricated zero/location. |
 | 5. Shared pit (when available) | View the assigned kart in the existing pit dashboard | Pit receives that kart's live updates. M5 PIT OK means it heard a beacon, so confirm both directions separately. Record this stage as pending if no base is available; it does not block own telemetry/direct peer checks. |
-| 6. Link loss | UART: interrupt/reconnect telemetry data. ESP-NOW: test radio loss/recovery and channel reacquisition. Also restart display alone | Own telemetry becomes lost after ~1.5 s, fresh map positions age out after ~3 s, optional stale dots vanish by ~15 s. Wireless reacquisition may take several seconds. Recovery sends no mode and VESC active settings stay unchanged. |
+| 6. Link loss | UART: interrupt/reconnect telemetry data. ESP-NOW: test radio loss/recovery and channel reacquisition. Also restart display alone | Own telemetry becomes lost after ~1.5 s, own map follow stops with the local link loss, and stale map markers disappear; no peer becomes the follow target. Wireless reacquisition may take several seconds. Recovery sends no mode and VESC active settings stay unchanged. |
 | 7. Sustained run | Leave telemetry running for 10 minutes; log boot messages and rates | No unexpected resets, repeated freezes or unexplained mode changes. Check both USB and display still work. This measures real hardware; host simulation is not a substitute. |
 
 For the UART option, change wiring only with power removed. For live link-loss checks use a prepared switch or
@@ -208,16 +213,16 @@ new unit; a previous kart's result does not commission another pair.
 | --- | --- |
 | Display dark | Run standalone `m5-demo`; verify USB power, Core2 power button and correct Core2 target before debugging the Heltec wires. |
 | Demo dots still shown | `m5-demo` is still installed. Use `m5` for UART or `m5-espnow` for wireless telemetry. |
-| Tabs do not respond | The four-target diagnostic confirmed touch input in IRQ mode. Verify the new image has outlined 40-pixel tabs; inspect Core2 USB `status` for page, touch count and coordinates. Kart 3 DASH/MAP and 650 ms mode holds are owner-confirmed; test each new panel separately. |
+| Tabs do not respond | The four-target diagnostic confirmed touch input in IRQ mode. Verify DASH opens from the map overlay and MAP returns from the dashboard; inspect Core2 USB `status` for page, touch count and coordinates. Kart 3 DASH/MAP and 650 ms mode holds are owner-confirmed; test each new panel separately. |
 | HELTEC DATA LOST over ESP-NOW | Correct wireless targets, both boards powered, reciprocal peer IDs and pairing on USB `espnow status`; allow channel search. Outside maintenance, Core2 does not join an access point; during maintenance its AP channel can temporarily interrupt telemetry. No jumper wires are needed. |
 | HELTEC DATA LOST over UART | Common ground, white G33 to Heltec47, both boards powered, correct M5 UART companion target, 230400 baud. |
 | VESC DISCONNECTED | Verify the unit's physical controller and both pins; the historical d8:94:35:be:e5:32 controller belongs to kart 2. Check VESC power and UUID-mismatch rejection. The M5 does not own BLE. |
 | Electrical data works but no map/speed | GPS needs a valid fix. M5 v1.5 speed is GPS-derived; spinning wheels on a stationary stand will not show road speed. |
 | Mode or pit motor controls unavailable | Expected with either read-only Heltec target. For a commissioned control pair, check `writes:true`, correct fresh UUID/configuration, baseline not suspect, maintenance off, `mode_ready:true`, and matching `channel`/`rx_channel`/`peer_channel` with alignment. Release and repeat the 650 ms hold if an attempt was unavailable; requests are never saved for later. |
 | PIT LOST | Expected with no base station. When testing the pit, confirm base power, antenna and matching fleet/radio settings. Own VESC telemetry and direct peer positions do not require a pit beacon. |
-| No other kart on map | Confirm another kart is transmitting with a valid GPS fix, antennas are attached and fleet/radio settings match. Neither a base station nor an SD card is required for direct peers. |
+| No other kart on map | Confirm another kart is transmitting with a valid GPS fix within the close-follow view, antennas are attached and fleet/radio settings match. Neither a base station nor an SD card is required for direct peers. |
 | Core2 OTA unavailable | Use `m5-espnow`, provision over USB, explicitly enable the window, and inspect `ota status`. Use that unit's display hostname; kart 3 uses `gokart-display-3.local`, distinct from Heltec `gokart-3.local`. No SD is required. |
-| Course absent | FAT32, `/gokart/course.json`, schema1, 2–128 valid points, file <=24576 bytes; restart the display after inserting the card. |
+| Course absent | Use Core2 `course status` and `status` to separate source/point-count errors from own GPS freshness. Provision a validated internal outline per [COURSE_MAP](COURSE_MAP.md); optional SD fallback is FAT32 `/gokart/course.json`, loaded at boot. No valid course is supplied automatically. |
 
 ## Record before calling it passed
 

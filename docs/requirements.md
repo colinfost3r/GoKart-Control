@@ -52,6 +52,23 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - No SD card is installed. Telemetry and live GPS positions must work without one. The base
   station is optional for local telemetry and directly heard peers, not for central pit control.
 
+## M5 driving map — November 11, 2026
+
+- Owner requests a simple course line centered on and following the driver's kart,
+  making better use of the Core2 screen without adding a Raspberry Pi or imagery.
+- Keep the driving view focused on the map and a FIRE button; retain deliberate
+  access to DASH/mode selection and maintenance. Missing GPS/course data must have
+  an explicit explanation rather than a blank screen.
+- A course outline may live in Core2 internal flash; SD is optional. Provision a
+  validated outline before driving, with corrupt/incomplete uploads rejected.
+  The committed shop demo is not a surveyed Manresa course.
+- FIRE requires authoritative inventory, session/target rules and fresh authenticated
+  requests. Eamon's separate Pi-dependent item screen does not supply those rules
+  to a no-Pi kart. The first map revision keeps FIRE unavailable rather than sending
+  an unrestricted attack. Native no-Pi gameplay is still separate implementation.
+- These presentation changes do not change VESC settings or LoRa packet formats.
+  On-device acceptance and the actual course package remain open.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.

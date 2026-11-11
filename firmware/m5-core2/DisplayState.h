@@ -9,7 +9,7 @@ inline bool number(JsonVariantConst v) { return (v.is<double>() || v.is<int>()) 
 inline float value(JsonVariantConst v) { return number(v)?v.as<float>():NAN; }
 inline bool location(double lat,double lon) { return std::isfinite(lat)&&std::isfinite(lon)&&lat>=-90&&lat<=90&&lon>=-180&&lon<=180; }
 struct Kart {
-  bool seen=false, fix=false, vesc=false, confirmed=false, stopped=false, writes=false;
+  bool seen=false, fixReported=false, fix=false, vesc=false, confirmed=false, stopped=false, writes=false;
   uint32_t received=0, fixReceived=0; bool hasPosition=false;
   double lat=0,lon=0; float gpsKph=NAN,volts=NAN,battA=NAN,motorA=NAN,escC=NAN;
   int mode=-1, fault=-1, sats=0, slow=0; float scale=NAN;
@@ -22,7 +22,11 @@ struct Course {
   char name[41]="No course loaded";
   bool load(JsonVariantConst d) {
     Course next;
-    if(d["schema"]!=1 || !d["points"].is<JsonArrayConst>() || !d["name"].is<const char*>()) return false;
+    if(!d["schema"].is<unsigned>() || d["schema"].as<unsigned>()!=1 || !d["points"].is<JsonArrayConst>() || !d["name"].is<const char*>()) return false;
+    JsonString title=d["name"].as<JsonString>();
+    if(!title.size()||title.size()>40||strlen(title.c_str())!=title.size())return false;
+    for(size_t i=0;i<title.size();++i)if(uint8_t(title.c_str()[i])<32||title.c_str()[i]==127)return false;
+    if(!d["closed"].isNull()&&!d["closed"].is<bool>())return false;
     auto points=d["points"].as<JsonArrayConst>();
     if(points.size()<2 || points.size()>MAX) return false;
     for(auto p:points) {
@@ -98,7 +102,8 @@ public:
       ageValid=doc["fix_age_ms"].is<unsigned>() && doc["fix_age_ms"].as<unsigned>()<=3000;
       ageMs=ageValid?doc["fix_age_ms"].as<unsigned>():0;
     }
-    k.fix=(doc["fix"]|false)&&number(doc["lat"])&&number(doc["lon"])&&ageValid;
+    k.fixReported=doc["fix"]|false;
+    k.fix=k.fixReported&&number(doc["lat"])&&number(doc["lon"])&&ageValid;
     if(k.fix) {
       double a=doc["lat"],b=doc["lon"];
       if(!location(a,b))k.fix=false;

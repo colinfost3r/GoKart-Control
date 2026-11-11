@@ -1,0 +1,134 @@
+{
+  "operation": "compile_only_no_upload",
+  "toolchain_config": "/tmp/gokart-arduino/arduino-cli.yaml",
+  "focused_tests": "8 passed; C++ ASan/UBSan and Python; independently repeated",
+  "source_files": {
+    "firmware/m5-core2/MapView.h": "27a90879963c4fe37cb4b06684435a0b004a208c23d394f23b5687a37cf65056",
+    "firmware/m5-core2/CourseStorage.h": "fc6daac98151d2e9ecb50dddb52d306e05dda79e50968cf0547caf479d87fe3c",
+    "firmware/m5-core2/DisplayState.h": "54bacc8da999724f3b56b6f82831dd0b787787bf19734b040db90c7364ba9ab0",
+    "firmware/m5-core2/m5-core2.ino": "6654b86035cffa31a6f5c2d0445eb86f21564b4c171829ec7221b0d056dbbb66"
+  },
+  "builds": {
+    "m5": {
+      "path": "firmware/build/m5-core2-m5/m5-core2.ino.bin",
+      "bytes": 612048,
+      "sha256": "9562730eda292cc341e4ea2057b9829838efe749a710265aac1b501628f7d73e"
+    },
+    "m5-demo": {
+      "path": "firmware/build/m5-core2-m5-demo/m5-core2.ino.bin",
+      "bytes": 612240,
+      "sha256": "7e90835e6dd3237a9c76d9882d153ade7b2ef27fb9b2d33d92eba9432c23c747"
+    },
+    "m5-espnow": {
+      "path": "firmware/build/m5-core2-m5-espnow/m5-core2.ino.bin",
+      "bytes": 1322240,
+      "sha256": "373a2bfc6328d87334daeca2f9b434875d5654f903e309c5e0c579c59fee57df"
+    },
+    "kart-m5-espnow": {
+      "path": "firmware/build/kart-heltec-v4-kart-m5-espnow/kart-heltec-v4.ino.bin",
+      "bytes": 1330688,
+      "sha256": "e3129f6943b4bb80f087a38e95d529a82283cc38d2da8a13a4292b64e3ee5fd8"
+    },
+    "kart-m5-espnow-readonly": {
+      "path": "firmware/build/kart-heltec-v4-kart-m5-espnow-readonly/kart-heltec-v4.ino.bin",
+      "bytes": 1325744,
+      "sha256": "fa7eea483be8c786c6da9893f6ba2285c47af2fdf46f7553d42c2499785538bb"
+    },
+    "kart-m5": {
+      "path": "firmware/build/kart-heltec-v4-kart-m5/kart-heltec-v4.ino.bin",
+      "bytes": 1307152,
+      "sha256": "74e3bb83bd2abada33cb959afccbf75321d204e80ff456487b04586b35671d8c"
+    },
+    "kart-m5-readonly": {
+      "path": "firmware/build/kart-heltec-v4-kart-m5-readonly/kart-heltec-v4.ino.bin",
+      "bytes": 1303600,
+      "sha256": "1d0c4e85bd7691dade71d96754e41828d6a65e3214f0d81fabf215c3b35d2694"
+    },
+    "kart": {
+      "path": "firmware/build/kart-heltec-v4/kart-heltec-v4.ino.bin",
+      "bytes": 1305392,
+      "sha256": "b5795f7531e96f58a06df2ca4f87a665b70c1198023b1d304671aa19d3f63c73"
+    },
+    "kart-uart": {
+      "path": "firmware/build/kart-heltec-v4-uart/kart-heltec-v4.ino.bin",
+      "bytes": 1091120,
+      "sha256": "2c161aaa96b99e985c2935605c979ac46d8c672a89af2d942f6061967b11ad08"
+    },
+    "core2": {
+      "path": "firmware/build/core2-items/core2-items.ino.bin",
+      "bytes": 1157136,
+      "sha256": "83a41f74fd380cf6ab4ecb254f6cb12ba53a9d4b045ea371385f28784d2eb484"
+    }
+  },
+  "stack_frame_entries": [
+    {
+      "symbol": "00000000 <m5dash::courseio::crc32(unsigned char const*, unsigned int)>:",
+      "frame_bytes": 32
+    },
+    {
+      "symbol": "00000000 <m5dash::courseio::get32(unsigned char const*)>:",
+      "frame_bytes": 32
+    },
+    {
+      "symbol": "00000000 <m5dash::courseio::decode(unsigned char const*, unsigned int, m5dash::Course&)>:",
+      "frame_bytes": 2176
+    },
+    {
+      "symbol": "00000000 <m5dash::courseio::encode(m5dash::Course const&, std::array<unsigned char, 1076u>&)>:",
+      "frame_bytes": 64
+    },
+    {
+      "symbol": "00000000 <_ZN6m5dash8courseio5StoreINS_17CoursePreferencesEE4saveERKNS_6CourseERS4_$isra$0>:",
+      "frame_bytes": 2208
+    },
+    {
+      "symbol": "00000000 <m5dash::courseio::singleObject(char const*, unsigned int)>:",
+      "frame_bytes": 32
+    },
+    {
+      "symbol": "00000000 <m5dash::CourseManager::decimal(char const*, unsigned int, unsigned long&)>:",
+      "frame_bytes": 32
+    },
+    {
+      "symbol": "00000000 <m5dash::Course::load(ArduinoJson::V743PB22::JsonVariantConst)>:",
+      "frame_bytes": 2224
+    },
+    {
+      "symbol": "00000000 <m5dash::courseio::parse(char const*, unsigned int, m5dash::Course&)>:",
+      "frame_bytes": 1200
+    },
+    {
+      "symbol": "00000000 <m5dash::CourseManager::status(Print&, char const*, bool)>:",
+      "frame_bytes": 1248
+    },
+    {
+      "symbol": "00000000 <m5dash::CourseManager::command(char const*, Print&, unsigned long, bool)>:",
+      "frame_bytes": 192
+    },
+    {
+      "symbol": "00000000 <loadCourse()>:",
+      "frame_bytes": 2368
+    },
+    {
+      "symbol": "00000000 <loop()>:",
+      "frame_bytes": 48
+    }
+  ],
+  "stack_note": "Individual compiled Xtensa frames, not a measured runtime high-water mark. CourseManager command 192 + Store.save 2208 + decode 2176 = 4576 bytes plus callers/library overhead; encode recursion was removed and candidate Course objects are heap allocated.",
+  "upstream_integrated": "a5a4c22",
+  "tests": {
+    "total": 492,
+    "suites": 8,
+    "skipped": 0,
+    "command": "PYTHON=<python-with-pyserial> ARDUINOJSON_DIR=<ArduinoJson/src> tools/run_tests.sh",
+    "result": "ALL PASSED"
+  },
+  "hardware_deployed": false,
+  "open_acceptance": [
+    "Actual course selection and surveyed alignment",
+    "Core2 map and changed touch layout on hardware",
+    "Core2 flash/reboot and power-interruption behavior",
+    "Heltec channel recovery with paired Core2 on hardware",
+    "Native no-Pi carried-item/game authority before enabling FIRE"
+  ]
+}

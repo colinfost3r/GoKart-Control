@@ -19,6 +19,24 @@ The old M5Stack Core2 dashboard is the ancestor of the VESC side (same temp-limi
 command, same three modes). It depended on a hand-edited VescUart library; this code
 has its own framing so a stock Arduino install builds it.
 
+## Core2 firmware variants
+
+Use **`m5-espnow`** for the M5 v1.5 no-Pi telemetry/dashboard/map, with
+**`kart-m5-espnow`** on its paired Heltec. This link remains encrypted and paired;
+the Pi item-screen broadcast service is excluded from that Heltec build.
+
+Eamon's **`core2`** target builds `core2-items`, a separate carried-item accessory
+whose inventory and game rules run on the kart Pi. It is not a replacement image
+for the no-Pi M5 dashboard. Its `inv`/`invuse` USB relay does not implement a game
+engine on the Heltec. The M5 map's FIRE control remains unavailable until an
+authoritative no-Pi item implementation exists.
+
+Both Heltec display variants retain the last connected access-point channel and
+attempt to return to it after a failed Wi-Fi reconnect scan. Paired M5 control
+still requires fresh authenticated channel alignment; a channel recovery never
+replays a command. This integration is compiled/offline-tested; it has not been
+flashed or accepted on the kart.
+
 ## Build and flash
 
 Needs arduino-cli with `esp32:esp32` 3.3.x and these libraries installed through the

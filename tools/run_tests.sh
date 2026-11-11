@@ -38,6 +38,9 @@ SUITES=(
 if [ -d firmware/tests ]; then
   SUITES+=("firmware|$PY -I -m unittest discover -s firmware/tests -p test_*.py")
 fi
+if [ -f firmware/m5-core2/tests/test_map_course.py ]; then
+  SUITES+=("firmware-map|$PY -I firmware/m5-core2/tests/test_map_course.py")
+fi
 
 wanted() {
   [ ${#FILTERS[@]} -eq 0 ] && return 0

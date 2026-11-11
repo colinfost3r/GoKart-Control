@@ -254,7 +254,7 @@ function renderGame(game, fresh, st) {
   else sty(fill, "width", "0");
   const ov = m.override;
   const left = ov && ov.left_s > 0 ? ` ${Math.ceil(ov.left_s)}s` : "";
-  // freeplay items (owner 2026-11-09): BOOST = NORMAL mode for 5 s (scale ~0.75), ROCKET = SPORT mode for 8 s (scale ~1.0)
+  // freeplay items (owner 2026-11-10): BOOST = NORMAL mode for 7 s (scale ~0.75), ROCKET = SPORT mode for 10 s (scale ~1.0)
   txt("boostLabel", kind === "boost" ? (sc !== null && sc >= 0.9 ? "ROCKET \u2192 SPORT" : "BOOST \u2192 NORMAL") + left : kind === "mud" ? "MUD" + left
     : kind === "stopped" ? "STOP" : kind === "grid" ? "GRID" : kind === "normal" ? `POWER ${Math.round(sc * 100)}%` : "POWER --");
 
@@ -303,6 +303,7 @@ function renderFree(f) {
   show("freeBtn", !!f && f.allowed !== false);
   b.classList.toggle("sel", !!f && !!f.on);
   renderMulti(f, m);
+  renderInv();
 }
 
 /* freeplay multiplayer (docs/freeplay-multiplayer.md section 5): S.freeplay.multi from the kart server.
@@ -522,9 +523,29 @@ const ITEM_SVG = {
     + '<path d="M38 34 L30 20 M62 34 L70 20 M70 48 L88 48 M62 62 L70 76 M38 62 L30 76 M30 48 L12 48"/></g></svg>',
   lightning: '<svg viewBox="0 0 100 100"><path d="M60 3 L18 56 L45 56 L34 97 L82 40 L54 40 Z" fill="currentColor" stroke="#000" stroke-width="6" stroke-linejoin="round"/></svg>',
 };
-const ITEM_COLOR = { boost: "#ffb000", rocket: "#ffd400", mud: "#c58a4e", empty: "#d0d0d0", shell: "#3ddc84", lightning: "#ffe600" };
-const ITEM_NAME = { boost: "BOOST", rocket: "ROCKET", mud: "MUD", empty: "EMPTY", shell: "SHELL", lightning: "LIGHTNING" };
-const ITEM_SUB = { boost: "NORMAL", rocket: "SPORT" };          // the mode the item gives for a few seconds
+ITEM_SVG.boost3 = '<svg viewBox="0 0 100 100"><g fill="none" stroke="#000" stroke-width="17" stroke-linejoin="miter">'
+  + '<path d="M20 42 L50 16 L80 42"/><path d="M20 64 L50 38 L80 64"/><path d="M20 86 L50 60 L80 86"/></g>'
+  + '<g fill="none" stroke="currentColor" stroke-width="9" stroke-linejoin="miter">'
+  + '<path d="M20 42 L50 16 L80 42"/><path d="M20 64 L50 38 L80 64"/><path d="M20 86 L50 60 L80 86"/></g></svg>';
+ITEM_SVG.star = '<svg viewBox="0 0 100 100"><path d="M50 4 L61 36 L95 37 L68 58 L78 91 L50 71 L22 91 L32 58 L5 37 L39 36 Z"'
+  + ' fill="currentColor" stroke="#000" stroke-width="6" stroke-linejoin="round"/>'
+  + '<circle cx="40" cy="48" r="4.5" fill="#000"/><circle cx="60" cy="48" r="4.5" fill="#000"/></svg>';
+ITEM_SVG.magnet = '<svg viewBox="0 0 100 100"><path d="M26 10 L26 52 A24 24 0 0 0 74 52 L74 10 L58 10 L58 52 A8 8 0 0 1 42 52 L42 10 Z"'
+  + ' fill="currentColor" stroke="#000" stroke-width="6" stroke-linejoin="round"/>'
+  + '<path d="M26 10 L26 26 L42 26 L42 10 Z M58 10 L58 26 L74 26 L74 10 Z" fill="#fff" stroke="#000" stroke-width="6"/></svg>';
+ITEM_SVG.hotlap = '<svg viewBox="0 0 100 100"><g stroke="#000" stroke-linejoin="round">'
+  + '<rect x="42" y="4" width="16" height="10" rx="3" fill="currentColor" stroke-width="5"/>'
+  + '<circle cx="50" cy="56" r="38" fill="#fff" stroke-width="6"/><circle cx="50" cy="56" r="29" fill="currentColor" stroke-width="5"/>'
+  + '<path d="M50 56 L50 34 M50 56 L66 64" stroke-width="7" stroke-linecap="round" fill="none"/></g></svg>';
+ITEM_SVG.shield = '<svg viewBox="0 0 100 100"><path d="M50 5 L88 18 L88 48 C88 74 70 89 50 96 C30 89 12 74 12 48 L12 18 Z"'
+  + ' fill="currentColor" stroke="#000" stroke-width="6" stroke-linejoin="round"/>'
+  + '<path d="M50 16 L78 26 L78 48 C78 68 64 80 50 86 Z" fill="#fff" opacity=".35"/></svg>';
+const ITEM_COLOR = { boost: "#ffb000", rocket: "#ffd400", mud: "#c58a4e", empty: "#d0d0d0", shell: "#3ddc84", lightning: "#ffe600",
+                     boost3: "#ffb000", star: "#ffd400", magnet: "#ff5a5a", hotlap: "#7ad7ff", shield: "#3da5ff" };
+const ITEM_NAME = { boost: "BOOST", rocket: "ROCKET", mud: "MUD", empty: "EMPTY", shell: "SHELL", lightning: "LIGHTNING",
+                    boost3: "BOOST x3", star: "STAR", magnet: "MAGNET", hotlap: "HOT LAP", shield: "SHIELD" };
+const ITEM_SUB = { boost: "NORMAL", rocket: "SPORT", boost3: "NORMAL x3", star: "SPORT + IMMUNE",
+                   magnet: "BIG PICKUP", hotlap: "BEAT YOUR BEST", shield: "AUTO BLOCK" };
 const ITEM_ALIAS = { super: "rocket" };                        // old records ("super") still render
 ITEM_SVG.super = ITEM_SVG.rocket; ITEM_COLOR.super = ITEM_COLOR.rocket; ITEM_NAME.super = ITEM_NAME.rocket; ITEM_SUB.super = ITEM_SUB.rocket;
 let itemTimer = null, itemSoundTimer = null, itemZone = null;
@@ -548,7 +569,7 @@ function itemGlyph(k, color) {
 }
 function itemRoulette(result, zone = null) {
   result = ITEM_ALIAS[result] || result;
-  const box = $("itemBox"), order = ["boost", "mud", "rocket", "shell", "lightning", "empty"];
+  const box = $("itemBox"), order = ["boost", "mud", "rocket", "shell", "boost3", "star", "lightning", "magnet", "hotlap", "shield", "empty"];
   clearInterval(itemTimer); clearTimeout(itemTimer); clearTimeout(itemSoundTimer);
   itemZone = zone; itemSoundTimer = null;
   let i = 0;
@@ -564,7 +585,8 @@ function itemRoulette(result, zone = null) {
     }
     clearInterval(itemTimer);
     box.className = "itembox done r-" + result;
-    itemGlyph(result, { mud: "#e2b07a", empty: "#bbb", rocket: "#fff", boost: "#fff", shell: "#3ddc84", lightning: "#ffe600" }[result] || "#fff");
+    itemGlyph(result, { mud: "#e2b07a", empty: "#bbb", rocket: "#fff", boost: "#fff", shell: "#3ddc84", lightning: "#ffe600",
+                        boost3: "#fff", star: "#fff", magnet: "#ff8a8a", hotlap: "#113", shield: "#fff" }[result] || "#fff");
     txt("itemName", ITEM_NAME[result] || result);
     txt("itemSub", ITEM_SUB[result] || "");
     if (result === "empty") Snd.play("empty");
@@ -957,6 +979,36 @@ document.querySelectorAll(".mbtn").forEach((btn) => {
 })();
 
 /* freeplay multiplayer taps: chip = HOST, or (in a game) tap twice within 3 s = LEAVE; JOIN rows; USE */
+/* carried items (game.inventory, config item_hold): chips above the mode row, tap = use now */
+const invUi = { key: "", busy: false };
+function renderInv() {
+  const inv = (S.game && S.game.inventory) || [];
+  const anyFx = S.game && S.game.effects && (S.game.effects.star_s || S.game.effects.magnet_s
+    || S.game.effects.shields || S.game.effects.hotlap_target_s);
+  show("invRow", inv.length > 0 || !!anyFx);
+  if (!inv.length && !anyFx) { if (invUi.key) { $("invRow").innerHTML = ""; invUi.key = ""; } return; }
+  const fx = (S.game && S.game.effects) || {};
+  const fxChips = [fx.star_s ? `STAR ${Math.ceil(fx.star_s)}s` : "", fx.magnet_s ? `MAGNET ${Math.ceil(fx.magnet_s)}s` : "",
+                   fx.shields ? `SHIELD x${fx.shields}` : "", fx.hotlap_target_s ? `HOT LAP: beat ${fx.hotlap_target_s.toFixed(1)}s` : ""]
+    .filter(Boolean);
+  const key = inv.map((i) => i.item + (i.charges || "")).join(",") + "|" + fxChips.join(",");
+  if (invUi.key === key) return;
+  invUi.key = key;
+  $("invRow").innerHTML = inv.map((i, n) =>
+    `<button class="invchip" data-useslot="${n}"><span class="invglyph" style="color:${ITEM_COLOR[i.item] || "#fff"}">`
+    + `${ITEM_SVG[i.item] || ""}</span><b>${ITEM_NAME[i.item] || i.item}${i.charges ? " (" + i.charges + ")" : ""}</b></button>`).join("")
+    + fxChips.map((t) => `<span class="invfx">${t}</span>`).join("");
+}
+$("invRow").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-useslot]");
+  if (!b || invUi.busy) return;
+  invUi.busy = true; b.disabled = true;
+  post("/api/item", { use: Number(b.dataset.useslot) }).then((j) => {
+    if (!j || !j.ok) mpNote(`use: ${(j && j.error) || "failed"}`, 3);
+    invUi.busy = false; invUi.key = ""; renderDirty = true; requestDraw();
+  });
+});
+
 function mpPost(body, what) {
   return post("/api/freeplay", body).then((j) => {
     if (!j || !j.ok) mpNote(`${what}: ${(j && j.error) || "failed"}`, 3);
@@ -1043,7 +1095,7 @@ function drPosition(key, f, now, en, fresh) {
     target = [base[0] + Math.sin(r) * sp * dt, base[1] + Math.cos(r) * sp * dt];
   }
   if (Math.hypot(target[0] - d.dispE, target[1] - d.dispN) > 50) { d.dispE = target[0]; d.dispN = target[1]; }
-  d.dispE += (target[0] - d.dispE) * 0.35; d.dispN += (target[1] - d.dispN) * 0.35;
+  d.dispE += (target[0] - d.dispE) * 0.45; d.dispN += (target[1] - d.dispN) * 0.45;   // 0.35 felt laggy on the kart
   return [d.dispE, d.dispN];
 }
 function niceStep(m) { const s = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000]; return s.find((x) => x >= m) || 5000; }

@@ -3,6 +3,13 @@
 **M5 v1.5 branch:** `v1.5/m5-core2` adds a Core2 display option alongside the Pi v2.
 Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
+**November 11 map source update (not installed):** the no-Pi Core2 now supports a
+fixed-scale map following its own GPS position and a course outline stored internally,
+without an SD card. DASH/modes/OTA remain available. FIRE is visibly unavailable until
+native item authority exists. Eamon's six commits through a5a4c22 are integrated while
+preserving the paired M5 link. [Course setup](firmware/m5-core2/COURSE_MAP.md) ·
+[validation and deployment boundary](HANDOFF.md#m5-follow-map-and-eamon-integration--november-11-2026-source-ready-not-deployed).
+
 Kart 3 has live VESC telemetry, authenticated Core2 Wi-Fi OTA and working ECO/NORMAL/SPORT
 selection over paired ESP-NOW. Matching control-capable images are installed; the operator
 confirmed all three modes and VESC readbacks matched. The existing pit command implementation

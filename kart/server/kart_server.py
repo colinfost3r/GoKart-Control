@@ -77,10 +77,10 @@ DEFAULTS = {
     "map_poll_s": 30,
     "beginner_mode": False,             # hides driver-facing fault alerts only (docs/requirements.md)
     "map_orientation": "heading_up",    # "heading_up" | "north_up" (heading-up only while following)
-    "follow_span_m": 70,                # metres shown across the map height while following
+    "follow_span_m": 50,                # metres shown across the map height while following
     "follow_resume_s": 10,              # auto-follow resumes this long after the last touch
     "mode_hold_ms": 500,                # press-and-hold to request a mode (0 = plain tap)
-    "map_fps": 10,                      # max redraw rate while something moves
+    "map_fps": 15,                      # max redraw rate while something moves
     "bind": "0.0.0.0",
     "http_port": 8081,
     "remote_cmd": False,                # allow POST /cmd from other machines (debug only)
@@ -100,7 +100,8 @@ DEFAULTS = {
     "freeplay": True,                   # allow freeplay (FREEPLAY map button / POST /api/freeplay): kart-local item boxes, no pit
     "freeplay_boxes": 3,                # item boxes kept on the freeplay course (1-6)
     "mud_slow_secs": 4,                 # each mud command (zone repeat / MUD item): `slow 5 N` on Heltec kart-0.2.4+, else `boost N 0.5`
-    "item_reveal_s": 1.4,               # hold an item-box prize this long so it lands as the dash prize-wheel finishes (owner 2026-11-10); 0 = instant
+    "item_reveal_s": 1.4,
+    "item_hold": True,                  # freeplay boost/rocket are carried (up to 3) and used later from the Core2 item screen or the dash; false = they fire at the prize-wheel reveal               # hold an item-box prize this long so it lands as the dash prize-wheel finishes (owner 2026-11-10); 0 = instant
     "rotate": 0,                        # install.sh only: 180 = panel mounted ports-down (kernel + touch rotation)
     "health_period_s": health.PERIOD_S, # vcgencmd get_throttled + CPU temp sample period (Pi only)
     "health_file": None,                # tests/dev: read the get_throttled text from this file instead of vcgencmd
@@ -114,7 +115,8 @@ CONFIG_RULES = {
     "health_period_s": (float, 0.2, 3600), "freeplay_boxes": (int, 1, 6),
     "mud_slow_secs": (int, 1, 30), "item_reveal_s": (float, 0, 5),
 }
-CONFIG_BOOLS = ("beginner_mode", "remote_cmd", "game", "gps_correction", "demo", "sound", "sun_mode", "freeplay")
+CONFIG_BOOLS = ("beginner_mode", "remote_cmd", "game", "gps_correction", "demo", "sound", "sun_mode", "freeplay",
+                "item_hold")
 CONFIG_CHOICES = {"map_orientation": ("heading_up", "north_up"), "rotate": (0, 180)}
 MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8", ".json": "application/json",
@@ -125,7 +127,7 @@ SSE_SKIP = ("heltec", "rx_lines", "rx_bad", "gps_lines", "kiosk")   # /api/state
 DEMO_FINISH_LAPS = 3                    # demo mode: FINISH (P1) after this many laps
 PUBLIC_CFG = ("kart_id", "beginner_mode", "map_orientation", "follow_span_m", "follow_resume_s",
               "mode_hold_ms", "map_fps", "game", "sound", "sound_volume", "demo", "sun_mode", "freeplay",
-              "freeplay_boxes")
+              "freeplay_boxes", "item_hold")
 
 
 def _file_reader(path):
@@ -330,7 +332,8 @@ class App:
         self.game = kartcore.GameEngine(local_enabled=bool(self.cfg.get("game", True)),
                                         gps_correction=bool(self.cfg.get("gps_correction", False)),
                                         mud_secs=int(self.cfg.get("mud_slow_secs", kartcore.MUD_SLOW_SECS)),
-                                        item_reveal_s=float(self.cfg.get("item_reveal_s", kartcore.ITEM_REVEAL_S)))
+                                        item_reveal_s=float(self.cfg.get("item_reveal_s", kartcore.ITEM_REVEAL_S)),
+                                        item_hold=bool(self.cfg.get("item_hold", True)))
         # multiplayer freeplay: the engine rolls the multiplayer table on freeplay boxes while in a session, and
         # freeplay reads peers / distances / scores from the display's fleet table
         self.game.freeplay_items = self.freeplay.item_table
@@ -435,6 +438,7 @@ class App:
 
     def _ingest(self, text, demo=False, source=None):
         now, wall = time.monotonic(), wall_iso()
+        invuse = None
         try:
             msg = json.loads(text) if text[:1] == "{" else None
         except ValueError:
@@ -495,6 +499,8 @@ class App:
                 game = game + self.freeplay.on_multi_line(t, msg, now)     # multiplayer freeplay (kart-0.2.5)
                 zones, more = self.freeplay.select(self.maps.zones(), now)
                 game += more + self.game.set_zones(zones, now)          # session changes invalidate pending prizes now
+            elif t == "invuse" and not demo:
+                invuse = msg                                               # Core2 item screen (kart-0.3.0); after the lock
             if not demo and t in ("self", "gps"):
                 # freeplay: the engine's filtered position (course recording, the 10 m rule) and its
                 # item rolls (a roll on a freeplay box = collected)
@@ -503,6 +509,9 @@ class App:
             demo_finish = (demo and d is not None and not self.game.race["finished"]
                            and any(r.get("ev") == "lap" and r.get("lap", 0) >= DEMO_FINISH_LAPS for r in game))
         self._game_out(game, demo=demo)
+        if invuse is not None:
+            self._handle_invuse(invuse)
+        self._push_inv()
         if demo_finish:                    # demo: after 3 laps the simulated pit flags the kart home in P1
             d.write_text("finish 1")
             self.log.write("event", what="demo_finish", laps=DEMO_FINISH_LAPS, position=1)
@@ -548,6 +557,7 @@ class App:
         the demo was stopped while the line was in flight (the reader thread could otherwise write
         the simulator's laps/race into game-state.json a few ms after demo_stop)."""
         rejected_prizes = set()
+        queued_prizes = set()
         for r in recs:
             token = r.get("prize_token")
             if token is not None:
@@ -555,19 +565,24 @@ class App:
                 if token in rejected_prizes:
                     continue
                 # Delayed prize records leave the engine lock before reaching this method.
-                # Atomically recheck generation/current state and enqueue without waiting.
-                with self.lock:
-                    valid = self.game.prize_current(token, time.monotonic())
-                    sent = valid and self._connected()
-                    if sent and r["ev"] == "cmd":
-                        sent = self._send_text(r["line"], wait=False)
+                # Every command is rechecked immediately before enqueue. Later log/HUD
+                # records describe that accepted send, even if state changes meanwhile;
+                # they cannot retrospectively reject an already-queued motor effect.
+                if r["ev"] == "cmd" or token not in queued_prizes:
+                    with self.lock:
+                        valid = self.game.prize_current(token, time.monotonic())
+                        sent = valid and self._connected()
+                        if sent and r["ev"] == "cmd":
+                            sent = self._send_text(r["line"], wait=False)
+                            if sent:
+                                queued_prizes.add(token)
+                        if not sent:
+                            rejected_prizes.add(token)
+                            rejected = self.game.reject_prize(token, r.get("zone"), time.monotonic())
+                            for event in rejected:
+                                self.log.write("game", **event)
                     if not sent:
-                        rejected_prizes.add(token)
-                        rejected = self.game.reject_prize(token, r.get("zone"), time.monotonic())
-                        for event in rejected:
-                            self.log.write("game", **event)
-                if not sent:
-                    continue
+                        continue
             if r["ev"] == "cmd":
                 if token is None:
                     sent = self._connected() and self._send_text(r["line"], wait=False)
@@ -640,6 +655,8 @@ class App:
                 self._save_freeplay()
             if due:
                 self._send_text("status", wait=False)
+                self._inv_line = None                  # status poll: resend the inventory line too
+            self._push_inv()
             self.log.flush()
 
     # -- game timing across restarts -------------------------------------------
@@ -666,6 +683,70 @@ class App:
             os.replace(tmp, self.freeplay_path)
         except OSError as e:
             self.log.write("event", what="freeplay_save_failed", error=str(e))
+
+    # -- carried items (Core2 item screen / dash chips; kartcore inventory + multiplayer held) ----
+    def _inv_names(self):
+        """Carried item names, engine inventory first (oldest first), then the multiplayer held item."""
+        names = [i["item"] + (f"*{i['charges']}" if i.get("charges") else "") for i in self.game.inventory]
+        if self.freeplay.held:
+            names.append(self.freeplay.held["item"])
+        return names
+
+    _inv_line = "inv -"                    # assumed start state; the status poll clears it to resync
+
+    def _push_inv(self):
+        """Send `inv a b c` / `inv -` to the Heltec when the carried items change (and with each
+        status poll): kart-0.3.0 forwards them to the Core2 item screen over ESP-NOW."""
+        with self.lock:
+            if self.demo is not None:          # demo: the real Heltec is never written to
+                return
+            line = "inv " + (" ".join(self._inv_names()) or "-")
+        if line != self._inv_line and self._connected():
+            self._inv_line = line
+            self._send_text(line, wait=False)
+
+    def item_use(self, body, who):
+        """POST /api/item {"use": SLOT} (0-based; true = slot 0): fire a carried item. Slots are the
+        engine's boosts/rockets first, then the multiplayer shell/lightning (sent like dash use).
+        ValueError = bad body (400), CommandError = refused (409)."""
+        slot = 0 if body.get("use") is True else body.get("use")
+        if not isinstance(slot, int) or isinstance(slot, bool) or slot < 0:
+            raise ValueError('expected {"use": SLOT} (0-based) or {"use": true}')
+        now = time.monotonic()
+        try:
+            with self.lock:
+                if self.demo is not None:
+                    raise kartcore.CommandError("demo running")
+                n = len(self.game.inventory)
+                if slot < n:
+                    recs = self.game.use_item(now, slot)
+                elif self.freeplay.held and slot == n:
+                    recs = self.freeplay.use(now)
+                else:
+                    raise kartcore.CommandError("empty slot")
+        except kartcore.CommandError as e:
+            self.log.write("op", who=who, action="item", request=body, refused=str(e))
+            raise
+        self.log.write("op", who=who, action="item", request=body,
+                       lines=[r["line"] for r in recs if r["ev"] == "cmd"])
+        self._game_out(recs)
+        self._save_freeplay()
+        self._push_inv()
+        with self.lock:
+            return {"inventory": self._inv_names()}
+
+    def _handle_invuse(self, msg):
+        """A {"t":"invuse","slot":N,"seq":Q} line from the Heltec: the Core2 asked to use an item.
+        seq de-duplicates the Core2's send retries."""
+        seq = msg.get("seq")
+        if seq is not None and seq == getattr(self, "_invuse_seq", None):
+            return
+        self._invuse_seq = seq
+        slot = msg.get("slot")
+        try:
+            self.item_use({"use": slot if isinstance(slot, int) else 0}, "core2@espnow")
+        except (ValueError, kartcore.CommandError):
+            pass                                        # logged by item_use; nothing else to do
 
     MULTI_KEYS = ("host", "join", "leave", "use")
 
@@ -995,6 +1076,19 @@ class Handler(BaseHTTPRequestHandler):
             except kartcore.CommandError as e:
                 return self._json(409, {"ok": False, "error": str(e)})
             return self._json(200, {"ok": True, "freeplay": info})
+        if p == "/api/item":
+            if not self._local() and not app.cfg.get("remote_cmd"):
+                return self._json(403, {"ok": False, "error": "items only from the kart's own screen"})
+            try:
+                body = json.loads(raw or b"{}")
+                if not isinstance(body, dict):
+                    raise ValueError("expected a JSON object")
+                info = app.item_use(body, who)
+            except ValueError as e:
+                return self._json(400, {"ok": False, "error": f"bad request: {e}"})
+            except kartcore.CommandError as e:
+                return self._json(409, {"ok": False, "error": str(e)})
+            return self._json(200, {"ok": True, **info})
         if p != "/cmd":
             return self._json(404, {"ok": False, "error": "not found"})
         if not self._local() and not app.cfg.get("remote_cmd"):
