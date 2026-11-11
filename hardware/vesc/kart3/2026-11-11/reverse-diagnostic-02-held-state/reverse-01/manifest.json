@@ -1,0 +1,51 @@
+{
+  "started_utc": "2026-11-11T16:00:03.381082+00:00",
+  "port": "/dev/cu.usbmodem3041",
+  "uuid_pin": "37004e000951343037353739",
+  "firmware_pin": "6.02",
+  "mode": "snapshot",
+  "ownership_reviewed": false,
+  "monitor_file_sha256": "6ba5d52cec8608cf295b5a98a96b26a9bd6fea9ddd364db3dbc9a25150610e1f",
+  "complete": true,
+  "sent_actions": [
+    {
+      "action": "snapshot",
+      "frame_hex": "02688a287072696e7420286c697374202770696e7320286770696f2d72656164202770696e2d72782920286770696f2d72656164202770696e2d74782920286765742d6164632d6465636f64656420302920286765742d72706d2920286765742d6661756c74292929003a6303"
+    }
+  ],
+  "interpreter_side_effects": "REPL may initialize interpreter; expression evaluation may pause/GC/resume it. No reset requested.",
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "pin_snapshot_lines": [
+    "(pins 0 1 {0.089019} {0.000014} 0)"
+  ],
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T16:00:05.390290+00:00"
+}

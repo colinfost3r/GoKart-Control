@@ -188,7 +188,7 @@
     "reference_is_current_kart2": false,
     "latest_eamon_integrated": "a9c8459",
     "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
-    "current_usb_state": "Connected; one authorizedSET13 acknowledged and fullreadbackexact",
+    "current_usb_state": "Session03 final81.7V zeroERPM/current fault0; user asked to power off before further wiring, off not yet confirmed",
     "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 k\u03a9 pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; measurements pending.",
     "tune_applied_at_utc": "2026-11-10T19:58:55+00:00",
     "tune_applied_path": "hardware/vesc/kart3/2026-11-10/tune-applied-v1",
@@ -211,7 +211,7 @@
       "heltec_alternative": "concept_only_reset_behavior_conflicts_with_reliability_requirement"
     },
     "reverse_next_test": {
-      "status": "live_monitor_complete_RX_stayed_high_electrical_check_pending",
+      "status": "isolated_input_and_forward_passed_external_switch_branch_leading_suspect",
       "guide": "firmware/vesc-lisp/reverse-input/README.md",
       "first": "bounded_read_only_RX_monitor_after_fresh_identity_config_and_Lisp_backup",
       "candidate": "VESC_local_buttons_only_filter_not_installed",
@@ -225,15 +225,15 @@
       "filter_installed": false,
       "filter_loader_implemented": false,
       "offline_validation": {
-        "project_tests_passed": 389,
+        "project_tests_passed": 395,
         "project_suites": 7,
         "project_tests_skipped": 0,
-        "lisp_mock_cases_passed": 22,
+        "lisp_mock_cases_passed": 29,
         "lisp_host_heap_cons_cells": 2464,
         "hardware_verified": false,
-        "fixed_monitor_sender_cases_passed": 18
+        "fixed_monitor_sender_cases_passed": 24
       },
-      "next": "measure_RX_to_VESC_signal_ground_while_reverse_held",
+      "next": "inspect_repair_or_substitute_original_reverse_branch_then_repeat_acceptance",
       "monitor_observation": {
         "date": "2026-11-11",
         "samples": 13415,
@@ -250,6 +250,41 @@
         "native_deadband": 0.15,
         "filter_guard_requires_review": true,
         "evidence": "hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md"
+      },
+      "filter_release_guard": 0.12,
+      "native_adc_deadband": 0.15,
+      "filter_hardware_gate": "isolate_harness_before_activation",
+      "latest_observation": {
+        "date": "2026-11-11",
+        "evidence": "hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md",
+        "forward_rx_edges": 861,
+        "forward_samples": 13208,
+        "reverse_rx_edges": 0,
+        "reverse_samples": 13381,
+        "reverse_worked_owner_confirmed": true,
+        "forward_direction_unreliable_owner_reported": true,
+        "all_sampled_faults_zero": true,
+        "vesc_off_owner_confirmed": true,
+        "heltec_off": true,
+        "filter_installed": false,
+        "cause_not_isolated": true
+      },
+      "local_isolation_observation": {
+        "evidence": "hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md",
+        "closed_rx": 0,
+        "closed_edges": 0,
+        "closed_samples": 13428,
+        "open_test_complete": true,
+        "physical_wiring_independently_verified": false,
+        "open_rx": 1,
+        "open_edges": 0,
+        "open_samples": 13364,
+        "forward_rx": 1,
+        "forward_edges": 0,
+        "forward_samples": 13281,
+        "owner_confirms_smooth_forward": true,
+        "all_376_fields_unchanged": true,
+        "repair_complete": false
       }
     }
   },

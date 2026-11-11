@@ -1,8 +1,26 @@
 # Kart 3 reverse-input check — staged for the next hardware session
 
-**November 11 update:** the compact monitor has now run on kart 3. It recorded **13,415 samples, zero transitions, RX high throughout**, while the owner confirms selecting reverse. [Measured evidence](../../../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md). Verify RX voltage/contact/ground next. The filter remains unloaded and disabled; no tune, calibration or wiring change was made. No ATOM/CAN board is needed for this diagnostic.
+**Latest isolation result:** [session 03](../../../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md) passed both local input states
+(closed 13,428 samples, open 13,364; zero transitions). With the long reverse-switch branch
+still disconnected, the operator confirmed smooth forward and RX remained high for 13,281
+samples with zero transitions. All 376 settings matched before/after. The removed branch is
+the leading suspect, not a proven specific component. The earlier isolation instructions below
+are retained for reproduction; the next step is branch inspection/repair/substitution followed
+by repeat acceptance. Filter remains uninstalled; no further motor test is queued.
 
-The first test is a bounded RX-input monitor on the firmware already installed. If it shows unwanted transitions during a held switch position, the separate filter candidate can be evaluated under supervision. A persistent wrong voltage, damaged connection, or reverse-torque problem is not fixed by software debounce. The [independent hardware conditioner](../../../docs/reverse-input/prototype-v1/README.md) remains an unbuilt alternative.
+**November 11 latest:** held-state reads eventually showed RX=0 in reverse and RX=1 in forward,
+and one reverse attempt worked. The next forward trace recorded **861 RX transitions in 30
+seconds** with inconsistent direction. [Evidence](../../../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md).
+The owner powered the VESC off. **Isolate the long switch harness before activating any filter.**
+The filter is still unloaded/disabled; no tune, calibration or input override was changed.
+
+With power and USB removed, replace only the long reverse-switch branch with a short known-good
+local contact from confirmed RX to VESC signal GND. Keep the throttle and its signal ground
+connected. Verify the pull-up is between RX and the controller's 3.3 V on the controller side.
+Do not infer pin orientation from wire colors. Reconnect USB/power only for the supervised
+pedal-released input check below; no motor test is queued. A stable local input followed by
+failure with the original harness helps isolate the external wiring. A software filter can
+still accept a wrong level held long enough and cannot establish a wiring repair.
 
 ## Existing firmware and battery
 
@@ -12,7 +30,7 @@ The owner's concern about a 72 V limit is grounded in [Flipsky's firmware guidan
 
 ## Diagnostic setup
 
-1. Leave throttle on **ADC1** and the maintained reverse contact on **RX → signal GND**. Keep the existing approximately 10 kΩ pull-up from RX to the VESC's **3.3 V**. The switch LED terminal stays disconnected and insulated. Do not move to PPM for this RX-specific diagnostic.
+1. Leave throttle on **ADC1**. For the latest isolation check, use the short local contact on **RX → signal GND** described above. Keep a verified approximately 10 kΩ pull-up from RX to the VESC's **3.3 V**. The switch LED terminal stays disconnected and insulated. Do not move to PPM for this RX-specific diagnostic.
 2. Connect the VESC USB **data** port to the computer. No ATOM, new CAN wires, 12 V accessory supply or new Heltec connection is needed.
 3. Before power/testing: driven wheels securely supported clear of the ground, pedal released, and operator beside the physical cutoff. Do not infer that an old readiness confirmation still applies.
 4. A multimeter is useful for checking held high/low levels. Digital sampling below cannot establish electrical voltage margins or exclude glitches between samples.
@@ -36,7 +54,7 @@ This sends only identity/read-code requests. Inspect its manifest before proceed
 
 **USB observation requirement:** temporarily remove the competing VESC Bluetooth client before a supervised capture. In stock 6.02, asynchronous Lisp output follows the most recent command interface; Heltec polling diverted or lost USB visibility in the first attempt. The owner powered off Heltec, contexts were inspected after the incomplete pass, and a new observation then completed. Never automatically resend after missing output or reset the controller to clear an uncertain run.
 
-The maintained [`rx_probe.py`](../../../tools/vesc/rx_probe.py) provides only fixed `--inspect` (stats and `:ctxs`) and fixed monitor modes. Run `--inspect` into a new evidence directory after the fresh identity/config/stored-code backup; review current ownership before using `--ownership-reviewed` for the monitor. No arbitrary expression or motor/control command is exposed. The source hash must match the reviewed monitor. Keep each capture in a new directory.
+The maintained [`rx_probe.py`](../../../tools/vesc/rx_probe.py) provides fixed `--inspect` (stats and `:ctxs`), `--snapshot` (one RX/TX/ADC/RPM/fault read), and fixed monitor modes. Run `--inspect` into a new evidence directory after the fresh identity/config/stored-code backup; review current ownership before using `--ownership-reviewed` for the monitor. No arbitrary expression or motor/control command is exposed. The source hash must match the reviewed monitor. Keep each capture in a new directory.
 
 [`rx-monitor-compact.repl`](rx-monitor-compact.repl) is a single bounded expression intended for the LispBM **REPL**, after the checks above. Strip its trailing newline when framing it: the expression is 403 UTF-8 bytes; command byte + expression + NUL is **405 bytes**, within the pinned firmware’s 512-byte packet-payload limit. It reads the existing GPIO state and telemetry, reports approximately once per second, and ends by itself. It does not configure GPIO, detach inputs, override direction, command the motor or write configuration/flash. Evaluating a REPL expression may initialize the Lisp interpreter if it was not already running; it is not the same as an entirely passive USB read.
 
@@ -50,11 +68,17 @@ Keep the pedal released throughout. Observe roughly 10 seconds in forward, 10 se
 
 `rx-filter-candidate.lisp` defines a removable filter and remains disarmed on load. It uses the supported stock 6.02 button override API; physical ADC1/ADC2 processing stays with the native app. Both buttons are detached by that API, so cruise-disabled/buttons=0 is a mandatory preflight condition. No throttle override or motor-current/RPM command belongs in this module.
 
-**Do not activate this candidate on the current calibration.** The live released-pedal reading is 0.089921–0.090987, before the native 0.15 deadband. Its provisional 0.01 release guard would refuse to arm. A suitable release guard needs measured validation after the RX electrical issue is resolved; preserve the pedal calibration and native deadband.
+**Do not activate before the local wiring isolation check.** The revised offline candidate uses
+an ADC release guard of 0.12, below the unchanged 0.15 native deadband. Released-pedal readings
+were roughly 0.081–0.106; this threshold describes a zero-command region, not proof that a pedal
+is physically untouched. No calibration or motor-braking setting changed.
 
-The candidate requires RX stable for 50 ms and pedal decoded value ≤0.01, |electrical RPM| ≤50, and fault 0 continuously for 250 ms before accepting a change. A sampling gap above 10 ms resets qualification. The 1% pedal threshold is provisional; measure release noise before deciding whether it is suitable. This is a direction-change interlock, not a stop command.
+The candidate requires RX stable for 50 ms and decoded pedal <=0.12, |electrical RPM| <=50,
+and fault 0 continuously for 250 ms before accepting a change. A sampling gap above 10 ms resets
+qualification. A faulty level persisting 50 ms while at rest can still be selected; this is a
+supervised direction-interlock candidate, not a commissioned cure or a stop command.
 
-The candidate and detailed monitor exceed the single-packet REPL limit. A future reviewed **volatile** `LISP_STREAM_CODE` loader with `restart=0` is needed; no such loader is included here. Do not paste the whole file into an unverified sender or use flash upload to bypass that limit. Stream acknowledgement alone would prove byte receipt, not successful evaluation. Loading the definitions must not overwrite an active copy or another script’s runtime environment.
+The candidate and detailed monitor exceed the single-packet REPL limit. A future reviewed **volatile** `LISP_STREAM_CODE` loader with `restart=0` is needed; no commissioned loader is included here. The reviewed stock stream implementation can partially evaluate source and has a buffer-timeout underflow path; a host timeout cannot prove firmware recovery. [Loader review](../../../docs/reverse-input/volatile-loader-review.md). Do not paste the whole file into an unverified sender or use flash upload to bypass that limit. Stream acknowledgement alone would prove byte receipt, not successful evaluation. Loading the definitions must not overwrite an active copy or another script’s runtime environment.
 
 After that loading/ownership review, manual entry points are:
 
@@ -72,7 +96,7 @@ The override lives in native C state. A paused/failed Lisp worker can leave the 
 
 ## Offline validation
 
-The read-only backup helper passed 15 focused tests. After adding the fixed monitor sender's 18 cases on November 11, the complete project suite passed **389 tests across seven suites, zero skipped** (the November 10 checkpoint had 371). The staged Lisp scripts passed **22 mocked cases** using the actual interpreter vendored in the pinned 6.02 source, with 2,464 cons cells. Independent review covered sampling gaps, direction interlocks, startup, joined stop and explicit rollback. [Reproduce the Lisp checks](tests/README.md).
+The read-only backup helper passed 15 focused tests. The fixed input helper now passes 24 cases, including the actual brace-wrapped float reply; the latest complete project check passed **395 tests across seven suites, zero skipped**. The staged Lisp scripts passed **29 mocked cases** using the actual interpreter vendored in the pinned 6.02 source, with 2,464 cons cells. Independent review covered sampling gaps, direction interlocks, startup, joined stop and explicit rollback. [Reproduce the Lisp checks](tests/README.md).
 
 These are host tests. The 64-bit build’s other memory pools, real scheduling, firmware extensions and electrical behavior differ from the controller. The compact monitor's read APIs and completion have since been exercised on kart 3. Button override APIs, electrical voltage margins, filter behavior and permanent deployment remain unvalidated.
 

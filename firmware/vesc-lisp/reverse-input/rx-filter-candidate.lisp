@@ -1,15 +1,24 @@
-; VESC 6.02 / kart 3 RX only. DEFINITIONS ONLY: loading does not change inputs.
+; VESC 6.02 / kart 3 RX only. VOLATILE BENCH TRIAL, NOT A PERMANENT FIX.
+; DEFINITIONS ONLY: loading does not change inputs.
 ; Do not load over an active copy: definitions reset lifecycle tracking.
 ; Host preflight must verify the kart UUID and saved settings: app=2, ctrl_type=3,
-; buttons=0 (cruise/inversion disabled), safe-start, valid pedal calibration,
-; and no conflicting existing Lisp/input overrides. ADC_UART app=5 is unsupported.
+; buttons=0 (cruise/inversion disabled), servo_out_enable=0, ADC hyst=0.15,
+; safe-start enabled and unchanged pedal calibration. Freeze that app configuration
+; throughout this trial; no other USB/BLE/configuration writers may change it.
+; No conflicting existing Lisp/input overrides. ADC_UART app=5 is unsupported.
 ; No GPIO configuration, throttle override, timeout reset, motor command or
 ; configuration/flash write. Button detach includes cruise; buttons=0 is required.
 ;
-; Provisional bench interlock: decoded pedal <=0.01, |ERPM| <=50, fault=0 for
+; Provisional bench interlock: decoded pedal <=0.12, |ERPM| <=50, fault=0 for
 ; 250 ms; RX stable for 50 ms. Gaps >10 ms restart qualification. Nominal 2 ms
 ; samples are not hard realtime. Rollback refuses a gap >10 ms.
 ; Reverse is RX low. These thresholds require wheels-up commissioning.
+; Observed released-pedal range on 2026-11-11: 0.081..0.106 before native
+; deadband. The 0.12 guard remains below unchanged 0.15 native deadband; it
+; identifies a conservative zero-command region, not physical pedal position.
+; Severe chatter can block arming. A wrong level held >=50 ms at rest can still
+; be accepted: verify printed applied direction against the switch before driving.
+; Native pedal/Hall calibration and motor-braking-current setting remain unchanged.
 ;
 ; Manual sequence, each call completed before the next:
 ;   (gk-rx-filter-start t)     ; t asserts host preflight + supervised bench setup
@@ -29,7 +38,7 @@
   (define gk-rx-filter-safe
     (lambda ()
       (let ((rpm (get-rpm)))
-        (and (<= (get-adc-decoded 0) 0.01)
+        (and (<= (get-adc-decoded 0) 0.12)
              (>= rpm -50.0) (<= rpm 50.0) (= (get-fault) 0)))))
   (define gk-rx-filter-config-ok
     (lambda ()

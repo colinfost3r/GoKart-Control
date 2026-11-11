@@ -1,0 +1,100 @@
+{
+  "status": "closed_and_open_input_checks_and_isolated_forward_test_complete_fault_cause_not_fully_isolated",
+  "date": "2026-11-11",
+  "uuid": "37004e000951343037353739",
+  "firmware": "6.02 no_hw_limits",
+  "reported_setup": "Short local RX-to-signal-GND jumper requested, long reverse-switch branch disconnected; owner indicated setup ready. Physical wiring and voltage not independently observed.",
+  "closed_monitor": {
+    "samples": 13428,
+    "edges": 0,
+    "printed_rx_values": [
+      0
+    ],
+    "printed_faults": [
+      0
+    ],
+    "adc_min": 0.08804,
+    "adc_max": 0.089101,
+    "max_abs_erpm_from_prints": 7e-06,
+    "manifest": "closed-monitor/manifest.json"
+  },
+  "filter_loaded": false,
+  "motor_commands_sent": false,
+  "configuration_writes_sent": false,
+  "next": "Repair or further isolate removed reverse-switch branch (contacts, crimps, signal-ground return, pull-up placement and noise pickup); keep filter deferred. Power off requested before any further wiring; off not yet confirmed.",
+  "open_monitor": {
+    "samples": 13364,
+    "edges": 0,
+    "printed_rx_values": [
+      1
+    ],
+    "printed_faults": [
+      0
+    ],
+    "adc_min": 0.087243,
+    "adc_max": 0.088578,
+    "max_abs_erpm_from_prints": 7e-06,
+    "manifest": "open-monitor/manifest.json"
+  },
+  "isolated_forward": {
+    "samples": 13281,
+    "edges": 0,
+    "printed_rx_values": [
+      1
+    ],
+    "printed_faults": [
+      0
+    ],
+    "adc_min": 0.079359,
+    "adc_max": 0.347903,
+    "max_abs_erpm_from_prints": 18426.841797,
+    "manifest": "isolated-forward-trace/manifest.json",
+    "operator_report": "Smooth forward motion",
+    "telemetry_samples": 303,
+    "sampled_erpm_min": 0,
+    "sampled_erpm_max": 23961,
+    "sampled_iq_min_a": 0.0,
+    "sampled_iq_max_a": 29.77,
+    "sampled_fault_codes": [
+      0
+    ],
+    "sampled_iq_above_1a_first_last_host_s": [
+      7.506875834,
+      12.834514459
+    ],
+    "duration_caveat": "Operator requested <=1s gentle throttle; samples above1A Iq span about5.33s. Do not report this as a validated one-second pulse. Host sent only diagnostic reads; operator was told to release once data were observed."
+  },
+  "all_376_fields_unchanged_open_precheck_to_after_forward": true,
+  "final_telemetry": {
+    "mosfet_temp_c": 16.7,
+    "motor_temp_c": 0.0,
+    "motor_current_a": 0.0,
+    "battery_current_a": 0.0,
+    "id_a": 0.0,
+    "iq_a": 0.0,
+    "duty": 0.0,
+    "erpm": 0,
+    "input_voltage_v": 81.7,
+    "amp_hours": 0.0083,
+    "amp_hours_charged": 0.0,
+    "watt_hours": 0.6643,
+    "watt_hours_charged": 0.0047,
+    "tachometer": 9711,
+    "tachometer_absolute": 10023,
+    "fault_code": 0,
+    "pid_position": 342.0,
+    "controller_id": 19,
+    "mosfet_temp_1_c": 16.7,
+    "mosfet_temp_2_c": -101.1,
+    "mosfet_temp_3_c": -273.1,
+    "vd_v": -0.008,
+    "vq_v": -0.021,
+    "status_raw": 0,
+    "timeout_active": false,
+    "kill_switch_active": false,
+    "bytes_consumed": 74,
+    "motor_temp_valid": false,
+    "motor_temp_validity_reason": "sensor_disabled_in_configuration"
+  },
+  "interpretation": "Removing long reverse branch coincided with stable sampled input and operator-confirmed smooth forward. Branch is leading suspect; does not distinguish cable/switch/connector/ground/pull-up/noise or prove fleet reliability."
+}

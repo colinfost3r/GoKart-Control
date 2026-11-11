@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Kart-3-only fixed Lisp diagnostics. No arbitrary expressions, reset, flash or motor commands.
 
+--snapshot directly reads RX/TX/ADC/RPM/fault once without setvar or loops.
 --inspect queries stats and fixed :ctxs; :ctxs may initialize Lisp but does not
 execute stored user code. --monitor requires reviewed ownership and sends only
 the SHA256-pinned committed 30-second input monitor. Input reads are read-only;
@@ -11,6 +12,7 @@ import binascii
 import datetime
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import select
@@ -28,6 +30,7 @@ MONITOR = WORKTREE / 'firmware/vesc-lisp/reverse-input/rx-monitor-compact.repl'
 MONITOR_SHA256 = '6ba5d52cec8608cf295b5a98a96b26a9bd6fea9ddd364db3dbc9a25150610e1f'
 HEADINGS = ('****** Running contexts ******', '****** Blocked contexts ******',
             '****** Sleeping contexts ******')
+SNAPSHOT_EXPRESSION = b"(print (list 'pins (gpio-read 'pin-rx) (gpio-read 'pin-tx) (get-adc-decoded 0) (get-rpm) (get-fault)))"
 MAX_CAPTURE_BYTES = 128 * 1024
 
 
@@ -36,12 +39,14 @@ def fixed_payload(action):
         return bytes((134,))
     if action == 'contexts':
         return bytes((138,)) + b':ctxs\0'
+    if action == 'snapshot':
+        return bytes((138,)) + SNAPSHOT_EXPRESSION + b'\0'
     if action == 'monitor':
         data = MONITOR.read_bytes()
         if hashlib.sha256(data).hexdigest() != MONITOR_SHA256:
             raise ValueError('Committed monitor changed: refusing unreviewed expression')
         return bytes((138,)) + data.strip() + b'\0'
-    raise ValueError('Only fixed stats, contexts or monitor actions are allowed')
+    raise ValueError('Only fixed stats, contexts, snapshot or monitor actions are allowed')
 
 
 def fixed_frame(action):
@@ -121,16 +126,34 @@ def context_summary(packets):
             'atomic_or_future_ownership_proof': False}
 
 
-def run(port, output, *, inspect=False, ownership_reviewed=False):
-    if not inspect and not ownership_reviewed:
+def pin_snapshot_record(line):
+    number = r'[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?'
+    # Pinned LispBM prints floats as {0.082444}; accept only balanced wrappers.
+    field = r'(?:' + number + r'|\{' + number + r'\})'
+    match = re.fullmatch(r'\(pins ([01]) ([01]) (' + field + r') (' + field + r') ([0-9]+)\)', line)
+    if not match:
+        return None
+    adc, rpm = (float(value[1:-1] if value.startswith('{') else value)
+                for value in (match[3], match[4]))
+    if not math.isfinite(adc) or not math.isfinite(rpm):
+        return None
+    return {'rx': int(match[1]), 'tx': int(match[2]), 'adc_decoded_0': adc,
+            'rpm': rpm, 'fault': int(match[5])}
+
+
+def run(port, output, *, inspect=False, snapshot=False, ownership_reviewed=False):
+    if inspect and snapshot:
+        raise ValueError("Choose either context inspection or the fixed pin snapshot")
+    if not inspect and not snapshot and not ownership_reviewed:
         raise ValueError('Monitor requires explicit --ownership-reviewed after stored-code/context review')
     # Validate fixed expression before touching the port.
-    fixed_frame('contexts' if inspect else 'monitor')
+    action = 'contexts' if inspect else 'snapshot' if snapshot else 'monitor'
+    fixed_frame(action)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     manifest = {'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'port': port, 'uuid_pin': UUID, 'firmware_pin': '6.02',
-                'mode': 'inspect' if inspect else 'monitor',
+                'mode': 'inspect' if inspect else 'snapshot' if snapshot else 'monitor',
                 'ownership_reviewed': ownership_reviewed,
                 'monitor_file_sha256': MONITOR_SHA256, 'complete': False,
                 'sent_actions': [], 'interpreter_side_effects':
@@ -147,16 +170,24 @@ def run(port, output, *, inspect=False, ownership_reviewed=False):
             (output / 'identity_before.bin').write_bytes(identity)
             manifest['identity_before'] = require_identity(identity, UUID)
             save()
-            send(connection.fd, 'stats')
-            stats = collect(connection.fd, 1.0, journal)
-            manifest['stats_reply_seen'] = any(p[0] == 134 for p in stats)
-            manifest['stats_note'] = 'Reply proves evaluator exists, not that contexts are idle; absence is inconclusive.'
-            send(connection.fd, 'contexts' if inspect else 'monitor')
-            packets = collect(connection.fd, 3.0 if inspect else 35.0, journal)
+            if not snapshot:
+                send(connection.fd, 'stats')
+                stats = collect(connection.fd, 1.0, journal)
+                manifest['stats_reply_seen'] = any(p[0] == 134 for p in stats)
+                manifest['stats_note'] = 'Reply proves evaluator exists, not that contexts are idle; absence is inconclusive.'
+            send(connection.fd, action)
+            packets = collect(connection.fd, 3.0 if inspect else 2.0 if snapshot else 35.0, journal)
             if inspect:
                 manifest['contexts'] = context_summary(packets)
                 if manifest['contexts']['snapshot'] == 'incomplete_unknown':
                     raise RuntimeError('Incomplete context output; ownership remains unknown')
+            elif snapshot:
+                lines = [line.strip() for line in printed_text(packets).splitlines()]
+                records = [(line, pin_snapshot_record(line)) for line in lines]
+                manifest['pin_snapshot_lines'] = [line for line, record in records if record is not None]
+                manifest['pin_snapshots'] = [record for _, record in records if record is not None]
+                if not manifest['pin_snapshot_lines']:
+                    raise RuntimeError('No fixed pin snapshot reply within 2 seconds; no automatic resend')
             else:
                 text = printed_text(packets)
                 matches = [re.fullmatch(r'\(done ([0-9]+) ([0-9]+)\)', line.strip())
@@ -182,11 +213,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', required=True)
     parser.add_argument('--out', required=True, type=Path)
-    parser.add_argument('--inspect', action='store_true', help='Fixed stats + :ctxs only; does not run monitor')
+    actions = parser.add_mutually_exclusive_group()
+    actions.add_argument('--inspect', action='store_true', help='Fixed stats + :ctxs only; does not run monitor')
+    actions.add_argument('--snapshot', action='store_true', help='One fixed direct RX/TX/ADC/RPM/fault read; no loop or mutation')
     parser.add_argument('--ownership-reviewed', action='store_true', help='Required for monitor after manual preflight')
     args = parser.parse_args()
-    result = run(args.port, args.out, inspect=args.inspect, ownership_reviewed=args.ownership_reviewed)
-    print(json.dumps(result.get('contexts', {'monitor_done_seen': result.get('monitor_done_seen')}), indent=2))
+    result = run(args.port, args.out, inspect=args.inspect, snapshot=args.snapshot, ownership_reviewed=args.ownership_reviewed)
+    print(json.dumps(result.get('contexts', {'pin_snapshot_lines': result.get('pin_snapshot_lines')} if args.snapshot else {'monitor_done_seen': result.get('monitor_done_seen')}), indent=2))
 
 
 if __name__ == '__main__':

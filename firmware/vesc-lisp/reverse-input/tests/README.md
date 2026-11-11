@@ -20,8 +20,8 @@ python3 -B firmware/vesc-lisp/reverse-input/tests/run_mock_tests.py \
 
 The wrapper generates cases, invokes each with `-h 2464`, saves logs and a hash manifest, and exits zero only if every case passes. **The upstream runner itself returns 1 on success**, so the wrapper checks that code together with `Test: OK!` and `Result: t`. The main project test script does not download or build this external interpreter.
 
-## November 10 result and limits
+## November 11 result and limits
 
-**22/22 passed**, also independently rerun during review. Cases cover disarmed load, startup preserving actual reverse state, short glitches, accepted stable transitions, pedal/RPM/fault interlocks, configuration changes, worker join, rollback disagreement and stalls within/around qualification windows. Both read-only monitors terminate after simulated 30 seconds and produce no detach/override calls.
+**29/29 passed** after adjusting the provisional release guard to 0.12 below the native 0.15 deadband. The earlier 22-case set also passed independently. Additional cases cover measured rest values 0.09/0.106, refusal at 0.13, continuous chatter, moving-state hold and no stale queued direction. Cases cover disarmed load, startup preserving actual reverse state, short glitches, accepted stable transitions, pedal/RPM/fault interlocks, configuration changes, worker join, rollback disagreement and stalls within/around qualification windows. Both read-only monitors terminate after simulated 30 seconds and produce no detach/override calls.
 
 The 2,464-cell cons heap matches the pinned firmware’s cell count. This is a **64-bit host** with different remaining memory pools, mocked time/hardware and a different scheduler. It does not prove MCU memory fit, real sampling deadlines, API presence on this custom build, USB behavior or electrical reliability. These remain physical acceptance work; the candidate is not installed or enabled.

@@ -1,0 +1,26 @@
+{"command": 21, "payload_hex": "152d3e20666f635f7374617465200a", "crc_verified": true, "text": "-> foc_state \n"}
+{"command": 21, "payload_hex": "15464f432053746174653a", "crc_verified": true, "text": "FOC State:"}
+{"command": 21, "payload_hex": "154d6f6420643a2020202020302e3030", "crc_verified": true, "text": "Mod d:     0.00"}
+{"command": 21, "payload_hex": "154d6f6420713a20202020202d302e3030", "crc_verified": true, "text": "Mod q:     -0.00"}
+{"command": 21, "payload_hex": "154d6f64207120666c743a202d302e3030", "crc_verified": true, "text": "Mod q flt: -0.00"}
+{"command": 21, "payload_hex": "15447574793a2020202020202d302e3030", "crc_verified": true, "text": "Duty:      -0.00"}
+{"command": 21, "payload_hex": "1556643a2020202020202020302e3035", "crc_verified": true, "text": "Vd:        0.05"}
+{"command": 21, "payload_hex": "1556713a20202020202020202d302e3033", "crc_verified": true, "text": "Vq:        -0.03"}
+{"command": 21, "payload_hex": "1550686173653a20202020202d312e3537", "crc_verified": true, "text": "Phase:     -1.57"}
+{"command": 21, "payload_hex": "15565f616c7068613a2020202d302e3130", "crc_verified": true, "text": "V_alpha:   -0.10"}
+{"command": 21, "payload_hex": "15565f626574613a202020202d302e3034", "crc_verified": true, "text": "V_beta:    -0.04"}
+{"command": 21, "payload_hex": "1569643a2020202020202020302e3030", "crc_verified": true, "text": "id:        0.00"}
+{"command": 21, "payload_hex": "1569713a2020202020202020302e3030", "crc_verified": true, "text": "iq:        0.00"}
+{"command": 21, "payload_hex": "1569645f66696c7465723a20302e3030", "crc_verified": true, "text": "id_filter: 0.00"}
+{"command": 21, "payload_hex": "1569715f66696c7465723a20302e3030", "crc_verified": true, "text": "iq_filter: 0.00"}
+{"command": 21, "payload_hex": "1569645f7461726765743a20302e3030", "crc_verified": true, "text": "id_target: 0.00"}
+{"command": 21, "payload_hex": "1569715f7461726765743a20302e3030", "crc_verified": true, "text": "iq_target: 0.00"}
+{"command": 21, "payload_hex": "15695f6162733a2020202020302e3030", "crc_verified": true, "text": "i_abs:     0.00"}
+{"command": 21, "payload_hex": "15695f6162735f666c743a20302e3030", "crc_verified": true, "text": "i_abs_flt: 0.00"}
+{"command": 21, "payload_hex": "154f62735f78313a202020202d302e3033", "crc_verified": true, "text": "Obs_x1:    -0.03"}
+{"command": 21, "payload_hex": "154f62735f78323a202020202d302e3033", "crc_verified": true, "text": "Obs_x2:    -0.03"}
+{"command": 21, "payload_hex": "156c616d6264615f6573743a302e30323633", "crc_verified": true, "text": "lambda_est:0.0263"}
+{"command": 21, "payload_hex": "1576645f696e743a20202020302e3036", "crc_verified": true, "text": "vd_int:    0.06"}
+{"command": 21, "payload_hex": "1576715f696e743a202020202d302e3031", "crc_verified": true, "text": "vq_int:    -0.01"}
+{"command": 21, "payload_hex": "156f66665f64656c61793a20302e3030", "crc_verified": true, "text": "off_delay: 0.00"}
+{"command": 21, "payload_hex": "1520", "crc_verified": true, "text": " "}

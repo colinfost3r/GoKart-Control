@@ -1,5 +1,13 @@
 # Kart 3 reverse input — wiring investigation
 
+**Latest isolation result:** [session 03](../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md) passed both local input states
+(closed 13,428 samples, open 13,364; zero transitions). With the long reverse-switch branch
+still disconnected, the operator confirmed smooth forward and RX remained high for 13,281
+samples with zero transitions. All 376 settings matched before/after. The removed branch is
+the leading suspect, not a proven specific component. The earlier isolation instructions below
+are retained for reproduction; the next step is branch inspection/repair/substitution followed
+by repeat acceptance. Filter remains uninstalled; no further motor test is queued.
+
 Latest owner correction, November 10: **throttle ADC1; reverse switch RX**. The switch is a
 maintained mechanical switch connected to VESC signal GND. The owner added an external pull-up
 from **RX to 3.3 V, believed to be 10 kΩ** to get it working, but reverse remains intermittent
@@ -25,24 +33,36 @@ For this stock 75_300_R2 definition, COMM RX is **PB11** while permanent NRF51/B
 **PC11/PC10**. `permanent_uart_enabled=1` therefore does not seize the reverse input; do not
 disable it on this evidence. [Pinned pin definitions](https://github.com/vedderb/bldc/blob/f7c2b34e1cff2234cae98be3abf0cd50e249558f/hwconf/trampa/75_300/hw_75_300_core.h#L185-L201).
 
-## November 11 measured input — next action is electrical verification
+## November 11 measured input — isolate the long switch harness next
 
-The [completed live observation](../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md)
-recorded **13,415 samples, zero RX transitions, RX high throughout**, with the owner confirming
-reverse selection during the pass. All 376 settings matched before/after; motor remained at
-zero RPM/current with fault 0. This does not demonstrate switch bounce. Measure RX relative
-to VESC signal GND while reverse is held before selecting a conditioner or changing the tune.
-No such voltage measurement is recorded yet.
+The [latest session](../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md)
+observed correct held-state snapshots after reconnection (reverse RX=0, forward RX=1), one good
+reverse attempt, then **861 RX transitions in 30 seconds** during inconsistent forward operation.
+Another burst of 384 edges occurred with zero speed in all 28 captured telemetry samples. The
+owner reported backward stuttering, forward movement or no movement, then powered the VESC off.
+No host motor/configuration/input-override command was sent. Every sampled fault code was zero.
+The earlier session-01 record of RX staying high is retained; it is not the latest observation.
 
-The first USB pass had no monitor output; stock 6.02 sends asynchronous Lisp prints to the last
-command interface, so Heltec BLE polling can divert them. After confirming the context had
-exited, the owner powered off Heltec and a new pass completed. The same firmware maps native
-reverse and Lisp `pin-rx` to PB11; permanent BLE UART RX is separate PC11. Physical connector
-mapping/contact/ground still requires inspection. No hardware or input setting was changed.
+Meter reports were corrected during the session and several resistance units were unreadable.
+Isolated switch contacts and individual wires reportedly had low resistance; this does not
+establish the assembled circuit's live voltage margins or noise immunity. Preserve those
+uncertainties rather than treating the initial reported 0 V as verified at the VESC connector.
 
-The compact monitor is tested on hardware; the staged filter is **not**. Released-pedal values
-are about 9% before the existing 15% deadband, so the proposed 1% filter guard would refuse to
-arm. Preserve calibration/tune and resolve the electrical observation before adapting that guard.
+With power removed, disconnect only the long reverse-switch branch and test a short known-good
+local contact between **confirmed RX and VESC signal GND**, retaining a verified controller-side
+pull-up to **3.3 V**. Throttle signal ground stays connected to the same VESC signal ground;
+no separate/isolated ground is needed. Verify physical connector orientation before wiring.
+Reapply power/USB only after that setup is checked, then record held-open and held-closed inputs
+with the pedal untouched. Stable local input followed by instability with the original harness
+would implicate the external path; instability even locally needs connector/pull-up/pin-mode
+investigation. No throttle test or filter activation is queued.
+
+The filter remains uninstalled. Its offline release guard is now 0.12, below the existing 0.15
+native deadband; pedal calibration is unchanged. A wrong input held for at least 50 ms can still
+be accepted, so software is not a substitute for isolating this fault. Heltec BLE polling must
+remain absent for reliable USB Lisp prints; stock 6.02 routes asynchronous output to the most
+recent command interface. Native ADC reverse and Lisp pin-rx map to PB11; permanent BLE RX is
+PC11 in the pinned source, not proof of physical connector orientation.
 
 ## Physical hardware and conditioner proposal — November 10
 

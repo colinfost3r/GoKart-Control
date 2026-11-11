@@ -1,6 +1,67 @@
 # Collaborator handoff
 
-## Kart 3 live reverse-input observation — November 11, 2026 (latest)
+## Kart 3 local-contact isolation — November 11, 2026 (latest, session 03)
+
+**Original reverse-switch branch is the leading suspect; kart is not yet repaired.**
+With the requested short local setup, closed RX stayed low for 13,428 samples with zero edges;
+open RX stayed high for 13,364 samples with zero edges. With the long branch still disconnected,
+the owner then confirmed **smooth forward** during a supervised wired-throttle check: 13,281
+RX samples, zero edges, 303 telemetry replies, no sampled fault and no negative ERPM. Motor
+returned to rest during the trace. Requested <=1s throttle differed from measured positive-Iq
+sample span (~5.33s); preserve that limit rather than claiming a controlled one-second pulse.
+[Session 03 evidence](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md).
+
+All 376 motor/app fields were byte-identical from the open precheck through final readback:
+81.7 V, zero ERPM/current, fault zero. No host motor, configuration, input-override, flash, reset
+or calibration command was sent. **Filter remains uninstalled.** Power off was requested before
+further wiring; not yet independently or explicitly confirmed. Heltec was off; last requested
+wiring leaves RX open and long switch branch disconnected. Do not treat this as a drive-ready
+vehicle or infer power isolation from USB presence/absence.
+
+Next inspect/repair or separately substitute the removed branch: switch contacts, crimps,
+paired RX/signal-ground return, pull-up placement and noise pickup. Preserve throttle ground,
+Hall/pedal calibration and tune. The successful isolation does not identify one failed part
+or establish fleet reliability. Recheck input stability and guarded operation after repair.
+
+All **395 project tests passed in seven suites, zero skipped**; 29 pinned Lisp interpreter
+mock cases passed separately. Baseline decoder verified both signatures and all 376 fields.
+This validates host tooling/offline candidate, not a commissioned reverse filter.
+
+## Kart 3 reverse instability — November 11, 2026 (earlier session 02)
+
+**Stop motor testing. Owner confirmed VESC OFF; Heltec is also off.** After reconnecting the
+switch harness, direct snapshots showed RX=0 in reverse and RX=1 in forward. A supervised wired-
+throttle reverse attempt worked without changing the tune. The subsequent forward recording
+captured **861 RX transitions / 13,208 samples / 30 seconds**, with the owner reporting backward
+stuttering, forward motion or no motion. A 384-transition burst occurred while all 28 captured
+speed readings were zero. Every sampled fault was zero. This establishes observed GPIO
+instability, not its electrical cause or a repaired kart.
+[Evidence, timing and measurement corrections](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md).
+
+**Next:** with all power removed, isolate only the long reverse-switch branch and use a short
+known-good local contact from confirmed RX to VESC signal GND. Preserve the throttle and its
+signal ground; no isolated ground is required. Verify the pull-up remains between RX and the
+VESC's 3.3 V on the controller side. Do not guess connector orientation: the owner requested
+help identifying contacts. Then reconnect USB/power for a fresh supervised, pedal-released input
+capture: held open should remain high; held closed should remain low. No throttle test is queued.
+USB enumeration is observable by the host, but does not prove battery isolation; the owner
+must confirm power removal before wiring. Do not move bare jumpers while powered.
+
+**Filter remains uninstalled and deferred until that isolation check.** A 50 ms software filter
+can still accept an erroneous level held long enough. The offline candidate now uses a 0.12
+release guard below the unchanged native 0.15 deadband; all 29 pinned-interpreter mock cases pass
+at 2,464 cons cells. This does not establish electrical reliability, MCU timing or permanent
+installation readiness. The reviewed stock stream path has partial-evaluation/lifecycle and
+buffer-timeout concerns; no live loader has been commissioned.
+
+No host motor, tune, calibration, input override, flash or reset command was sent in session 02.
+Owner power cycling restored saved scale 1.0 / ERPM +/-150000 from prior runtime NORMAL limits;
+all application fields matched. A fixed terminal `faults` read reported no faults since startup.
+The portable pin snapshot initially rejected valid LispBM `{float}` text: its failure manifest
+is retained, and the host parser now accepts balanced braces with a real-packet regression case.
+Current fixed snapshot tests: 24 passing. Do not mislabel that parser failure as a bad VESC reply.
+
+## Kart 3 live reverse-input observation — November 11, 2026 (earlier session 01)
 
 **Observed:** with Heltec off, the fixed read-only 30-second monitor completed with **13,415
 samples, zero RX transitions, RX high throughout**. The owner confirms selecting reverse during

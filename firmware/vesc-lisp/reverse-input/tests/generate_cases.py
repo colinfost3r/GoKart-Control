@@ -100,6 +100,63 @@ scenarios = {
   (if (= mock-time 250) (setvar 'mock-time 350)) 0.0)))
 (and (not (gk-rx-filter-rollback t)) (eq mock-calls nil) gk-rx-filter-active)
 ''',
+'trial-rest-09-accepted': '''
+(setvar 'mock-pin (lambda () 0))
+(setvar 'mock-pedal (lambda () 0.09))
+(setvar 'mock-stop-at 1000)
+(setvar 'gk-rx-filter-run t)
+(gk-rx-filter-worker)
+(eq mock-calls '((250 detach 2 1) (250 override 2 1)))
+''',
+'trial-observed-rest-upper-106-accepted': '''
+(setvar 'mock-pedal (lambda () 0.106))
+(setvar 'mock-stop-at 1000)
+(setvar 'gk-rx-filter-run t)
+(gk-rx-filter-worker)
+(eq mock-calls '((250 detach 2 1) (250 override 2 0)))
+''',
+'trial-13-refuses-initial-arm': '''
+(setvar 'mock-pedal (lambda () 0.13))
+(setvar 'mock-stop-at 1000)
+(setvar 'gk-rx-filter-run t)
+(gk-rx-filter-worker)
+(and (eq mock-calls nil) (not gk-rx-filter-active))
+''',
+'trial-13-blocks-direction-change-until-requalified': '''
+(setvar 'mock-pin (lambda () (if (>= mock-time 600) 0 1)))
+(setvar 'mock-pedal (lambda () (if (and (>= mock-time 400) (< mock-time 1100)) 0.13 0.09)))
+(setvar 'mock-stop-at 1600)
+(setvar 'gk-rx-filter-run t)
+(gk-rx-filter-worker)
+(eq mock-calls '((1350 override 2 1) (250 detach 2 1) (250 override 2 0)))
+''',
+'continuous-chatter-does-not-arm': '''
+(setvar 'mock-pin (lambda () (if (< (mod mock-time 20) 10) 1 0)))
+(setvar 'mock-pedal (lambda () 0.09))
+(setvar 'mock-stop-at 1000)
+(setvar 'gk-rx-filter-run t)
+(gk-rx-filter-worker)
+(and (eq mock-calls nil) (not gk-rx-filter-active))
+''',
+'chatter-during-motion-holds-applied-direction': '''
+(setvar 'mock-pin (lambda () (if (< mock-time 400) 1 (if (< (mod mock-time 20) 10) 1 0))))
+(setvar 'mock-pedal (lambda () (if (< mock-time 400) 0.09 0.5)))
+(setvar 'mock-rpm (lambda () (if (< mock-time 400) 0.0 1000.0)))
+(setvar 'mock-stop-at 1000)
+(setvar 'gk-rx-filter-run t)
+(gk-rx-filter-worker)
+(and (= gk-rx-filter-applied 0)
+     (eq mock-calls '((250 detach 2 1) (250 override 2 0))))
+''',
+'latest-current-switch-state-after-motion': '''
+(setvar 'mock-pin (lambda () (if (and (>= mock-time 600) (< mock-time 900)) 0 1)))
+(setvar 'mock-pedal (lambda () (if (and (>= mock-time 400) (< mock-time 1100)) 0.5 0.09)))
+(setvar 'mock-stop-at 1600)
+(setvar 'gk-rx-filter-run t)
+(gk-rx-filter-worker)
+(and (= gk-rx-filter-applied 0)
+     (eq mock-calls '((250 detach 2 1) (250 override 2 0))))
+''',
 'load-is-disarmed': '''(and (eq mock-calls nil) (not gk-rx-filter-active)
  (not gk-rx-filter-run) (= gk-rx-filter-pid -1) (= mock-time 0))''',
 'boot-reverse-seed-before-detach': '''

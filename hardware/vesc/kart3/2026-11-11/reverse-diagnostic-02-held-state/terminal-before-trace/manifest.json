@@ -1,0 +1,84 @@
+{
+  "scope": "fixed_read_only_faults_and_foc_state",
+  "allowed_terminal_strings": [
+    "faults",
+    "foc_state"
+  ],
+  "queries": [
+    {
+      "action": "faults",
+      "frame_hex": "0207146661756c74730d9a03",
+      "reply_lines": [
+        "-> faults \n",
+        "No faults registered since startup\n"
+      ],
+      "partial_frame_bytes": 0
+    },
+    {
+      "action": "foc_state",
+      "frame_hex": "020a14666f635f73746174653e6e03",
+      "reply_lines": [
+        "-> foc_state \n",
+        "FOC State:",
+        "Mod d:     0.00",
+        "Mod q:     -0.00",
+        "Mod q flt: -0.00",
+        "Duty:      -0.00",
+        "Vd:        0.05",
+        "Vq:        -0.03",
+        "Phase:     -1.57",
+        "V_alpha:   -0.10",
+        "V_beta:    -0.04",
+        "id:        0.00",
+        "iq:        0.00",
+        "id_filter: 0.00",
+        "iq_filter: 0.00",
+        "id_target: 0.00",
+        "iq_target: 0.00",
+        "i_abs:     0.00",
+        "i_abs_flt: 0.00",
+        "Obs_x1:    -0.03",
+        "Obs_x2:    -0.03",
+        "lambda_est:0.0263",
+        "vd_int:    0.06",
+        "vq_int:    -0.01",
+        "off_delay: 0.00",
+        " "
+      ],
+      "partial_frame_bytes": 0
+    }
+  ],
+  "complete": true,
+  "started_utc": "2026-11-11T16:12:47.608238+00:00",
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T16:12:51.626074+00:00"
+}

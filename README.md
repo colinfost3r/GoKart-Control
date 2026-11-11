@@ -12,12 +12,13 @@ was applied and read back exactly. See the [tune review](docs/kart3-tune-compari
 [mode commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
 Two additional M5/Heltec karts are planned, with IDs still unassigned; follow the
 [per-kart bring-up guide](firmware/m5-core2/BRINGUP.md).
-Reverse-switch intermittence remains unresolved. A [November 11 live monitor](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md)
-recorded 13,415 samples with RX high throughout while the owner selected reverse. The next check
-is RX voltage/contact/ground verification; the software filter remains uninstalled. Heltec BLE
-polling must be absent for reliable USB Lisp output. All 376 settings were unchanged after the
-monitor. [Current procedure](firmware/vesc-lisp/reverse-input/README.md); the
-[standalone conditioner](docs/reverse-input/prototype-v1/README.md) remains an unbuilt fallback.
+Reverse remains unresolved: the [original-branch November 11 trace](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md)
+recorded **861 RX transitions** and inconsistent forward operation. With that branch removed,
+[local input checks and a supervised forward test](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md)
+recorded **zero RX transitions**, and the owner confirmed smooth forward. The external switch
+branch is the leading suspect; inspect/repair it and repeat acceptance. All 376 settings matched
+before/after. The software filter remains uninstalled; the kart is not yet declared repaired.
+[Current procedure](firmware/vesc-lisp/reverse-input/README.md).
 
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor
 board on every kart, a shared LoRa radio network, a pit station with touch kiosk and

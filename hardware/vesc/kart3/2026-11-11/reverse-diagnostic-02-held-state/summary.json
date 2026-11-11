@@ -1,0 +1,1187 @@
+{
+  "schema_version": 1,
+  "session": "kart3-reverse-diagnostic-02-held-state",
+  "date": "2026-11-11",
+  "evidence_paths_relative_to": "reverse-diagnostic-02-held-state directory",
+  "uuid": "37004e000951343037353739",
+  "firmware": "6.02",
+  "firmware_name": "no_hw_limits",
+  "reported_hardware_target": "75_300_R2",
+  "operator_identified_physical_controller": "Flipsky 75100 Pro V2.0",
+  "analysis_method": "Independently decoded every saved74-byte GET_VALUES payload with signed big-endian fields; cross-checked stored decoded values; counted raw prints/TX/RX; recomputed extrema/timing. Incoming CRC verification relies on live capture metadata because logs retain payloads, not RX frame CRCs. TX frame CRCs independently checked.",
+  "snapshots": {
+    "reverse-01": {
+      "manifest": "reverse-01/manifest.json",
+      "packets": "reverse-01/packets.jsonl",
+      "manifest_complete": true,
+      "raw_line": "(pins 0 1 {0.089019} {0.000014} 0)",
+      "rx": 0,
+      "tx": 1,
+      "adc_decoded": 0.089019,
+      "erpm": 1.4e-05,
+      "fault": 0,
+      "identity_before_present": true,
+      "identity_after_present": true
+    },
+    "forward-01": {
+      "manifest": "forward-01/manifest.json",
+      "packets": "forward-01/packets.jsonl",
+      "manifest_complete": true,
+      "raw_line": "(pins 1 1 {0.089599} {0.000014} 0)",
+      "rx": 1,
+      "tx": 1,
+      "adc_decoded": 0.089599,
+      "erpm": 1.4e-05,
+      "fault": 0,
+      "identity_before_present": true,
+      "identity_after_present": true
+    },
+    "reverse-before-trace": {
+      "manifest": "reverse-before-trace/manifest.json",
+      "packets": "reverse-before-trace/packets.jsonl",
+      "manifest_complete": false,
+      "raw_line": "(pins 0 1 {0.082444} {0.000007} 0)",
+      "rx": 0,
+      "tx": 1,
+      "adc_decoded": 0.082444,
+      "erpm": 7e-06,
+      "fault": 0,
+      "identity_before_present": true,
+      "identity_after_present": false
+    }
+  },
+  "traces": {
+    "failure-trace-01": {
+      "manifest": "failure-trace-01/manifest.json",
+      "packets": "failure-trace-01/packets.jsonl",
+      "started_utc": "2026-11-11T16:15:36.249017+00:00",
+      "finished_utc": "2026-11-11T16:16:11.257394+00:00",
+      "complete": true,
+      "capture_elapsed_s": 35.002139166999996,
+      "tx_action_counts": {
+        "identity": 2,
+        "monitor": 1,
+        "values": 303
+      },
+      "rx_command_counts": {
+        "0": 2,
+        "4": 303,
+        "135": 30
+      },
+      "max_outstanding_values_queries_reconstructed": 1,
+      "telemetry_samples": 303,
+      "telemetry_first_host_s": 0.503371416,
+      "telemetry_last_host_s": 33.8740855,
+      "telemetry_interarrival_seconds": {
+        "min": 0.0005386250000000148,
+        "median": 0.10881725000000131,
+        "max": 0.1450332920000008
+      },
+      "requested_telemetry_hz": 10,
+      "observed_rate_over_entire_capture_hz": 8.656613773070998,
+      "extrema": {
+        "motor_current_a": {
+          "min": 0.0,
+          "min_at_host_s": 0.503371416,
+          "max": 27.86,
+          "max_at_host_s": 29.299101416
+        },
+        "battery_current_a": {
+          "min": 0.0,
+          "min_at_host_s": 0.503371416,
+          "max": 18.63,
+          "max_at_host_s": 29.841651541
+        },
+        "id_a": {
+          "min": -24.13,
+          "min_at_host_s": 30.182881958,
+          "max": 1.23,
+          "max_at_host_s": 29.622512083
+        },
+        "iq_a": {
+          "min": -25.46,
+          "min_at_host_s": 29.299101416,
+          "max": 0.0,
+          "max_at_host_s": 0.503371416
+        },
+        "duty": {
+          "min": -0.862,
+          "min_at_host_s": 30.075768791,
+          "max": 0.0,
+          "max_at_host_s": 0.503371416
+        },
+        "erpm": {
+          "min": -23434,
+          "min_at_host_s": 30.182881958,
+          "max": 0,
+          "max_at_host_s": 0.503371416
+        },
+        "input_voltage_v": {
+          "min": 78.6,
+          "min_at_host_s": 29.841651541,
+          "max": 81.9,
+          "max_at_host_s": 4.190616875
+        },
+        "tachometer": {
+          "min": -13971,
+          "min_at_host_s": 32.146219375,
+          "max": -10403,
+          "max_at_host_s": 0.503371416
+        },
+        "tachometer_absolute": {
+          "min": 10887,
+          "min_at_host_s": 0.503371416,
+          "max": 14573,
+          "max_at_host_s": 32.146219375
+        },
+        "vd_v": {
+          "min": -10.192,
+          "min_at_host_s": 29.841651541,
+          "max": 0.053,
+          "max_at_host_s": 28.7353425
+        },
+        "vq_v": {
+          "min": -38.784,
+          "min_at_host_s": 30.289157625,
+          "max": 0.011,
+          "max_at_host_s": 0.503371416
+        }
+      },
+      "fault_codes": [
+        0
+      ],
+      "timeout_seen": false,
+      "kill_switch_seen": false,
+      "first_nonzero_erpm": {
+        "host_elapsed_s": 29.087167458,
+        "erpm": -307
+      },
+      "first_abs_erpm_gt_50": {
+        "host_elapsed_s": 29.087167458,
+        "erpm": -307
+      },
+      "last_abs_erpm_gt_50": {
+        "host_elapsed_s": 32.037184791,
+        "erpm": -60
+      },
+      "monitor": {
+        "nominal_window_s": 30,
+        "printed_rows": 29,
+        "rx_at_print_times": [
+          0
+        ],
+        "done": {
+          "host_elapsed_s": 29.967130625,
+          "edges": 0,
+          "samples": 13381,
+          "text": "(done 0 13381)"
+        },
+        "adc_min": 0.081894,
+        "adc_max": 0.209685,
+        "stationary_below_deadband_adc_min": 0.081894,
+        "stationary_below_deadband_adc_max": 0.090097,
+        "rows": [
+          {
+            "lisp_elapsed_s": 1.0021,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 442.0,
+            "adc_decoded": 0.082455,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 1.024176208
+          },
+          {
+            "lisp_elapsed_s": 2.0038,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 890.0,
+            "adc_decoded": 0.083315,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 2.02393
+          },
+          {
+            "lisp_elapsed_s": 3.008,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 1339.0,
+            "adc_decoded": 0.084241,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 3.026172916
+          },
+          {
+            "lisp_elapsed_s": 4.0108,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 1788.0,
+            "adc_decoded": 0.084684,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 4.027102416
+          },
+          {
+            "lisp_elapsed_s": 5.0128,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 2235.0,
+            "adc_decoded": 0.084692,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 5.027255375
+          },
+          {
+            "lisp_elapsed_s": 6.0158,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 2681.0,
+            "adc_decoded": 0.084482,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 6.028231125
+          },
+          {
+            "lisp_elapsed_s": 7.0172,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 3129.0,
+            "adc_decoded": 0.083012,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 7.027707958
+          },
+          {
+            "lisp_elapsed_s": 8.0194,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 3577.0,
+            "adc_decoded": 0.082336,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 8.027997083
+          },
+          {
+            "lisp_elapsed_s": 9.0209,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 4024.0,
+            "adc_decoded": 0.083088,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 9.027616958000001
+          },
+          {
+            "lisp_elapsed_s": 10.0221,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 4472.0,
+            "adc_decoded": 0.081894,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 10.026930250000001
+          },
+          {
+            "lisp_elapsed_s": 11.0241,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 4920.0,
+            "adc_decoded": 0.083847,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 11.026961375
+          },
+          {
+            "lisp_elapsed_s": 12.0257,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 5367.0,
+            "adc_decoded": 0.083498,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 12.026552166
+          },
+          {
+            "lisp_elapsed_s": 13.027,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 5815.0,
+            "adc_decoded": 0.082306,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 13.026065500000001
+          },
+          {
+            "lisp_elapsed_s": 14.0292,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 6263.0,
+            "adc_decoded": 0.082491,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 14.02629475
+          },
+          {
+            "lisp_elapsed_s": 15.0316,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 6711.0,
+            "adc_decoded": 0.084797,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 15.026751958
+          },
+          {
+            "lisp_elapsed_s": 16.0341,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 7159.0,
+            "adc_decoded": 0.082282,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 16.027351166
+          },
+          {
+            "lisp_elapsed_s": 17.036301,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 7607.0,
+            "adc_decoded": 0.081975,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 17.027620875
+          },
+          {
+            "lisp_elapsed_s": 18.0392,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 8055.0,
+            "adc_decoded": 0.082558,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 18.028598458
+          },
+          {
+            "lisp_elapsed_s": 19.042,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 8504.0,
+            "adc_decoded": 0.084558,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 19.029572583
+          },
+          {
+            "lisp_elapsed_s": 20.0446,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 8953.0,
+            "adc_decoded": 0.0837,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 20.03014825
+          },
+          {
+            "lisp_elapsed_s": 21.046,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 9400.0,
+            "adc_decoded": 0.08311,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 21.029643500000002
+          },
+          {
+            "lisp_elapsed_s": 22.047501,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 9848.0,
+            "adc_decoded": 0.088514,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 22.02929225
+          },
+          {
+            "lisp_elapsed_s": 23.0488,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 10296.0,
+            "adc_decoded": 0.089163,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 23.028605250000002
+          },
+          {
+            "lisp_elapsed_s": 24.050699,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 10744.0,
+            "adc_decoded": 0.090097,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 24.028604416
+          },
+          {
+            "lisp_elapsed_s": 25.0541,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 11193.0,
+            "adc_decoded": 0.087738,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 25.029996625
+          },
+          {
+            "lisp_elapsed_s": 26.0553,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 11641.0,
+            "adc_decoded": 0.088854,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 26.029373125
+          },
+          {
+            "lisp_elapsed_s": 27.0571,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 12088.0,
+            "adc_decoded": 0.089472,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 27.029299583
+          },
+          {
+            "lisp_elapsed_s": 28.0599,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 12535.0,
+            "adc_decoded": 0.087569,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 28.030155666000002
+          },
+          {
+            "lisp_elapsed_s": 29.063101,
+            "rx": 0.0,
+            "edges": 0.0,
+            "samples": 12983.0,
+            "adc_decoded": 0.209685,
+            "erpm": 7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 29.031718833
+          }
+        ],
+        "limitation": "2ms nominal samples with cumulative edge count; only 1Hz rows saved. No individual pulse-width record. RX monitoring ends at done, before telemetry capture ends."
+      }
+    },
+    "forward-trace-01": {
+      "manifest": "forward-trace-01/manifest.json",
+      "packets": "forward-trace-01/packets.jsonl",
+      "started_utc": "2026-11-11T16:18:15.317751+00:00",
+      "finished_utc": "2026-11-11T16:18:50.325782+00:00",
+      "complete": true,
+      "capture_elapsed_s": 35.000843167,
+      "tx_action_counts": {
+        "identity": 2,
+        "monitor": 1,
+        "values": 303
+      },
+      "rx_command_counts": {
+        "0": 2,
+        "4": 303,
+        "135": 30
+      },
+      "max_outstanding_values_queries_reconstructed": 1,
+      "telemetry_samples": 303,
+      "telemetry_first_host_s": 0.505152,
+      "telemetry_last_host_s": 33.865482125,
+      "telemetry_interarrival_seconds": {
+        "min": 0.0008928339999999535,
+        "median": 0.10881562549999835,
+        "max": 0.14609495799999905
+      },
+      "requested_telemetry_hz": 10,
+      "observed_rate_over_entire_capture_hz": 8.656934307390596,
+      "extrema": {
+        "motor_current_a": {
+          "min": -16.65,
+          "min_at_host_s": 2.948115042,
+          "max": 83.39,
+          "max_at_host_s": 2.842191417
+        },
+        "battery_current_a": {
+          "min": -1.71,
+          "min_at_host_s": 2.948115042,
+          "max": 47.43,
+          "max_at_host_s": 2.731169209
+        },
+        "id_a": {
+          "min": -77.35,
+          "min_at_host_s": 2.842191417,
+          "max": 3.23,
+          "max_at_host_s": 2.402092084
+        },
+        "iq_a": {
+          "min": -30.7,
+          "min_at_host_s": 5.521889625,
+          "max": 54.94,
+          "max_at_host_s": 2.511964459
+        },
+        "duty": {
+          "min": -0.345,
+          "min_at_host_s": 5.521889625,
+          "max": 0.946,
+          "max_at_host_s": 2.62239525
+        },
+        "erpm": {
+          "min": -7646,
+          "min_at_host_s": 5.630427792000001,
+          "max": 31975,
+          "max_at_host_s": 2.842191417
+        },
+        "input_voltage_v": {
+          "min": 73.4,
+          "min_at_host_s": 2.731169209,
+          "max": 81.8,
+          "max_at_host_s": 0.505152
+        },
+        "tachometer": {
+          "min": -16618,
+          "min_at_host_s": 2.293891625,
+          "max": -10682,
+          "max_at_host_s": 8.934719167
+        },
+        "tachometer_absolute": {
+          "min": 17537,
+          "min_at_host_s": 0.505152,
+          "max": 25376,
+          "max_at_host_s": 8.934719167
+        },
+        "vd_v": {
+          "min": -18.249,
+          "min_at_host_s": 2.842191417,
+          "max": 0.088,
+          "max_at_host_s": 8.825601625000001
+        },
+        "vq_v": {
+          "min": -16.074,
+          "min_at_host_s": 5.630427792000001,
+          "max": 42.259,
+          "max_at_host_s": 2.948115042
+        }
+      },
+      "fault_codes": [
+        0
+      ],
+      "timeout_seen": false,
+      "kill_switch_seen": false,
+      "first_nonzero_erpm": {
+        "host_elapsed_s": 1.3993582089999999,
+        "erpm": -488
+      },
+      "first_abs_erpm_gt_50": {
+        "host_elapsed_s": 1.3993582089999999,
+        "erpm": -488
+      },
+      "last_abs_erpm_gt_50": {
+        "host_elapsed_s": 8.825601625000001,
+        "erpm": 815
+      },
+      "monitor": {
+        "nominal_window_s": 30,
+        "printed_rows": 29,
+        "rx_at_print_times": [
+          1
+        ],
+        "done": {
+          "host_elapsed_s": 29.964133167,
+          "edges": 861,
+          "samples": 13208,
+          "text": "(done 861 13208)"
+        },
+        "adc_min": 0.080471,
+        "adc_max": 0.53161,
+        "stationary_below_deadband_adc_min": 0.08328,
+        "stationary_below_deadband_adc_max": 0.089887,
+        "rows": [
+          {
+            "lisp_elapsed_s": 1.0003,
+            "rx": 1.0,
+            "edges": 79.0,
+            "samples": 435.0,
+            "adc_decoded": 0.086268,
+            "erpm": 1.4e-05,
+            "fault": 0.0,
+            "host_elapsed_s": 1.0193587089999998
+          },
+          {
+            "lisp_elapsed_s": 2.0034,
+            "rx": 1.0,
+            "edges": 149.0,
+            "samples": 862.0,
+            "adc_decoded": 0.429913,
+            "erpm": -2017.48877,
+            "fault": 0.0,
+            "host_elapsed_s": 2.02070225
+          },
+          {
+            "lisp_elapsed_s": 3.0069,
+            "rx": 1.0,
+            "edges": 191.0,
+            "samples": 1289.0,
+            "adc_decoded": 0.101555,
+            "erpm": 30154.65625,
+            "fault": 0.0,
+            "host_elapsed_s": 3.022443334
+          },
+          {
+            "lisp_elapsed_s": 4.0103,
+            "rx": 1.0,
+            "edges": 247.0,
+            "samples": 1714.0,
+            "adc_decoded": 0.106184,
+            "erpm": 13240.84082,
+            "fault": 0.0,
+            "host_elapsed_s": 4.023875834
+          },
+          {
+            "lisp_elapsed_s": 5.0132,
+            "rx": 1.0,
+            "edges": 287.0,
+            "samples": 2152.0,
+            "adc_decoded": 0.081002,
+            "erpm": 2573.866455,
+            "fault": 0.0,
+            "host_elapsed_s": 5.024586625
+          },
+          {
+            "lisp_elapsed_s": 6.016,
+            "rx": 1.0,
+            "edges": 357.0,
+            "samples": 2584.0,
+            "adc_decoded": 0.080471,
+            "erpm": -4506.253906,
+            "fault": 0.0,
+            "host_elapsed_s": 6.025336167000001
+          },
+          {
+            "lisp_elapsed_s": 7.0184,
+            "rx": 1.0,
+            "edges": 393.0,
+            "samples": 3018.0,
+            "adc_decoded": 0.10045,
+            "erpm": 19586.853516,
+            "fault": 0.0,
+            "host_elapsed_s": 7.0260728750000006
+          },
+          {
+            "lisp_elapsed_s": 8.0216,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 3446.0,
+            "adc_decoded": 0.082585,
+            "erpm": 8269.125977,
+            "fault": 0.0,
+            "host_elapsed_s": 8.027127709
+          },
+          {
+            "lisp_elapsed_s": 9.0246,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 3893.0,
+            "adc_decoded": 0.088702,
+            "erpm": -9e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 9.028112542
+          },
+          {
+            "lisp_elapsed_s": 10.0276,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 4341.0,
+            "adc_decoded": 0.088643,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 10.029174417
+          },
+          {
+            "lisp_elapsed_s": 11.0307,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 4788.0,
+            "adc_decoded": 0.089887,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 11.030305375000001
+          },
+          {
+            "lisp_elapsed_s": 12.0329,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 5236.0,
+            "adc_decoded": 0.089254,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 12.030595042
+          },
+          {
+            "lisp_elapsed_s": 13.0342,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 5684.0,
+            "adc_decoded": 0.089654,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 13.030063584
+          },
+          {
+            "lisp_elapsed_s": 14.0376,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 6132.0,
+            "adc_decoded": 0.086883,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 14.031407292
+          },
+          {
+            "lisp_elapsed_s": 15.0398,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 6580.0,
+            "adc_decoded": 0.087194,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 15.031731584000001
+          },
+          {
+            "lisp_elapsed_s": 16.042601,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 7029.0,
+            "adc_decoded": 0.087892,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 16.032673666999997
+          },
+          {
+            "lisp_elapsed_s": 17.045099,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 7477.0,
+            "adc_decoded": 0.087137,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 17.033395167
+          },
+          {
+            "lisp_elapsed_s": 18.0471,
+            "rx": 1.0,
+            "edges": 477.0,
+            "samples": 7926.0,
+            "adc_decoded": 0.08328,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 18.033430583999998
+          },
+          {
+            "lisp_elapsed_s": 19.0497,
+            "rx": 1.0,
+            "edges": 575.0,
+            "samples": 8359.0,
+            "adc_decoded": 0.53161,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 19.034292334
+          },
+          {
+            "lisp_elapsed_s": 20.0527,
+            "rx": 1.0,
+            "edges": 685.0,
+            "samples": 8790.0,
+            "adc_decoded": 0.085965,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 20.035025124999997
+          },
+          {
+            "lisp_elapsed_s": 21.0553,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 9213.0,
+            "adc_decoded": 0.085316,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 21.035765834
+          },
+          {
+            "lisp_elapsed_s": 22.0581,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 9662.0,
+            "adc_decoded": 0.087247,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 22.036628542
+          },
+          {
+            "lisp_elapsed_s": 23.0613,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 10111.0,
+            "adc_decoded": 0.089481,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 23.037800292
+          },
+          {
+            "lisp_elapsed_s": 24.0627,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 10557.0,
+            "adc_decoded": 0.088713,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 24.037401833999997
+          },
+          {
+            "lisp_elapsed_s": 25.064899,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 11003.0,
+            "adc_decoded": 0.087388,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 25.037692791999998
+          },
+          {
+            "lisp_elapsed_s": 26.067699,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 11451.0,
+            "adc_decoded": 0.088676,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 26.038517333999998
+          },
+          {
+            "lisp_elapsed_s": 27.070801,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 11899.0,
+            "adc_decoded": 0.087128,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 27.039583792
+          },
+          {
+            "lisp_elapsed_s": 28.0741,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 12348.0,
+            "adc_decoded": 0.087387,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 28.041031874999998
+          },
+          {
+            "lisp_elapsed_s": 29.077,
+            "rx": 1.0,
+            "edges": 861.0,
+            "samples": 12796.0,
+            "adc_decoded": 0.08723,
+            "erpm": -7e-06,
+            "fault": 0.0,
+            "host_elapsed_s": 29.041961292
+          }
+        ],
+        "limitation": "2ms nominal samples with cumulative edge count; only 1Hz rows saved. No individual pulse-width record. RX monitoring ends at done, before telemetry capture ends."
+      },
+      "early_chatter": {
+        "first_row_host_s": 1.0193587089999998,
+        "edges_by_first_row": 79,
+        "first_nonzero_erpm_host_s": 1.3993582089999999,
+        "precedes_first_nonzero_erpm": true
+      },
+      "late_stationary_burst": {
+        "monitor_interval_host_s": [
+          18.033430583999998,
+          21.035765834
+        ],
+        "edges_before": 477,
+        "edges_after": 861,
+        "edge_increase": 384,
+        "telemetry_check_interval_host_s": [
+          18,
+          21.1
+        ],
+        "telemetry_samples": 28,
+        "erpm_values": [
+          0
+        ],
+        "max_abs_motor_current_a": 0.24
+      }
+    }
+  },
+  "configuration_after_owner_reported_power_cycle": {
+    "scope": "runtime readback; not an independent flash dump",
+    "motor_json": "decoded-after-reconnect/motor_configuration.json",
+    "app_json": "decoded-after-reconnect/app_configuration.json",
+    "sport_equivalent_limits": {
+      "l_current_max": 140.0,
+      "l_current_max_scale": 1.0,
+      "l_current_min_scale": 1.0,
+      "l_min_erpm": -150000.0,
+      "l_max_erpm": 150000.0
+    },
+    "unchanged_braking_settings": {
+      "l_current_min": 0.0,
+      "l_in_current_min": -12.0
+    },
+    "app": {
+      "app_to_use": 2,
+      "servo_out_enable": 0,
+      "app_adc_conf.ctrl_type": 3,
+      "app_adc_conf.buttons": 0,
+      "app_adc_conf.hyst": 0.15000000596046448,
+      "app_adc_conf.safe_start": 1,
+      "app_adc_conf.voltage_start": 0.69,
+      "app_adc_conf.voltage_end": 2.67
+    },
+    "app_blob_identical_to_previous_session": true,
+    "motor_differences_vs_previous_runtime": {
+      "l_min_erpm": {
+        "before": -36102.3359375,
+        "after": -150000.0
+      },
+      "l_max_erpm": {
+        "before": 36102.3359375,
+        "after": 150000.0
+      },
+      "l_current_max_scale": {
+        "before": 0.75,
+        "after": 1.0
+      },
+      "foc_offsets_current__0": {
+        "before": 2046.9549560546875,
+        "after": 2047.0040283203125
+      },
+      "foc_offsets_current__1": {
+        "before": 2042.5260009765625,
+        "after": 2042.7230224609375
+      },
+      "foc_offsets_current__2": {
+        "before": 2043.7860107421875,
+        "after": 2043.7760009765625
+      },
+      "foc_offsets_voltage__0": {
+        "before": -0.0034,
+        "after": -0.0041
+      },
+      "foc_offsets_voltage__1": {
+        "before": 0.0045,
+        "after": 0.0047
+      },
+      "foc_offsets_voltage__2": {
+        "before": -0.001,
+        "after": -0.0006
+      }
+    },
+    "differences_interpretation": "Owner power-cycle/reconnect preceded this readback. SPORT-equivalent scale/ERPM limits and small current/voltage ADC offset differences observed; no diagnostic config-write or detection command was sent. Do not label the offset differences Hall/pedal recalibration."
+  },
+  "operator_reports": {
+    "reverse_trace_result": "Operator confirmed reverse worked during failure-trace-01; folder name records original test intent, not outcome.",
+    "earlier_symptom": "Owner previously described failed reverse/stuttering forwards; not assumed reproduced by failure-trace-01.",
+    "meter_caveat": "Meter descriptions were corrected during troubleshooting; some terminal/reference/unit descriptions were uncertain. They are reported observations, not calibrated measurements retained in this evidence set; do not infer a resistance value or exact connector voltage from them.",
+    "end_state": "Owner reported VESC powered off; Heltec off. This is end-of-session status, not a live reading."
+  },
+  "scope_and_limits": {
+    "configuration_writes_sent": false,
+    "motor_actuation_commands_sent": false,
+    "flash_writes_sent": false,
+    "hall_or_pedal_detection_sent": false,
+    "direction_filter_loaded_or_activated": false,
+    "operator_actuation": "Any motion used the owner-operated wired throttle and direction switch.",
+    "diagnostic_actions": "Identity/configuration/telemetry reads; fixed read-only faults/foc_state terminal commands; volatile input-reading Lisp snapshot/monitor expressions. REPL can initialize/pause/GC/resume interpreter; not a controller reset.",
+    "reverse_rx_after_monitor_done": "UNKNOWN. Reverse acceleration/coastdown continued after monitor ended; later telemetry does not prove RX remained low.",
+    "motor_temperature": "No motor temperature sensors wired; do not interpret returned motor_temp_c as a valid thermal measurement.",
+    "cause_not_proven": "Forward trial demonstrates unstable sampled RX, including before first nonzero ERPM and a later stationary burst. It does not locate the electrical cause or prove every historical symptom has this cause.",
+    "next_step": "With controller off, isolate switch contacts and short local wiring/ground path before considering the software filter. No-throttle electrical isolation first; filter deferred."
+  },
+  "helper_provenance": {
+    "monitor_file_sha256_from_manifests": "6ba5d52cec8608cf295b5a98a96b26a9bd6fea9ddd364db3dbc9a25150610e1f",
+    "limitation": "Historical helper-source hashes were not embedded in run manifests. Current helper files may include later parser/console changes; their hashes are inventory only, not proof of the exact executed version. Logged TX frames and payloads provide stronger action-level evidence.",
+    "current_file_inventory": [
+      {
+        "path": "/tmp/gokart-rx-session-20261111/rx_failure_trace.py",
+        "sha256_now": "f5b2c38e3a46d01bc62e4597a53f49ad1456a8a8af5a828aa88ccfe831e1951f",
+        "bytes": 7588
+      },
+      {
+        "path": "/tmp/gokart-rx-session-20261111/rx_probe.py",
+        "sha256_now": "bf3e0d314cabc2108c6818f7dd9d674c6d850313811d7756d1e08798cfca7140",
+        "bytes": 10138
+      },
+      {
+        "path": "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/tools/vesc/rx_probe.py",
+        "sha256_now": "6877dba04c448bf9bd0a944123755fb250a6f52307f176746d7876d0d3195227",
+        "bytes": 10960
+      }
+    ]
+  },
+  "evidence_file_inventory": [
+    {
+      "path": "decoded-after-reconnect/app_configuration.json",
+      "bytes": 8852,
+      "sha256": "e72fc46ceba0fdeae1efdb28566320b54b5c0b2c8fe39e96bb932c6b1ca2ed3c"
+    },
+    {
+      "path": "decoded-after-reconnect/identity.json",
+      "bytes": 315,
+      "sha256": "ba52d61672284b67dfe7563e1944beedb82f8c5629c3387c6424f1c753c52874"
+    },
+    {
+      "path": "decoded-after-reconnect/motor_configuration.json",
+      "bytes": 7114,
+      "sha256": "ca41004083b57c8b04b593a53eb0f7ce31611fb17107a4d27689fa38e9e1c029"
+    },
+    {
+      "path": "decoded-after-reconnect/telemetry.json",
+      "bytes": 748,
+      "sha256": "32171edea6066a242a961264713e58fb7f4814f4504027f4a98cd5127a9caf16"
+    },
+    {
+      "path": "failure-trace-01/manifest.json",
+      "bytes": 3015,
+      "sha256": "55f9fa920e0d168ca3a3df22927239e82b8e01fe15d9613f74e2dd173449ff10"
+    },
+    {
+      "path": "failure-trace-01/packets.jsonl",
+      "bytes": 299143,
+      "sha256": "8da8e71ab35041bad65434d263894d8702b91fbf69fa49b89768a7964b9cf7a4"
+    },
+    {
+      "path": "forward-01/identity_after.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "forward-01/identity_before.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "forward-01/manifest.json",
+      "bytes": 1616,
+      "sha256": "9c9b493424b94e9e2e6c75e98507e715c9090241fd8ce1f34f8366c1bb55d162"
+    },
+    {
+      "path": "forward-01/packets.jsonl",
+      "bytes": 263,
+      "sha256": "da00bc9d0976a768903f172007822e1fd4e7b890abc1b6c53a8e705532d908b8"
+    },
+    {
+      "path": "forward-trace-01/manifest.json",
+      "bytes": 3115,
+      "sha256": "8346e8ef9f3b13af6ab43811b2c3f6477ffa6a6dd62415827a000dda3f9aebb5"
+    },
+    {
+      "path": "forward-trace-01/packets.jsonl",
+      "bytes": 299664,
+      "sha256": "d5c90147fb227c98f697bfda7e1b7b0847f12908d9db6fdd45ac6ef3350f9790"
+    },
+    {
+      "path": "raw-after-reconnect/app_configuration.bin",
+      "bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    },
+    {
+      "path": "raw-after-reconnect/firmware.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "raw-after-reconnect/manifest.json",
+      "bytes": 2044,
+      "sha256": "89e90551ec9ea51763a669f880f36294e23494031e2f6cc01d7729064435bd9c"
+    },
+    {
+      "path": "raw-after-reconnect/motor_configuration.bin",
+      "bytes": 482,
+      "sha256": "5f91ebbe689b6020dd95bfffa24e406dd3f1cc8be7d9b169be14aa1ef0cf8dd0"
+    },
+    {
+      "path": "raw-after-reconnect/telemetry.bin",
+      "bytes": 74,
+      "sha256": "759729ae6b5f1c9d9188985a6991a051e154e137471dfa102bbd7e65555018d2"
+    },
+    {
+      "path": "reverse-01/identity_after.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "reverse-01/identity_before.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "reverse-01/manifest.json",
+      "bytes": 1616,
+      "sha256": "884fc86aca0b0c5946ed4fbc2acc48c4cb6ee7eb23a8e8ba7f1cec5d3151e4da"
+    },
+    {
+      "path": "reverse-01/packets.jsonl",
+      "bytes": 263,
+      "sha256": "6cfd4bf6d40b5169765af7ee1028d0df8bbfdefcd7dbd25c82d932c6df80c553"
+    },
+    {
+      "path": "reverse-before-trace/identity_before.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "reverse-before-trace/manifest.json",
+      "bytes": 1326,
+      "sha256": "70ce429bd40221f71340991e6aab5582c400f1bcbacbc45c42eb8318964ad6b0"
+    },
+    {
+      "path": "reverse-before-trace/packets.jsonl",
+      "bytes": 262,
+      "sha256": "cf78107ae9ab81d92b5823860194d88a24577117bf3d8f06018002c1b984968d"
+    },
+    {
+      "path": "terminal-before-trace/faults.jsonl",
+      "bytes": 282,
+      "sha256": "b13dd8c98c74ae166f3288221eb2d323e860dba5e0ce6d6ecf42b083d80268fc"
+    },
+    {
+      "path": "terminal-before-trace/foc_state.jsonl",
+      "bytes": 2993,
+      "sha256": "a322a4eb4d6fa0556b25cce905d4d36d930cca1f15310a1520b83a432c309c34"
+    },
+    {
+      "path": "terminal-before-trace/identity_after.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "terminal-before-trace/identity_before.bin",
+      "bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "path": "terminal-before-trace/manifest.json",
+      "bytes": 2068,
+      "sha256": "102738b321cffe701a0309cb58866acb2d78af2ea438b7b6d9f4640d85f12681"
+    }
+  ],
+  "snapshot_parser_failure": {
+    "run": "reverse-before-trace",
+    "manifest_complete": false,
+    "valid_raw_input_packet_observed": true,
+    "reason": "Host-side numeric recognizer rejected LispBM curly-brace float notation; the raw135 packet contains (pins 0 1 {0.082444} {0.000007} 0) and >t followed.",
+    "handling": "Keep original incomplete manifest/error and missing identity-after evidence. Use raw packet as an observed snapshot, not as a completed automated session."
+  }
+}

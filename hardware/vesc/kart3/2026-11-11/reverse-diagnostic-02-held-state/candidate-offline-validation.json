@@ -1,0 +1,183 @@
+{
+  "status": "offline proposal only; deferred pending no-throttle electrical isolation",
+  "candidate_scratch_path": "/tmp/gokart-rx-filter-trial-20261111/rx-filter-candidate.lisp",
+  "sha256": "25e2515fdeede0ce768a2d24a3e22aef413b2289d0dd5b63bd76ff07e05b0072",
+  "executable_change": "decoded-pedal guard0.01 to0.12 only",
+  "observed_rest_range_approx": [
+    0.081,
+    0.106
+  ],
+  "required_native_deadband": 0.15,
+  "required_host_preflight": {
+    "app": 2,
+    "ctrl_type": 3,
+    "buttons": 0,
+    "servo_out_enable": 0,
+    "hyst": 0.15,
+    "other_configuration_writers": "quiet",
+    "calibration_and_braking": "unchanged"
+  },
+  "interlocks": "50ms stable RX,250ms zero-command/rest/fault-free checks,>10ms gap qualification reset,seed-before-detach,joined stop andexplicit guarded rollback",
+  "tests_passed": 29,
+  "tests_total": 29,
+  "host_validation": {
+    "pinned_firmware_commit": "f7c2b34e1cff2234cae98be3abf0cd50e249558f",
+    "cons_cells": 2464,
+    "host_is_64_bit": true,
+    "tests": [
+      {
+        "test": "test-adc-uart-config-refused.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-boot-reverse-seed-before-detach.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-chatter-during-motion-holds-applied-direction.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-config-change-holds-last.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-continuous-chatter-does-not-arm.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-fault-blocks-initial-arm.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-fresh-check-stall-restarts-qualification.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-fresh-pedal-check-restarts-qualification.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-glitch-rejected-sustained-accepted.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-latest-current-switch-state-after-motion.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-load-is-disarmed.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-monitor-compact-readonly-bounded.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-monitor-readonly-bounded.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-pedal-and-rpm-interlock.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-preflight-false-refused.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-at-rest-matching-rx.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-body-helper-stall-refused.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-final-helper-stall-refused.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-refused-pedal.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-refused-rx-mismatch.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-refused-unjoined.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-stall-crossing-deadline-refused.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-rollback-stall-refused.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-stall-restarts-qualification.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-start-stop-join-holds-last.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-trial-13-blocks-direction-change-until-requalified.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-trial-13-refuses-initial-arm.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-trial-observed-rest-upper-106-accepted.lisp",
+        "passed": true,
+        "harness_exit": 1
+      },
+      {
+        "test": "test-trial-rest-09-accepted.lisp",
+        "passed": true,
+        "harness_exit": 1
+      }
+    ]
+  },
+  "hardware_tested": false,
+  "loaded_or_activated_in_documented_session": false,
+  "limitations": [
+    "64-bit host VM with2464cons cells is not full MCU timing/memory/electrical validation",
+    "Wrong RXlevelheld>=50msatrest canbeaccepted",
+    "Continuouschattercanpreventarming",
+    "Scriptstop/errorsholdlastoverride;powercycle returnsnativeinput"
+  ]
+}

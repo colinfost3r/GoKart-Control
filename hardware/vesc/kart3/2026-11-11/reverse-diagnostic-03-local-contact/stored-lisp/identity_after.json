@@ -1,0 +1,15 @@
+{
+  "firmware": "6.02",
+  "hardware": "75_300_R2",
+  "uuid": "37004e000951343037353739",
+  "paired": 0,
+  "test_version": 0,
+  "hardware_type": 0,
+  "custom_config_count": 0,
+  "has_phase_filters": 1,
+  "qml_hardware": 0,
+  "qml_app": 0,
+  "nrf_flags": 0,
+  "firmware_name": "no_hw_limits",
+  "remaining_hex": ""
+}

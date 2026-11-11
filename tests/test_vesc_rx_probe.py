@@ -49,6 +49,82 @@ class ProbeTests(unittest.TestCase):
             packets += parser.feed(bytes((value,)))
         self.assertEqual(packets, [payload])
 
+    def test_snapshot_fixed_expression_no_mutation_or_loop(self):
+        expression = b"(print (list 'pins (gpio-read 'pin-rx) (gpio-read 'pin-tx) (get-adc-decoded 0) (get-rpm) (get-fault)))"
+        self.assertEqual(r.fixed_payload('snapshot'), b'\x8a' + expression + b'\0')
+        self.assertEqual(r.PacketParser().feed(r.fixed_frame('snapshot')), [b'\x8a' + expression + b'\0'])
+        for forbidden in (b'setvar', b'loop', b'set-', b'conf-', b'detach', b'override', b'gpio-configure'):
+            self.assertNotIn(forbidden, expression)
+
+    def test_snapshot_only_single_read_expression_and_identity_rechecks(self):
+        connection = FakeConnection()
+        with patch.object(r, 'SerialConnection', return_value=connection), patch.object(r, 'send_once') as send, patch.object(r, 'collect', return_value=[b'\x87(pins 0 1 0.09 0 0)']) as collect:
+            result = r.run('fake', self.out, snapshot=True)
+            self.assertEqual([x.args[1] for x in send.call_args_list], ['snapshot'])
+            self.assertEqual(collect.call_args.args[1], 2.0)
+            self.assertEqual(connection.queries, [0, 0])
+            self.assertEqual(result['pin_snapshot_lines'], ['(pins 0 1 0.09 0 0)'])
+            self.assertEqual(result['pin_snapshots'], [
+                {'rx': 0, 'tx': 1, 'adc_decoded_0': 0.09, 'rpm': 0.0, 'fault': 0}])
+            self.assertTrue(result['complete'])
+        self.assertEqual(r.pin_snapshot_record('(pins 0 1 0.089019 0.000014 0)'),
+                         {'rx': 0, 'tx': 1, 'adc_decoded_0': 0.089019, 'rpm': 0.000014, 'fault': 0})
+        self.assertEqual(r.pin_snapshot_record('(pins 1 0 +.09 -1.4e-5 3)'),
+                         {'rx': 1, 'tx': 0, 'adc_decoded_0': 0.09, 'rpm': -0.000014, 'fault': 3})
+
+    def test_snapshot_actual_lispbm_braced_float_packet(self):
+        # Exact printed payload observed on kart 3, 2026-11-11 (command 135).
+        payload = b'\x87(pins 0 1 {0.082444} {0.000007} 0)'
+        connection = FakeConnection()
+        with patch.object(r, 'SerialConnection', return_value=connection), patch.object(r, 'send_once') as send, patch.object(r, 'collect', return_value=[payload]):
+            result = r.run('fake', self.out, snapshot=True)
+        self.assertEqual(result['pin_snapshot_lines'], [payload[1:].decode()])
+        self.assertEqual(result['pin_snapshots'], [
+            {'rx': 0, 'tx': 1, 'adc_decoded_0': 0.082444, 'rpm': 0.000007, 'fault': 0}])
+        self.assertTrue(result['complete'])
+        self.assertEqual([call.args[1] for call in send.call_args_list], ['snapshot'])
+        self.assertEqual(connection.queries, [0, 0])
+        self.assertEqual(r.pin_snapshot_record('(pins 0 1 {0.089019} {0.000014} 0)'),
+                         {'rx': 0, 'tx': 1, 'adc_decoded_0': 0.089019, 'rpm': 0.000014, 'fault': 0})
+        self.assertEqual(r.pin_snapshot_record('(pins 1 0 {+.09} {-1.4e-5} 3)'),
+                         {'rx': 1, 'tx': 0, 'adc_decoded_0': 0.09, 'rpm': -0.000014, 'fault': 3})
+
+    def test_snapshot_wrong_identity_refused(self):
+        for label, reply in (('uuid', identity('17004e000951343037353739')),
+                             ('firmware', identity(minor=0))):
+            with self.subTest(label=label):
+                connection = FakeConnection(reply)
+                with patch.object(r, 'SerialConnection', return_value=connection), patch.object(r, 'send_once') as send, patch.object(r, 'collect') as collect:
+                    with self.assertRaises(ValueError): r.run('fake', self.out / label, snapshot=True)
+                    send.assert_not_called()
+                    collect.assert_not_called()
+                    self.assertEqual(connection.queries, [0])
+
+    def test_snapshot_missing_or_error_reply_never_retried(self):
+        invalid = ('Error in (pins 0 1 0.09 0 0)', '(pins 0 1 error 0 0)',
+                   '(pins 0 1 0.09 0)', '(pins 0 1 0.09 0 0 extra)',
+                   '(pins 0 1 nan 0 0)', '(pins 0 1 0.09 inf 0)',
+                   '(pins 0 1 1e999 0 0)', '(pins 0 1 0.09 -1e999 0)',
+                   '(pins 2 1 0.09 0 0)', '(pins 0 1 0.09 0 0.5)',
+                   '(pins 0 1 0.09 0 -1)', '(pins 0 1 {0.09 0 0)',
+                   '(pins 0 1 0.09} 0 0)', '(pins 0 1 {{0.09}} 0 0)',
+                   '(pins 0 1 {nan} 0 0)', '(pins 0 1 0.09 {inf} 0)',
+                   '(pins 0 1 {1e999} 0 0)', '(pins 0 1 0.09 {-1e999} 0)')
+        for text in invalid:
+            self.assertIsNone(r.pin_snapshot_record(text))
+        for label, packets in (('missing', []), ('invalid', [b'\x87' + text.encode() for text in invalid])):
+            with self.subTest(label=label):
+                connection = FakeConnection()
+                with patch.object(r, 'SerialConnection', return_value=connection), patch.object(r, 'send_once') as send, patch.object(r, 'collect', return_value=packets):
+                    with self.assertRaises(RuntimeError): r.run('fake', self.out / label, snapshot=True)
+                    self.assertEqual([x.args[1] for x in send.call_args_list], ['snapshot'])
+                    self.assertEqual(connection.queries, [0])
+
+    def test_snapshot_inspect_conflict_refused(self):
+        with patch.object(r, 'SerialConnection') as connection:
+            with self.assertRaises(ValueError): r.run('fake', self.out, inspect=True, snapshot=True)
+            connection.assert_not_called()
+
     def test_corrupt_crc_rejected(self):
         frame = bytearray(r.fixed_frame('monitor'))
         frame[-2] ^= 1

@@ -30,11 +30,14 @@ changes cannot be excluded: close other clients and do not edit code while readi
 
 ## Fixed reverse-input observation
 
-`rx_probe.py` is a separate kart-3-only helper. It pins UUID `37004e000951343037353739` and firmware 6.02, permits identity (0), Lisp stats (134) and only fixed REPL (138) requests. `--inspect` sends `:ctxs`; monitor mode sends the SHA-pinned bounded input-only expression. REPL can initialize the interpreter or pause/GC/resume evaluation, so capture stored code and inspect ownership first. No reset, flash, input override or motor command is available.
+`rx_probe.py` is a separate kart-3-only helper. It pins UUID `37004e000951343037353739` and firmware 6.02, permits identity (0), Lisp stats (134) and only fixed REPL (138) requests. `--inspect` sends `:ctxs`; `--snapshot` directly reads RX/TX/ADC/RPM/fault once; monitor mode sends the SHA-pinned bounded input-only expression. REPL can initialize the interpreter or pause/GC/resume evaluation, so capture stored code and inspect ownership first. No reset, flash, input override or motor command is available.
 
 ```sh
 python3 -B tools/vesc/rx_probe.py --port /dev/cu.usbmodemACTUAL_PORT \
   --inspect --out /absolute/path/to/new/context-capture
+# One fixed direct snapshot (balanced LispBM {float} replies supported):
+python3 -B tools/vesc/rx_probe.py --port /dev/cu.usbmodemACTUAL_PORT \
+  --snapshot --out /absolute/path/to/new/pin-snapshot
 # Only after fresh configuration, stored-code and context review:
 python3 -B tools/vesc/rx_probe.py --port /dev/cu.usbmodemACTUAL_PORT \
   --ownership-reviewed --out /absolute/path/to/new/rx-monitor
@@ -42,7 +45,7 @@ python3 -B tools/vesc/rx_probe.py --port /dev/cu.usbmodemACTUAL_PORT \
 
 Pause the competing VESC Bluetooth client for reliable USB Lisp prints: 6.02 routes asynchronous output to the most recent interface. After a missing completion marker, inspect context state and resolve transport visibility; do not automatically resend. The sender stops after an uncertain/partial write, captures for a bounded time/byte budget and retains failure evidence. Context output is only a snapshot, not proof of future ownership or absence of native overrides.
 
-[Hardware observation and limitations](../../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md); [session procedure](../../firmware/vesc-lisp/reverse-input/README.md).
+[Hardware observation and limitations](../../hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md); [session procedure](../../firmware/vesc-lisp/reverse-input/README.md).
 
 ## Capture
 
