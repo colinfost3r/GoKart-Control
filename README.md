@@ -108,8 +108,10 @@ A pit STOP always wins. **Sounds** are synthesized in the browser (`static/sound
 file on pit and kart): countdown lights, GO, boost, mud, item roulette, lap, finish, STOP.
 Kart panel speakers are fed over HDMI audio.
 
-The [compact Heltec/GPS enclosure prototype](hardware/cad/heltec-bar-enclosure/r03-parallel/)
-uses four installation screws and mounts parallel to the owner's 0.995-inch bar.
+The [compact Heltec/GPS enclosure prototype](hardware/cad/heltec-bar-enclosure/r05-rectangular/)
+follows the owner-edited antenna/GPS placement, with a slide-in GPS tray, OLED
+viewing opening and integral antenna mount in the lid, all on a clean rectangular
+shell. It uses four installation screws and mounts parallel to the owner's 0.995-inch bar.
 Editable Fusion source, print files and fit assumptions are documented in the
 [mechanical handoff](docs/mechanical/README.md). Physical prototype checks remain open.
 

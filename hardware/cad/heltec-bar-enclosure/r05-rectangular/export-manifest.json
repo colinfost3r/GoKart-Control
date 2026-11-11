@@ -1,0 +1,107 @@
+[
+  {
+    "file": "GoKart-Heltec-Rectangular-Owner-Layout-R05.f3d",
+    "bytes": 7056779,
+    "sha256": "4c445422a2a831b6dd4063223ed33581a90d35b9cbf5b902d1ff6fc95ad85266"
+  },
+  {
+    "file": "README.md",
+    "bytes": 6838,
+    "sha256": "802eb221553de5a341b825d631ddb507f51ac7c04de42be44a67bfa6ee07c2bc"
+  },
+  {
+    "file": "assembled-preview.png",
+    "bytes": 40256,
+    "sha256": "17b485c35f798fab4b59d813b18d218a90392ccb9fb3fd8d51ba2cb0c56f5e58"
+  },
+  {
+    "file": "build_rectangular_revision.py",
+    "bytes": 10106,
+    "sha256": "8edf527952f7a9f705da1261af66272d86d85ee01a97bd399550680be9bc0b69"
+  },
+  {
+    "file": "case-upper-collar.step",
+    "bytes": 217537,
+    "sha256": "0a42025705b2bc8d2874b0d415e090ba6061a8c033b83402c9fc4cd3a478a874"
+  },
+  {
+    "file": "case-upper-collar.stl",
+    "bytes": 216584,
+    "sha256": "d299649ac398303f14e09ff83e7e281befae45daa7def748217be694db4f2a8e"
+  },
+  {
+    "file": "export-verification.json",
+    "bytes": 3697,
+    "sha256": "1c064474d1ca41589f1afeeeffd54ebd3827e12bb047dfb8dafe79fcd2551274"
+  },
+  {
+    "file": "export_revision.py",
+    "bytes": 4666,
+    "sha256": "318bd57e6d3c2a9f1a75470d38ddeadb517272281597632a14c3a787d5520caa"
+  },
+  {
+    "file": "gps-slide-tray.step",
+    "bytes": 66556,
+    "sha256": "4dd8eff0f23163d38e8e8ca2a9e2fb9da73b315cae46af21ca1b83a285bd5169"
+  },
+  {
+    "file": "gps-slide-tray.stl",
+    "bytes": 10084,
+    "sha256": "ab8aae619e46e607af8a1e1a559d6c9171dba9cc539a1b16a217f0c0b97a93a4"
+  },
+  {
+    "file": "independent-review.json",
+    "bytes": 2871,
+    "sha256": "5cc58fc4852af5b200172fb1fef9c22d278c7e0f130040b91149f3a921a1516c"
+  },
+  {
+    "file": "independent_review.py",
+    "bytes": 3388,
+    "sha256": "aea633848eb5a061e1cc8787ae194e9b527b503e23f6d3127dbd23fe1341d9a3"
+  },
+  {
+    "file": "input/owner-edited-R03-before-R04.f3d",
+    "bytes": 8336351,
+    "sha256": "bd51bd928381ee201085990a5535de61db92f15e3bfff82050936125bee5faa5"
+  },
+  {
+    "file": "input/owner-layout.json",
+    "bytes": 5712,
+    "sha256": "3c6fab69d414c988e1a347d85a66f4dc92a082ea687c8a081a61b7667ca0c854"
+  },
+  {
+    "file": "input/owner-view.png",
+    "bytes": 73013,
+    "sha256": "35da35bc128a61b450b0f87eb7a7532a2b4a73ecac18d366fd3928b854356238"
+  },
+  {
+    "file": "lid-integral-antenna.step",
+    "bytes": 101352,
+    "sha256": "6e8b119fc460632e689e6c38b588fffe4e1f1ae75495a6c10ec7e342ac42bd91"
+  },
+  {
+    "file": "lid-integral-antenna.stl",
+    "bytes": 796884,
+    "sha256": "69ed689ba2fff8292729c3888d7380683c19f076e0a30aa2a01944aa5480fb71"
+  },
+  {
+    "file": "lower-collar.step",
+    "bytes": 24889,
+    "sha256": "ec50af88081f14b628cf61f7f6e243eff9d80a92866c41be8a40198f5601e248"
+  },
+  {
+    "file": "lower-collar.stl",
+    "bytes": 138084,
+    "sha256": "e2fc273fb886fb5176d1d7a8971c10b8a62f013f86b6a33f02d6a7163bd8e74a"
+  },
+  {
+    "file": "model-audit.json",
+    "bytes": 6419,
+    "sha256": "bcfe94f4e0d467377ba88d15e873c52effb504301f4982b0c60cfc059399d27d"
+  },
+  {
+    "file": "tray-extracted-preview.png",
+    "bytes": 41014,
+    "sha256": "1135791dbf2808ca4adcf0a83f5ac06f21b3270f470ee5a9e58f9087a86c33f8"
+  }
+]

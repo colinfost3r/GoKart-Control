@@ -1,0 +1,104 @@
+{
+  "document": "GoKart Heltec Rectangular Owner Layout R05",
+  "timeline_count": 435,
+  "print_solids": {
+    "R05 Case and upper collar": {
+      "solid": true,
+      "lumps": 1
+    },
+    "R05 OLED lid with integral antenna mount": {
+      "solid": true,
+      "lumps": 1
+    },
+    "R05 Lower collar": {
+      "solid": true,
+      "lumps": 1
+    },
+    "R05 GPS slide tray with end latch": {
+      "solid": true,
+      "lumps": 1
+    }
+  },
+  "owner_transform_max_deltas": {
+    "REF Heltec V4.3.1 official STEP": 0,
+    "REF GPS accessory alternate revision": 3.944304526105059e-31,
+    "REF 2inch antenna envelope diameter7mm assumed": 0
+  },
+  "sma_point_checks": {
+    "hole_center_clear": true,
+    "seat_ring_present": true,
+    "rear_access_clear": true
+  },
+  "oled_center_sightline_clear": true,
+  "released_tray_and_gps_sweep": [
+    {
+      "rearward_travel_mm": 0,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 1,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 2,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 3,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 5,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 8,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 12,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 16,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 20,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 24,
+      "intersection_mm3": 0
+    },
+    {
+      "rearward_travel_mm": 30,
+      "intersection_mm3": 0
+    }
+  ],
+  "sweep_limit": "Discrete sampled travel; rigid geometry with below-floor latch tooth analytically removed; does not validate printed latch flex or cable movement.",
+  "interference": {
+    "checked_bodies": 13,
+    "remaining_contacts": [
+      {
+        "a": "Open CASCADE STEP translator 6.8 1.1.1/Body1",
+        "b": "R05 Case and upper collar/Body1",
+        "volume_mm3": 0.0007508929708586328
+      },
+      {
+        "a": "GPS-Module1/Body3",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.22057640606521983
+      }
+    ],
+    "scope": "Four print bodies, four GPS bodies, conservative OLED cover, and visible Heltec bodies in modified rear-support region. Native coincident-face contacts excluded.",
+    "interpretation": "The 0.000750893 mm\u00b3 PCB contact is a nominal support-pad rounding overlap (Z 6.94128074\u20136.9413 mm). The 0.220576 mm\u00b3 GPS-receiver/rectangular OLED-cover-envelope overlap remains a physical fit uncertainty. Case/lid and actual IPEX material overlaps were removed."
+  },
+  "hardware_tested": false,
+  "offline_repository_tests": {
+    "passed": 492,
+    "suites": 8,
+    "skipped": 0,
+    "log": "/tmp/gokart-r04-final-tests.log"
+  }
+}

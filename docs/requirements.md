@@ -90,6 +90,28 @@ This explicit persistent maintenance tune is separate from temporary supervisory
   printed clamp/clip fit and outdoor GPS/radio acceptance remain to be checked.
   This is an accessory prototype, not a validated environmental or structural rating.
 
+## Owner-edited enclosure revision — November 11, 2026
+
+- The owner manually edited the Fusion model after R03: antenna placement, shell
+  shape and GPS placement in that edited model are the new geometric reference.
+  Capture the input revision before making further changes; do not reset it to
+  the earlier generated layout.
+- Replace the GPS retention with a simple slide-in tray and one end clip/latch.
+  The owner can hot-glue the GPS into its carrier. Keep glue and retaining forces
+  off the ceramic antenna and preserve connector access.
+- Add a compact OLED viewing opening aligned to the actual display reference.
+- Fix the antenna at the owner's edited position. The latest instruction is to
+  integrate the owner-shaped top with the lid and provide a proper SMA mounting
+  seat, hole and nut/tool access. The earlier removable/indexed antenna and fixed
+  case-web layouts are superseded.
+- Use one normal rectangular enclosure sized for both boards, with a flush GPS
+  tray end. The owner rejected the added rear bay because it looked like separate
+  pieces stuck together and authorizes rebuilding the shell around the preserved
+  component positions.
+- Retain the compact layout, parallel tube orientation, four installation screws
+  maximum, and ASA/PETG prototype material choice. Printed fit and outdoor use
+  remain unvalidated.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.

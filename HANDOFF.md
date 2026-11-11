@@ -1,6 +1,38 @@
 # Collaborator handoff
 
-## Compact Heltec/GPS bar enclosure — November 11, 2026
+## Owner-edited Heltec/GPS enclosure R05 — November 11, 2026
+
+The owner adjusted the Fusion model after R03. Those edits are the geometric
+reference for [R05](hardware/cad/heltec-bar-enclosure/r05-rectangular/README.md):
+GPS moved rearward/lower and rotated, and the antenna has a new shaped collar and
+position. The actual edited antenna axis is **30 degrees from vertical at 35 degrees
+in plan**; it supersedes the old 15-degree indexed-insert layout. The owner's
+unedited input is archived under the revision's `input/` directory, and the
+original open Fusion document was preserved.
+
+R05 replaces the old GPS retention with a sliding carrier and one end latch,
+allows hot-glue retention at the PCB edges/back, adds a compact OLED viewing
+opening and makes the antenna mount integral. It remains a four-installation-screw
+prototype (two clamp bolts and two lid screws) for ASA/PETG. The owner rejected
+R04’s separate-looking rear bay; R05 uses one **77 × 36 mm rectangular shell**,
+a flush tray end, and the owner-shaped antenna mount integrated into the lid.
+Refer to the revision
+README for final dimensions, assembly order, CAD checks and remaining physical-fit
+checks. No firmware, controller settings or kart hardware were changed.
+
+Independent review confirmed four solid print parts, preserved board/antenna poses,
+clear SMA seat/access, a clear OLED centre sightline and zero case/lid intersections
+during sampled withdrawal of the released tray and GPS. All four exported meshes
+are closed, consistently wound and connected; all 492 repository checks passed.
+The window is a straight-down service view. The tiny GPS receiver-to-rectangular
+OLED-cover-reference overlap remains an actual-hardware fit check, along with the
+pigtail, USB plug, latch flex and harness. See the R05 review/export reports.
+
+The moved GPS connector faces rearward. Its cable route is provided in the model,
+but the actual supplied harness length and bend clearance remain unmeasured. Do
+not force the module or ceramic antenna to accommodate a short cable.
+
+## R03 enclosure checkpoint — November 11, 2026
 
 The mechanical branch `mechanical/kart-mounts` adds a new Fusion prototype for the
 owner's **25.273 mm / 0.995 in horizontal tube**. The **66 × 36 × 30 mm case runs
