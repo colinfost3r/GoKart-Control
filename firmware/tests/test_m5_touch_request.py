@@ -29,6 +29,7 @@ class TouchRequestTests(unittest.TestCase):
 #include <cassert>
 #include <cstring>
 #include "DisplayState.h"
+#include "PlayerPreview.h"
 #define M5_USE_ESPNOW 1
 #define M5_DEMO 0
 #define M5_MODE_HOLD_MS 650
@@ -36,9 +37,8 @@ m5dash::State state;
 const char* localModeNotice=nullptr;uint32_t localModeNoticeMs=0;
 uint32_t requestId=10,holdMs=0,touchPresses=0,headerHoldMs=0;
 int heldMode=-1,touchX=-1,touchY=-1;
+bool navigationTouch=false;
 bool holdFired=false,maintenanceMenu=false,headerHolding=false,mapPage=false,onlineOnly=true;
-struct TabRect {int x,y,w,h;bool contains(int px,int py)const{return px>=x&&px<x+w&&py>=y&&py<y+h;}};
-constexpr TabRect tabs[3]={{4,23,94,40},{103,23,94,40},{202,23,114,40}};
 struct Detail {int x=40,y=220;bool down=false,edge=false;bool wasPressed()const{return edge;}bool isPressed()const{return down;}};
 struct FakeTouch {Detail detail;Detail getDetail()const{return detail;}};
 struct Device {FakeTouch Touch;} M5;
@@ -76,6 +76,12 @@ int main(){
   wireless.accept=true;ready(4000);touch(4000);assert(wireless.calls==2);
   release();touch(4100);ready(4200);press();touch(4200);held();ready(4850);state.modeReady=false;touch(4850);
   assert(wireless.calls==2&&!state.pending&&std::strstr(localModeNotice,"unavailable"));
+  // Switching pages consumes this whole gesture, including dragging into a mode/header.
+  release();touch(4900);mapPage=true;M5.Touch.detail.x=280;M5.Touch.detail.y=35;press();touch(5000);
+  assert(!mapPage);held();M5.Touch.detail.x=40;M5.Touch.detail.y=220;ready(6000);touch(6000);
+  ready(7000);touch(7000);assert(wireless.calls==2&&heldMode==-1);
+  M5.Touch.detail.y=10;touch(7100);touch(10000);assert(!maintenanceMenu);
+  release();touch(10001);
   return 0;
 }
 '''

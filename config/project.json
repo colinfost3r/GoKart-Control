@@ -199,6 +199,14 @@
         "ui_reference": "Hunter retro driver graphics 315710e through 5629924, adapted to DASH and MAP/GAME",
         "navigation_proposal": "on_screen_edge_page_button_with_pulsing_host_invitation_dot",
         "implementation_brief": "docs/m5-player-mode.md"
+      },
+      "ui_rehearsal_2026_11_11": {
+        "status": "source_and_offline_demo_not_deployed",
+        "renderer": "firmware/m5-core2/DriverView.h",
+        "browser_preview": "docs/previews/core2-player-rehearsal/index.html",
+        "standalone_target": "m5-demo",
+        "live_game_commands": false,
+        "wireless_host_course_transfer": false
       }
     },
     "pi_v2": {

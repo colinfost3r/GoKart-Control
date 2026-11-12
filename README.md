@@ -3,6 +3,7 @@
 **M5 v1.5 branch:** `v1.5/m5-core2` adds a Core2 display option alongside the Pi v2.
 Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
+**Offline Core2 rehearsal available:** [open the interactive preview](docs/previews/core2-player-rehearsal/index.html) · [tomorrow’s test sequence](docs/m5-offline-rehearsal.md). Native Hunter-style pages and a no-output demo are built in source; no hardware update is implied.
 **Next player-mode direction (planned):** Core2 owns map/course storage and player logic;
 Heltec retains GPS/LoRa/VESC supervision. Join-only UI, ESP-NOW host-course downloads,
 Hunter styling on both pages and an invite/page button are specified in the

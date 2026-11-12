@@ -1,0 +1,66 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 320 240'>
+<rect x='0' y='0' width='320' height='240' rx='0' fill='#101c29' stroke='none'/>
+<text x='9' y='14' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='42' lengthAdjust='spacingAndGlyphs'>KART 03</text>
+<text x='112' y='14' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='96' lengthAdjust='spacingAndGlyphs'>DEMO / NO OUTPUT</text>
+<path d='M0 21 L319 21' stroke='#738e9c'/>
+<path d='M20 23 L20 186' stroke='#293542'/>
+<path d='M60 23 L60 186' stroke='#293542'/>
+<path d='M100 23 L100 186' stroke='#293542'/>
+<path d='M140 23 L140 186' stroke='#293542'/>
+<path d='M180 23 L180 186' stroke='#293542'/>
+<path d='M220 23 L220 186' stroke='#293542'/>
+<path d='M260 23 L260 186' stroke='#293542'/>
+<path d='M300 23 L300 186' stroke='#293542'/>
+<path d='M2 27 L317 27' stroke='#293542'/>
+<path d='M2 67 L317 67' stroke='#293542'/>
+<path d='M2 107 L317 107' stroke='#293542'/>
+<path d='M2 147 L317 147' stroke='#293542'/>
+<path d='M317 128 L313 122' stroke='#a5e7ef'/>
+<path d='M313 122 L306 114' stroke='#a5e7ef'/>
+<path d='M306 114 L298 106' stroke='#a5e7ef'/>
+<path d='M298 106 L288 99' stroke='#a5e7ef'/>
+<path d='M288 99 L277 93' stroke='#a5e7ef'/>
+<path d='M277 93 L266 89' stroke='#a5e7ef'/>
+<path d='M266 89 L254 86' stroke='#a5e7ef'/>
+<path d='M254 86 L241 84' stroke='#a5e7ef'/>
+<path d='M241 84 L228 83' stroke='#a5e7ef'/>
+<path d='M228 83 L216 84' stroke='#a5e7ef'/>
+<path d='M216 84 L203 86' stroke='#a5e7ef'/>
+<path d='M203 86 L191 89' stroke='#a5e7ef'/>
+<path d='M191 89 L179 93' stroke='#a5e7ef'/>
+<path d='M179 93 L169 99' stroke='#a5e7ef'/>
+<path d='M169 99 L159 106' stroke='#a5e7ef'/>
+<path d='M159 106 L150 114' stroke='#a5e7ef'/>
+<path d='M150 114 L143 122' stroke='#a5e7ef'/>
+<path d='M143 122 L138 131' stroke='#a5e7ef'/>
+<path d='M138 131 L133 141' stroke='#a5e7ef'/>
+<path d='M133 141 L131 151' stroke='#a5e7ef'/>
+<path d='M131 151 L130 161' stroke='#a5e7ef'/>
+<path d='M130 161 L131 171' stroke='#a5e7ef'/>
+<path d='M131 171 L133 181' stroke='#a5e7ef'/>
+<path d='M133 181 L135 186' stroke='#a5e7ef'/>
+<circle cx='298' cy='106' r='7' fill='#8cd2ff' stroke='none'/>
+<text x='295' y='110' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>1</text>
+<circle cx='229' cy='83' r='7' fill='#8cd2ff' stroke='none'/>
+<text x='226' y='87' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>2</text>
+<circle cx='160' cy='105' r='9' fill='#f7ce7b' stroke='none'/>
+<circle cx='160' cy='105' r='12' fill='none' stroke='#f7ce7b'/>
+<text x='157' y='109' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>3</text>
+<circle cx='130' cy='160' r='7' fill='#8cd2ff' stroke='none'/>
+<text x='127' y='164' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>4</text>
+<rect x='7' y='27' width='99' height='23' rx='5' fill='#293542' stroke='none'/>
+<rect x='7' y='27' width='99' height='23' rx='5' fill='none' stroke='#738e9c'/>
+<text x='15' y='42' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='78' lengthAdjust='spacingAndGlyphs'>N UP  /  70 M</text>
+<text x='8' y='197' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='198' lengthAdjust='spacingAndGlyphs'>DEMO LOOP / NOT A SURVEYED COURSE</text>
+<rect x='4' y='202' width='312' height='36' rx='5' fill='#293542' stroke='none'/>
+<rect x='4' y='202' width='312' height='36' rx='5' fill='none' stroke='#f7ce7b'/>
+<text x='15' y='227' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='16' textLength='48' lengthAdjust='spacingAndGlyphs'>FIRE</text>
+<text x='86' y='223' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='102' lengthAdjust='spacingAndGlyphs'>SHELL / SIMULATED</text>
+<rect x='258' y='26' width='58' height='40' rx='5' fill='#293542' stroke='none'/>
+<rect x='258' y='26' width='58' height='40' rx='5' fill='none' stroke='#a5e7ef'/>
+<text x='266' y='48' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>DASH</text>
+<rect x='214' y='26' width='40' height='40' rx='5' fill='#293542' stroke='none'/>
+<rect x='214' y='26' width='40' height='40' rx='5' fill='none' stroke='#738e9c'/>
+<circle cx='234' cy='39' r='4' fill='#425963' stroke='none'/>
+<text x='222' y='58' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>GAME</text>
+</svg>

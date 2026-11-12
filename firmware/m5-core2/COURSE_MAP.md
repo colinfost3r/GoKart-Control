@@ -8,7 +8,8 @@ authoritative item/session implementation is connected; touching it sends nothin
 The display starts on a north-up map that follows its own fresh position. The map shows
 70 metres vertically. Distant peers do not shrink the view; only fresh markers inside it
 are drawn. The own marker has a white ring. Course lines are clipped to the map area.
-DASH opens the existing telemetry/mode screen, whose MAP tab returns to the driving view.
+The upper-right DASH/MAP button toggles between the driving view and the telemetry/mode screen.
+The Hunter-style renderer is shared with the [offline rehearsal](../../docs/m5-offline-rehearsal.md).
 Hold the top status header for 1.8 seconds to open the existing OTA maintenance screen.
 
 A valid GPS fix is still required to follow the kart. Without one, a stored course is shown

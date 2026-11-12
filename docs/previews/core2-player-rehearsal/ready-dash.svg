@@ -1,0 +1,45 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 320 240'>
+<rect x='0' y='0' width='320' height='240' rx='0' fill='#101c29' stroke='none'/>
+<text x='9' y='14' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='42' lengthAdjust='spacingAndGlyphs'>KART 03</text>
+<text x='112' y='14' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='96' lengthAdjust='spacingAndGlyphs'>DEMO / NO OUTPUT</text>
+<path d='M0 21 L319 21' stroke='#738e9c'/>
+<text x='12' y='38' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='48' lengthAdjust='spacingAndGlyphs'>VELOCITY</text>
+<rect x='50' y='56' width='4' height='27' rx='1' fill='#a5e7ef' stroke='none'/>
+<rect x='50' y='87' width='4' height='23' rx='1' fill='#a5e7ef' stroke='none'/>
+<rect x='102' y='56' width='4' height='27' rx='1' fill='#a5e7ef' stroke='none'/>
+<rect x='102' y='87' width='4' height='23' rx='1' fill='#a5e7ef' stroke='none'/>
+<rect x='64' y='56' width='4' height='27' rx='1' fill='#a5e7ef' stroke='none'/>
+<rect x='68' y='81' width='34' height='4' rx='1' fill='#a5e7ef' stroke='none'/>
+<text x='116' y='97' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='18' lengthAdjust='spacingAndGlyphs'>MPH</text>
+<text x='12' y='130' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='54' lengthAdjust='spacingAndGlyphs'>GPS SPEED</text>
+<path d='M156 76 L156 175' stroke='#738e9c'/>
+<text x='169' y='84' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='42' lengthAdjust='spacingAndGlyphs'>BATTERY</text>
+<text x='169' y='103' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='16' textLength='72' lengthAdjust='spacingAndGlyphs'>79.4 V</text>
+<text x='169' y='118' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='48' lengthAdjust='spacingAndGlyphs'>ESC TEMP</text>
+<text x='169' y='137' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='16' textLength='48' lengthAdjust='spacingAndGlyphs'>32 C</text>
+<text x='169' y='152' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='30' lengthAdjust='spacingAndGlyphs'>POWER</text>
+<text x='169' y='171' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='16' textLength='60' lengthAdjust='spacingAndGlyphs'>318 W</text>
+<text x='12' y='152' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='72' lengthAdjust='spacingAndGlyphs'>12.0 A MOTOR</text>
+<text x='12' y='168' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='54' lengthAdjust='spacingAndGlyphs'>4.0 A BAT</text>
+<text x='10' y='187' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='150' lengthAdjust='spacingAndGlyphs'>NORMAL VERIFIED / 10 SATS</text>
+<text x='8' y='198' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='180' lengthAdjust='spacingAndGlyphs'>Mode controls disabled in demo</text>
+<rect x='2' y='202' width='102' height='36' rx='5' fill='#293542' stroke='none'/>
+<rect x='2' y='202' width='102' height='36' rx='5' fill='none' stroke='#425963'/>
+<text x='10' y='215' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='18' lengthAdjust='spacingAndGlyphs'>ECO</text>
+<text x='10' y='230' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='36' lengthAdjust='spacingAndGlyphs'>15 MPH</text>
+<rect x='109' y='202' width='102' height='36' rx='5' fill='#293542' stroke='none'/>
+<rect x='109' y='202' width='102' height='36' rx='5' fill='none' stroke='#8cd2ff'/>
+<text x='117' y='215' fill='#8cd2ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='36' lengthAdjust='spacingAndGlyphs'>NORMAL</text>
+<text x='117' y='230' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='36' lengthAdjust='spacingAndGlyphs'>25 MPH</text>
+<rect x='216' y='202' width='102' height='36' rx='5' fill='#293542' stroke='none'/>
+<rect x='216' y='202' width='102' height='36' rx='5' fill='none' stroke='#425963'/>
+<text x='224' y='215' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='30' lengthAdjust='spacingAndGlyphs'>SPORT</text>
+<text x='224' y='230' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='48' lengthAdjust='spacingAndGlyphs'>UNCAPPED</text>
+<rect x='258' y='26' width='58' height='40' rx='5' fill='#293542' stroke='none'/>
+<rect x='258' y='26' width='58' height='40' rx='5' fill='none' stroke='#a5e7ef'/>
+<text x='266' y='48' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='18' lengthAdjust='spacingAndGlyphs'>MAP</text>
+<rect x='214' y='26' width='40' height='40' rx='5' fill='#293542' stroke='none'/>
+<rect x='214' y='26' width='40' height='40' rx='5' fill='none' stroke='#738e9c'/>
+<circle cx='234' cy='39' r='4' fill='#425963' stroke='none'/>
+<text x='222' y='58' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>GAME</text>
+</svg>

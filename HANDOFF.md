@@ -1,5 +1,28 @@
 # Collaborator handoff
 
+## Core2 UI rehearsal — November 11, 2026 (source/bench candidate, not installed)
+
+Hunter-style native DASH and following MAP views now share `DriverView.h`: segmented speed,
+cyan/amber palette, verified mode cards and explicit unavailable/stale fields. The edge page
+button consumes its full touch through release, preventing navigation drags from requesting
+a mode or entering maintenance. PIT STOP/SLOW and non-beginner fault banners appear on both
+pages. Live FIRE remains unavailable. No Heltec, VESC, LoRa or pairing code changed.
+
+**Validation:** all 495 tests passed across eight suites, zero skipped. All three Core2
+targets compile. Browser invitation/download/page/FIRE/menu checks passed; these are
+simulations, not radio or hardware evidence. [Manifest](docs/validation/m5-ui-rehearsal-2026-11-11.json).
+
+`m5-demo` adds a simulated invitation, pulsing dot, download/ready/FIRE flow and failure
+scenarios. It has no UART/ESP-NOW control transport, no mode output and a RAM-only course.
+The [browser rehearsal](docs/previews/core2-player-rehearsal/index.html) uses the production
+renderer for 30 visual states; browser text approximates LCD glyphs. Native tests cover modal
+isolation, navigation drags, one-shot simulated FIRE, clock wrap and critical alerts.
+
+[Preparation and next-session runbook](docs/m5-offline-rehearsal.md). Nothing is flashed.
+Host course publishing, wireless game-package transfer and live player/item authority are
+still separate implementation work. Eamon upstream remains reviewed through `59976df`,
+integrated through `a5a4c22`; this UI milestone does not silently change his Pi/item firmware.
+
 ## Core2 player/course-sharing decisions — November 11, 2026 (planned)
 
 Owner clarified the no-Pi game split: **Core2 owns map/course storage, player inventory and

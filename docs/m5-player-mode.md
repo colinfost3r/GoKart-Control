@@ -2,8 +2,9 @@
 
 Owner decisions: November 11, 2026. **Design/implementation brief, not deployed firmware.**
 This supersedes the earlier suggestion to put native map/inventory logic on the Heltec.
-The current no-SD follow map is implemented but not installed; JOIN, native inventory,
-FIRE and wireless host-course downloads remain to be implemented.
+The current no-SD follow map and Hunter-style two-page UI are implemented but not installed.
+The [offline rehearsal](m5-offline-rehearsal.md) simulates invitation/download/item states.
+Real JOIN, native inventory, FIRE and wireless host-course downloads remain to be implemented.
 
 ## Responsibility split
 

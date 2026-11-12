@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-11",
+  "scope": "Core2 native styling and isolated UI rehearsal only",
+  "base_commit": "2967d71",
+  "hardware_accessed": false,
+  "vesc_settings_changed": false,
+  "host_course_transfer_implemented": false,
+  "live_game_commands_implemented": false,
+  "tests": {
+    "command": "PYTHON=<project-python> ARDUINOJSON_DIR=<ArduinoJson/src> tools/run_tests.sh",
+    "tests": 495,
+    "suites": 8,
+    "skipped": 0,
+    "result": "ALL PASSED"
+  },
+  "builds": {
+    "m5-demo": {
+      "sha256": "117903934ecdde96800e06b1041d96dd38545d410884c140e66e05b89832111f",
+      "bytes": 574560,
+      "compiled": true,
+      "uploaded": false
+    },
+    "m5": {
+      "sha256": "293851cbdd23f36c32ed05ae2186cc66829edbe598be961621eeb4dc7f551d1e",
+      "bytes": 614176,
+      "compiled": true,
+      "uploaded": false
+    },
+    "m5-espnow": {
+      "sha256": "e5a0a3fe110306f9b9edad3e341db77f8b66bd9f67ec3be880248b9a4fdfaaed",
+      "bytes": 1324608,
+      "compiled": true,
+      "uploaded": false
+    }
+  },
+  "sources": {
+    "firmware/m5-core2/m5-core2.ino": "05290c3d02f8850925f795466262872de596db1dfedd17c8294401d71c4e67f5",
+    "firmware/m5-core2/DriverView.h": "0126b313b99eae07672cdfa21eaf2218692e8454b9f525c924c8dcce6ab6b92f",
+    "firmware/m5-core2/PlayerPreview.h": "e1f1cac823a465c0cc7cce62420454d27ddd3c26cb54792c3ff867931e060233"
+  },
+  "visual_checks": {
+    "renderer": "production C++ shared between firmware and desktop SVG fixture",
+    "scenes": 30,
+    "browser": "invite -> simulated download -> ready -> MAP -> FIRE -> used; ready game menu -> LEAVE",
+    "text_limitations": "Browser monospace glyphs approximate LCD bitmap text; physical viewing/touch acceptance pending"
+  },
+  "rehearsal": "docs/previews/core2-player-rehearsal/index.html",
+  "runbook": "docs/m5-offline-rehearsal.md",
+  "upstream": {
+    "reviewed": "59976df",
+    "integrated": "a5a4c22"
+  }
+}

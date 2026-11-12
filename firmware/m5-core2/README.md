@@ -1,5 +1,7 @@
 # M5 Core2 v1.5
 
+**New source, not installed:** [Hunter-style native pages and no-output player rehearsal](../../docs/m5-offline-rehearsal.md). Live FIRE stays unavailable. The standalone `m5-demo` uses RAM-only simulated data and no UART/ESP-NOW command transport.
+
 Branch **`v1.5/m5-core2`**, sharing Eamon's kart 0.2.7 / base protocol and upstream work
 through `a9c8459` (original Pi/pit layout plus MAP/SAT; native M5 appearance unchanged). Owner confirmed **Core2 v1.3 / K010-V13**. This alternative to the Pi v2
 display provides telemetry, driver mode requests, base-station status and a simple north-up map.
