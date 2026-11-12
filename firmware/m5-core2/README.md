@@ -56,7 +56,10 @@ VESC <-- BLE --> Heltec V4.3 + L76K <-- LoRa --> existing T-Beam / Pi 4 pit
 ```
 
 Heltec owns VESC identity, polling, motor profiles, calibration, LoRa and GPS. Core2 owns display
-and touch only. The original M5 BLE client/profile writer is not included. It must be replaced
+and touch in the current implementation. The [approved player-mode direction](../../docs/m5-player-mode.md)
+extends the existing local course storage with inventory, local game logic and host-course
+downloads over ESP-NOW; these additions are not implemented yet. VESC supervision stays on Heltec.
+The original M5 BLE client/profile writer is not included. It must be replaced
 by this display image before using this topology. No two devices should connect to the same
 VESC. The motor's wired controls and protection stay with the VESC.
 

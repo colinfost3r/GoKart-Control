@@ -69,6 +69,23 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - These presentation changes do not change VESC settings or LoRa packet formats.
   On-device acceptance and the actual course package remain open.
 
+## Core2 player-only game and sharing — November 11, 2026
+
+- Core2 owns the course/map and player game logic (including inventory); Heltec supplies
+  fresh own/fleet GPS, LoRa session/attack transport and validated VESC supervision.
+- Join an existing host only; no Core2 course creation, mapping or hosting controls.
+- Download the host's published course over ESP-NOW into Core2 storage, then use the local
+  cache. This replaces manual preloading as the target workflow; host publishing and
+  course-transfer firmware still need implementation. No Pi or SD is added to the player.
+- Both DASH and MAP/GAME follow Hunter's original visual/type examples. Provide an easy
+  page button back to kart modes and a flashing invitation indicator next to it. The
+  proposed hardware-free realization is an on-screen edge button/dot, with swipe optional.
+- New notification, course transfer and page switching never imply a join, mode write,
+  FIRE or reconnect replay. Apply existing reliability and explicit-command rules.
+- This advances player gameplay beyond the earlier deferred scope; full Pi parity and
+  photographic maps remain outside this iteration. See the [implementation brief](m5-player-mode.md)
+  for proposed transport/UI details and the distinction between requirements and installed code.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.

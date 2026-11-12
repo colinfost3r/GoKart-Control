@@ -1,5 +1,23 @@
 # Collaborator handoff
 
+## Core2 player/course-sharing decisions — November 11, 2026 (planned)
+
+Owner clarified the no-Pi game split: **Core2 owns map/course storage, player inventory and
+local game logic; Heltec retains GPS, LoRa and exclusive VESC supervision**. Core2 joins
+existing games only. The desired course flow is host publication followed by a nearby
+ESP-NOW download and a verified local cache, not a manual per-player preload.
+Both pages must follow Hunter's original retro graphics (`315710e` through `5629924`).
+A page button returns to DASH/modes; a pulsing invite dot calls attention to fresh hosted
+games. First-version proposal is an on-screen edge control; the physical side button is
+power control, not an assumed independent game button/LED.
+
+[Implementation brief and host-side work](docs/m5-player-mode.md) records the proposed
+publishing bridge, channel/peer constraints, atomic course validation, join notification,
+no-replay rules and acceptance order. No hosting/course editor is added to Core2.
+These are requirements, not installed features: FIRE remains unavailable, the current
+course uploader is USB-only and the newer follow map has not been flashed. Upstream through
+`59976df` was inspected; integration remains at `a5a4c22`. No hardware or runtime code changed.
+
 ## M5 follow map and Eamon integration — November 11, 2026 (source ready, not deployed)
 
 The no-Pi Core2 implementation now boots into a simple north-up line map following

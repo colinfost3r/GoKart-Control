@@ -42,6 +42,17 @@ callback is excluded from paired M5 builds, preserving authenticated link owners
 FIRE button remains unavailable until native inventory/game authority is ported; relaying
 `invuse` to an absent Pi would not implement firing.
 
+## Planned Core2 player logic and course download (November 11, 2026)
+
+The owner now assigns native map/course storage, inventory and local player logic to Core2.
+Heltec keeps GPS/LoRa, exclusive VESC BLE and supervisory validation/arbitration. This expands
+Core2 beyond its currently implemented display role without moving motor control into the UI.
+The proposed publication path is host Pi -> host Heltec USB -> nearby Core2 ESP-NOW -> local
+validated game-package cache. It requires new host publishing and a course-only peer service
+coexisting with the private own-Heltec link on one channel. LoRa remains the gameplay link.
+The current USB outline format is not a complete host game package. Neither publisher nor
+wireless course transfer exists yet. [Design and acceptance](m5-player-mode.md).
+
 ## Boundaries
 
 | Component | Owns | Does not imply |

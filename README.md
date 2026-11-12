@@ -3,6 +3,10 @@
 **M5 v1.5 branch:** `v1.5/m5-core2` adds a Core2 display option alongside the Pi v2.
 Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
+**Next player-mode direction (planned):** Core2 owns map/course storage and player logic;
+Heltec retains GPS/LoRa/VESC supervision. Join-only UI, ESP-NOW host-course downloads,
+Hunter styling on both pages and an invite/page button are specified in the
+[player-mode brief](docs/m5-player-mode.md); they are not installed features.
 **November 11 map source update (not installed):** the no-Pi Core2 now supports a
 fixed-scale map following its own GPS position and a course outline stored internally,
 without an SD card. DASH/modes/OTA remain available. FIRE is visibly unavailable until
