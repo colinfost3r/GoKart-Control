@@ -70,8 +70,9 @@ VESC. The motor's wired controls and protection stay with the VESC.
 
 The M5 targets are **opt-in**. Integration now includes Eamon's kart0.2.7 and 46/47/54-byte
 radio support; an idle kart still sends 47 bytes. Native player uses session/attack metadata.
-Active multiplayer requires updated base/repeater0.2.2; M5 game UI and physical game-command
-acceptance remain separate from the verified driver mode checks. Normal `kart`, `kart-uart`,
+Direct host/player LoRa operation needs no base station. Relay-dependent course identity
+coverage requires this candidate’s updated repeater; see [player compatibility](../../docs/m5-player-mode.md).
+Physical game-command acceptance remains separate from the verified driver mode checks. Normal `kart`, `kart-uart`,
 base, repeater and Pi builds retain existing behavior. Existing telemetry/command structs, IDs, frequencies and slots remain unchanged. Optional
 14-byte COURSE identities replace one host telemetry slot every2s; older nodes ignore them. Both local transports carry the existing `self` and `fleet` JSON plus display-only
 `display` metadata; existing USB telemetry stays compatible. ESP-NOW adds local USB pairing
