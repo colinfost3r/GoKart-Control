@@ -1,6 +1,46 @@
 # Collaborator handoff
 
-## Connected clamp and recessed lid R09 — November 11, 2026
+## Sculpted clamp and top-access M4 screws R10 — November 11, 2026
+
+[R10](hardware/cad/heltec-bar-enclosure/r10-sculpted-clamp/README.md) retains the
+complete bottom clamp as a distinct printed part and gives the clamp a restrained
+machined-bike appearance: **1 mm exterior bevels** on the upper shoulders/lower
+perimeter and **1.5 mm additive fillets** at the web-to-floor roots. The exact live
+R09 input was archived; no intervening owner edits were found. The lower collar
+was already present, so no earlier geometry was rolled back.
+
+The two clamp fasteners now insert **from the top**. Use **M4 ×30 DIN 912/ISO 4762
+socket-head screws**, with nominal 7 mm diameter ×4 mm high heads and a 3 mm Allen
+key. Each upper **8.2 mm diameter ×4.5 mm deep counterbore** has a chamfered entry
+and places the head **0.5 mm below the top face**. The old upper nut slots and
+lower head recesses were filled before making the new interfaces.
+
+The lower clamp has bottom-facing **7.3 mm AF ×3.4 mm deep hex pockets** for plain
+M4 nuts (7 mm AF ×3.2 mm high). At the modeled uncompressed stack, the screw tips
+extend **0.7 mm beyond the nuts**, or **0.5 mm below the lower clamp**. These pockets
+are not specified for taller nyloc nuts. Check printed fit and actual hardware;
+hex pockets resist nut rotation but do not establish retention while screws are loose.
+The two #4 plastic-forming lid screws remain unchanged; four installation screws total.
+
+Independent Boolean comparisons show the recessed lid, upper enclosure, tube
+contact bands and both split interfaces match R09. The extended base and 4 mm
+webs remain. Native topology, head/bearing/passage samples and new nominal M4
+hardware checks pass. Tube radial clearance remains **0.125 mm**, split gap
+**1.5 mm**, and the 12 mm driver corridors retain **2 mm clearance** above the ears.
+GPS support paths and internal cable/plug clearances are unchanged.
+
+Native Fusion, STEP/STL parts, assembled/separated views, provenance and audit
+reports are in the revision folder. All three STL meshes pass closed-manifold,
+consistent-winding and single-component checks. Physical FDM fit, clamp grip, torque and
+endurance remain prototype checks. The inherited GPS/OLED-cover proxy overlap,
+unmeasured cable plugs and hidden historical R07 timeline-607 warning remain
+documented; the current native parts are checked separately.
+
+All **492 offline repository tests passed**, eight suites, zero skipped. No
+firmware, VESC settings or live kart hardware changed in this CAD revision.
+The final fetch inspected Eamon’s `59976df` Core2 OTA update; it changes firmware/releases only, with no CAD interface changes, and remains on his branch.
+
+## R09 connected-clamp checkpoint — superseded by R10
 
 [R09](hardware/cad/heltec-bar-enclosure/r09-clamp-repair/README.md) completes the
 owner-approved clamp repairs around the extended base. The missing upper-left ear

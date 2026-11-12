@@ -1,0 +1,524 @@
+{
+  "revision": "R10",
+  "date": "2026-11-11",
+  "physical_hardware_tested": false,
+  "result": "Native geometry, protected-interface checks and all three STL topology checks pass; physical FDM acceptance remains open",
+  "fit": {
+    "document": "GoKart Heltec Sculpted Clamp R10",
+    "timeline_count": 784,
+    "scope": "Transient copies only; protected interfaces are compared separately from authorized fastener/outer styling changes",
+    "lid_difference_mm3": [
+      0,
+      0
+    ],
+    "protected_regions": {
+      "upper_enclosure_above_z0p01": {
+        "added_mm3": 0,
+        "removed_mm3": 0
+      },
+      "case_tube_contact_band": {
+        "added_mm3": 0,
+        "removed_mm3": 0
+      },
+      "lower_tube_contact_band": {
+        "added_mm3": 0,
+        "removed_mm3": 0
+      },
+      "upper_split": {
+        "added_mm3": 0,
+        "removed_mm3": 0
+      },
+      "lower_split": {
+        "added_mm3": 0,
+        "removed_mm3": 0
+      }
+    },
+    "parts": {
+      "case": {
+        "solid": true,
+        "lumps": 1,
+        "bad_coedges": [],
+        "volume_cm3": 51.94676732801875,
+        "bounds_mm": [
+          [
+            -33,
+            -46.00000000000001,
+            -16.250000000000004
+          ],
+          [
+            33,
+            33,
+            29.000000000000004
+          ]
+        ]
+      },
+      "lid": {
+        "solid": true,
+        "lumps": 1,
+        "bad_coedges": [],
+        "volume_cm3": 7.293359045905113,
+        "bounds_mm": [
+          [
+            -18,
+            -46,
+            14.3
+          ],
+          [
+            19.38969553462584,
+            33,
+            39.50271411896337
+          ]
+        ]
+      },
+      "lower_clamp": {
+        "solid": true,
+        "lumps": 1,
+        "bad_coedges": [],
+        "volume_cm3": 14.51955547353727,
+        "bounds_mm": [
+          [
+            -33,
+            -12.000000000000007,
+            -34
+          ],
+          [
+            33,
+            12.000000000000007,
+            -17.750000000000004
+          ]
+        ]
+      }
+    },
+    "web_columns": [
+      {
+        "xy_mm": [
+          -16,
+          -10
+        ],
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          -16,
+          0
+        ],
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          -16,
+          10
+        ],
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          16,
+          -10
+        ],
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          16,
+          0
+        ],
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          16,
+          10
+        ],
+        "all_material": true,
+        "missing_z_mm": []
+      }
+    ],
+    "head_pockets": [
+      {
+        "axis_xy_mm": [
+          -26,
+          0
+        ],
+        "head_envelope_radial_clear": true,
+        "counterbore_r4p05_clear": true,
+        "counterbore_r4p15_wall": true,
+        "seat_above_empty": true,
+        "seat_below_solid": true,
+        "shaft_r2p24_clear": true,
+        "shaft_r2p26_wall": true
+      },
+      {
+        "axis_xy_mm": [
+          26,
+          0
+        ],
+        "head_envelope_radial_clear": true,
+        "counterbore_r4p05_clear": true,
+        "counterbore_r4p15_wall": true,
+        "seat_above_empty": true,
+        "seat_below_solid": true,
+        "shaft_r2p24_clear": true,
+        "shaft_r2p26_wall": true
+      }
+    ],
+    "M4_axis_clearance": [
+      {
+        "x_mm": -26,
+        "blocked_z_mm": []
+      },
+      {
+        "x_mm": 26,
+        "blocked_z_mm": []
+      }
+    ],
+    "nominal_tube_fit": {
+      "case": {
+        "overlap_mm3": 0,
+        "clearance_mm": 0.12499999999999989
+      },
+      "lower_clamp": {
+        "overlap_mm3": 0,
+        "clearance_mm": 0.12499999999999559
+      }
+    },
+    "split": {
+      "overlap_mm3": 0,
+      "gap_mm": 1.5000000000000013
+    },
+    "above_ear_tool_clearance_mm": [
+      1.9999999999999996,
+      1.9999999999999996
+    ],
+    "hardware_reference_bounds": [
+      {
+        "component": "REF R10 M4x30 top socket screws nominal",
+        "body": "Body1",
+        "bounds_mm": [
+          [
+            -29.5,
+            -3.500000000000001,
+            -34.5
+          ],
+          [
+            -22.5,
+            3.500000000000001,
+            -0.4999999999999982
+          ]
+        ],
+        "print_overlap_mm3": 0
+      },
+      {
+        "component": "REF R10 M4x30 top socket screws nominal",
+        "body": "Body2",
+        "bounds_mm": [
+          [
+            22.5,
+            -3.500000000000001,
+            -34.5
+          ],
+          [
+            29.5,
+            3.500000000000001,
+            -0.4999999999999982
+          ]
+        ],
+        "print_overlap_mm3": 0
+      },
+      {
+        "component": "REF R10 bottom plain M4 nuts nominal",
+        "body": "Body1",
+        "bounds_mm": [
+          [
+            -29.5,
+            -4.041451884327381,
+            -33.8
+          ],
+          [
+            -22.5,
+            4.041451884327381,
+            -30.599999999999994
+          ]
+        ],
+        "print_overlap_mm3": 0
+      },
+      {
+        "component": "REF R10 bottom plain M4 nuts nominal",
+        "body": "Body2",
+        "bounds_mm": [
+          [
+            22.5,
+            -4.041451884327381,
+            -33.8
+          ],
+          [
+            29.5,
+            4.041451884327381,
+            -30.599999999999994
+          ]
+        ],
+        "print_overlap_mm3": 0
+      }
+    ]
+  },
+  "hardware": {
+    "document": "GoKart Heltec Sculpted Clamp R10",
+    "timeline_count": 784,
+    "selected": {
+      "hardware_or_cover": 43,
+      "routing_or_fastener_reference": 11,
+      "printed": 3
+    },
+    "remaining_intersections": [
+      {
+        "a": "Open CASCADE STEP translator 6.8 1.1.1/Body1",
+        "b": "R10 Sculpted upper clamp and owner case/Body1",
+        "volume_mm3": 0.000510976913711545,
+        "bounds_mm": [
+          [
+            -9.25,
+            -21.000000000000007,
+            6.94128074
+          ],
+          [
+            9.25,
+            11.2155,
+            6.9413
+          ]
+        ]
+      },
+      {
+        "a": "REF R08 number4 plastic screws nominal/Body1",
+        "b": "R10 Sculpted upper clamp and owner case/Body1",
+        "volume_mm3": 8.322123078576423,
+        "bounds_mm": [
+          [
+            11.5776,
+            -30.422399999999996,
+            17.3
+          ],
+          [
+            14.4224,
+            -27.577600000000004,
+            27.2474
+          ]
+        ]
+      },
+      {
+        "a": "REF R08 number4 plastic screws nominal/Body2",
+        "b": "R10 Sculpted upper clamp and owner case/Body1",
+        "volume_mm3": 8.322123078576423,
+        "bounds_mm": [
+          [
+            -14.4224,
+            26.577599999999997,
+            17.3
+          ],
+          [
+            -11.5776,
+            29.4224,
+            27.2474
+          ]
+        ]
+      }
+    ],
+    "inherited_cover_fit": [
+      {
+        "a": "GPS-Module1/Body3",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.22057640606521983,
+        "bounds_mm": [
+          [
+            -4.415000000000028,
+            -22.034500000000005,
+            13.700000000000001
+          ],
+          [
+            4.4149999999999725,
+            -21.950000000000035,
+            14.000000000000002
+          ]
+        ]
+      }
+    ],
+    "floor_support_samples": [
+      {
+        "x_mm": -11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      }
+    ],
+    "bare_gps_socket_to_rear_inner_wall_mm": 4.247279753981701,
+    "route_reference_to_print_minimum_mm": {
+      "REF R06 internal wire route 8x2mm assumed": 0.25000000000000355,
+      "REF R06 GPS mating plug12x3x2p5 assumed": 0.7106335201775946,
+      "REF R06 Heltec P3 mating plug12x5x2p7 assumed": 0.7500000000000018
+    },
+    "print_solids": {
+      "R10 Sculpted upper clamp and owner case": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R10 Preserved recessed lid": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R10 Sculpted lower clamp": {
+        "solid": true,
+        "lumps": 1
+      }
+    }
+  },
+  "fastener_stack": {
+    "screw": "M4 x 30 DIN912/ISO4762 socket head, coarse0.7mm",
+    "head_nominal_diameter_mm": 7,
+    "head_nominal_height_mm": 4,
+    "allen_key_mm": 3,
+    "counterbore_diameter_mm": 8.2,
+    "counterbore_depth_mm": 4.5,
+    "head_recess_below_top_mm": 0.5,
+    "head_radial_clearance_mm": 0.6,
+    "nut": "Plain DIN934 M4 hex nut,7mm AF x3.2mm",
+    "nut_pocket_AF_mm": 7.3,
+    "nut_pocket_depth_mm": 3.4,
+    "nut_bearing_z_mm": -30.6,
+    "nut_bottom_z_mm": -33.8,
+    "screw_tip_z_mm": -34.5,
+    "nominal_projection_beyond_nut_mm": 0.7,
+    "nominal_projection_below_lower_clamp_mm": 0.5,
+    "note": "Nominal uncompressed assembly. Actual screw/nut tolerances and FDM fit require a physical trial; not sized for tall nyloc nuts."
+  },
+  "interpretations": {
+    "expected_thread_engagement": "Two approximately8.322mm3 #4 screw-crest/pilot-wall overlaps represent intended thread formation, unchanged.",
+    "pcb_contact": "Unchanged nominal support rounding contact0.000511mm3, approximately0.00001926mm deep.",
+    "cover_proxy": "Inherited GPS receiver/rectangular OLED cover proxy overlap remains an actual-fit uncertainty (0.0845mm inY,0.3mm inZ).",
+    "restoration": "The lower collar already existed in the live R09 model. R10 retains it as a distinct current component with revised pockets/exterior finish; no older shape was rolled back.",
+    "appearance": "Subtle exterior bevels and additive web-root fillets inspired by machined bicycle hardware; main case/lid functional geometry preserved."
+  },
+  "repository_tests": {
+    "passed": 492,
+    "suites": 8,
+    "skipped": 0,
+    "evidence": "repository-validation.txt"
+  },
+  "sources": [
+    {
+      "purpose": "Styling inspiration",
+      "url": "https://www.hopetech.com/products/controls/stems/gravity-stem/"
+    },
+    {
+      "purpose": "M4 socket-head dimensions",
+      "url": "https://accu-components.com/api/product-datasheet?id=2828"
+    },
+    {
+      "purpose": "Plain M4 nut dimensions; supplier Accu listing",
+      "url": "https://www.diy.com/departments/m4-hexagon-nuts-din-934-stainless-steel-a2-pack-of-200-accu/5054328003347_BQ.prd"
+    }
+  ],
+  "export_checks": {
+    "evidence": "export-verification.json",
+    "all_stls_closed_manifold": true,
+    "consistent_winding": true,
+    "one_connected_mesh_per_part": true,
+    "native_archive_directory_readable": true,
+    "round_trip_reopen_tested": false
+  },
+  "retained_history_warning": {
+    "timeline_index": 607,
+    "feature": "45deg front socket transition",
+    "status": "Hidden historical R07 lost-profile/cached geometry warning; current R10 solids separately verified"
+  },
+  "preview_state": {
+    "evidence": "preview-state-audit.json",
+    "separated_view_transforms_restored": true,
+    "final_assembled_view": true
+  }
+}

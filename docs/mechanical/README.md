@@ -4,9 +4,9 @@ Updated 2026-11-11. Mechanical specialist lane for GoKart Control, created at th
 owner's request with the project conversation as context. This brief records the
 starting point. The current deliverable is a fit-check prototype, not a production release.
 
-**Current CAD work:** [connected clamp and recessed lid R09](../../hardware/cad/heltec-bar-enclosure/r09-clamp-repair/README.md). The owner approved restoring the missing left ear and adding finite-thickness connections. Both ears now join the floor through 4 mm side webs; no original base material was removed. The extended skirt, lower collar, board/antenna positions and recessed lid are preserved. The 66 mm clamp retains its tube clearance, split gap and M4 access.
+**Current CAD work:** [sculpted clamp and top-access screws R10](../../hardware/cad/heltec-bar-enclosure/r10-sculpted-clamp/README.md). The full lower clamp is included. Restrained exterior bevels and additive web-root fillets give the clamp a machined bicycle-component appearance. The main enclosure, recessed lid, extended base, tube fit, split surfaces, electronics and harness space are preserved.
 
-Use two #4 ×1/2-inch rounded/pan-head TRS screws for plastic (McMaster 92295A103 reference) for the lid, and two M4 ×30 socket-head screws with nuts for the clamp. The 2.65 mm lid pilot is a prototype fit requiring an actual PETG/ASA check. R09 supersedes [R08](../../hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md), whose nonmanifold case STL remains quarantined as diagnostic history. See the revision's geometry, export and physical-fit notes before printing.
+Clamp screws are now **M4 ×30 socket heads inserted from above**, fully recessed in 8.2 ×4.5 mm counterbores with chamfered entries. Plain M4 nuts fit bottom-facing 7.3 mm AF ×3.4 mm pockets. The lid retains two #4 ×1/2-inch TRS plastic screws (McMaster 92295A103 reference). Four installation screws remain. Print-fit, grip and strength checks are still required; use the current revision's audit and assembly notes. [R09](../../hardware/cad/heltec-bar-enclosure/r09-clamp-repair/README.md) is the pre-styling, pre-fastener-reversal checkpoint.
 
 ## Scope and ownership
 

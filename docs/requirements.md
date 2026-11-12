@@ -170,6 +170,19 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - Preserve the recessed R08 lid, hardware placement and owner GPS support edits.
   Keep the as-edited R08 archive as provenance; repairs belong in a new revision.
 
+## Sculpted enclosure and top-access clamp screws — November 11, 2026
+
+- Restore/include the bottom clamp part in the complete assembly and give the
+  exterior a machined bicycle-component appearance inspired by Hope Technology.
+  Preserve functional interfaces, the extended base, hardware positions, internal
+  supports and wire clearance. Use restrained exterior facets/chamfers suitable
+  for an ASA/PETG FDM prototype; branding is not requested.
+- Reverse the two M4 clamp fasteners: standard Allen socket heads go on top,
+  fully counterbored, with a chamfered entry; hex nuts go underneath.
+- Preserve the M4 axes and tube/split interfaces. Replace obsolete pockets and
+  counterbores cleanly, check actual screw stack and nut access, and show the
+  complete upper/lower assembly clearly. Lid #4 screws remain as selected.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.

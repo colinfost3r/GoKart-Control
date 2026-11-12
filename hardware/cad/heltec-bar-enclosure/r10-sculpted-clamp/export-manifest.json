@@ -1,0 +1,151 @@
+{
+  "revision": "R10",
+  "status": "Geometry and exported mesh checks passed; physical fit and structural performance unvalidated",
+  "files": [
+    {
+      "path": "GoKart-Heltec-Sculpted-Clamp-R10.f3d",
+      "bytes": 9779622,
+      "sha256": "647cdea0133bad5283752873d351aa37700e4365142cb1447a200978dd0aa9be"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5211,
+      "sha256": "850a8c18ca1aeb83f811eeb7ad0c4eee2c14a7c313e7b6a8a5ddfc2a43c1c3f2"
+    },
+    {
+      "path": "assembled-preview.png",
+      "bytes": 49951,
+      "sha256": "ac9027b6caefec0bcd6b7d99bafd5e7b35db949df174d94b03001df30019c6f8"
+    },
+    {
+      "path": "bottom-nut-pockets-preview.png",
+      "bytes": 28946,
+      "sha256": "fad003dcd58e6d7991e3dba067d91c3d2055a9904d52a0b64aa8c86a88e01274"
+    },
+    {
+      "path": "bottom-nuts-installed-preview.png",
+      "bytes": 29867,
+      "sha256": "bc79fd473a04cd98b56bda58e16fc409fa4d9087fa04b54d9e40e06453c07e64"
+    },
+    {
+      "path": "build_sculpted_clamp.py",
+      "bytes": 7498,
+      "sha256": "7be8e0716a3b0f4cfe83c3fc6eef5c8fb82f8729667b97b19a13f5f001c3caa3"
+    },
+    {
+      "path": "capture_input.py",
+      "bytes": 1646,
+      "sha256": "9480fd621010aa1ce9b30b1c8e1517cf591e25ae53fa35e00f1755956b72d612"
+    },
+    {
+      "path": "case-sculpted-clamp.step",
+      "bytes": 368050,
+      "sha256": "f7906e0cb9dd5114bbf2ecd38338205dbc474c7284153a8135d2a6c20dbc5202"
+    },
+    {
+      "path": "case-sculpted-clamp.stl",
+      "bytes": 382084,
+      "sha256": "120de9715c55a92965894b58a908d8e800b86ae68a471bd5672bb16576926789"
+    },
+    {
+      "path": "export-verification.json",
+      "bytes": 3861,
+      "sha256": "83e94545e822bdfe481a12d5a35ae6d6cef945f5e98ea7f98cebcf0b2a510208"
+    },
+    {
+      "path": "export_revision.py",
+      "bytes": 4989,
+      "sha256": "51b672f544b41eb991af394a7592d80fc44d29e1dc90aab723a22298710a02fe"
+    },
+    {
+      "path": "independent-review.json",
+      "bytes": 12769,
+      "sha256": "44105241d8ace30217c74c0b47d519798ab9a1afe74a5df7ba7b5d249ee03444"
+    },
+    {
+      "path": "independent_fit_review.py",
+      "bytes": 4777,
+      "sha256": "ee3ebd0df69038834f05f8a1d8dbb75c658c86ac1560186f17886f999fb99ba8"
+    },
+    {
+      "path": "independent_hardware_review.py",
+      "bytes": 3529,
+      "sha256": "e81f94b2ef57905f24dd547f6ed358b0e369929291c0579b3178e8b33f11ade3"
+    },
+    {
+      "path": "input/current-R09-before-R10.f3d",
+      "bytes": 11112393,
+      "sha256": "a490563c54ac3b13263c448686750a5c71b60533eb72f891c5017e078c56bf91"
+    },
+    {
+      "path": "input/input-view.png",
+      "bytes": 29278,
+      "sha256": "7a9066f57c5c1e2978ae58eda52cccdcdb19b5f087c59a21b4621f2aac930f62"
+    },
+    {
+      "path": "input/owner-layout.json",
+      "bytes": 28660,
+      "sha256": "1599541bc41d7ec4ba687e06bbfd1b871fc2fabb04e2f0e13fc9457583694ed1"
+    },
+    {
+      "path": "lower-sculpted-clamp.step",
+      "bytes": 62605,
+      "sha256": "67d7bd0f62006eb2c05ad045e2d188be1deb5859129247cd40928a01f6853e9c"
+    },
+    {
+      "path": "lower-sculpted-clamp.stl",
+      "bytes": 75784,
+      "sha256": "3ce00a0a8e9aa3d3b8b681e0987b738a83b6d0a7eb5c1a7b6df53f1a8b784b89"
+    },
+    {
+      "path": "make_previews.py",
+      "bytes": 3719,
+      "sha256": "80363819ea48b360c34f3b000801b8e694065d20a01c91653ffca88da3acf68b"
+    },
+    {
+      "path": "model-audit.json",
+      "bytes": 15372,
+      "sha256": "347bdee85ec824d00272aa591a73804b397cf1aa6d071045f9bfc14a8b9e2891"
+    },
+    {
+      "path": "preview-state-audit.json",
+      "bytes": 310,
+      "sha256": "e6fba4a1f8e36c0121be3c1b76b219f0a7ac96306f7080944a0cf428b4ec8247"
+    },
+    {
+      "path": "recessed-lid.step",
+      "bytes": 114918,
+      "sha256": "aaef50bfdac5bfe91e05539891abdfdc433553e4b6e24b849615bf25440dd851"
+    },
+    {
+      "path": "recessed-lid.stl",
+      "bytes": 750984,
+      "sha256": "bdd4ce0baf932315e652948fca6c1eaf0a2efa2a5f3a12f621979b426b6ca9c1"
+    },
+    {
+      "path": "repository-validation.txt",
+      "bytes": 1429,
+      "sha256": "e97666d36fc331893de42dbbb78855e7a1fce14b8a5d839043c647e5498543f8"
+    },
+    {
+      "path": "sculpt-audit.json",
+      "bytes": 8815,
+      "sha256": "a5a8ee573bd728c76705bb8fafcf94dd54507959bde35ced121e4b51bd1ccb55"
+    },
+    {
+      "path": "separated-bottom-clamp-preview.png",
+      "bytes": 49558,
+      "sha256": "7a2f83b47d53893d05c42474dbf9037161a024402e8db1b35973d3397dc59a1b"
+    },
+    {
+      "path": "verify_exports.py",
+      "bytes": 2875,
+      "sha256": "2de59c39553c26e806d2b61d4981580b4bd0de55c7e53d4f8ae7fbb2e8d1a454"
+    },
+    {
+      "path": "web-root-transitions-preview.png",
+      "bytes": 41077,
+      "sha256": "c1d98817446b00114c063b599da6ccb5c090100047f2e0e0ac1ba60462730abd"
+    }
+  ]
+}
