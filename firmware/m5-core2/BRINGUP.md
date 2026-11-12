@@ -149,12 +149,12 @@ seconds for Core2's channel search. Pairing readback alone is not radio acceptan
 
 | Stage | Setup/action | Expected result |
 | --- | --- | --- |
-| 1. Display alone | Run `m5-demo`; Heltec link not needed | Screen says **DEMO / NO OUTPUT**. Map follows the synthetic own kart; fresh synthetic peers within the view appear. DASH/MAP navigation responds and FIRE is visibly unavailable. Mode buttons send nothing. |
+| 1. Display alone | Run `m5-demo`; Heltec link not needed | Startup says **DISPLAY DEMO / NO OUTPUT** for five seconds; map retains **DEMO**. Map follows the synthetic own kart; fresh synthetic peers within the view appear. DASH/MAP navigation responds. Simulated FIRE consumes one item without output; mode buttons send nothing. |
 | 2. Local telemetry | Run the paired ESP-NOW targets, or the UART targets with three wires connected; begin with VESC off | Demo label disappears. Kart ID is the unit's assigned ID and Heltec status reaches the display; VESC is disconnected while off. DASH/MAP navigation responds; FIRE sends nothing. Mode controls remain unavailable. No base station or SD card is required. |
 | 2b. VESC telemetry | Complete the per-unit identity check above, then turn on its intended VESC for a read-only check | Electrical values match Heltec USB `self` telemetry; no throttle or motor command is sent. |
 | 3. Identity/read-only | On Heltec USB console, request `status` | `writes:false`, `transport:"ble"`, intended `vescmac`/`vesc_uuid`, `id_ok:true` and `radio:true`. Before later mode testing, verify nonempty `uuid_pin` matches `vesc_uuid`; `id_ok` alone also allows address-only binding. No motor test or settings write is needed. |
-| 4. GPS/map | Allow an outdoor fix; power another transmitting kart for the peer check; provision the intended internal course, or install optional course SD before starting display | Own numbered dot gets a white ring; a directly received peer with a valid fix appears when within the close-follow view, without a base station or SD card. Course outline is visible if loaded. With no fix, GPS speed is `--`, not a fabricated zero/location. |
-| 5. Shared pit (when available) | View the assigned kart in the existing pit dashboard | Pit receives that kart's live updates. M5 PIT OK means it heard a beacon, so confirm both directions separately. Record this stage as pending if no base is available; it does not block own telemetry/direct peer checks. |
+| 4. GPS/map | Allow an outdoor fix; power another transmitting kart for the peer check; provision the intended internal course, or install optional course SD before starting display | Own numbered dot gets an amber ring; a directly received peer with a valid fix appears when within the close-follow view, without a base station or SD card. Course outline is visible if loaded. With no fix, GPS speed is `--`, not a fabricated zero/location. |
+| 5. Shared pit (when available) | View the assigned kart in the existing pit dashboard | Pit receives that kart's live updates. The compact candidate omits the old PIT OK header. Check Heltec beacon reception separately from the pit receiving telemetry; neither alone proves both directions. Record this stage as pending if no base is available; it does not block own telemetry/direct peer checks. |
 | 6. Link loss | UART: interrupt/reconnect telemetry data. ESP-NOW: test radio loss/recovery and channel reacquisition. Also restart display alone | Own telemetry becomes lost after ~1.5 s, own map follow stops with the local link loss, and stale map markers disappear; no peer becomes the follow target. Wireless reacquisition may take several seconds. Recovery sends no mode and VESC active settings stay unchanged. |
 | 7. Sustained run | Leave telemetry running for 10 minutes; log boot messages and rates | No unexpected resets, repeated freezes or unexplained mode changes. Check both USB and display still work. This measures real hardware; host simulation is not a substitute. |
 
@@ -178,7 +178,7 @@ Keep the matching `ota_password` in a private `0600` JSON file under ignored
 
 1. Reboot Core2 and request USB `ota status`: credentials may be `configured:true`, but
    `active`, `ready` and `updating` must be false. Confirm ordinary ESP-NOW telemetry first.
-2. Hold the **top status bar for 1.8 seconds** to open DISPLAY UPDATES, then tap ENABLE UPDATES;
+2. Hold the **upper-right DASH/MAP page button for 1.8 seconds** to open DISPLAY UPDATES, then tap ENABLE UPDATES;
    alternatively send Core2 USB `ota on`. Expect a ten-minute window and
    **`gokart-display-3.local`** on kart 3, or that new unit's unique provisioned hostname.
    Wait for `ota status` to report `ready:true`.

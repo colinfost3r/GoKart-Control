@@ -7,7 +7,7 @@ namespace m5dash {
 // North-up local projection. Distant peers/course points never change follow zoom.
 struct MapView {
   double lat=0,lon=0,pixelsPerMeter=1;
-  int left=2,top=23,width=316,height=164;
+  int left=0,top=0,width=320,height=240;
   bool valid=false,following=false;
   static MapView make(const State& state,const Course& course,uint32_t now,double spanMeters=70) {
     MapView v;

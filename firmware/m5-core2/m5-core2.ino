@@ -8,6 +8,7 @@
 #include "MapView.h"
 #include "CourseStorage.h"
 #include "DriverView.h"
+#include "ScreenLifecycle.h"
 #if M5_DEMO
 m5dash::PlayerPreview playerPreview;
 #endif
@@ -17,13 +18,14 @@ m5dash::PlayerPreview playerPreview;
 m5now::Link wireless;
 m5now::Settings wirelessSettings;
 m5dash::DisplayMaintenance maintenance;
-bool maintenanceMenu=false,headerHolding=false;
-uint32_t headerHoldMs=0;
+bool maintenanceMenu=false;
 
 #endif
 
 M5Canvas canvas(&M5.Display);
 m5dash::State state;
+m5dash::StartupScreen startupScreen;
+m5dash::PageHold pageHold;
 m5dash::CourseManager courseManager;
 m5dash::Course& course=courseManager.active;
 m5link::Lines<1152> lines;
@@ -123,6 +125,10 @@ void draw(uint32_t now) {
 #if M5_USE_ESPNOW
   if(maintenanceMenu||maintenance.updating()||maintenance.restarting()){drawMaintenance();return;}
 #endif
+  if(startupScreen.visible(now)){
+    m5dash::DriverView<M5Canvas> bootView(canvas);bootView.startup(M5_DEMO);
+    canvas.pushSprite(0,0);return;
+  }
   const auto& k=state.karts[state.self];
   const char* note=!state.live(now)?"HELTEC LOST / no automatic commands":k.stopped?"PIT STOP ACTIVE":k.slow?"PIT SLOW ACTIVE":state.pending?"Mode requested; awaiting read-back":state.pendingUnknown?"Outcome unknown; no retry":state.result==2?"Mode applied / read-back received":state.result==4?"Request refused":state.result==3?"VESC unavailable":state.canRequest(now)?"Hold a mode button to request":state.live(now)?"Mode controls unavailable":"No commands on reconnect";
   if(localModeNotice&&uint32_t(now-localModeNoticeMs)<4000&&state.live(now)&&!state.pending&&!k.stopped&&!k.slow)note=localModeNotice;
@@ -167,11 +173,21 @@ static void requestWirelessMode(uint8_t mode,uint32_t now) {
 void touch(uint32_t now) {
   auto t=M5.Touch.getDetail();
   if(t.wasPressed()){++touchPresses;touchX=t.x;touchY=t.y;}
-  if(!t.isPressed())navigationTouch=false;
-  if(navigationTouch){heldMode=-1;holdFired=false;return;}
+  if(!t.isPressed()){navigationTouch=false;pageHold.reset();}
+  if(startupScreen.visible(now)){
+    navigationTouch=t.isPressed();heldMode=-1;holdFired=false;pageHold.reset();return;
+  }
+  if(navigationTouch){
+    heldMode=-1;holdFired=false;
+#if M5_USE_ESPNOW
+    if(pageHold.maintenance(t.x,t.y,now))maintenanceMenu=true;
+#endif
+    return;
+  }
 #if M5_USE_ESPNOW
   if(maintenanceMenu||maintenance.updating()||maintenance.restarting()){
-    heldMode=-1;holdFired=false;headerHolding=false;
+    heldMode=-1;holdFired=false;pageHold.reset();
+    if(t.wasPressed())navigationTouch=true; // Every overlay press is consumed through release, including BACK.
     if(!maintenance.updating()&&!maintenance.restarting()&&t.wasPressed()){
       if(t.x>=10&&t.x<310&&t.y>=108&&t.y<156){
         if(maintenance.active())maintenance.stop();
@@ -181,10 +197,6 @@ void touch(uint32_t now) {
     }
     return;
   }
-  if(t.isPressed()&&t.x>=0&&t.x<320&&t.y>=0&&t.y<22){
-    if(!headerHolding){headerHolding=true;headerHoldMs=now;}
-    if(uint32_t(now-headerHoldMs)>=1800){maintenanceMenu=true;heldMode=-1;return;}
-  }else headerHolding=false;
 #endif
 #if M5_DEMO
   if(playerPreview.overlay || (t.wasPressed()&&m5dash::layout::invite.contains(t.x,t.y))){
@@ -194,7 +206,7 @@ void touch(uint32_t now) {
   }
 #endif
   if(t.wasPressed()&&m5dash::layout::page.contains(t.x,t.y)){
-    mapPage=!mapPage;heldMode=-1;holdFired=false;navigationTouch=true;return;
+    mapPage=!mapPage;heldMode=-1;holdFired=false;navigationTouch=true;pageHold.begin(now);return;
   }
   if(mapPage){
     heldMode=-1;holdFired=false;
@@ -264,6 +276,7 @@ void setup() {
 #else
   loadCourse();
 #endif
+  startupScreen.begin(millis()); // Time five seconds of visible splash, after peripheral/storage initialization.
   draw(millis());displayStatus();
 }
 void loop() {

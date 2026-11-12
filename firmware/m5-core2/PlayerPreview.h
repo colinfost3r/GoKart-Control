@@ -9,9 +9,9 @@ struct HitRect {
   bool contains(int px,int py) const { return px>=x&&px<x+w&&py>=y&&py<y+h; }
 };
 namespace layout {
-constexpr HitRect page{258,26,58,40}, invite{214,26,40,40};
+constexpr HitRect page{268,4,48,40}, invite{222,4,42,40};
 constexpr HitRect close{20,145,132,36}, join{168,145,132,36};
-constexpr HitRect fire{4,202,312,36};
+constexpr HitRect fire{258,180,58,56};
 }
 class PlayerPreview {
 public:

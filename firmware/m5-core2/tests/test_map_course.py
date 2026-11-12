@@ -68,28 +68,71 @@ class MapCourseTests(unittest.TestCase):
             exe=Path(t)/'render'
             subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-I'+str(include),'-I'+str(ROOT/'firmware/m5-core2'),'-I'+str(BASE/'firmware/libraries/M5DisplayLink'),str(ROOT/'firmware/m5-core2/tests/render_driver.cpp'),'-o',str(exe)],check=True)
             for page in ('map','dash'):
-                for scene in ('invite','invitation','joined','download','ready','used','download-error','host-lost','gps-lost','link-lost','no-course','fault','stopped','slow','live'):
+                for scene in ('startup','invite','invitation','joined','download','ready','used','download-error','host-lost','gps-lost','link-lost','no-course','fault','stopped','slow','live'):
                     svg=subprocess.check_output([str(exe),scene,page],text=True);doc=ET.fromstring(svg)
                     labels=[e for e in doc if e.tag.endswith('text')]
                     text=' '.join(e.text or '' for e in labels)
-                    self.assertIn('LIVE' if scene=='live' else 'DEMO / NO OUTPUT',text)
+                    self.assertNotIn('KART 03',text)
+                    if scene=='startup':
+                        self.assertIn('OpenStreetMap',text)
+                        continue
+                    self.assertNotIn('OpenStreetMap',text)
                     if scene=='fault':self.assertIn('VESC FAULT 5',text)
                     if scene=='stopped':self.assertIn('PIT STOP ACTIVE',text)
                     if scene=='slow':self.assertIn('PIT SLOW / 5 MPH',text)
-                    if page=='map' and scene=='live':self.assertIn('UNAVAILABLE / NO ITEM DATA',text)
+                    if page=='map' and scene=='live':self.assertNotIn('SHELL',text)
                     if page=='map':
+                        if scene!='live':self.assertIn('DEMO',text)
                         self.assertNotIn('N UP',text)
                         self.assertNotIn('20m /',text)
-                        self.assertIn('--%' if scene=='link-lost' else '~81%',text)
+                        self.assertIn('-- V' if scene=='link-lost' else '79.4 V',text)
                         if scene=='ready':
-                            self.assertIn('START/FINISH',text)
+                            self.assertIn('S/F',text)
                             self.assertNotIn('OpenStreetMap contributors',text)
-                        if scene in ('live','no-course'):self.assertNotIn('START/FINISH',text)
-                    if scene in ('invitation','joined','download','download-error'):
-                        self.assertIn('OpenStreetMap contributors',text)
+                        if scene in ('live','no-course'):self.assertNotIn('S/F',text)
                     for e in labels:
                         self.assertLessEqual(float(e.attrib['x'])+float(e.attrib['textLength']),320)
                         self.assertLessEqual(float(e.attrib['y']),240)
+    def test_native_startup_and_navigation_timers(self):
+        self.assertIn('startup/page hold passed',self.native(ROOT/'firmware/m5-core2/tests/screen_lifecycle_test.cpp'))
+    def test_startup_press_cannot_become_a_mode_request(self):
+        old=BASE/'firmware/tests/test_m5_touch_request.py';tree=ast.parse(old.read_text());harness=next(n.value.value for n in ast.walk(tree) if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='harness' for t in n.targets) and isinstance(n.value,ast.Constant))
+        source=(ROOT/'firmware/m5-core2/m5-core2.ino').read_text()
+        for signature in ('static void requestWirelessMode(','void touch('):
+            at=source.index(signature);end=re.search(r'^}',source[at:],re.M).end();harness+=source[at:at+end]+'\n'
+        harness+=r"""
+int main(){
+ startupScreen.begin(100);ready(100);press();touch(100);held();ready(5000);touch(5000);
+ assert(wireless.calls==0);ready(5200);touch(5200);ready(7000);touch(7000);
+ assert(wireless.calls==0&&!state.pending); // A held startup press is not a fresh intent.
+ release();touch(7001);ready(7100);press();touch(7100);held();ready(7750);touch(7750);
+ assert(wireless.calls==1);
+ release();touch(7800);M5.Touch.detail.x=280;M5.Touch.detail.y=20;press();touch(7900);
+ held();touch(9699);assert(!maintenanceMenu);touch(9700);assert(maintenanceMenu);
+ assert(wireless.calls==1);return 0;
+}
+"""
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t)/'startup_touch.cpp';p.write_text(harness);self.native(p)
+    def test_maintenance_back_cannot_send_a_mode(self):
+        old=BASE/'firmware/tests/test_m5_touch_request.py';tree=ast.parse(old.read_text());harness=next(n.value.value for n in ast.walk(tree) if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='harness' for t in n.targets) and isinstance(n.value,ast.Constant))
+        source=(ROOT/'firmware/m5-core2/m5-core2.ino').read_text()
+        for signature in ('static void requestWirelessMode(','void touch('):
+            at=source.index(signature);end=re.search(r'^}',source[at:],re.M).end();harness+=source[at:at+end]+'\n'
+        harness+=r"""
+int main(){
+ for(int x:{40,150,250}){
+  release();touch(100);maintenanceMenu=true;mapPage=false;M5.Touch.detail.x=x;M5.Touch.detail.y=220;
+  ready(200);press();touch(200);assert(!maintenanceMenu);
+  held();ready(1000);touch(1000);ready(3000);touch(3000);
+  assert(wireless.calls==0&&!state.pending&&heldMode==-1);
+ }
+ release();touch(3100);M5.Touch.detail.x=40;ready(3200);press();touch(3200);held();ready(3850);touch(3850);
+ assert(wireless.calls==1);return 0;
+}
+"""
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t)/'maintenance_back.cpp';p.write_text(harness);self.native(p)
     def test_native_display_metrics(self):
         self.assertIn('stale telemetry passed',self.native(ROOT/'firmware/m5-core2/tests/display_metrics_test.cpp'))
     def test_player_preview_states(self):
@@ -105,7 +148,7 @@ int main(){
  release();touch(1001);M5.Touch.detail.x=234;M5.Touch.detail.y=40;press();touch(1100);assert(playerPreview.overlay);
  release();touch(1101);M5.Touch.detail.x=200;M5.Touch.detail.y=160;press();touch(1200);playerPreview.tick(4200);
  assert(playerPreview.stage==m5dash::PlayerPreview::Stage::Ready&&!playerPreview.overlay);
- held();mapPage=true;M5.Touch.detail.x=40;M5.Touch.detail.y=220;touch(4300);assert(playerPreview.fired==0);
+ held();mapPage=true;M5.Touch.detail.x=280;M5.Touch.detail.y=220;touch(4300);assert(playerPreview.fired==0);
  release();touch(4301);press();touch(4400);held();touch(5000);assert(playerPreview.fired==1&&wireless.calls==0&&!state.pending);
  return 0;
 }
@@ -128,7 +171,7 @@ int main(){
  assert(wireless.calls==0&&!state.pending&&heldMode==-1); // FIRE coordinates cannot reach hidden modes
  release();touch(2001);M5.Touch.detail.x=280;M5.Touch.detail.y=35;press();touch(2100);assert(!mapPage);
  release();touch(2101);M5.Touch.detail.x=40;M5.Touch.detail.y=220;ready(2200);press();touch(2200);held();ready(2850);touch(2850);assert(wireless.calls==1);
- release();touch(2851);mapPage=true;M5.Touch.detail.y=10;press();touch(3000);held();touch(4800);assert(maintenanceMenu&&wireless.calls==1);
+ release();touch(2851);mapPage=true;M5.Touch.detail.x=280;M5.Touch.detail.y=20;press();touch(3000);held();touch(4800);assert(maintenanceMenu&&wireless.calls==1);
  return 0;
 }
 '''

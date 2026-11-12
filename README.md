@@ -4,7 +4,7 @@
 Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
 **Offline Core2 rehearsal available:** [open the interactive preview](docs/previews/core2-player-rehearsal/index.html) · [tomorrow’s test sequence](docs/m5-offline-rehearsal.md). Native Hunter-style pages and a no-output demo are built in source; no hardware update is implied.
-**Map rehearsal updated:** real shop-area street/building outlines from the Pi’s OSM extract, a simulated checkered start/finish gate, boost/pickup markers, and a speed/battery header. Credits are in the game menu; no distance scale is shown. Battery % uses the Pi’s voltage estimate. These game markers/background remain demo-only; no firmware was flashed.
+**November 12 display candidate:** full-screen follow map, smaller GPS MPH and measured VESC pack volts relayed by Heltec, compact corner FIRE and page controls. No persistent kart header, scale or credits; map attribution appears for five seconds at startup. Real shop geography and game markers remain demo-only. Nothing was flashed. **[Start here: Claude handoff and next test](docs/CLAUDE_HANDOFF.md).**
 **Next player-mode direction (planned):** Core2 owns map/course storage and player logic;
 Heltec retains GPS/LoRa/VESC supervision. Join-only UI, ESP-NOW host-course downloads,
 Hunter styling on both pages and an invite/page button are specified in the
@@ -66,7 +66,7 @@ See [docs/requirements.md](docs/requirements.md#reliability-and-link-loss-behavi
 ([measured capture](hardware/vesc/baseline-kart/2026-11-05/README.md)). The older M5Stack
 dashboard repository is historical reference only.
 
-M5/reverse status above is current as of **2026-11-11** on `v1.5/m5-core2`.
+M5/reverse status above is current as of **2026-11-12** on `v1.5/m5-core2`.
 The dated fleet feature table below retains Eamon’s earlier acceptance checkpoints.
 Details, evidence and open decisions: [HANDOFF.md](HANDOFF.md).
 

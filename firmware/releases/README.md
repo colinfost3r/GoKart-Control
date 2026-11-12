@@ -1,5 +1,9 @@
 # Prebuilt images
 
+**M5 v1.5 Core2 dashboard:** the generic `core2-items`/kart merged images below are not
+the paired no-Pi dashboard candidates. Use [the November 12 handoff](../../docs/CLAUDE_HANDOFF.md)
+and its application-image manifest; preserve each board’s NVS.
+
 > **Current images: kart 0.3.2, base and repeater 0.2.2, Core2 item screen 0.2.1** (2026-11-10, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy

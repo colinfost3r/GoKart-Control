@@ -15,7 +15,7 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-SCENES = ('invite', 'invitation', 'joined', 'download', 'ready', 'used', 'download-error',
+SCENES = ('startup', 'invite', 'invitation', 'joined', 'download', 'ready', 'used', 'download-error',
           'host-lost', 'gps-lost', 'link-lost', 'no-course', 'fault', 'stopped', 'slow', 'live')
 
 
@@ -56,31 +56,32 @@ main{max-width:1100px;margin:40px auto;padding:24px}h1{font-size:30px;font-weigh
 label{display:block;margin-bottom:8px;color:#bbcbd5}select,button{padding:12px;background:#293744;color:#edf4f8;border:1px solid #748c9c;border-radius:7px;font:inherit}
 select{width:100%}.buttons{display:flex;gap:8px;margin:14px 0}button{cursor:pointer}button.active{border-color:#a4e5ee;color:#a4e5ee}
 #result{border-left:2px solid #f7ce79;padding-left:12px;min-height:100px;font-size:14px}
-small{color:#bbcbd5;line-height:1.5;display:block;margin-top:20px}a{color:#a4e5ee}
+[hidden]{display:none!important}small{color:#bbcbd5;line-height:1.5;display:block;margin-top:20px}a{color:#a4e5ee}
 @media(max-width:800px){main{margin:8px auto;padding:16px}.workbench{grid-template-columns:1fr}}
 </style><main><div class="eyebrow">M5 V1.5 / OFFLINE DESIGN REHEARSAL</div>
 <h1>Your course, in context.</h1><p>Hunter’s instrument style with the Pi’s existing South Norwalk map data. Roads and building outlines are real; the loop, start/finish, boost pad, pickup and kart positions are simulated.</p>
-<div class="workbench"><div><img id="screen" alt="Core2 native view preview" draggable="false"><small>320 × 240 layout from the production C++ renderer. Browser text approximates the LCD bitmap font. All inputs here are simulated—even the LIVE appearance scenario.</small></div>
-<aside><label for="scene">Test scenario</label><select id="scene"></select><div class="buttons"><button id="dash">DASH</button><button id="map">MAP</button></div><p id="result" role="status" aria-live="polite">Checkered gate: start/finish. Green arrows: boost pad. Gold ?: item pickup. Gold 3: your kart; blue numbers: other karts. Top left: speed in MPH and estimated battery %.</p><small>Battery % matches the Pi’s 60–84 V estimate; it is not a BMS charge reading.<br><br>Map credits: © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> / ODbL. This is the shop area, not the Manresa course. The native demo uses the same clipped geometry; live map-package downloads are not implemented.<br><br>No hardware connection. No radio packets. No motor output. Real host publishing, course transfer, inventory and game commands are still separate work.</small></aside></div></main>
+<div class="workbench"><div><img id="screen" alt="Core2 native view preview" draggable="false"><small>320 × 240 layout from the production C++ renderer. Browser text approximates the LCD bitmap font. All inputs here are simulated—even the LIVE appearance scenario. The five-second startup screen is the only attribution screen.</small></div>
+<aside><label for="scene">Test scenario</label><select id="scene"></select><div class="buttons"><button id="dash">DASH</button><button id="map">MAP</button></div><p id="result" role="status" aria-live="polite">Checkered gate: start/finish. Green arrows: boost pad. Gold ?: item pickup. Gold 3: your kart; blue numbers: other karts. Top left: GPS speed in MPH and measured pack voltage from the Heltec. Hold the page button for 1.8 seconds on live hardware to open updates.</p><small>No hardware connection. No radio packets. No motor output. Real host publishing, course transfer, inventory and game commands are still separate work.</small><small id="startupCredits">Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> / ODbL.</small></aside></div></main>
 <script>
-const frames=FRAMES_JSON;const scenes=SCENES_JSON;let scene='ready',page='map',returnScene='invite',timer;
+const frames=FRAMES_JSON;const scenes=SCENES_JSON;let scene='startup',page='map',returnScene='invite',timer;
 const screen=document.getElementById('screen'),select=document.getElementById('scene'),result=document.getElementById('result');
 for(const s of scenes){const o=document.createElement('option');o.value=s;o.textContent=s.replaceAll('-',' ').toUpperCase();select.append(o)}
-function render(){screen.src=frames[scene+'-'+page];select.value=scene;for(const p of ['dash','map'])document.getElementById(p).classList.toggle('active',p===page)}
+function render(){document.getElementById('startupCredits').hidden=scene!=='startup';screen.src=frames[scene+'-'+page];select.value=scene;for(const p of ['dash','map'])document.getElementById(p).classList.toggle('active',p===page)}
 function choose(s,message){clearTimeout(timer);scene=s;if(message)result.textContent=message;render()}
 select.onchange=()=>choose(select.value,'Scenario selected. This changes the preview only.');
 for(const p of ['dash','map'])document.getElementById(p).onclick=()=>{page=p;render()};
 screen.onclick=e=>{let r=screen.getBoundingClientRect(),x=(e.clientX-r.left)*320/r.width,y=(e.clientY-r.top)*240/r.height;
  const inside=(a,b,w,h)=>x>=a&&x<a+w&&y>=b&&y<b+h;
+ if(scene==='startup')return;
  const modal=['invitation','joined','download','download-error'].includes(scene);
  if(modal){if(inside(20,145,132,36)){choose(returnScene,'Invitation closed; no command sent.');return}
   if(inside(168,145,132,36)&&scene==='joined'){choose('invite','Left the simulated game. No command sent.');return}
   if(inside(168,145,132,36)&&scene!=='download'){choose('download','Simulated transfer: a real transfer will verify the package before joining.');timer=setTimeout(()=>choose('ready','Simulated join complete. Open MAP and press FIRE to try item feedback.'),3000)}return}
- if(inside(258,26,58,40)){page=page==='map'?'dash':'map';render();return}
- if(inside(214,26,40,40)&&!['host-lost','link-lost','live'].includes(scene)){returnScene=scene;choose(['ready','used'].includes(scene)?'joined':'invitation','Game menu is simulated. No session request has been sent.');return}
- if(page==='map'&&inside(4,202,312,36)){if(scene==='ready')choose('used','Simulated shell consumed once. No attack packet or VESC command was sent.');else result.textContent='FIRE unavailable in this scenario.';return}
+ if(inside(268,4,48,40)){page=page==='map'?'dash':'map';render();return}
+ if(inside(222,4,42,40)&&!['host-lost','link-lost','live'].includes(scene)){returnScene=scene;choose(['ready','used'].includes(scene)?'joined':'invitation','Game menu is simulated. No session request has been sent.');return}
+ if(page==='map'&&inside(258,180,58,56)){if(scene==='ready')choose('used','Simulated shell consumed once. No attack packet or VESC command was sent.');else result.textContent='FIRE unavailable in this scenario.';return}
  if(page==='dash'&&y>=202)result.textContent='Mode controls are disabled in the rehearsal. Installed live firmware retains guarded hold-to-select behavior.';
-};render();
+};render();timer=setTimeout(()=>choose('ready'),5000);
 </script>'''
     html = html.replace('FRAMES_JSON', json.dumps(frames)).replace('SCENES_JSON', json.dumps(SCENES))
     (args.out/'index.html').write_text(html)

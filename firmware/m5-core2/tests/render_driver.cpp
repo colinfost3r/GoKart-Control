@@ -61,6 +61,7 @@ int main(int argc,char** argv){
   bool live=!std::strcmp(scene,"live");
   std::cout<<"<svg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 320 240'>\n";
   SvgCanvas canvas;m5dash::DriverView<SvgCanvas> view(canvas);
-  view.draw(state,course,now,map,!live,false,live?"Hold a mode button to request":"Mode controls disabled in demo",-1,0,false,live?nullptr:&p);
+  if(!std::strcmp(scene,"startup"))view.startup(true);
+  else view.draw(state,course,now,map,!live,false,live?"Hold a mode button to request":"Mode controls disabled in demo",-1,0,false,live?nullptr:&p);
   std::cout<<"</svg>\n";
 }

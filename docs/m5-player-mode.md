@@ -84,10 +84,11 @@ Course geometry remains a simple line; SoNo artwork is not the Manresa route.
 
 - DASH: existing telemetry, truthful unavailable/stale fields, verified mode controls.
 - MAP/GAME: own-kart follow map with geographic context, a checkered start/finish gate,
-  boost/pickup symbols, nearby players and one prominent item/FIRE control. Top-left card
-  shows GPS MPH and estimated battery percentage; omit the scale and orientation label.
-  Keep map credits accessible from the menu, off the driving view; keep
-  game join/details in an overlay so they do not consume the driving map permanently.
+  boost/pickup symbols, nearby players and one compact corner item/FIRE control. The map
+  fills 320×240; a small top-left card shows GPS MPH and measured VESC pack volts relayed
+  by Heltec. There is no measured SOC field; do not synthesize a percentage. Omit the kart
+  header, scale and orientation label. Show map attribution only on the five-second startup
+  screen, retaining source/license metadata. Game join/details remain a temporary overlay.
 - A dedicated edge button toggles DASH and MAP/GAME. Page changes send no mode/join/fire
   request and cancel in-progress control holds; one touch cannot activate both pages.
 - Fresh joinable-host notification: a pulsing on-screen dot next to that button, a short

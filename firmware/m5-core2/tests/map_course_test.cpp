@@ -35,13 +35,13 @@ int main(){
  assert(up.begin(strlen(json),crc,100));assert(!up.chunk(0,all.c_str(),30100));
  assert(up.begin(strlen(json),crc,0xfffffff0U));assert(up.chunk(0,all.c_str(),10));assert(up.finish(loaded,11));
  State s;s.self=3;auto& own=s.karts[3];own.seen=own.fix=own.hasPosition=true;own.received=own.fixReceived=100;own.lat=41.0938;own.lon=-73.4163;
- auto view=MapView::make(s,Course{},101);assert(view.valid&&view.following);double x,y;assert(view.project(own.lat,own.lon,x,y));assert(x==160&&y==105);
+ auto view=MapView::make(s,Course{},101);assert(view.valid&&view.following);double x,y;assert(view.project(own.lat,own.lon,x,y));assert(x==160&&y==120);
  State parsed;assert(parsed.ingest(R"({"t":"self","kart":3,"lat":41.0938000,"lon":-73.4163000,"fix":true,"gps_age_s":0,"fix_age_ms":200,"sats":11})",500));assert(parsed.karts[3].fixReported);assert(MapView::make(parsed,Course{},600).following);assert(!MapView::make(parsed,Course{},4000).following);
  const double scale=view.pixelsPerMeter;auto& peer=s.karts[8];peer=own;peer.lat+=3;peer.lon+=3;auto same=MapView::make(s,course,101);assert(same.following&&same.pixelsPerMeter==scale&&same.lat==own.lat&&same.lon==own.lon);
  assert(!MapView::make(s,Course{},1700).valid);auto overview=MapView::make(s,course,1700);assert(overview.valid&&!overview.following);
  double x0=-1e8,y0=100,x1=1e8,y1=100;assert(view.clip(x0,y0,x1,y1));assert(std::fabs(x0-view.left)<1e-5&&std::fabs(x1-(view.left+view.width-1))<1e-5);
- x0=0;y0=0;x1=500;y1=0;assert(!view.clip(x0,y0,x1,y1));x0=NAN;assert(!view.clip(x0,y0,x1,y1));
- x0=160;y0=-1000;x1=160;y1=1000;assert(view.clip(x0,y0,x1,y1));assert(y0>=23&&y1<=186);assert(!view.contains(160,210));
+ x0=0;y0=-1;x1=500;y1=-1;assert(!view.clip(x0,y0,x1,y1));x0=NAN;assert(!view.clip(x0,y0,x1,y1));
+ x0=160;y0=-1000;x1=160;y1=1000;assert(view.clip(x0,y0,x1,y1));assert(y0>=0&&y1<=239);assert(!view.contains(160,240));
  State wrap;wrap.self=3;wrap.karts[3]=own;wrap.karts[3].received=wrap.karts[3].fixReceived=0xfffffff0U;assert(MapView::make(wrap,Course{},20).following);
  std::printf("Map follow/clipping, course validation/CRC/atomic readback and bounded upload tests passed; record_crc=%08x\n",courseio::get32(record.data()+n-4));
 }

@@ -1,5 +1,32 @@
 # Collaborator handoff
 
+**Current entry point: [Claude handoff — November 12](docs/CLAUDE_HANDOFF.md).**
+Earlier dated entries below are history; the latest entry supersedes their UI details.
+
+## Overnight Core2 display candidate — November 12, 2026 (not installed)
+
+The map now fills 320×240 with compact GPS MPH and measured VESC pack volts relayed by
+Heltec, compact corner FIRE/page controls, no kart header/scale/footer, and five-second
+startup-only map credits. No percentage estimate is made. Mode controls remain on DASH.
+Hold the page button 1.8 s for maintenance in this candidate; the installed older image
+still uses its top status bar. Overlay/back/startup/navigation presses are consumed through
+release and cannot leak into mode selection. The independent review found and verified
+fixes for the maintenance BACK hold, startup timer placement and DEMO-on-error labels.
+
+**499 tests across eight suites passed, zero skipped; five firmware candidates compiled.**
+[The final validation manifest](docs/validation/m5-ready-2026-11-12.json) records tests,
+source/application hashes and review scope. All preview/source/documentation changes are
+prepared for kart-3 acceptance; nothing was flashed and no VESC settings changed overnight.
+Installed accessories remain `4a582f0`, with the November 11 −5 A/filter/coexistence result
+unchanged. New application images are frozen locally under ignored
+`firmware/build/bench-candidates/2026-11-12/`, with hashes in Git.
+
+The clean handoff separates demo-only background/game symbols from live telemetry/course
+outline support, lists missing host transfer/native game logic, and orders kart3 then4/5
+commissioning. VESC tune/Lisp application still requires USB; Heltec OTA is not a VESC
+updater. Fleet preparation remains offline and its kart4/5 writer remains unimplemented.
+No blind clone or Hall/pedal recalibration is authorized.
+
 ## Core2 map context and HUD — November 11, 2026 (source/rehearsal, not installed)
 
 The owner requested geographic context, a visible start/finish line and boost/pickup

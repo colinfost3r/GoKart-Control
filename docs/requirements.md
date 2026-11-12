@@ -74,12 +74,14 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - Show real surrounding geography beneath the host course, using the Pi’s map sources.
   Prefer lightweight roads/buildings/shoreline for this small display; no Google dependency.
 - Make the host’s start/finish gate, boost pads and item pickups distinct overlays.
-- Top-left card shows kart GPS speed in MPH and battery percentage. Match the Pi’s current
-  voltage-based estimate (60–84 V) and label it approximate; unknown/stale data stays unknown.
-- Omit the distance scale and north/span label; retain north-up fixed-scale follow behavior.
-  Put map attribution in accessible credits/menu, outside the driving map.
+- Latest owner refinement (overnight November 11–12): use the battery readings supplied
+  by Heltec. The current contract has VESC pack volts, not measured SOC: show fresh voltage
+  directly beside GPS MPH in a small card; unknown/stale stays unknown. Remove the kart header.
+- Fill the 320×240 display with the map and compact corner controls. Omit the distance scale
+  and north/span label; retain north-up fixed-scale following. Show map attribution for five
+  seconds at startup only, with source/license metadata retained in code.
 - Current implementation status: native demo/preview has real shop background plus simulated
-  game symbols; live builds have the speed/battery header. Host background/game download,
+  game symbols; live builds have the compact speed/voltage card. Host background/game download,
   actual lap/zone rendering and hardware acceptance are still pending.
 
 ## Core2 player-only game and sharing — November 11, 2026

@@ -30,10 +30,11 @@ class TouchRequestTests(unittest.TestCase):
 #include <cstring>
 #include "DisplayState.h"
 #include "PlayerPreview.h"
+#include "ScreenLifecycle.h"
 #define M5_USE_ESPNOW 1
 #define M5_DEMO 0
 #define M5_MODE_HOLD_MS 650
-m5dash::State state;
+m5dash::State state; m5dash::StartupScreen startupScreen; m5dash::PageHold pageHold;
 const char* localModeNotice=nullptr;uint32_t localModeNoticeMs=0;
 uint32_t requestId=10,holdMs=0,touchPresses=0,headerHoldMs=0;
 int heldMode=-1,touchX=-1,touchY=-1;

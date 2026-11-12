@@ -1,5 +1,7 @@
 # M5 Core2 v1.5
 
+**November 12 candidate, not installed:** [Claude handoff](../../docs/CLAUDE_HANDOFF.md). Full-screen map, compact MPH/pack-voltage HUD, five-second startup credits and page-button hold for updates.
+
 **New source, not installed:** [Hunter-style native pages and no-output player rehearsal](../../docs/m5-offline-rehearsal.md). Live FIRE stays unavailable. The standalone `m5-demo` uses RAM-only simulated data and no UART/ESP-NOW command transport.
 
 Branch **`v1.5/m5-core2`**, sharing Eamon's kart 0.2.7 / base protocol and upstream work
@@ -93,9 +95,10 @@ remains separate from kart 3's completed telemetry and driver-mode checks.
 ## What the display does
 
 - DASH: GPS MPH, pack volts, battery watts, motor/battery amps, ESC temperature, actual mode,
-  VESC/link status, fault code, STOP/SLOW state and Heltec-reported speed calibration.
+  VESC/link status, fault code and STOP/SLOW state. Speed calibration remains Heltec-owned
+  metadata; the compact display does not show its calibration factor.
 - MAP: own kart plus up to seven other directly/repeater-heard kart positions, labeled by ID;
-  own kart gets a white ring. North up, fixed 70 m own-follow view, optional internally stored or SD course outline.
+  own kart gets an amber ring. North up, fixed 70 m own-follow view, optional internally stored or SD course outline.
   Only fresh markers inside the current view are drawn; distant peers do not zoom the map out.
   DASH opens the telemetry/mode screen. FIRE remains visibly unavailable and sends nothing.
   Missing GPS is unavailable, never an invented position at (0,0). This is not geofencing.
@@ -211,7 +214,7 @@ First capture/retain each board's existing image and commissioning values for ro
 VESC settings write, detection or motor test is part of the build/test commands above.
 
 For a **new pair**, install the read-only companion, provision its confirmed fleet ID and
-verify `writes:false`. The next two IDs are still unassigned; **do not reuse 3**. With both
+verify `writes:false`. The next two IDs are **4 and 5**; **do not reuse 1, 2 or 3**. With both
 explicit USB ports connected, run from the repository root (Python with `pyserial` installed;
 replace the two port names and `N` with that unit's confirmed ID):
 
@@ -239,7 +242,7 @@ belong to kart 3. Each new kart needs its own `gokart-display-N` hostname, priva
 and recovery record; do not clone the existing NVS or password file.
 
 Maintenance is **inactive after every boot**, including after an update. Saved credentials do
-not start Wi-Fi or OTA. Hold the dashboard's **top status bar for 1.8 seconds** to open DISPLAY
+not start Wi-Fi or OTA. Hold the dashboard's **upper-right DASH/MAP page button for 1.8 seconds** to open DISPLAY
 UPDATES, then tap **ENABLE UPDATES**. The USB equivalent is `ota on`. This starts a ten-minute
 window, including the time spent joining Wi-Fi. Repeating `ota on` does not extend it. The screen
 shows the hostname, readiness, remaining time and upload progress. Returning to the dashboard
@@ -298,8 +301,8 @@ in the handoff. The ordered checks are in [BRINGUP](BRINGUP.md#core2-ota-check),
 The new Core2 source starts on a close-follow map and stores a course internally when
 provisioned over USB; **this change is not yet deployed or physically accepted**. No SD card
 or Pi is required. The map follows the own fresh fix at 70 m vertical span; distant karts do
-not change the zoom. DASH retains the existing telemetry/mode controls and the top-header
-hold still opens OTA. FIRE is visibly disabled because authoritative item data is not yet
+not change the zoom. DASH retains the existing telemetry/mode controls and the page-button
+hold opens OTA. FIRE is visibly disabled because authoritative item data is not yet
 available; it sends no command.
 
 Follow [course provisioning, diagnostics and acceptance](COURSE_MAP.md) to export the pit's

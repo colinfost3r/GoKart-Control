@@ -16,7 +16,8 @@ not deploy firmware or implement host publishing, wireless course transfer or li
   ESP-NOW nor the serial VESC/display link, disables mode output, uses a RAM demonstration
   loop, and does not load or replace the saved course. No image has been uploaded by this work.
 - Production `m5` and `m5-espnow` share the new styling and page button. Existing guarded
-  mode selection, own-kart following, course storage and maintenance remain available.
+  mode selection, own-kart following and course storage remain available. Maintenance/OTA
+  is available only in `m5-espnow`; UART `m5` and standalone `m5-demo` require USB firmware updates.
   Live FIRE stays unavailable; invitations/items in the demo are not live radio features.
 
 From the repository root:
@@ -28,10 +29,10 @@ python3 tools/m5/preview_driver.py --out /tmp/gokart-core2-preview
 ```
 
 The compiler needs ArduinoJson headers; set `ARDUINOJSON_DIR` when they are outside the
-usual Arduino library directory. `--write-scenes` additionally exports all 30 SVG scenes.
+usual Arduino library directory. `--write-scenes` additionally exports all 32 SVG scenes.
 The preview can be regenerated without Python packages or an internet connection.
 
-## Background map, game symbols and header
+## Background map, game symbols and compact HUD
 
 The Pi uses `kart/server/mapsync.py` to download `/map/package.json`, its image and zones
 from the pit over Wi-Fi into a local cache. The repository shop preset uses CT ECO aerial
@@ -42,19 +43,20 @@ style additionally uses the cached SoNo OpenStreetMap extract.
 The Core2 demo now reuses a 240 m square shop crop from that **same OSM extract**, quantized
 to decimetres and drawn as quiet outlines. Rebuild with `python3 tools/m5/export_preview_map.py`.
 Source/ODbL attribution: [Pi map notes](../pit/server/map/SONO-MAP.md); the full derivative
-geometry remains in `pit/server/map/sono-map.geojson`. Credits are in the demo GAME menu
-and below the browser preview, keeping the driving map clear.
+geometry remains in `pit/server/map/sono-map.geojson`. Credits appear on a five-second startup screen only; they are absent from the map and
+game menu. The source and license remain with the geometry. Startup is nonblocking and
+consumes touches until release, so a held splash touch cannot select a mode.
 
-The loop, checkered START/FINISH gate, green boost arrows and gold `?` pickup box are
+The loop, checkered S/F gate, green boost arrows and gold `?` pickup box are
 **demonstration overlays**, not surveyed course/game data. Gold 3 is the own kart;
 blue numbers identify other karts. Nearby markers are clipped to the follow view.
 A fixed 70 m vertical span and north-up orientation remain, but their label and the
-scale bar are removed at the owner’s request. The upper-left card shows GPS MPH and
-estimated battery percentage instead. The battery estimate matches the Pi’s linear
-60 V = 0%, 84 V = 100% rule, clamped; `~` marks it as approximate. It is not BMS state
-of charge and can sag under load. Lost GPS hides speed; lost VESC/link hides battery.
+scale bar are removed at the owner’s request. The 320×240 map has no kart/status header
+or full-width FIRE footer. A small floating card shows GPS MPH and the actual VESC pack
+voltage relayed by Heltec. There is no measured SOC field and no local percentage estimate.
+Lost GPS hides speed; lost VESC/link hides voltage. FIRE is a compact lower-right control.
 
-Live builds use the same telemetry header but do **not** draw invented game markers or
+Live builds use the same telemetry card but do **not** draw invented game markers or
 the shop demo background. Full host background/zone/lapline packaging and download are
 still needed; the current USB course upload accepts an outline only. This preview is
 not evidence of lap counting, pickups, boost effects or real radio synchronization.
@@ -62,7 +64,7 @@ not evidence of lap counting, pickups, boost effects or real radio synchronizati
 ## Standalone demo interaction
 
 - Upper-right MAP/DASH changes page. A touch remains consumed until release; dragging the
-  same press into a mode button, FIRE or the maintenance header cannot activate it.
+  same press into a mode button, FIRE or another control cannot activate it.
 - JOIN opens a simulated invitation; JOIN inside it starts a three-second simulated download.
   On completion the preview carries one SHELL. MAP/FIRE consumes it once, with no packet sent.
 - The invitation dot pulses until opened. A failed download retains the previous demo course.
@@ -73,6 +75,9 @@ not evidence of lap counting, pickups, boost effects or real radio synchronizati
 - Touch/visibility still need physical checking on a Core2 at its mounted viewing distance.
   Host renderings do not establish sunlight readability, gesture reliability or RF behavior.
 
+The [Claude handoff](CLAUDE_HANDOFF.md) has the exact installed/candidate boundary,
+artifact paths, rollback cautions and kart 3 → 4 → 5 sequence.
+
 ## Next hardware session: small, separate acceptance steps
 
 1. Record the installed Core2 image, target, kart ID and existing pairing/OTA state. Select
@@ -81,7 +86,8 @@ not evidence of lap counting, pickups, boost effects or real radio synchronizati
 2. **Core2 on USB, VESC off:** verify DEMO / NO OUTPUT, page switching, invite pulse/acknowledge,
    simulated download, single FIRE, and disabled modes. This can be done without a kart.
 3. **Live display:** restore/use `m5-espnow`, verify kart3 and paired Heltec, inspect stale/lost
-   states and existing course persistence. Existing OTA header is still a 1.8-second hold.
+   states and existing course persistence. Hold the upper-right DASH/MAP button for 1.8 seconds to open updates; sliding away cancels
+   the hold. BACK must stay consumed until release, even over a mode button.
    Do not mistake demo status or a cached graphic for a real connection.
 4. **Outside:** acquire a fresh own GPS fix, confirm own marker follows at fixed scale,
    nearby peer labels and clipping, and correct course geometry. The sample loop is not a

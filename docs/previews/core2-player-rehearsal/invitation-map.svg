@@ -1,140 +1,122 @@
 <svg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 320 240'>
 <rect x='0' y='0' width='320' height='240' rx='0' fill='#101c29' stroke='none'/>
-<text x='9' y='14' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='42' lengthAdjust='spacingAndGlyphs'>KART 03</text>
-<text x='112' y='14' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='96' lengthAdjust='spacingAndGlyphs'>DEMO / NO OUTPUT</text>
-<path d='M0 21 L319 21' stroke='#738e9c'/>
-<path d='M128 126 L129 126' stroke='#3a4152'/>
-<path d='M129 126 L129 138' stroke='#3a4152'/>
-<path d='M129 138 L117 138' stroke='#3a4152'/>
-<path d='M117 138 L117 125' stroke='#3a4152'/>
-<path d='M117 125 L123 125' stroke='#3a4152'/>
-<path d='M123 125 L123 118' stroke='#3a4152'/>
-<path d='M123 118 L111 118' stroke='#3a4152'/>
-<path d='M111 118 L111 87' stroke='#3a4152'/>
-<path d='M111 87 L197 86' stroke='#3a4152'/>
-<path d='M197 86 L197 108' stroke='#3a4152'/>
-<path d='M197 108 L198 108' stroke='#3a4152'/>
-<path d='M198 108 L198 117' stroke='#3a4152'/>
-<path d='M198 117 L190 117' stroke='#3a4152'/>
-<path d='M190 117 L190 117' stroke='#3a4152'/>
-<path d='M190 117 L128 117' stroke='#3a4152'/>
-<path d='M128 117 L128 126' stroke='#3a4152'/>
-<path d='M52 89 L44 89' stroke='#3a4152'/>
-<path d='M44 89 L2 89' stroke='#3a4152'/>
-<path d='M2 45 L44 45' stroke='#3a4152'/>
-<path d='M44 45 L52 45' stroke='#3a4152'/>
-<path d='M52 45 L61 45' stroke='#3a4152'/>
-<path d='M61 45 L61 54' stroke='#3a4152'/>
-<path d='M61 54 L61 63' stroke='#3a4152'/>
-<path d='M61 63 L61 72' stroke='#3a4152'/>
-<path d='M61 72 L61 81' stroke='#3a4152'/>
-<path d='M61 81 L61 89' stroke='#3a4152'/>
-<path d='M61 89 L52 89' stroke='#3a4152'/>
-<path d='M76 23 L76 26' stroke='#3a4152'/>
-<path d='M76 26 L67 25' stroke='#3a4152'/>
-<path d='M67 25 L67 24' stroke='#3a4152'/>
-<path d='M67 24 L51 23' stroke='#3a4152'/>
-<path d='M109 23 L109 67' stroke='#3a4152'/>
-<path d='M109 67 L159 70' stroke='#3a4152'/>
-<path d='M159 70 L156 23' stroke='#3a4152'/>
-<path d='M91 186 L90 147' stroke='#5a6d7b'/>
-<path d='M91 186 L90 148' stroke='#5a6d7b'/>
-<path d='M91 186 L90 149' stroke='#5a6d7b'/>
-<path d='M90 147 L90 119' stroke='#5a6d7b'/>
-<path d='M90 148 L90 120' stroke='#5a6d7b'/>
-<path d='M90 149 L90 121' stroke='#5a6d7b'/>
-<path d='M90 119 L90 55' stroke='#5a6d7b'/>
-<path d='M90 120 L90 56' stroke='#5a6d7b'/>
-<path d='M90 121 L90 57' stroke='#5a6d7b'/>
-<path d='M90 55 L89 33' stroke='#5a6d7b'/>
-<path d='M90 56 L89 34' stroke='#5a6d7b'/>
-<path d='M90 57 L89 35' stroke='#5a6d7b'/>
-<path d='M89 33 L89 23' stroke='#5a6d7b'/>
-<path d='M89 34 L89 23' stroke='#5a6d7b'/>
-<path d='M89 35 L89 23' stroke='#5a6d7b'/>
-<path d='M317 128 L313 122' stroke='#a5e7ef'/>
-<path d='M313 122 L306 114' stroke='#a5e7ef'/>
-<path d='M306 114 L298 106' stroke='#a5e7ef'/>
-<path d='M298 106 L288 99' stroke='#a5e7ef'/>
-<path d='M288 99 L277 93' stroke='#a5e7ef'/>
-<path d='M277 93 L266 89' stroke='#a5e7ef'/>
-<path d='M266 89 L254 86' stroke='#a5e7ef'/>
-<path d='M254 86 L241 84' stroke='#a5e7ef'/>
-<path d='M241 84 L228 83' stroke='#a5e7ef'/>
-<path d='M228 83 L216 84' stroke='#a5e7ef'/>
-<path d='M216 84 L203 86' stroke='#a5e7ef'/>
-<path d='M203 86 L191 89' stroke='#a5e7ef'/>
-<path d='M191 89 L179 93' stroke='#a5e7ef'/>
-<path d='M179 93 L169 99' stroke='#a5e7ef'/>
-<path d='M169 99 L159 106' stroke='#a5e7ef'/>
-<path d='M159 106 L150 114' stroke='#a5e7ef'/>
-<path d='M150 114 L143 122' stroke='#a5e7ef'/>
-<path d='M143 122 L138 131' stroke='#a5e7ef'/>
-<path d='M138 131 L133 141' stroke='#a5e7ef'/>
-<path d='M133 141 L131 151' stroke='#a5e7ef'/>
-<path d='M131 151 L130 161' stroke='#a5e7ef'/>
-<path d='M130 161 L131 171' stroke='#a5e7ef'/>
-<path d='M131 171 L133 181' stroke='#a5e7ef'/>
-<path d='M133 181 L135 186' stroke='#a5e7ef'/>
-<rect x='223' y='70' width='10' height='26' rx='0' fill='#101c29' stroke='none'/>
-<rect x='224' y='71' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
-<rect x='228' y='71' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
-<rect x='224' y='75' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
-<rect x='228' y='75' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
-<rect x='224' y='79' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
-<rect x='228' y='79' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
-<rect x='224' y='83' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
-<rect x='228' y='83' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
-<rect x='224' y='87' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
-<rect x='228' y='87' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
-<rect x='224' y='91' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
-<rect x='228' y='91' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
-<rect x='190' y='98' width='78' height='12' rx='2' fill='#293542' stroke='none'/>
-<text x='192' y='107' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='72' lengthAdjust='spacingAndGlyphs'>START/FINISH</text>
-<rect x='129' y='122' width='19' height='19' rx='3' fill='#293542' stroke='none'/>
-<rect x='129' y='122' width='19' height='19' rx='3' fill='none' stroke='#8cebc5'/>
-<path d='M133 130 L138 126' stroke='#8cebc5'/>
-<path d='M138 126 L143 130' stroke='#8cebc5'/>
-<path d='M133 136 L138 132' stroke='#8cebc5'/>
-<path d='M138 132 L143 136' stroke='#8cebc5'/>
-<rect x='269' y='85' width='17' height='17' rx='3' fill='#293542' stroke='none'/>
-<rect x='269' y='85' width='17' height='17' rx='3' fill='none' stroke='#f7ce7b'/>
-<text x='274' y='96' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>?</text>
-<circle cx='298' cy='106' r='7' fill='#8cd2ff' stroke='none'/>
-<text x='295' y='110' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>1</text>
-<circle cx='201' cy='86' r='7' fill='#8cd2ff' stroke='none'/>
-<text x='198' y='90' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>2</text>
-<circle cx='160' cy='105' r='9' fill='#f7ce7b' stroke='none'/>
-<circle cx='160' cy='105' r='12' fill='none' stroke='#f7ce7b'/>
-<text x='157' y='109' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>3</text>
-<circle cx='130' cy='160' r='7' fill='#8cd2ff' stroke='none'/>
-<text x='127' y='164' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>4</text>
-<rect x='7' y='26' width='187' height='40' rx='5' fill='#293542' stroke='none'/>
-<rect x='7' y='26' width='187' height='40' rx='5' fill='none' stroke='#738e9c'/>
-<text x='15' y='49' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='16' textLength='24' lengthAdjust='spacingAndGlyphs'>14</text>
-<text x='49' y='49' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='18' lengthAdjust='spacingAndGlyphs'>MPH</text>
-<path d='M82 32 L82 59' stroke='#738e9c'/>
-<rect x='93' y='39' width='16' height='11' rx='0' fill='none' stroke='#8cebc5'/>
-<rect x='109' y='42' width='2' height='5' rx='0' fill='#8cebc5' stroke='none'/>
-<rect x='95' y='41' width='10' height='7' rx='0' fill='#8cebc5' stroke='none'/>
-<text x='119' y='49' fill='#8cebc5' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='16' textLength='48' lengthAdjust='spacingAndGlyphs'>~81%</text>
-<text x='8' y='197' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='198' lengthAdjust='spacingAndGlyphs'>DEMO LOOP / NOT A SURVEYED COURSE</text>
-<rect x='4' y='202' width='312' height='36' rx='5' fill='#293542' stroke='none'/>
-<rect x='4' y='202' width='312' height='36' rx='5' fill='none' stroke='#425963'/>
-<text x='15' y='227' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='16' textLength='48' lengthAdjust='spacingAndGlyphs'>FIRE</text>
-<text x='86' y='223' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='114' lengthAdjust='spacingAndGlyphs'>NO ITEM / SIMULATED</text>
-<rect x='258' y='26' width='58' height='40' rx='5' fill='#293542' stroke='none'/>
-<rect x='258' y='26' width='58' height='40' rx='5' fill='none' stroke='#a5e7ef'/>
-<text x='266' y='48' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>DASH</text>
-<rect x='214' y='26' width='40' height='40' rx='5' fill='#293542' stroke='none'/>
-<rect x='214' y='26' width='40' height='40' rx='5' fill='none' stroke='#738e9c'/>
-<circle cx='234' cy='39' r='4' fill='#425963' stroke='none'/>
-<text x='222' y='58' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>JOIN</text>
+<path d='M113 151 L114 151' stroke='#3a4152'/>
+<path d='M114 151 L115 168' stroke='#3a4152'/>
+<path d='M115 168 L97 168' stroke='#3a4152'/>
+<path d='M97 168 L97 150' stroke='#3a4152'/>
+<path d='M97 150 L106 150' stroke='#3a4152'/>
+<path d='M106 150 L106 139' stroke='#3a4152'/>
+<path d='M106 139 L88 139' stroke='#3a4152'/>
+<path d='M88 139 L88 94' stroke='#3a4152'/>
+<path d='M88 94 L214 93' stroke='#3a4152'/>
+<path d='M214 93 L214 124' stroke='#3a4152'/>
+<path d='M214 124 L215 124' stroke='#3a4152'/>
+<path d='M215 124 L215 138' stroke='#3a4152'/>
+<path d='M215 138 L204 138' stroke='#3a4152'/>
+<path d='M204 138 L204 137' stroke='#3a4152'/>
+<path d='M204 137 L113 138' stroke='#3a4152'/>
+<path d='M113 138 L113 151' stroke='#3a4152'/>
+<path d='M3 97 L0 97' stroke='#3a4152'/>
+<path d='M0 33 L3 33' stroke='#3a4152'/>
+<path d='M3 33 L15 33' stroke='#3a4152'/>
+<path d='M15 33 L15 45' stroke='#3a4152'/>
+<path d='M15 45 L15 58' stroke='#3a4152'/>
+<path d='M15 58 L15 72' stroke='#3a4152'/>
+<path d='M15 72 L15 84' stroke='#3a4152'/>
+<path d='M15 84 L15 97' stroke='#3a4152'/>
+<path d='M15 97 L3 97' stroke='#3a4152'/>
+<path d='M37 0 L37 4' stroke='#3a4152'/>
+<path d='M37 4 L23 3' stroke='#3a4152'/>
+<path d='M23 3 L23 1' stroke='#3a4152'/>
+<path d='M23 1 L0 0' stroke='#3a4152'/>
+<path d='M85 0 L86 65' stroke='#3a4152'/>
+<path d='M86 65 L158 69' stroke='#3a4152'/>
+<path d='M158 69 L153 0' stroke='#3a4152'/>
+<path d='M59 239 L58 181' stroke='#5a6d7b'/>
+<path d='M59 239 L58 182' stroke='#5a6d7b'/>
+<path d='M59 239 L58 183' stroke='#5a6d7b'/>
+<path d='M58 181 L57 141' stroke='#5a6d7b'/>
+<path d='M58 182 L57 142' stroke='#5a6d7b'/>
+<path d='M58 183 L57 143' stroke='#5a6d7b'/>
+<path d='M57 141 L57 48' stroke='#5a6d7b'/>
+<path d='M57 142 L57 49' stroke='#5a6d7b'/>
+<path d='M57 143 L57 50' stroke='#5a6d7b'/>
+<path d='M57 48 L56 15' stroke='#5a6d7b'/>
+<path d='M57 49 L56 16' stroke='#5a6d7b'/>
+<path d='M57 50 L56 17' stroke='#5a6d7b'/>
+<path d='M56 15 L56 0' stroke='#5a6d7b'/>
+<path d='M56 16 L56 0' stroke='#5a6d7b'/>
+<path d='M56 17 L56 0' stroke='#5a6d7b'/>
+<path d='M319 98 L315 96' stroke='#a5e7ef'/>
+<path d='M315 96 L297 92' stroke='#a5e7ef'/>
+<path d='M297 92 L279 89' stroke='#a5e7ef'/>
+<path d='M279 89 L260 88' stroke='#a5e7ef'/>
+<path d='M260 88 L241 89' stroke='#a5e7ef'/>
+<path d='M241 89 L223 92' stroke='#a5e7ef'/>
+<path d='M223 92 L205 96' stroke='#a5e7ef'/>
+<path d='M205 96 L188 103' stroke='#a5e7ef'/>
+<path d='M188 103 L172 111' stroke='#a5e7ef'/>
+<path d='M172 111 L158 121' stroke='#a5e7ef'/>
+<path d='M158 121 L146 133' stroke='#a5e7ef'/>
+<path d='M146 133 L135 145' stroke='#a5e7ef'/>
+<path d='M135 145 L127 158' stroke='#a5e7ef'/>
+<path d='M127 158 L121 173' stroke='#a5e7ef'/>
+<path d='M121 173 L117 187' stroke='#a5e7ef'/>
+<path d='M117 187 L116 202' stroke='#a5e7ef'/>
+<path d='M116 202 L117 217' stroke='#a5e7ef'/>
+<path d='M117 217 L121 232' stroke='#a5e7ef'/>
+<path d='M121 232 L124 239' stroke='#a5e7ef'/>
+<rect x='255' y='75' width='10' height='26' rx='0' fill='#101c29' stroke='none'/>
+<rect x='256' y='76' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
+<rect x='260' y='76' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
+<rect x='256' y='80' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
+<rect x='260' y='80' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
+<rect x='256' y='84' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
+<rect x='260' y='84' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
+<rect x='256' y='88' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
+<rect x='260' y='88' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
+<rect x='256' y='92' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
+<rect x='260' y='92' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
+<rect x='256' y='96' width='4' height='4' rx='0' fill='#101c29' stroke='none'/>
+<rect x='260' y='96' width='4' height='4' rx='0' fill='#eff7ff' stroke='none'/>
+<text x='268' y='92' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='18' lengthAdjust='spacingAndGlyphs'>S/F</text>
+<rect x='118' y='149' width='19' height='19' rx='3' fill='#293542' stroke='none'/>
+<rect x='118' y='149' width='19' height='19' rx='3' fill='none' stroke='#8cebc5'/>
+<path d='M122 157 L127 153' stroke='#8cebc5'/>
+<path d='M127 153 L132 157' stroke='#8cebc5'/>
+<path d='M122 163 L127 159' stroke='#8cebc5'/>
+<path d='M127 159 L132 163' stroke='#8cebc5'/>
+<rect x='289' y='84' width='17' height='17' rx='3' fill='#293542' stroke='none'/>
+<rect x='289' y='84' width='17' height='17' rx='3' fill='none' stroke='#f7ce7b'/>
+<text x='294' y='95' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>?</text>
+<circle cx='220' cy='92' r='7' fill='#8cd2ff' stroke='none'/>
+<text x='217' y='96' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>2</text>
+<circle cx='160' cy='120' r='9' fill='#f7ce7b' stroke='none'/>
+<circle cx='160' cy='120' r='12' fill='none' stroke='#f7ce7b'/>
+<text x='157' y='124' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>3</text>
+<circle cx='116' cy='200' r='7' fill='#8cd2ff' stroke='none'/>
+<text x='113' y='204' fill='#101c29' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='6' lengthAdjust='spacingAndGlyphs'>4</text>
+<rect x='4' y='4' width='128' height='26' rx='5' fill='#293542' stroke='none'/>
+<rect x='4' y='4' width='128' height='26' rx='5' fill='none' stroke='#738e9c'/>
+<text x='11' y='20' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='36' lengthAdjust='spacingAndGlyphs'>14 MPH</text>
+<path d='M64 9 L64 25' stroke='#738e9c'/>
+<text x='76' y='20' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='36' lengthAdjust='spacingAndGlyphs'>79.4 V</text>
+<text x='8' y='232' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>DEMO</text>
+<rect x='258' y='180' width='58' height='56' rx='5' fill='#293542' stroke='none'/>
+<rect x='258' y='180' width='58' height='56' rx='5' fill='none' stroke='#425963'/>
+<text x='275' y='200' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>FIRE</text>
+<text x='281' y='225' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='12' lengthAdjust='spacingAndGlyphs'>--</text>
+<rect x='268' y='4' width='48' height='40' rx='5' fill='#293542' stroke='none'/>
+<rect x='268' y='4' width='48' height='40' rx='5' fill='none' stroke='#a5e7ef'/>
+<text x='276' y='26' fill='#a5e7ef' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>DASH</text>
+<rect x='222' y='4' width='42' height='40' rx='5' fill='#293542' stroke='none'/>
+<rect x='222' y='4' width='42' height='40' rx='5' fill='none' stroke='#738e9c'/>
+<circle cx='243' cy='16' r='4' fill='#425963' stroke='none'/>
+<text x='231' y='36' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='24' lengthAdjust='spacingAndGlyphs'>JOIN</text>
 <rect x='12' y='69' width='296' height='118' rx='5' fill='#293542' stroke='none'/>
 <rect x='12' y='69' width='296' height='118' rx='5' fill='none' stroke='#f7ce7b'/>
 <text x='24' y='87' fill='#f7ce7b' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='126' lengthAdjust='spacingAndGlyphs'>KART 2 / GAME PREVIEW</text>
 <text x='24' y='108' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='150' lengthAdjust='spacingAndGlyphs'>Download course and join?</text>
-<text x='24' y='139' fill='#bdcad6' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='180' lengthAdjust='spacingAndGlyphs'>(c) OpenStreetMap contributors</text>
 <rect x='20' y='145' width='132' height='36' rx='5' fill='#293542' stroke='none'/>
 <rect x='20' y='145' width='132' height='36' rx='5' fill='none' stroke='#738e9c'/>
 <text x='58' y='165' fill='#eff7ff' font-family='Menlo,DejaVu Sans Mono,monospace' font-size='8' textLength='30' lengthAdjust='spacingAndGlyphs'>CLOSE</text>

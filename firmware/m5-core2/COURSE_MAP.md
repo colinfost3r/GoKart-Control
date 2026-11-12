@@ -7,15 +7,18 @@ authoritative item/session implementation is connected; touching it sends nothin
 
 The display starts on a north-up map that follows its own fresh position. The map shows
 70 metres vertically. Distant peers do not shrink the view; only fresh markers inside it
-are drawn. The own marker has a white ring. Course lines are clipped to the map area.
+are drawn. The own marker has a amber ring. Course lines are clipped to the map area.
 The upper-right DASH/MAP button toggles between the driving view and the telemetry/mode screen.
 The Hunter-style renderer is shared with the [offline rehearsal](../../docs/m5-offline-rehearsal.md).
-Hold the top status header for 1.8 seconds to open the existing OTA maintenance screen.
+In `m5-espnow`, hold the upper-right DASH/MAP page button for 1.8 seconds to open OTA maintenance.
+The first press changes page; continuing the same hold opens maintenance. Dragging off cancels
+the hold until release. Startup credits last five seconds; telemetry continues underneath.
+The map fills 320×240 with compact GPS MPH and fresh VESC pack volts, not an estimated SOC.
 
 A valid GPS fix is still required to follow the kart. Without one, a stored course is shown
-as an overview with “Own GPS unavailable”. With neither a course nor own fix, the display
-says it is waiting; it never invents a position or follows a different kart. Without a course,
-a valid own fix still produces the numbered marker and “GPS only”. No road image, external
+as an overview with “WAITING FOR GPS” while the Heltec link is live. A lost link instead
+shows “HELTEC LINK LOST”. It never invents a position or follows a different kart. Without a
+course, a valid own fix still produces the numbered marker and “NO COURSE LOADED”. No road image, external
 server or base station is needed for this local display.
 
 ## Provision an outline over the Core2 USB port

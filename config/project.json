@@ -210,10 +210,13 @@
         "map_context": {
           "background": "demo-only clipped Pi SoNo OSM geometry",
           "game_symbols": "demo-only start_finish_boost_pickup",
-          "header": "fresh GPS mph and approximate 60_to_84V battery percent",
           "scale_label": false,
-          "credits": "game_menu_and_browser_footer",
-          "live_host_background_transfer": false
+          "credits": "five_second_startup_only",
+          "live_host_background_transfer": false,
+          "hud": "fresh GPS mph and measured VESC pack volts from Heltec; unknown when stale",
+          "viewport": "full_screen_320x240",
+          "persistent_kart_header": false,
+          "compact_fire": true
         }
       }
     },
