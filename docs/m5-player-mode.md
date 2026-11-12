@@ -112,7 +112,9 @@ Do not overwrite Eamon's kart1/2 firmware while he is using it; coordinate the h
 
    Stop the host Pi's serial service while USB provisioning from a computer. Rerun the same
    command with `--apply --host-port /dev/cu.HOST --core2-port /dev/cu.CORE2`. It verifies both
-   identities and channel before writes, records secrets0600, and does not reboot either board.
+   identities and channel before writes and records secrets0600. On macOS its port open was
+   seen to reboot both boards; if it then refuses, run `tools/m5/pair_course_fallback.py` with
+   the same arguments and plan (it waits for the boards to settle and writes each once).
    Restart accessories while stationary; restore the host Pi's sole serial ownership. Each new
    player needs its own pairwise key. Use the original private plan for recovery, never Git.
 3. Host a course. Updated Pi publishes automatically once host/package/peer service is ready.

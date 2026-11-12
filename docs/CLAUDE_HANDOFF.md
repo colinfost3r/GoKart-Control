@@ -91,7 +91,10 @@ Never substitute `core2-items` for this dashboard. Two things to know:
    `m5-demo` is optional no-output rehearsal, has no OTA and needs USB to return to live firmware.
 3. Read `share status` to get host/Core2 station MACs/channel. Configure separate course-only
    trust using [pair_course.py procedure](m5-player-mode.md#deployment-and-first-test). It checks
-   board MAC/role/ID/channel and saves a0600 private plan; never prints secrets or reboots boards.
+   board MAC/role/ID/channel and saves a0600 private plan; it never prints secrets. On macOS it
+   reboots both boards when it opens the ports and is then expected to refuse; the provisional
+   `tools/m5/pair_course_fallback.py` (same arguments and plan) handles that. Neither tool's
+   `--apply` has run on hardware yet.
    Stop the Pi serial owner while provisioning the host from another computer, then restore it.
    The player's own Heltec must be running so Core2 can identify kart3. Channel6 was the last
    local pairing checkpoint; verify the host uses the same channel rather than guessing.
@@ -186,6 +189,7 @@ failure review; do not turn ordinary reconnect code into a persistent writer.
 ## Validation and artifacts
 
 **Final offline validation: 511 tests across eight suites passed, zero skipped; eight firmware targets compiled.**
+The fallback pairing tool added 18 simulated-board tests afterwards, so the suite now reports 529.
 
 The [candidate manifest](validation/m5-player-2026-11-12.json) records exact source/application
 hashes, final tests, independent review and limitations. Run all suites before each push:

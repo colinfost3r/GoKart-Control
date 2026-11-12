@@ -130,6 +130,10 @@ disk id typed or `FLASH_CONFIRM` set to it, and verify the image hash and seed f
 
 `tools/m5/pair_course.py` creates a private, pairwise host-Heltec↔Core2 course key plan.
 Default opens no device; `--apply` requires explicit USB ports and checks MACs, role, kart IDs
-and radio channel before saving course-only NVS. It does not alter own-kart pairing, reboot
-accessories or issue VESC commands. Preserve its0600 plan for recovery and keep it out of Git.
+and radio channel before saving course-only NVS. It does not alter own-kart pairing or issue
+VESC commands. Preserve its0600 plan for recovery and keep it out of Git. On macOS its port
+open was seen to reboot both boards (2026-11-12), after which its immediate checks are expected
+to refuse. `tools/m5/pair_course_fallback.py` is a provisional replacement for that case: same
+arguments and plan file, no reboot on macOS, waits for rebooted boards to settle, still writes
+each board once, and adds a read-only `--verify`. Neither tool's `--apply` has run on hardware.
 [Exact procedure and host requirements](../docs/m5-player-mode.md#deployment-and-first-test).
