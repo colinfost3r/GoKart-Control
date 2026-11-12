@@ -13,6 +13,10 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
+#include <ArduinoOTA.h>
+#include <Preferences.h>
+
+#define FW_VERSION "core2-0.3.0"
 
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
@@ -41,6 +45,19 @@ static uint32_t vbusLostMs = 0;                 // 0 = VBUS present (or stay-on 
 static bool stayOn = false;                     // tapped during the countdown: no auto-off
 static uint32_t vbusPollMs = 0;
 static const uint32_t OFF_AFTER_MS = 15000;     // key off -> power off this much later
+
+/* OTA over the pit AP, so updates need no USB (owner 2026-11-11). Credentials live in NVS --
+ * `wifi SSID PASS` over USB serial, once; the repo is public, so they are never compiled in.
+ * The join runs at boot only (25 s window): since 0.2.2 powers off at key-off, every session
+ * is a fresh boot, so at the pit it always joins; and a kart away from the AP gives up once
+ * and never scans again mid-ride (a scan would drag the radio off the ESP-NOW channel).
+ * While joined the radio sits on the AP's channel = the kart Heltec's pinned channel.
+ * Flash with: espota.py -i gokart-core2.local -p 3232 -f core2-items.ino.bin */
+static Preferences prefs;
+static String wifiSsid, wifiPass;
+static bool wifiTrying = false, otaUp = false, otaBusy = false;
+static uint32_t wifiGiveUpMs = 0;
+static char usbLine[96]; static uint8_t usbN = 0;
 
 /* Names, colors and shapes mirror the dash (app.js ITEM_SVG / ITEM_COLOR / ITEM_SUB).
    Codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud, 6 boost3, 7 star, 8 magnet,
@@ -205,6 +222,7 @@ static void draw() {
   cv.setTextColor(TFT_DARKGREY);
   cv.drawString(String(M5.Power.getBatteryLevel()) + "%", W - 10, 8);
   cv.fillCircle(W / 2, 17, 6, link ? TFT_GREEN : TFT_RED);
+  if (otaUp) cv.fillCircle(W / 2 + 16, 17, 4, TFT_SKYBLUE);     // on the pit AP: OTA reachable
 
   if (vbusLostMs) {                      // kart keyed off: full-screen countdown to power off
     uint32_t left = millis() - vbusLostMs;
@@ -289,14 +307,105 @@ void setup() {
   M5.Display.setBrightness(200);
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
+  WiFi.setAutoReconnect(false);          // a reconnect scan would hop off the ESP-NOW channel
   esp_now_init();
   esp_now_register_recv_cb(onRecv);
   esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
+  prefs.begin("core2", false);
+  wifiSsid = prefs.getString("ssid", "");
+  wifiPass = prefs.getString("pass", "");
+  if (wifiSsid.length()) {
+    WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
+    wifiTrying = true;
+    wifiGiveUpMs = millis() + 25000;
+  }
+  Serial.printf("%s wifi '%s' %s\n", FW_VERSION, wifiSsid.c_str(),
+                wifiSsid.length() ? "joining for OTA" : "not set (usb: wifi SSID PASS)");
+}
+
+static void otaStart() {
+  ArduinoOTA.setHostname("gokart-core2");
+  ArduinoOTA.onStart([]() {
+    otaBusy = true;
+    M5.Display.fillScreen(TFT_BLACK);
+    M5.Display.setTextDatum(middle_center);
+    M5.Display.setFont(&fonts::DejaVu24);
+    M5.Display.setTextColor(TFT_SKYBLUE);
+    M5.Display.drawString("UPDATING", M5.Display.width() / 2, M5.Display.height() / 2 - 20);
+  });
+  ArduinoOTA.onProgress([](unsigned p, unsigned total) {
+    static int last = -1;
+    int pct = total ? (int)(p * 100 / total) : 0;
+    if (pct == last) return;
+    last = pct;
+    int W = M5.Display.width();
+    M5.Display.fillRect(20, M5.Display.height() / 2 + 10, (W - 40) * pct / 100, 14, TFT_SKYBLUE);
+  });
+  ArduinoOTA.onError([](ota_error_t) { otaBusy = false; dirty = true; });
+  ArduinoOTA.begin();
+}
+
+/* USB console (one-time setup + checks): wifi SSID PASS | wifi clear | status */
+static void usbCommand(char* line) {
+  if (!strncmp(line, "wifi ", 5)) {
+    char* a = line + 5;
+    if (!strcmp(a, "clear")) {
+      prefs.remove("ssid"); prefs.remove("pass");
+      wifiSsid = ""; Serial.println("wifi cleared");
+      return;
+    }
+    char* sp = strrchr(a, ' ');          // SSID may hold spaces, the password may not
+    if (!sp || sp == a) { Serial.println("usage: wifi SSID PASS | wifi clear"); return; }
+    *sp = 0;
+    prefs.putString("ssid", a); prefs.putString("pass", sp + 1);
+    Serial.printf("wifi stored for '%s'; reboots join it for OTA\n", a);
+    wifiSsid = a; wifiPass = sp + 1;
+    WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
+    wifiTrying = true; wifiGiveUpMs = millis() + 25000;
+  } else if (!strcmp(line, "status")) {
+    Serial.printf("%s kart %u locked %d ch %u wifi %s ip %s ota %d vbus %d mV batt %d%%\n",
+                  FW_VERSION, kart, locked, scanCh,
+                  WiFi.status() == WL_CONNECTED ? wifiSsid.c_str() : "down",
+                  WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString().c_str() : "-",
+                  otaUp, M5.Power.getVBUSVoltage(), M5.Power.getBatteryLevel());
+  } else if (line[0]) {
+    Serial.println("commands: wifi SSID PASS | wifi clear | status");
+  }
 }
 
 void loop() {
   M5.update();
   uint32_t ms = millis();
+
+  if (wifiTrying) {
+    if (WiFi.status() == WL_CONNECTED) {
+      wifiTrying = false; otaUp = true;
+      otaStart();
+      Serial.printf("wifi %s ota gokart-core2.local ch %d\n",
+                    WiFi.localIP().toString().c_str(), WiFi.channel());
+      dirty = true;
+    } else if ((int32_t)(ms - wifiGiveUpMs) > 0) {
+      wifiTrying = false;
+      WiFi.disconnect(false);            // keep the radio for ESP-NOW; never scan again this boot
+      dirty = true;
+    }
+  }
+  if (otaUp) {
+    ArduinoOTA.handle();
+    if (WiFi.status() != WL_CONNECTED) { otaUp = false; dirty = true; }   // drove away: stay put
+    if (otaBusy) { delay(2); return; }   // mid-update: no draws, no power-off, no ESP-NOW sends
+  }
+
+  while (Serial.available()) {           // USB console: wifi SSID PASS | wifi clear | status
+    char c = (char)Serial.read();
+    if (c == '\n' || c == '\r') {
+      usbLine[usbN] = 0;
+      if (usbN) usbCommand(usbLine);
+      usbN = 0;
+    } else if (usbN < sizeof(usbLine) - 1) {
+      usbLine[usbN++] = c;
+    }
+  }
 
   if (frameFresh) {                      // adopt the newest broadcast
     frameFresh = false;
@@ -309,13 +418,14 @@ void loop() {
       dirty = true;
     }
   }
-  if (!locked && ms - scanHopMs > 400) { // hunt for the kart across channels
+  // while joining or joined (OTA) the radio belongs to the AP: no channel hunting
+  if (!locked && !wifiTrying && !otaUp && ms - scanHopMs > 400) {   // hunt for the kart
     scanHopMs = ms;
     scanCh = scanCh >= 13 ? 1 : scanCh + 1;
     esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
     dirty = true;
   }
-  if (locked && ms - lastRxMs > 20000) { // really lost: hunt again, starting where it last was
+  if (locked && !wifiTrying && !otaUp && ms - lastRxMs > 20000) {   // really lost: hunt again
     locked = false; scanHopMs = 0; dirty = true;
     uint8_t cur; wifi_second_chan_t sc;
     if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur >= 1 && cur <= 13) scanCh = cur;
