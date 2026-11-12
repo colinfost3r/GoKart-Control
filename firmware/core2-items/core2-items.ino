@@ -13,6 +13,10 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
+#include <ArduinoOTA.h>
+#include <Preferences.h>
+
+#define FW_VERSION "core2-0.3.2"
 
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
@@ -23,6 +27,8 @@ static const uint8_t ROT = 2;                 // fixed for the bar cradle (owner
 // link / inventory (written from the ESP-NOW callback)
 static volatile bool frameFresh = false;
 static uint8_t rxItems[3], rxN = 0, rxSeq = 0, rxKart = 0;
+static volatile uint8_t kartPin = 0;          // 0.3.1: NVS "kart" -- 0 = any kart, N = only kart N's broadcasts
+//                                               (two karts now broadcast at once; unpinned would flicker between them)
 static uint8_t heltecMac[6]; static bool heltecKnown = false;
 static uint32_t lastRxMs = 0;
 
@@ -32,6 +38,28 @@ static int sel = 0;
 static uint32_t scanHopMs = 0; static uint8_t scanCh = 1; static bool locked = false;
 static uint32_t useSentMs = 0; static uint8_t useSeq = 0, useTries = 0, useSlot = 0;
 static uint32_t lastDrawMs = 0; static bool dirty = true;
+
+/* USB power follows the kart key (cradle USB): key on boots the Core2 (the AXP powers up on
+ * VBUS insert), and when VBUS goes away the battery would run for hours, so we power off after
+ * a short on-screen countdown. A tap during the countdown keeps it on (handheld use) until USB
+ * power is next seen, which re-arms the auto-off. */
+static uint32_t vbusLostMs = 0;                 // 0 = VBUS present (or stay-on armed)
+static bool stayOn = false;                     // tapped during the countdown: no auto-off
+static uint32_t vbusPollMs = 0;
+static const uint32_t OFF_AFTER_MS = 15000;     // key off -> power off this much later
+
+/* OTA over the pit AP, so updates need no USB (owner 2026-11-11). Credentials live in NVS --
+ * `wifi SSID PASS` over USB serial, once; the repo is public, so they are never compiled in.
+ * The join runs at boot only (25 s window): since 0.2.2 powers off at key-off, every session
+ * is a fresh boot, so at the pit it always joins; and a kart away from the AP gives up once
+ * and never scans again mid-ride (a scan would drag the radio off the ESP-NOW channel).
+ * While joined the radio sits on the AP's channel = the kart Heltec's pinned channel.
+ * Flash with: espota.py -i gokart-core2.local -p 3232 -f core2-items.ino.bin */
+static Preferences prefs;
+static String wifiSsid, wifiPass;
+static bool wifiTrying = false, otaUp = false, otaBusy = false;
+static uint32_t wifiGiveUpMs = 0;
+static char usbLine[96]; static uint8_t usbN = 0;
 
 /* Names, colors and shapes mirror the dash (app.js ITEM_SVG / ITEM_COLOR / ITEM_SUB).
    Codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud, 6 boost3, 7 star, 8 magnet,
@@ -48,6 +76,7 @@ static void onRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len
   if (len != (int)sizeof(GkInvFrame)) return;
   const GkInvFrame* f = (const GkInvFrame*)data;
   if (f->m0 != 'G' || f->m1 != 'I' || f->ver != 1) return;
+  if (kartPin && f->kart != kartPin) return;   // pinned: other karts' frames are not ours
   rxKart = f->kart; rxSeq = f->seq; rxN = f->n > 3 ? 3 : f->n;
   for (int i = 0; i < 3; i++) rxItems[i] = f->items[i];
   memcpy(heltecMac, info->src_addr, 6); heltecKnown = true;
@@ -191,12 +220,30 @@ static void draw() {
   cv.setTextDatum(top_left);
   cv.setFont(&fonts::DejaVu18);
   cv.setTextColor(link ? TFT_GREEN : TFT_RED);
-  cv.drawString(link || kart ? (String("KART ") + kart) : "NO KART", 10, 8);
+  cv.drawString(link || kart ? (String("KART ") + kart) : kartPin ? (String("KART ") + kartPin) : "NO KART", 10, 8);
   cv.setTextDatum(top_right);
   cv.setTextColor(TFT_DARKGREY);
   cv.drawString(String(M5.Power.getBatteryLevel()) + "%", W - 10, 8);
   cv.fillCircle(W / 2, 17, 6, link ? TFT_GREEN : TFT_RED);
+  if (otaUp) cv.fillCircle(W / 2 + 16, 17, 4, TFT_SKYBLUE);     // on the pit AP: OTA reachable
 
+  if (vbusLostMs) {                      // kart keyed off: full-screen countdown to power off
+    uint32_t left = millis() - vbusLostMs;
+    int secs = left >= OFF_AFTER_MS ? 0 : (int)((OFF_AFTER_MS - left) / 1000) + 1;
+    cv.setTextDatum(middle_center);
+    cv.setFont(&fonts::DejaVu24);
+    cv.setTextColor(TFT_ORANGE);
+    cv.drawString("KART OFF", W / 2, H / 2 - 56);
+    cv.setFont(&fonts::DejaVu56);
+    cv.setTextColor(TFT_WHITE);
+    cv.drawString(String(secs), W / 2, H / 2 + 4);
+    cv.setFont(&fonts::DejaVu18);
+    cv.setTextColor(TFT_DARKGREY);
+    cv.drawString("TAP TO STAY ON", W / 2, H / 2 + 64);
+    cv.pushSprite(0, 0);
+    cv.deleteSprite();
+    return;
+  }
   if (!link) {
     cv.setTextDatum(middle_center);
     cv.setTextColor(TFT_WHITE);
@@ -259,18 +306,133 @@ static void draw() {
 void setup() {
   auto cfg = M5.config();
   M5.begin(cfg);
+  Serial.begin(115200);                  // explicit: the USB console must work whatever cfg defaults to
   M5.Display.setRotation(ROT);
   M5.Display.setBrightness(200);
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
+  WiFi.setAutoReconnect(false);          // a reconnect scan would hop off the ESP-NOW channel
   esp_now_init();
   esp_now_register_recv_cb(onRecv);
   esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
+  prefs.begin("core2", false);
+  kartPin = prefs.getUChar("kart", 0);
+  wifiSsid = prefs.getString("ssid", "");
+  wifiPass = prefs.getString("pass", "");
+  if (wifiSsid.length()) {
+    WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
+    wifiTrying = true;
+    wifiGiveUpMs = millis() + 25000;
+  }
+  Serial.printf("%s wifi '%s' %s\n", FW_VERSION, wifiSsid.c_str(),
+                wifiSsid.length() ? "joining for OTA" : "not set (usb: wifi SSID PASS)");
+}
+
+static void otaStart() {
+  static char host[20];
+  snprintf(host, sizeof host, "gokart-core2-%u", kartPin);   // 0.3.2: per-kart mDNS name (two units collided)
+  ArduinoOTA.setHostname(host);
+  ArduinoOTA.onStart([]() {
+    otaBusy = true;
+    M5.Display.fillScreen(TFT_BLACK);
+    M5.Display.setTextDatum(middle_center);
+    M5.Display.setFont(&fonts::DejaVu24);
+    M5.Display.setTextColor(TFT_SKYBLUE);
+    M5.Display.drawString("UPDATING", M5.Display.width() / 2, M5.Display.height() / 2 - 20);
+  });
+  ArduinoOTA.onProgress([](unsigned p, unsigned total) {
+    static int last = -1;
+    int pct = total ? (int)(p * 100 / total) : 0;
+    if (pct == last) return;
+    last = pct;
+    int W = M5.Display.width();
+    M5.Display.fillRect(20, M5.Display.height() / 2 + 10, (W - 40) * pct / 100, 14, TFT_SKYBLUE);
+  });
+  ArduinoOTA.onError([](ota_error_t) { otaBusy = false; dirty = true; });
+  ArduinoOTA.begin();
+}
+
+/* USB console (one-time setup + checks): kart N|any | wifi SSID PASS | wifi clear | status */
+static void usbCommand(char* line) {
+  if (!strncmp(line, "kart ", 5)) {
+    char* a = line + 5;
+    if (!strcmp(a, "any") || !strcmp(a, "0")) {
+      prefs.putUChar("kart", 0); kartPin = 0;
+      Serial.println("kart pin cleared: any kart");
+    } else {
+      int n = atoi(a);
+      if (n < 1 || n > 8) { Serial.println("usage: kart 1-8 | kart any"); return; }
+      prefs.putUChar("kart", (uint8_t)n); kartPin = (uint8_t)n;
+      locked = false; n = 0;                 // drop the current lock: only the pinned kart from now on
+      Serial.printf("pinned to kart %u\n", kartPin);
+    }
+  } else if (!strncmp(line, "wifi ", 5)) {
+    char* a = line + 5;
+    if (!strcmp(a, "clear")) {
+      prefs.remove("ssid"); prefs.remove("pass");
+      wifiSsid = ""; Serial.println("wifi cleared");
+      return;
+    }
+    char* sp = strrchr(a, ' ');          // SSID may hold spaces, the password may not
+    if (!sp || sp == a) { Serial.println("usage: wifi SSID PASS | wifi clear"); return; }
+    *sp = 0;
+    prefs.putString("ssid", a); prefs.putString("pass", sp + 1);
+    Serial.printf("wifi stored for '%s'; reboots join it for OTA\n", a);
+    wifiSsid = a; wifiPass = sp + 1;
+    WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
+    wifiTrying = true; wifiGiveUpMs = millis() + 25000;
+  } else if (!strcmp(line, "status")) {
+    Serial.printf("%s pin %u kart %u locked %d ch %u wifi %s ip %s ota %d vbus %d mV batt %d%%\n",
+                  FW_VERSION, kartPin, kart, locked, scanCh,
+                  WiFi.status() == WL_CONNECTED ? wifiSsid.c_str() : "down",
+                  WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString().c_str() : "-",
+                  otaUp, M5.Power.getVBUSVoltage(), M5.Power.getBatteryLevel());
+  } else if (line[0]) {
+    Serial.println("commands: kart 1-8|any | wifi SSID PASS | wifi clear | status");
+  }
 }
 
 void loop() {
   M5.update();
   uint32_t ms = millis();
+
+  if (wifiTrying) {
+    if (WiFi.status() == WL_CONNECTED) {
+      wifiTrying = false; otaUp = true;
+      lastRxMs = ms;                     // 0.3.2: give the kart the full grace from WiFi-join time
+      otaStart();
+      Serial.printf("wifi %s ota gokart-core2.local ch %d\n",
+                    WiFi.localIP().toString().c_str(), WiFi.channel());
+      dirty = true;
+    } else if ((int32_t)(ms - wifiGiveUpMs) > 0) {
+      wifiTrying = false;
+      WiFi.disconnect(false);            // keep the radio for ESP-NOW; never scan again this boot
+      dirty = true;
+    }
+  }
+  if (otaUp) {
+    ArduinoOTA.handle();
+    if (WiFi.status() != WL_CONNECTED) { otaUp = false; dirty = true; }   // drove away: stay put
+    if (otaBusy) { delay(2); return; }   // mid-update: no draws, no power-off, no ESP-NOW sends
+    // 0.3.2: the kart comes first. Two shop APs share the SSID on different channels; when WiFi
+    // parks us where the pinned kart's Heltec is not, drop WiFi and go find the kart.
+    if (!otaBusy && ms - lastRxMs > 15000) {
+      otaUp = false;
+      WiFi.disconnect(false);            // keep the radio; no reconnect (autoReconnect is off)
+      locked = false; scanHopMs = 0; dirty = true;
+    }
+  }
+
+  while (Serial.available()) {           // USB console: wifi SSID PASS | wifi clear | status
+    char c = (char)Serial.read();
+    if (c == '\n' || c == '\r') {
+      usbLine[usbN] = 0;
+      if (usbN) usbCommand(usbLine);
+      usbN = 0;
+    } else if (usbN < sizeof(usbLine) - 1) {
+      usbLine[usbN++] = c;
+    }
+  }
 
   if (frameFresh) {                      // adopt the newest broadcast
     frameFresh = false;
@@ -283,13 +445,14 @@ void loop() {
       dirty = true;
     }
   }
-  if (!locked && ms - scanHopMs > 400) { // hunt for the kart across channels
+  // while joining or joined (OTA) the radio belongs to the AP: no channel hunting
+  if (!locked && !wifiTrying && !otaUp && ms - scanHopMs > 400) {   // hunt for the kart
     scanHopMs = ms;
     scanCh = scanCh >= 13 ? 1 : scanCh + 1;
     esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
     dirty = true;
   }
-  if (locked && ms - lastRxMs > 20000) { // really lost: hunt again, starting where it last was
+  if (locked && !wifiTrying && !otaUp && ms - lastRxMs > 20000) {   // really lost: hunt again
     locked = false; scanHopMs = 0; dirty = true;
     uint8_t cur; wifi_second_chan_t sc;
     if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur >= 1 && cur <= 13) scanCh = cur;
@@ -300,9 +463,30 @@ void loop() {
     useTries++;
   }
 
+  // usb power follows the kart key: VBUS gone -> countdown -> power off (getVBUSVoltage -1 = no PMIC
+  // support on this unit: never auto-off). VBUS back re-arms stay-on.
+  if (ms - vbusPollMs > 500) {
+    vbusPollMs = ms;
+    int16_t mv = M5.Power.getVBUSVoltage();
+    if (mv > 4000) {
+      if (vbusLostMs || stayOn) dirty = true;
+      vbusLostMs = 0; stayOn = false;
+    } else if (mv >= 0 && !vbusLostMs && !stayOn) {
+      vbusLostMs = ms ? ms : 1; dirty = true;
+    }
+    if (vbusLostMs) {
+      dirty = true;                      // the countdown digit ticks
+      if (ms - vbusLostMs > OFF_AFTER_MS) { M5.Display.fillScreen(TFT_BLACK); M5.Power.powerOff(); }
+    }
+  }
+
   // touch: swipe = pick a slot, tap = use (rotation is fixed: no gestures can flip it)
   static bool down = false; static int x0 = 0, y0 = 0; static uint32_t downMs = 0; static bool acted = false;
   auto t = M5.Touch.getDetail();
+  if (t.isPressed() && vbusLostMs) {     // tap during the countdown: stay on, swallow the gesture
+    vbusLostMs = 0; stayOn = true; dirty = true;
+    down = true; acted = true; x0 = t.x; y0 = t.y; downMs = ms;
+  }
   if (t.isPressed() && !down) { down = true; acted = false; x0 = t.x; y0 = t.y; downMs = ms; }
   else if (t.isPressed() && down && !acted) {
     int dx = t.x - x0;
