@@ -7,9 +7,11 @@ in the native player candidate. Offline validation does not establish hardware a
 **Update, November 12 afternoon: both kart 3 accessories now run the candidate.** The Core2 and
 Heltec applications were written over USB with the VESC off; identity, VESC pins, pairing and
 Wi-Fi/OTA settings were retained and the pair re-linked. Nothing was driven and nothing was
-written to a VESC. The owner confirmed the new map screen appears. VESC reconnection, mode
-control, wired pedal/reverse coexistence and touch are **not yet checked** on the new
-applications. See
+written to a VESC by the update. The owner confirmed the new map screen appears. With the VESC
+then powered, the Heltec reconnected to the pinned controller, ECO/NORMAL/SPORT from the Core2
+were written and verified at the November 10 values, and the wheel ran forward and reverse
+with fault 0 throughout. Still open: the owner's judgement of pedal feel, pit STOP/SLOW/BOOST,
+a sustained soak, GPS, and everything that needs the host (course download, JOIN, FIRE). See
 [the install record](../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
 ## Project and Git
@@ -123,8 +125,9 @@ not cryptographic LoRa replay protection. Course download and own-kart commands 
 
 The previous `4a582f0` pair (Heltec `11e556e8…21f2`, Core2 `996c4387…9b0a`) was read back from
 flash before the update and is kept privately for rollback; see the
-[install record](../hardware/m5/2026-11-12-kart3-player-update/README.md). The VESC observations
-below were made on that previous pair and have **not** been repeated on the candidate.
+[install record](../hardware/m5/2026-11-12-kart3-player-update/README.md). The November 11
+observations below were made on that previous pair; on the candidate, identity, the three mode
+readbacks and wheels-up forward/reverse were repeated on November 12, cold-boot behaviour was not.
 
 - Core2 v1.3 / K010-V13, Heltec WiFi LoRa 32 V4.3 + L76K. Encrypted local pair; channel 6 on
   November 11, channel 2 after this update because the Heltec follows the Wi-Fi access point.

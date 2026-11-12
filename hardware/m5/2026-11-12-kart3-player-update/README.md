@@ -24,10 +24,19 @@ aligned channels; the channel moved from 6 to 2 because the Heltec followed the 
 point. No course peer is configured on either board yet. The owner confirmed the Core2 shows the new
 full-screen map with the DASH/MAP button and FIRE box.
 
-**Not verified here.** VESC connection, identity and mode control with the new Heltec
-application; wired throttle and reverse coexistence; touch and page switching; GPS; course download,
-JOIN and FIRE; OTA. Free heap on the Heltec with Wi-Fi up is 45.7 kB, against 59.2 kB on the
-previous application; watch `heap_min` once BLE is connected.
+**VESC powered afterwards.** The owner turned the VESC on and the console was watched
+read-only. The Heltec connected to the pinned controller (6.02, `75_300_R2`, UUID equal to the
+pin) with `id_ok`, `limits_ok`, baseline source `read` and zero CRC errors, and did not reboot.
+Core2 mode holds produced NORMAL 0.75 / 36102 ERPM, ECO 0.50 / 21661 ERPM and SPORT 1.00 /
+150000 ERPM, each written and verified, the same values as November 10. The wheel was run
+forward to 25528 ERPM and in reverse to about −14000 ERPM over several cycles; all 142 samples
+showed fault 0 and the VESC link never dropped. Final state: ECO, stopped.
+
+**Not verified here.** The owner's judgement of pedal smoothness and direction; pit
+STOP/SLOW/BOOST; a sustained soak; touch and page switching; GPS; course download, JOIN and
+FIRE; OTA. The Core2 game state read `Error`, consistent with a JOIN tap while no host is paired. Free heap on the Heltec with Wi-Fi up is 45.7 kB, against 59.2 kB on the
+previous application. With BLE also connected its low-water mark was 37.8 kB and had fallen
+about 1.2 kB over a few minutes; it has not been soak-tested.
 
 **Rollback.** The previous applications, NVS copies, raw console logs and upload logs are in
 the ignored private folder `firmware/build/bench-private/player-update-20261112/`. To go back,

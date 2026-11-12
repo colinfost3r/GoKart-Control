@@ -35,7 +35,7 @@ received and peer channels all matched **6**, with alignment confirmed.
 
 **Since November 12 kart 3 runs the native-player candidate instead** (Heltec `d4366264…b9`,
 Core2 `894a1a34…d3ac`), installed with the VESC off. The settings and readbacks above were
-observed on the `4a582f0` pair and are not yet repeated on the candidate; see the
+observed on the `4a582f0` pair; the candidate reproduced the same three mode readbacks; see the
 [install record](../../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
 Both segmented USB uploads were verified and preserved NVS. Full rollback images, pairing keys
