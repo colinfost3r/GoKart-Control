@@ -1,0 +1,154 @@
+{
+  "operation": "offline_export_verification",
+  "hardware_tested": false,
+  "files": {
+    "GoKart-Heltec-Rectangular-Owner-Layout-R05.f3d": {
+      "sha256": "4c445422a2a831b6dd4063223ed33581a90d35b9cbf5b902d1ff6fc95ad85266",
+      "bytes": 7056779,
+      "zip_directory_readable": true,
+      "compression_methods": [
+        0,
+        93
+      ],
+      "crc_check": "Not performed: Python zipfile does not support Fusion compression method 93; no round-trip reopen claimed."
+    },
+    "build_rectangular_revision.py": {
+      "sha256": "8edf527952f7a9f705da1261af66272d86d85ee01a97bd399550680be9bc0b69",
+      "bytes": 10106,
+      "python_syntax_valid": true
+    },
+    "case-upper-collar.step": {
+      "sha256": "0a42025705b2bc8d2874b0d415e090ba6061a8c033b83402c9fc4cd3a478a874",
+      "bytes": 217537,
+      "step_envelope_valid": true
+    },
+    "case-upper-collar.stl": {
+      "sha256": "d299649ac398303f14e09ff83e7e281befae45daa7def748217be694db4f2a8e",
+      "bytes": 216584,
+      "triangles": 4330,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -25.0,
+          25.0
+        ],
+        [
+          -44.0,
+          33.0
+        ],
+        [
+          -16.25,
+          27.5
+        ]
+      ],
+      "extent_mm": [
+        50.0,
+        77.0,
+        43.75
+      ]
+    },
+    "export_revision.py": {
+      "sha256": "318bd57e6d3c2a9f1a75470d38ddeadb517272281597632a14c3a787d5520caa",
+      "bytes": 4666,
+      "python_syntax_valid": true
+    },
+    "gps-slide-tray.step": {
+      "sha256": "4dd8eff0f23163d38e8e8ca2a9e2fb9da73b315cae46af21ca1b83a285bd5169",
+      "bytes": 66556,
+      "step_envelope_valid": true
+    },
+    "gps-slide-tray.stl": {
+      "sha256": "ab8aae619e46e607af8a1e1a559d6c9171dba9cc539a1b16a217f0c0b97a93a4",
+      "bytes": 10084,
+      "triangles": 200,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -12.3,
+          12.3
+        ],
+        [
+          -43.900002,
+          -23.5
+        ],
+        [
+          9.4,
+          20.0
+        ]
+      ],
+      "extent_mm": [
+        24.6,
+        20.400002,
+        10.6
+      ]
+    },
+    "lid-integral-antenna.step": {
+      "sha256": "6e8b119fc460632e689e6c38b588fffe4e1f1ae75495a6c10ec7e342ac42bd91",
+      "bytes": 101352,
+      "step_envelope_valid": true
+    },
+    "lid-integral-antenna.stl": {
+      "sha256": "69ed689ba2fff8292729c3888d7380683c19f076e0a30aa2a01944aa5480fb71",
+      "bytes": 796884,
+      "triangles": 15936,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -18.0,
+          19.386377
+        ],
+        [
+          -44.0,
+          33.0
+        ],
+        [
+          14.3,
+          39.502037
+        ]
+      ],
+      "extent_mm": [
+        37.386377,
+        77.0,
+        25.202037
+      ]
+    },
+    "lower-collar.step": {
+      "sha256": "ec50af88081f14b628cf61f7f6e243eff9d80a92866c41be8a40198f5601e248",
+      "bytes": 24889,
+      "step_envelope_valid": true
+    },
+    "lower-collar.stl": {
+      "sha256": "e2fc273fb886fb5176d1d7a8971c10b8a62f013f86b6a33f02d6a7163bd8e74a",
+      "bytes": 138084,
+      "triangles": 2760,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -25.0,
+          25.0
+        ],
+        [
+          -12.0,
+          12.0
+        ],
+        [
+          -34.0,
+          -17.75
+        ]
+      ],
+      "extent_mm": [
+        50.0,
+        24.0,
+        16.25
+      ]
+    }
+  }
+}

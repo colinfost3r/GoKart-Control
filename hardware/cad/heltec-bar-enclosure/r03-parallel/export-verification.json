@@ -1,0 +1,144 @@
+{
+  "operation": "offline_export_verification",
+  "hardware_tested": false,
+  "files": {
+    "antenna-insert-15deg.stl": {
+      "sha256": "c297d8878af710a4d7336cd3547ba438f58f0f0fa96018784412ad251852b32e",
+      "bytes": 111484,
+      "triangles": 2228,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          11.022101,
+          30.9779
+        ],
+        [
+          -9.977899,
+          9.977899
+        ],
+        [
+          27.5,
+          39.143593
+        ]
+      ],
+      "extent_mm": [
+        19.955799,
+        19.955798,
+        11.643593
+      ]
+    },
+    "case-upper-collar.stl": {
+      "sha256": "a98d049c1a2f330bc35cb1c0b4a6258bf57b38f8431eab79d09ee687d3658f47",
+      "bytes": 229784,
+      "triangles": 4594,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -33.0,
+          33.0
+        ],
+        [
+          -25.0,
+          25.0
+        ],
+        [
+          -16.25,
+          27.5
+        ]
+      ],
+      "extent_mm": [
+        66.0,
+        50.0,
+        43.75
+      ]
+    },
+    "lid-gps-retainers.stl": {
+      "sha256": "a7daa3c631f9b93d6e6521e7988cc20366ec38aa72405930d63c5abb0e0b51a7",
+      "bytes": 202484,
+      "triangles": 4048,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -33.0,
+          33.0
+        ],
+        [
+          -18.0,
+          18.0
+        ],
+        [
+          8.8,
+          30.0
+        ]
+      ],
+      "extent_mm": [
+        66.0,
+        36.0,
+        21.2
+      ]
+    },
+    "lower-collar.stl": {
+      "sha256": "7057e38f0004c68141c052af38ef01551bc846b1af600faf954d93cdc07713d2",
+      "bytes": 138084,
+      "triangles": 2760,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -12.0,
+          12.0
+        ],
+        [
+          -25.0,
+          25.0
+        ],
+        [
+          -34.0,
+          -17.75
+        ]
+      ],
+      "extent_mm": [
+        24.0,
+        50.0,
+        16.25
+      ]
+    },
+    "antenna-insert-15deg.step": {
+      "sha256": "b04ea797567d5a26bf590ebc18ba6791f5c767fd80c4f3afdde6a53cd49d62d9",
+      "bytes": 21053,
+      "step_envelope_valid": true
+    },
+    "case-upper-collar.step": {
+      "sha256": "6eb3089f1de54d9cbc2ea95f9fa93a0a281c976e99cdebb30428ef75b53ecfd0",
+      "bytes": 158932,
+      "step_envelope_valid": true
+    },
+    "lid-gps-retainers.step": {
+      "sha256": "e995426d26e66935f43f0a99e5a399f8a697b44136c533ad7d7888aa8cf589ce",
+      "bytes": 82276,
+      "step_envelope_valid": true
+    },
+    "lower-collar.step": {
+      "sha256": "4c6990e201281a67ad45fc428d55b59e197a573d7186fb0d6427921777b3c5a3",
+      "bytes": 23727,
+      "step_envelope_valid": true
+    },
+    "GoKart-Heltec-Compact-Parallel-R03.f3d": {
+      "sha256": "829ef085d38aa49f51243e804512a971a4d3ba1bc63d59959a23e7dafc9bfff1",
+      "bytes": 6314277,
+      "zip_directory_readable": true,
+      "compression_methods": [
+        0,
+        93
+      ],
+      "crc_check": "Not performed: local Python zipfile does not support all Fusion compression methods; no round-trip reopen claimed."
+    }
+  }
+}

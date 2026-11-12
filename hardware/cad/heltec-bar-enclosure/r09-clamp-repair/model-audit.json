@@ -1,0 +1,294 @@
+{
+  "status": "CAD clamp topology repaired; physical FDM fit, grip, strength and endurance remain unvalidated",
+  "document": "GoKart Heltec Connected Clamp R09",
+  "timeline_count": 733,
+  "authoritative_input": "input/current-R08-before-R09.f3d",
+  "owner_pose_comparison": [
+    {
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF OLED protective cover missing from STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "component": "R09 Case with connected clamp ears",
+      "file": "case-connected-clamp",
+      "stl": "case-connected-clamp.stl",
+      "step": "case-connected-clamp.step",
+      "solid": true,
+      "connected_solids": 1,
+      "volume_cm3": 51.907489563648184,
+      "all_edges_two_coedges": true,
+      "periodic_seam_edges": 0,
+      "bounds_mm": [
+        [
+          -33.0,
+          -46.00000000000001,
+          -16.25
+        ],
+        [
+          33.0,
+          33.0,
+          29.000000000000004
+        ]
+      ]
+    },
+    {
+      "component": "R09 Recessed lid",
+      "file": "recessed-lid",
+      "stl": "recessed-lid.stl",
+      "step": "recessed-lid.step",
+      "solid": true,
+      "connected_solids": 1,
+      "volume_cm3": 7.293359045905113,
+      "all_edges_two_coedges": true,
+      "periodic_seam_edges": 1,
+      "bounds_mm": [
+        [
+          -18.0,
+          -46.0,
+          14.3
+        ],
+        [
+          19.38969553462584,
+          33.0,
+          39.50271411896337
+        ]
+      ]
+    },
+    {
+      "component": "R09 Owner lower collar",
+      "file": "lower-collar",
+      "stl": "lower-collar.stl",
+      "step": "lower-collar.step",
+      "solid": true,
+      "connected_solids": 1,
+      "volume_cm3": 14.676929878136049,
+      "all_edges_two_coedges": true,
+      "periodic_seam_edges": 0,
+      "bounds_mm": [
+        [
+          -33.0,
+          -12.000000000000002,
+          -34.0
+        ],
+        [
+          33.0,
+          12.000000000000002,
+          -17.75
+        ]
+      ]
+    }
+  ],
+  "repair": {
+    "document": "GoKart Heltec Connected Clamp R09",
+    "timeline_count": 733,
+    "input_archive": "input/current-R08-before-R09.f3d",
+    "owner_base_preservation": "Additive repairs only; original body minus repaired body has zero volume",
+    "original_case_volume_cm3": 43.442406820706154,
+    "repaired_case_volume_cm3": 51.907489563648184,
+    "removed_original_volume_cm3": 0.0,
+    "mirrored_surviving_ear_volume_cm3": 5.345082742941999,
+    "webs_mm": [
+      {
+        "x": [
+          -18,
+          -14
+        ],
+        "y": [
+          -12,
+          12
+        ],
+        "z": [
+          -16.25,
+          0
+        ]
+      },
+      {
+        "x": [
+          14,
+          18
+        ],
+        "y": [
+          -12,
+          12
+        ],
+        "z": [
+          -16.25,
+          0
+        ]
+      }
+    ],
+    "web_thickness_mm": 4,
+    "tube_diameter_mm": 25.273,
+    "bore_diameter_mm": 25.523,
+    "minimum_web_to_bore_radial_allowance_mm": 1.2385,
+    "split_gap_mm": 1.5,
+    "M4_axes_xy_mm": [
+      [
+        -26,
+        0
+      ],
+      [
+        26,
+        0
+      ]
+    ],
+    "clamp_width_mm": 66,
+    "native_case_edges_have_two_coedges": true,
+    "note": "Periodic seam edges can have one unique face and two coedges; two-coedge topology is the intended check."
+  },
+  "unchanged_parts": [
+    {
+      "part": "recessed-lid",
+      "volume_delta_cm3": 0.0
+    },
+    {
+      "part": "lower-collar",
+      "volume_delta_cm3": 0.0
+    }
+  ],
+  "lid_screws": {
+    "chosen_part": "McMaster92295A103, #4 x 1/2 inch pan-head thread-forming screw for plastic",
+    "pilot_diameter_mm": 2.6500000000000004,
+    "pilot_depth_mm": 12.000000000000002,
+    "lid_clearance_mm": 3.4000000000000004,
+    "count": 2,
+    "tip_clearance_mm": 1.8
+  },
+  "clamp_screws": {
+    "count": 2,
+    "specification": "M4 x30 socket head, M4 nuts",
+    "axes_xy_mm": [
+      [
+        -26,
+        0
+      ],
+      [
+        26,
+        0
+      ]
+    ]
+  },
+  "known_fit_limits": [
+    "Inherited GPS receiver overlap with conservative OLED cover proxy:0.0845mm in Y and0.3mm in Z; actual accessory fit unverified",
+    "Actual mating plugs, harness bundle and bend are unmeasured",
+    "Pilot diameter, screw torque, clip flex and ASA/PETG fit need a physical prototype",
+    "Clamping force, vibration, FDM strength and weather sealing are not established by manifold CAD geometry"
+  ],
+  "feature_warnings": [
+    {
+      "timeline_index": 607,
+      "name": "45deg front socket transition",
+      "component": "R07 Case with floor-backed GPS supports",
+      "suppressed": false,
+      "message": "Profile 1 missing<b>1 Reference Failures</b><br/>The profile reference is lost and this feature is using cached geometry.<br/>Edit this feature and select new profile references.45deg front socket transition"
+    }
+  ]
+}

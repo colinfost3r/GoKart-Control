@@ -1,0 +1,14 @@
+{
+  "timeline_unchanged": 784,
+  "view_only_separation_mm": 20,
+  "transforms_restored": [
+    {
+      "component": "R10 Sculpted lower clamp",
+      "max_matrix_delta_after_view": 0.0
+    },
+    {
+      "component": "REF R10 bottom plain M4 nuts nominal",
+      "max_matrix_delta_after_view": 0.0
+    }
+  ]
+}

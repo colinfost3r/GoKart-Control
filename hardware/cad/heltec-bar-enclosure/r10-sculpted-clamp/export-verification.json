@@ -1,0 +1,147 @@
+{
+  "operation": "offline_export_verification",
+  "hardware_tested": false,
+  "files": {
+    "GoKart-Heltec-Sculpted-Clamp-R10.f3d": {
+      "sha256": "647cdea0133bad5283752873d351aa37700e4365142cb1447a200978dd0aa9be",
+      "bytes": 9779622,
+      "zip_directory_readable": true,
+      "compression_methods": [
+        0,
+        93
+      ],
+      "crc_check": "Not performed: Python zipfile does not support Fusion compression method 93; no round-trip reopen claimed."
+    },
+    "build_sculpted_clamp.py": {
+      "sha256": "7be8e0716a3b0f4cfe83c3fc6eef5c8fb82f8729667b97b19a13f5f001c3caa3",
+      "bytes": 7498,
+      "python_syntax_valid": true
+    },
+    "capture_input.py": {
+      "sha256": "9480fd621010aa1ce9b30b1c8e1517cf591e25ae53fa35e00f1755956b72d612",
+      "bytes": 1646,
+      "python_syntax_valid": true
+    },
+    "case-sculpted-clamp.step": {
+      "sha256": "f7906e0cb9dd5114bbf2ecd38338205dbc474c7284153a8135d2a6c20dbc5202",
+      "bytes": 368050,
+      "step_envelope_valid": true
+    },
+    "case-sculpted-clamp.stl": {
+      "sha256": "120de9715c55a92965894b58a908d8e800b86ae68a471bd5672bb16576926789",
+      "bytes": 382084,
+      "triangles": 7640,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -33.0,
+          33.0
+        ],
+        [
+          -46.0,
+          33.0
+        ],
+        [
+          -16.25,
+          29.0
+        ]
+      ],
+      "extent_mm": [
+        66.0,
+        79.0,
+        45.25
+      ]
+    },
+    "export_revision.py": {
+      "sha256": "51b672f544b41eb991af394a7592d80fc44d29e1dc90aab723a22298710a02fe",
+      "bytes": 4989,
+      "python_syntax_valid": true
+    },
+    "independent_fit_review.py": {
+      "sha256": "ee3ebd0df69038834f05f8a1d8dbb75c658c86ac1560186f17886f999fb99ba8",
+      "bytes": 4777,
+      "python_syntax_valid": true
+    },
+    "independent_hardware_review.py": {
+      "sha256": "e81f94b2ef57905f24dd547f6ed358b0e369929291c0579b3178e8b33f11ade3",
+      "bytes": 3529,
+      "python_syntax_valid": true
+    },
+    "lower-sculpted-clamp.step": {
+      "sha256": "67d7bd0f62006eb2c05ad045e2d188be1deb5859129247cd40928a01f6853e9c",
+      "bytes": 62605,
+      "step_envelope_valid": true
+    },
+    "lower-sculpted-clamp.stl": {
+      "sha256": "3ce00a0a8e9aa3d3b8b681e0987b738a83b6d0a7eb5c1a7b6df53f1a8b784b89",
+      "bytes": 75784,
+      "triangles": 1514,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -33.0,
+          33.0
+        ],
+        [
+          -12.0,
+          12.0
+        ],
+        [
+          -34.0,
+          -17.75
+        ]
+      ],
+      "extent_mm": [
+        66.0,
+        24.0,
+        16.25
+      ]
+    },
+    "make_previews.py": {
+      "sha256": "80363819ea48b360c34f3b000801b8e694065d20a01c91653ffca88da3acf68b",
+      "bytes": 3719,
+      "python_syntax_valid": true
+    },
+    "recessed-lid.step": {
+      "sha256": "aaef50bfdac5bfe91e05539891abdfdc433553e4b6e24b849615bf25440dd851",
+      "bytes": 114918,
+      "step_envelope_valid": true
+    },
+    "recessed-lid.stl": {
+      "sha256": "bdd4ce0baf932315e652948fca6c1eaf0a2efa2a5f3a12f621979b426b6ca9c1",
+      "bytes": 750984,
+      "triangles": 15018,
+      "closed_manifold": true,
+      "consistent_winding": true,
+      "connected_components": 1,
+      "bounds_mm": [
+        [
+          -18.0,
+          19.386377
+        ],
+        [
+          -46.0,
+          33.0
+        ],
+        [
+          14.3,
+          39.502037
+        ]
+      ],
+      "extent_mm": [
+        37.386377,
+        79.0,
+        25.202037
+      ]
+    },
+    "verify_exports.py": {
+      "sha256": "2de59c39553c26e806d2b61d4981580b4bd0de55c7e53d4f8ae7fbb2e8d1a454",
+      "bytes": 2875,
+      "python_syntax_valid": true
+    }
+  }
+}

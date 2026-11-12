@@ -1,5 +1,242 @@
 # Collaborator handoff
 
+## Sculpted clamp and top-access M4 screws R10 — November 11, 2026
+
+[R10](hardware/cad/heltec-bar-enclosure/r10-sculpted-clamp/README.md) retains the
+complete bottom clamp as a distinct printed part and gives the clamp a restrained
+machined-bike appearance: **1 mm exterior bevels** on the upper shoulders/lower
+perimeter and **1.5 mm additive fillets** at the web-to-floor roots. The exact live
+R09 input was archived; no intervening owner edits were found. The lower collar
+was already present, so no earlier geometry was rolled back.
+
+The two clamp fasteners now insert **from the top**. Use **M4 ×30 DIN 912/ISO 4762
+socket-head screws**, with nominal 7 mm diameter ×4 mm high heads and a 3 mm Allen
+key. Each upper **8.2 mm diameter ×4.5 mm deep counterbore** has a chamfered entry
+and places the head **0.5 mm below the top face**. The old upper nut slots and
+lower head recesses were filled before making the new interfaces.
+
+The lower clamp has bottom-facing **7.3 mm AF ×3.4 mm deep hex pockets** for plain
+M4 nuts (7 mm AF ×3.2 mm high). At the modeled uncompressed stack, the screw tips
+extend **0.7 mm beyond the nuts**, or **0.5 mm below the lower clamp**. These pockets
+are not specified for taller nyloc nuts. Check printed fit and actual hardware;
+hex pockets resist nut rotation but do not establish retention while screws are loose.
+The two #4 plastic-forming lid screws remain unchanged; four installation screws total.
+
+Independent Boolean comparisons show the recessed lid, upper enclosure, tube
+contact bands and both split interfaces match R09. The extended base and 4 mm
+webs remain. Native topology, head/bearing/passage samples and new nominal M4
+hardware checks pass. Tube radial clearance remains **0.125 mm**, split gap
+**1.5 mm**, and the 12 mm driver corridors retain **2 mm clearance** above the ears.
+GPS support paths and internal cable/plug clearances are unchanged.
+
+Native Fusion, STEP/STL parts, assembled/separated views, provenance and audit
+reports are in the revision folder. All three STL meshes pass closed-manifold,
+consistent-winding and single-component checks. Physical FDM fit, clamp grip, torque and
+endurance remain prototype checks. The inherited GPS/OLED-cover proxy overlap,
+unmeasured cable plugs and hidden historical R07 timeline-607 warning remain
+documented; the current native parts are checked separately.
+
+All **492 offline repository tests passed**, eight suites, zero skipped. No
+firmware, VESC settings or live kart hardware changed in this CAD revision.
+The final fetch inspected Eamon’s `59976df` Core2 OTA update; it changes firmware/releases only, with no CAD interface changes, and remains on his branch.
+
+## R09 connected-clamp checkpoint — superseded by R10
+
+[R09](hardware/cad/heltec-bar-enclosure/r09-clamp-repair/README.md) completes the
+owner-approved clamp repairs around the extended base. The missing upper-left ear
+is restored as a mirror of the surviving right ear, and two **4 mm thick side webs**
+connect the ears to the case floor. The intended **66 mm clamp width**, **52 mm M4
+bolt spacing** and **1.5 mm split gap** are retained. The extended skirt remains.
+
+Independent Boolean checks found **zero original case material removed**, and no
+change to the upper enclosure, recessed lid or lower collar. All three current
+native parts are single solids with valid two-coedge edges. The full-length
+25.273 mm tube reference has no interference and retains **0.125 mm radial
+clearance**. Both M4 bores are clear, and the nominal 12 mm driver corridors have
+**2 mm clearance** above the ear mounting plane.
+
+The owner delegated screw selection: use **two #4 ×1/2-inch rounded/pan-head TRS
+thread-forming screws for plastic**, reference **McMaster 92295A103**. The recessed
+lid retains its 1.5 mm locating step, 0.3 mm side clearance, chamfered entry and
+perimeter ledge. Its adjustable **2.65 mm pilot diameter** requires a printed fit
+check with the selected screws. The clamp still uses **two M4 ×30 socket-head
+screws and M4 nuts**, keeping four installation screws total.
+
+The exact R08 input and new editable Fusion/STEP/STL outputs, previews and audit
+scripts are archived with R09. R08's rejected diagnostic case STL remains history;
+use the R09 parts for the prototype. Physical screw fit, clamp grip, clip movement,
+unmeasured harness plugs and the inherited GPS/cover proxy clearance still need
+checking. The old hidden R07 history retains its timeline-607 lost-profile warning;
+current R09 native geometry and exported meshes are checked separately.
+All three final STL meshes pass closed-manifold, consistent-winding and single-component checks.
+
+All **492 offline tests passed**, eight suites, zero skipped. Eamon's new
+`c4731bd` changes Core2 key-power firmware/releases only; it has no enclosure
+interface changes and was not merged into this focused mechanical branch.
+No firmware, VESC settings or live hardware changed in this revision.
+
+## R08 recessed-lid checkpoint — superseded by R09
+
+[R08](hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md) derives from the
+owner's extended R07 at timeline 677. The exact native input, layout and view were
+archived before work. The extended lower shell/skirt and lower collar are retained.
+Independent Boolean comparisons found no added or removed material below Z2.49 mm
+and no change anywhere on the lower collar.
+
+The lid's lower edge locates **1.5 mm** into a perimeter rim with **0.3 mm side
+clearance**, a **0.5 mm 45° entry chamfer** and approximately **1 mm ledge bearing**.
+The cap top and antenna stay at their existing height. The former M3 nut pockets
+and clearance passages are filled. New lid axes are (13,−29) and (−13,28) mm.
+
+The working screw selection is **#4 × 1/2 inch rounded-head thread-forming screws
+for plastic**, using McMaster 92295A103 as the reference. These are TRS plastic
+screws, not an interchangeable generic #4 sheet-metal or wood screw. Blind pilot
+diameter is **2.65 mm**, depth **12 mm**, with **3.4 mm lid clearance holes**.
+Nominal screw tips have **1.8 mm** bottom clearance. The owner subsequently delegated screw selection for R09; actual FDM pilot fit
+and retention still need a trial.
+
+**Clamp status:** the authoritative owner input has no upper-left clamp ear.
+That was not silently restored, because the owner requested preserving the base.
+Restoration while retaining the extension was subsequently approved and completed in R09.
+Do not treat this prototype as a complete accepted clamp assembly.
+
+**Case export blocked:** the owner-edited right clamp ear meets the extended base
+only along three zero-thickness edges (four native faces at each edge). The native
+model and STEP preserve this geometry; the case STL is quarantined as
+`diagnostics/case-as-edited-NOT-PRINT-READY.stl`. The lid and lower collar pass mesh
+checks. The owner subsequently approved a connecting web, implemented in R09.
+The hidden historical R07 feature at timeline 607 also retains a lost-profile
+warning; it was not rebuilt over the owner edits. See the R08 diagnostic reports.
+
+All 492 offline repository tests passed in eight suites, zero skipped. Those
+software tests are separate from the CAD and physical-fit checks. No firmware,
+controller settings, hardware calibration or kart operation changed.
+
+## R07 FDM supports and outboard clamp checkpoint — November 11, 2026
+
+The owner requested GPS supports that reach the case floor for FDM printing and
+mounting screws moved clear of the enclosure. [R07](hardware/cad/heltec-bar-enclosure/r07-fdm-supports/README.md)
+retains the **79 × 36 mm shell**, internal harness, OLED opening and owner board/
+antenna positions. Rear GPS supports extend to the floor; supports near the Heltec
+use floor-backed ribs and sloped transitions around the board. The clip root is
+supported. The owner then edited the GPS support/retention geometry directly;
+those edits are authoritative and must not be overwritten by regenerating the base.
+Clip flex and retention remain physical-fit checks.
+
+The two M4 tube-clamp bolt axes move from **±18.5 to ±26 mm**, with both clamp halves
+updated together. The clamp is **66 mm wide**. A 12 mm diameter straight tool
+envelope is reserved at each axis; the two M3 lid screws remain in place, keeping
+four installation screws total. This is a CAD fit prototype; use the revision's
+audit/export reports for final validation and physical-fit limitations. The
+4.247 mm bare-GPS-socket rear gap and fully internal cable route are retained.
+
+
+The owner's seven completed features (OffsetFaces1 and Extrude19–24) were archived
+before a small lid-only relief. All remain in the final native model; the case
+volume is unchanged. The generated-base script does not reproduce those manual
+edits and must not replace the final native file. See the owner-edit provenance.
+
+Independent checks passed all eight sampled floor-support paths, retained wire/
+plug clearances, nominal M4 hardware fit and 2 mm clearance from each 12 mm tool
+envelope to the case and lid. The inherited small GPS-to-cover proxy uncertainty
+remains a physical-fit check. All 492 offline repository tests passed in eight
+suites, zero skipped; these do not establish physical print or kart acceptance.
+All three final STL meshes are closed, consistently wound and connected. Native
+Fusion, STEP/STL parts, previews, owner input snapshots and hashes are included.
+
+## R06 internal GPS harness checkpoint — November 11, 2026
+
+The latest owner requirement keeps the GPS-to-Heltec harness entirely inside the
+same rectangular enclosure. [R06](hardware/cad/heltec-bar-enclosure/r06-internal-harness/README.md)
+replaces R05's external tray opening with an internal side-supported GPS socket,
+a simple retaining clip, and open space below the module for the cable route.
+Access is through the removable lid. The owner's latest case/lid edits are
+preserved in the input snapshot before further changes.
+
+The owner confirmed **4 mm behind the bare GPS board socket** as the clearance reference;
+the supplied mated plug and wire bend have not been measured. The modeled clearance is
+**4.247 mm**, and the main rectangle is **79 × 36 mm**, retaining the four installation screws, OLED service
+opening, horizontal bar mount and owner-shaped antenna lid. The route must reach
+Heltec **P3**, its underside 1.25 mm eight-pin GPS socket, rather than the IPEX RF
+connector. Three connected printed solids provide the case/socket, lid and lower collar.
+Independent CAD checks found no route/plug-to-print intersections; the assumed wire
+envelope has a minimum 0.25 mm to printed material. The inherited tiny GPS-to-cover
+reference overlap remains an actual-fit check. All **492 repository tests passed**
+across eight suites with zero skipped; these are separate from mechanical validation.
+All three STL meshes passed closed-manifold, winding and connected-component checks.
+Native Fusion, STEP/STL parts, assembled/internal-route previews and the owner input
+archive are included. Refer to the R06 README and audit for assembly and fit limitations.
+No firmware, VESC settings or kart hardware are changed by this mechanical work.
+
+## R05 rectangular enclosure checkpoint — November 11, 2026
+
+The owner adjusted the Fusion model after R03. Those edits are the geometric
+reference for [R05](hardware/cad/heltec-bar-enclosure/r05-rectangular/README.md):
+GPS moved rearward/lower and rotated, and the antenna has a new shaped collar and
+position. The actual edited antenna axis is **30 degrees from vertical at 35 degrees
+in plan**; it supersedes the old 15-degree indexed-insert layout. The owner's
+unedited input is archived under the revision's `input/` directory, and the
+original open Fusion document was preserved.
+
+R05 replaces the old GPS retention with a sliding carrier and one end latch,
+allows hot-glue retention at the PCB edges/back, adds a compact OLED viewing
+opening and makes the antenna mount integral. It remains a four-installation-screw
+prototype (two clamp bolts and two lid screws) for ASA/PETG. The owner rejected
+R04’s separate-looking rear bay; R05 uses one **77 × 36 mm rectangular shell**,
+a flush tray end, and the owner-shaped antenna mount integrated into the lid.
+Refer to the revision
+README for final dimensions, assembly order, CAD checks and remaining physical-fit
+checks. No firmware, controller settings or kart hardware were changed.
+
+Independent review confirmed four solid print parts, preserved board/antenna poses,
+clear SMA seat/access, a clear OLED centre sightline and zero case/lid intersections
+during sampled withdrawal of the released tray and GPS. All four exported meshes
+are closed, consistently wound and connected; all 492 repository checks passed.
+The window is a straight-down service view. The tiny GPS receiver-to-rectangular
+OLED-cover-reference overlap remains an actual-hardware fit check, along with the
+pigtail, USB plug, latch flex and harness. See the R05 review/export reports.
+
+The moved GPS connector faces rearward. Its cable route is provided in the model,
+but the actual supplied harness length and bend clearance remain unmeasured. Do
+not force the module or ceramic antenna to accommodate a short cable.
+
+## R03 enclosure checkpoint — November 11, 2026
+
+The mechanical branch `mechanical/kart-mounts` adds a new Fusion prototype for the
+owner's **25.273 mm / 0.995 in horizontal tube**. The **66 × 36 × 30 mm case runs
+parallel to the tube**; the collar ears make the complete footprint **66 × 50 mm**.
+Four installation screws total: two M4 clamp bolts and two M3 lid screws. Molded
+features retain the Heltec and stacked, sky-facing GPS without separate keeper screws.
+The captured antenna insert is **15 degrees outward** and indexes in 45-degree yaw
+steps; another printed insert changes its tilt. The **50.8 mm antenna is a reference**,
+with assumed diameter/base geometry, not a printable antenna or verified purchased part.
+
+[CAD source, print files and assembly/fit notes](hardware/cad/heltec-bar-enclosure/r03-parallel/)
+are coordinated through the [mechanical handoff](docs/mechanical/README.md). The owner
+selected ASA or PETG. Official Heltec V4.3.1 and L76K references were used; the GPS
+STEP/dimension drawing disagree, and the V4 STEP omits the photographed OLED cover.
+The model includes those documented allowances rather than assuming the references
+perfectly describe the installed boards.
+
+Independent CAD review verified the actual board/reference poses, four connected
+printed solids, parallel tube/case axes, coaxial 15-degree SMA passages and modeled
+PCB-edge GPS retention without material interference. **This is prototype geometry,
+not a physical fit or outdoor acceptance result.** Actual GPS revision, SMA/pigtail,
+USB plug, harness, clip/clamp fit, print supports and radio/GPS operation still need
+checking. Do not force the ceramic patch against a printed retainer. No kart hardware,
+VESC setting or firmware was changed by this mechanical work. Existing charger-holder
+CAD and the owner's other Fusion documents were preserved.
+
+The mechanical branch starts from software checkpoint `e77d19b`; all **492 offline
+tests passed across eight suites, zero skipped**, before publishing. CAD verification
+is separate from those software tests. Next: print the small mating parts/fit features,
+check actual hardware, then print and bench-test the complete assembly.
+
+The final fetch also found Eamon’s `c21baf8` (Heltec motion-aware Wi-Fi recovery
+and Pi freeplay/persistent inventory). It has no mechanical interface changes and
+is not merged into this milestone. The next software integration should reconcile
+its inventory restoration with our course/session/epoch clearing rules.
+
 ## M5 follow map and Eamon integration — November 11, 2026 (source ready, not deployed)
 
 The no-Pi Core2 implementation now boots into a simple north-up line map following

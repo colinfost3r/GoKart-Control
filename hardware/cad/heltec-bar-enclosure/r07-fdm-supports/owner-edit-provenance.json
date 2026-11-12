@@ -1,0 +1,96 @@
+{
+  "authoritative_owner_archive": "input/owner-edited-R07-timeline-667.f3d",
+  "owner_timeline_count": 667,
+  "owner_features_retained": [
+    "OffsetFaces1",
+    "Extrude19",
+    "Extrude20",
+    "Extrude21",
+    "Extrude22",
+    "Extrude23",
+    "Extrude24"
+  ],
+  "final_timeline_count": 670,
+  "owner_case_volume_before_cm3": 39.939555021424,
+  "owner_case_volume_after_cm3": 39.939555021424,
+  "case_volume_delta_cm3": 0.0,
+  "lid_volume_before_cm3": 8.043762191119303,
+  "lid_volume_after_cm3": 8.038140223952666,
+  "approved_change": "Local lid-only relief; owner case geometry and completed features untouched",
+  "relief_bounds_mm": [
+    [
+      -8.8,
+      -20.55,
+      14.1
+    ],
+    [
+      -6.15,
+      -19.5,
+      17.5
+    ]
+  ],
+  "lid_connected_solids": 1,
+  "remaining_capture_faces_z14p3_mm": [
+    {
+      "area_mm2": 4.17856082659073,
+      "bounds_mm": [
+        [
+          5.499999999999999,
+          -20.25,
+          14.3
+        ],
+        [
+          8.5,
+          -18.5345,
+          14.3
+        ]
+      ]
+    },
+    {
+      "area_mm2": 2.4344818881106822,
+      "bounds_mm": [
+        [
+          -8.401538351241236,
+          -20.25,
+          14.3
+        ],
+        [
+          -5.499999999999999,
+          -18.5345,
+          14.3
+        ]
+      ]
+    },
+    {
+      "area_mm2": 7.068583470577036,
+      "bounds_mm": [
+        [
+          5.499999999999999,
+          7.4655000000000005,
+          14.3
+        ],
+        [
+          8.5,
+          10.4655,
+          14.3
+        ]
+      ]
+    },
+    {
+      "area_mm2": 7.068583470577036,
+      "bounds_mm": [
+        [
+          -8.5,
+          7.4655000000000005,
+          14.3
+        ],
+        [
+          -5.499999999999999,
+          10.4655,
+          14.3
+        ]
+      ]
+    }
+  ],
+  "source_status": "build_fdm_revision.py is generated base only; final native is authoritative"
+}

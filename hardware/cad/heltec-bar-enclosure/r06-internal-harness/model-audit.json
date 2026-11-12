@@ -1,0 +1,260 @@
+{
+  "document": "GoKart Heltec Internal Harness R06",
+  "status": "physical fit prototype",
+  "nominal_shell_mm": [
+    79,
+    36,
+    30
+  ],
+  "bar_mm": 25.273,
+  "bore_mm": 25.523,
+  "installation_screws": 4,
+  "printed_parts": 3,
+  "owner_pose_comparison": [
+    {
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF OLED protective cover missing from STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "owner_input": "Current R05 including DeleteFace1 and DeleteFace2 preserved in input/",
+  "gps_socket": {
+    "rear_bare_connector_y_mm": -39.752710246011276,
+    "inner_rear_wall_y_mm": -44,
+    "bare_connector_rear_clearance_mm": 4.247289753988724,
+    "clearance_reference": "Owner confirmed4mm behind bare board socket",
+    "pcb_support_z_mm": 15.6,
+    "pcb_top_z_mm": 17.2,
+    "upper_capture_z_mm": 17.5,
+    "retention": "Fixed rear PCB lips and one front end clip; serviced with lid removed"
+  },
+  "harness": {
+    "destination": "Heltec P3 SH1.25 8-pin GNSS connector under PCB; rearward mating approach",
+    "P3_bounds_mm": [
+      [
+        -7.499499445799438,
+        -17.34389755641854,
+        3.3412281448183734
+      ],
+      [
+        7.500500898161686,
+        -12.043896972273727,
+        6.941229407575513
+      ]
+    ],
+    "wire_envelope_mm": [
+      8,
+      2
+    ],
+    "GPS_plug_envelope_assumed_mm": [
+      12,
+      3,
+      2.5
+    ],
+    "P3_plug_envelope_assumed_mm": [
+      12,
+      5,
+      2.7
+    ],
+    "under_PCB_wire_center_z_mm": 5.1,
+    "route_reference_rear_wall_gap_mm": 0.25,
+    "route": "Behind GPS bare socket, downward behind boards, forward beneath Heltec PCB into P3",
+    "actual_harness": "Unmeasured plug sizes, wire thickness, length and bend radius; square-corner envelope is clearance reference only"
+  },
+  "antenna": {
+    "mount_center_mm": [
+      12.48894797741298,
+      24.091377231888114,
+      33.31736793577977
+    ],
+    "axis": [
+      0.409576022144496,
+      0.2867882181755233,
+      0.8660254037844386
+    ],
+    "cant_from_vertical_deg": 30.000000000000004,
+    "SMA_panel_mm": 2,
+    "SMA_bore_mm": 6.6,
+    "rear_access_mm": 13.2,
+    "reference_antenna_length_mm": 50.8,
+    "reference_diameter_assumed_mm": 7
+  },
+  "OLED": {
+    "lower_opening_mm": [
+      14.4,
+      25
+    ],
+    "upper_opening_mm": [
+      18.4,
+      29
+    ],
+    "full_display_view_angle_deg_estimate": 12
+  },
+  "parts": [
+    {
+      "component": "R06 Case with internal GPS socket",
+      "file": "case-upper-collar",
+      "connected_solids": 1,
+      "volume_cm3": 32.55632958678474,
+      "assembly_bounds_mm": [
+        [
+          -24.999999999999996,
+          -46.0,
+          -16.250000000000004
+        ],
+        [
+          24.999999999999996,
+          33.0,
+          27.5
+        ]
+      ]
+    },
+    {
+      "component": "R06 OLED and antenna lid",
+      "file": "lid-integral-antenna",
+      "connected_solids": 1,
+      "volume_cm3": 8.227655858958187,
+      "assembly_bounds_mm": [
+        [
+          -18.0,
+          -46.0,
+          14.3
+        ],
+        [
+          19.38969553462584,
+          33.0,
+          39.50271411896337
+        ]
+      ]
+    },
+    {
+      "component": "R06 Lower collar",
+      "file": "lower-collar",
+      "connected_solids": 1,
+      "volume_cm3": 13.078110435221888,
+      "assembly_bounds_mm": [
+        [
+          -25.0,
+          -12.000000000000002,
+          -34.0
+        ],
+        [
+          25.0,
+          12.000000000000002,
+          -17.75
+        ]
+      ]
+    }
+  ],
+  "known_fit_limits": [
+    "Preserved GPS receiver overlaps conservative rectangular OLED cover proxy approximately0.0845mm inY and0.3mm inZ; check actual hardware without forcing.",
+    "Actual GPS accessory revision differs between official drawing and STEP.",
+    "Physical clip flex, harness route and RF performance remain unvalidated."
+  ],
+  "feature_warnings": []
+}

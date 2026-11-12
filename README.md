@@ -108,6 +108,14 @@ A pit STOP always wins. **Sounds** are synthesized in the browser (`static/sound
 file on pit and kart): countdown lights, GO, boost, mud, item roulette, lap, finish, STOP.
 Kart panel speakers are fed over HDMI audio.
 
+The [compact Heltec/GPS enclosure prototype](hardware/cad/heltec-bar-enclosure/r10-sculpted-clamp/)
+retains the extended base, connected clamp ears, bottom collar and board/antenna
+placement. R10 adds restrained machined-style bevels and reverses the two M4 clamp
+fasteners: fully recessed Allen heads on top, plain hex nuts underneath. The
+recessed lid still uses two #4 plastic-forming screws. Editable CAD, print files,
+fastener details and validation are in the [mechanical handoff](docs/mechanical/README.md).
+Physical print fit and clamp strength remain prototype checks.
+
 ## Repository map
 
 ```text

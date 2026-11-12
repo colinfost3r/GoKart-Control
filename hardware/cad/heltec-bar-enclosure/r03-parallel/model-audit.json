@@ -1,0 +1,280 @@
+{
+  "document": "GoKart Heltec L76K Compact Parallel R03",
+  "release_status": "fit-check prototype; not fleet/road acceptance",
+  "case_nominal_mm": [
+    66,
+    36,
+    30
+  ],
+  "overall_printed_plan_mm": [
+    66,
+    50
+  ],
+  "bar_nominal_mm": 25.273,
+  "bar_bore_mm": 25.523,
+  "installation_screws": 4,
+  "sma_cant_degrees": 15,
+  "antenna_reference_length_mm": 50.8,
+  "antenna_reference_diameter_mm_assumed": 7,
+  "parts": [
+    {
+      "component": "C01 Compact case with upper collar",
+      "file": "case-upper-collar",
+      "connected_solids": 1,
+      "volume_cm3": 29.96893754359349,
+      "local_bounds_mm": [
+        [
+          -33.0,
+          -25.0,
+          -16.250000000000004
+        ],
+        [
+          33.0,
+          25.0,
+          27.500000000000007
+        ]
+      ],
+      "assembly_transform": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "C02 Lower collar two bolts",
+      "file": "lower-collar",
+      "connected_solids": 1,
+      "volume_cm3": 13.078110435221888,
+      "local_bounds_mm": [
+        [
+          -12.0,
+          -25.0,
+          -34.0
+        ],
+        [
+          12.0,
+          25.0,
+          -17.75
+        ]
+      ],
+      "assembly_transform": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "C03 Lid with molded board and GPS retention",
+      "file": "lid-gps-retainers",
+      "connected_solids": 1,
+      "volume_cm3": 5.788035579053258,
+      "local_bounds_mm": [
+        [
+          -33.0,
+          -18.0,
+          8.8
+        ],
+        [
+          33.0,
+          18.0,
+          30.0
+        ]
+      ],
+      "assembly_transform": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "C04 Captured 15deg antenna insert",
+      "file": "antenna-insert-15deg",
+      "connected_solids": 1,
+      "volume_cm3": 1.291226219818001,
+      "local_bounds_mm": [
+        [
+          11.0221010488781,
+          -9.977898951121896,
+          27.5
+        ],
+        [
+          30.977898951121894,
+          9.977898951121897,
+          39.143593539448986
+        ]
+      ],
+      "assembly_transform": [
+        1.0,
+        0.0,
+        0.0,
+        -2.1,
+        0.0,
+        1.0,
+        0.0,
+        2.1,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "parameters": [
+    {
+      "name": "bar_diameter",
+      "expression": "25.273 mm",
+      "comment": "Owner: 0.995 inch horizontal bar"
+    },
+    {
+      "name": "clamp_fit",
+      "expression": "0.25 mm",
+      "comment": "Prototype diametral clearance; fit test before full print"
+    },
+    {
+      "name": "split_gap",
+      "expression": "1.5 mm",
+      "comment": "Clamp take-up; two M4 bolts"
+    },
+    {
+      "name": "case_length",
+      "expression": "66 mm",
+      "comment": "Board-close footprint; USB plug outside"
+    },
+    {
+      "name": "case_width",
+      "expression": "36 mm",
+      "comment": "PCB plus shell/diagonal screw bosses"
+    },
+    {
+      "name": "case_height",
+      "expression": "27.5 mm",
+      "comment": "To lid underside; stacked GPS"
+    },
+    {
+      "name": "base_thickness",
+      "expression": "2.5 mm",
+      "comment": "Plain ASA or PETG prototype"
+    },
+    {
+      "name": "wall",
+      "expression": "2 mm",
+      "comment": "Prototype wall"
+    },
+    {
+      "name": "lid_thickness",
+      "expression": "2.5 mm",
+      "comment": "Roof includes3.3mm GPS patch clearance"
+    },
+    {
+      "name": "sma_angle",
+      "expression": "15 deg",
+      "comment": "Cant from up toward outboard+X"
+    },
+    {
+      "name": "sma_hole",
+      "expression": "6.6 mm",
+      "comment": "Unverified actual bulkhead clearance"
+    },
+    {
+      "name": "sma_panel",
+      "expression": "2 mm",
+      "comment": "Unverified available SMA thread/panel thickness"
+    },
+    {
+      "name": "m3_clear",
+      "expression": "3.4 mm",
+      "comment": "Two case closure screws"
+    },
+    {
+      "name": "m4_clear",
+      "expression": "4.5 mm",
+      "comment": "Two clamp screws"
+    },
+    {
+      "name": "board_top",
+      "expression": "8.5 mm",
+      "comment": "PCB top; official components clear floor"
+    },
+    {
+      "name": "cover_top",
+      "expression": "14 mm",
+      "comment": "PDF: PCBtop+5.5mm cover"
+    },
+    {
+      "name": "capture_clearance",
+      "expression": "0.3 mm",
+      "comment": "Positive capture; no glass loading"
+    },
+    {
+      "name": "gps_bottom",
+      "expression": "17 mm",
+      "comment": "3mm clear above Heltec cover"
+    },
+    {
+      "name": "gps_stack",
+      "expression": "7.2 mm",
+      "comment": "Larger of differing official GPS sources"
+    },
+    {
+      "name": "gps_roof_gap",
+      "expression": "3.3 mm",
+      "comment": "Patch to plain polymer roof"
+    },
+    {
+      "name": "gps_finger",
+      "expression": "0.8 mm",
+      "comment": "Prototype snapbeam; fit check ASA/PETG"
+    }
+  ],
+  "feature_warnings": [],
+  "import_group_status": [
+    "Group1",
+    "Group2"
+  ],
+  "reviewed_gps_ceramic_min_printed_clearance_mm": 0.56155281,
+  "reviewed_gps_pcb_support_contact_z_mm": 20.6,
+  "gps_fit_status": "Actual owned revision/printer fit unverified; no ceramic clamping"
+}

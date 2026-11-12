@@ -1,0 +1,108 @@
+{
+  "status": "BLOCKED: case is not print-ready; inherited edge-only right clamp-ear attachment",
+  "source_model": "GoKart Heltec Recessed Lid R08, timeline719",
+  "source_owner_archive": "input/owner-extended-R07-timeline-677.f3d",
+  "native_and_stl_agree": true,
+  "native_edges": [
+    {
+      "endpoints_mm": [
+        [
+          18,
+          -12,
+          -16.25
+        ],
+        [
+          18,
+          -12,
+          0
+        ]
+      ],
+      "incident_faces": 4
+    },
+    {
+      "endpoints_mm": [
+        [
+          18,
+          -12,
+          0
+        ],
+        [
+          18,
+          12,
+          0
+        ]
+      ],
+      "incident_faces": 4
+    },
+    {
+      "endpoints_mm": [
+        [
+          18,
+          12,
+          -16.25
+        ],
+        [
+          18,
+          12,
+          0
+        ]
+      ],
+      "incident_faces": 4
+    }
+  ],
+  "point_containment": [
+    {
+      "point_mm": [
+        17.99,
+        0,
+        -8
+      ],
+      "result": "outside"
+    },
+    {
+      "point_mm": [
+        18.01,
+        0,
+        -8
+      ],
+      "result": "inside ear"
+    },
+    {
+      "point_mm": [
+        17.99,
+        12.1,
+        -8
+      ],
+      "result": "inside case"
+    },
+    {
+      "point_mm": [
+        18.01,
+        12.1,
+        -8
+      ],
+      "result": "outside"
+    },
+    {
+      "point_mm": [
+        17.99,
+        0,
+        0.1
+      ],
+      "result": "inside case"
+    },
+    {
+      "point_mm": [
+        18.01,
+        0,
+        0.1
+      ],
+      "result": "outside"
+    }
+  ],
+  "interpretation": "The remaining upper-right ear contacts the case along edges only, not a finite-area material connection. This is native geometry, not an export tolerance or duplicate-triangle issue.",
+  "preservation": "No topology repair, owner-feature deletion, base material addition or ear restoration performed. Raw owner input and final native remain preserved.",
+  "required_resolution": "Owner-approved finite-thickness connecting web or equivalent clamp redesign; restoring missing upper-left ear is a separate open decision.",
+  "other_parts": "Lid and lower-collar STL edge incidence passed the root check; case STL is retained as diagnostic only.",
+  "stl_file": "diagnostics/case-as-edited-NOT-PRINT-READY.stl"
+}

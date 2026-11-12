@@ -1,0 +1,313 @@
+{
+  "document": "GoKart Heltec Rectangular Owner Layout R05",
+  "status": "fit-check prototype, not print-fit or road acceptance",
+  "nominal_shell_mm": {
+    "width_x": 36,
+    "length_y": 77,
+    "body_plus_lid_height_z": 30
+  },
+  "bar_mm": 25.273,
+  "bore_mm": 25.523,
+  "installation_screws": 4,
+  "owner_pose_comparison": [
+    {
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 3.944304526105059e-31,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "antenna_mount": {
+    "center_mm": [
+      12.48894797741298,
+      24.091377231888114,
+      33.31736793577977
+    ],
+    "axis": [
+      0.409576022144496,
+      0.2867882181755233,
+      0.8660254037844386
+    ],
+    "cant_from_vertical_deg": 30.000000000000004,
+    "panel_hole_mm": 6.6,
+    "panel_thickness_mm": 2,
+    "rear_access_bore_mm": 13.2,
+    "reference_length_mm": 50.8,
+    "reference_diameter_assumed_mm": 7,
+    "actual_bulkhead_dimensions": "unmeasured"
+  },
+  "oled_window": {
+    "lower_opening_mm": [
+      14.4,
+      25
+    ],
+    "upper_opening_mm": [
+      18.4,
+      29
+    ],
+    "nominal_visible_display_mm": [
+      11.4,
+      22
+    ],
+    "full_display_view_angle_from_vertical_deg_estimate": 12,
+    "purpose": "straight-down service view; physical viewability untested"
+  },
+  "tray": {
+    "inserted_center_y_mm": -33,
+    "extraction_direction": [
+      0,
+      -1,
+      0
+    ],
+    "fully_extracted_translation_mm": [
+      0,
+      -25,
+      0
+    ],
+    "track_width_mm": 20.8,
+    "tray_width_mm": 20.3,
+    "latch_beam_mm": [
+      6,
+      10,
+      0.8
+    ],
+    "latch_release_rise_mm": 1.1,
+    "release_method": "push tongue upward from underside, then pull rearward",
+    "gps_retention": "small hot-glue pads at PCB edges/back; do not press ceramic"
+  },
+  "known_fit_limits": [
+    "Owner GPS receiver overlaps conservative rectangular OLED-cover proxy by approximately0.094mm inY and0.3mm inZ; real cover and module must be checked without force.",
+    "Physical GPS accessory differs between official photo and STEP; actual fit and harness route remain unverified.",
+    "USB plug overmould, SMA bulkhead nut/thread, print shrinkage, latch durability and clamp strength require physical checks."
+  ],
+  "parts": [
+    {
+      "component": "R05 Case and upper collar",
+      "file": "case-upper-collar",
+      "connected_solids": 1,
+      "volume_cm3": 33.40667558724004,
+      "assembly_bounds_mm": [
+        [
+          -24.999999999999996,
+          -44.0,
+          -16.250000000000004
+        ],
+        [
+          24.999999999999996,
+          33.0,
+          27.5
+        ]
+      ],
+      "assembly_transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "R05 OLED lid with integral antenna mount",
+      "file": "lid-integral-antenna",
+      "connected_solids": 1,
+      "volume_cm3": 8.076543532091371,
+      "assembly_bounds_mm": [
+        [
+          -18.0,
+          -44.0,
+          14.3
+        ],
+        [
+          19.38969553462584,
+          33.0,
+          39.50271411896337
+        ]
+      ],
+      "assembly_transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "R05 Lower collar",
+      "file": "lower-collar",
+      "connected_solids": 1,
+      "volume_cm3": 13.078110435221888,
+      "assembly_bounds_mm": [
+        [
+          -25.0,
+          -12.000000000000002,
+          -34.0
+        ],
+        [
+          25.0,
+          12.000000000000002,
+          -17.75
+        ]
+      ],
+      "assembly_transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "R05 GPS slide tray with end latch",
+      "file": "gps-slide-tray",
+      "connected_solids": 1,
+      "volume_cm3": 0.8809425000000011,
+      "assembly_bounds_mm": [
+        [
+          -12.3,
+          -43.900000000000006,
+          9.4
+        ],
+        [
+          12.3,
+          -23.5,
+          20.0
+        ]
+      ],
+      "assembly_transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "feature_warnings": [],
+  "lower_m3_pillar_cavity": "Filled Z2.5..10.5mm; upper clearance and nut seat unchanged."
+}

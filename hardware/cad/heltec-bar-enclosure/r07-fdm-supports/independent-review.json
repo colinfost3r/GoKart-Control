@@ -1,0 +1,578 @@
+{
+  "revision": "R07",
+  "date": "2026-11-11",
+  "operation": "independent_Fusion_geometry_review",
+  "physical_hardware_tested": false,
+  "scope": "Three printed solids; archived owner-edited case retained; imported GPS and rear Heltec geometry excluding unpopulated JP4/JP5 headers; inherited OLED-cover proxy; assumed cable/plug and nominal M4 hardware/access envelopes.",
+  "result": "No material case/lid, hardware-to-print, nominal fastener-to-print or harness-to-print interference. Nominal PCB support rounding contact and inherited GPS-to-cover proxy uncertainty are recorded separately.",
+  "geometry": {
+    "document": "GoKart Heltec FDM Supports R07",
+    "timeline_count": 670,
+    "selected": {
+      "hardware_or_cover": 42,
+      "routing_or_fastener_reference": 9,
+      "printed": 3
+    },
+    "remaining_intersections": [
+      {
+        "a": "Open CASCADE STEP translator 6.8 1.1.1/Body1",
+        "b": "R07 Case with floor-backed GPS supports/Body1",
+        "volume_mm3": 0.000510976913711545,
+        "bounds_mm": [
+          [
+            -9.25,
+            -21.000000000000007,
+            6.94128074
+          ],
+          [
+            9.25,
+            11.2155,
+            6.9413
+          ]
+        ]
+      }
+    ],
+    "inherited_cover_fit": [
+      {
+        "a": "GPS-Module1/Body3",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.22057640606521983,
+        "bounds_mm": [
+          [
+            -4.415000000000028,
+            -22.034500000000005,
+            13.700000000000001
+          ],
+          [
+            4.4149999999999725,
+            -21.950000000000035,
+            14.000000000000002
+          ]
+        ]
+      }
+    ],
+    "floor_support_samples": [
+      {
+        "x_mm": -11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      }
+    ],
+    "bare_gps_socket_to_rear_inner_wall_mm": 4.247279753981701,
+    "route_reference_to_print_minimum_mm": {
+      "REF R06 internal wire route 8x2mm assumed": 0.25000000000000355,
+      "REF R06 GPS mating plug12x3x2p5 assumed": 0.7106335201775946,
+      "REF R06 Heltec P3 mating plug12x5x2p7 assumed": 0.7500000000000018
+    },
+    "print_solids": {
+      "R07 Case with floor-backed GPS supports": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R07 OLED and antenna lid": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R07 Outboard lower collar": {
+        "solid": true,
+        "lumps": 1
+      }
+    }
+  },
+  "clamp": {
+    "tool_access": [
+      {
+        "axis_x_mm": -26,
+        "diameter_mm": 12,
+        "shell_above_z0p1_clearance_mm": 1.9999999999999996,
+        "lid_clearance_mm": 1.9999999999999996
+      },
+      {
+        "axis_x_mm": 26,
+        "diameter_mm": 12,
+        "shell_above_z0p1_clearance_mm": 1.9999999999999996,
+        "lid_clearance_mm": 1.9999999999999996
+      }
+    ],
+    "new_clamp_axis_passages": [
+      {
+        "x_mm": -26,
+        "z_samples_mm": [
+          -33,
+          -31,
+          -28,
+          -24,
+          -20,
+          -16,
+          -12,
+          -8,
+          -4,
+          -1
+        ],
+        "clear": true,
+        "blocked_z_mm": []
+      },
+      {
+        "x_mm": 26,
+        "z_samples_mm": [
+          -33,
+          -31,
+          -28,
+          -24,
+          -20,
+          -16,
+          -12,
+          -8,
+          -4,
+          -1
+        ],
+        "clear": true,
+        "blocked_z_mm": []
+      }
+    ],
+    "old_axes": [
+      {
+        "x_mm": -18.5,
+        "upper_old_hole_filled": true,
+        "lower_old_hole_filled": true
+      },
+      {
+        "x_mm": 18.5,
+        "upper_old_hole_filled": true,
+        "lower_old_hole_filled": true
+      }
+    ],
+    "note": "Transient clipped copy isolates case above Z0.1 mm from its intended collar datum; native model is not modified."
+  },
+  "interpretation": [
+    "The sole printed/hardware intersection is nominal PCB support contact approximately 0.0000193 mm deep; this is not meaningful manufacturing clearance.",
+    "The inherited GPS receiver-to-conservative-cover proxy overlap remains an actual hardware fit uncertainty (0.0845 mm along Y and 0.3 mm along Z).",
+    "Floor support continuity is checked at eight column centerlines, with 51 heights on each. This is a sampled geometry check, not structural or print-process validation.",
+    "The 12 mm tool-access check isolates shell above Z0.1 mm from the collar mounting datum and includes the full lid. It does not certify every real driver handle.",
+    "Cable/plug references and nominal fasteners are design allowances. Actual harness bend radius, clip flex, print tolerance, mechanical strength and tool fit remain physical checks."
+  ],
+  "repository_checks": {
+    "passed": 492,
+    "suites": 8,
+    "skipped": 0,
+    "source_log": "repository-validation.txt",
+    "scope": "Offline software checks, separate from mechanical validation."
+  },
+  "owner_edit_preservation": {
+    "authoritative_owner_archive": "input/owner-edited-R07-timeline-667.f3d",
+    "owner_timeline_count": 667,
+    "owner_features_retained": [
+      "OffsetFaces1",
+      "Extrude19",
+      "Extrude20",
+      "Extrude21",
+      "Extrude22",
+      "Extrude23",
+      "Extrude24"
+    ],
+    "final_timeline_count": 670,
+    "owner_case_volume_before_cm3": 39.939555021424,
+    "owner_case_volume_after_cm3": 39.939555021424,
+    "case_volume_delta_cm3": 0.0,
+    "lid_volume_before_cm3": 8.043762191119303,
+    "lid_volume_after_cm3": 8.038140223952666,
+    "approved_change": "Local lid-only relief; owner case geometry and completed features untouched",
+    "relief_bounds_mm": [
+      [
+        -8.8,
+        -20.55,
+        14.1
+      ],
+      [
+        -6.15,
+        -19.5,
+        17.5
+      ]
+    ],
+    "lid_connected_solids": 1,
+    "remaining_capture_faces_z14p3_mm": [
+      {
+        "area_mm2": 4.17856082659073,
+        "bounds_mm": [
+          [
+            5.499999999999999,
+            -20.25,
+            14.3
+          ],
+          [
+            8.5,
+            -18.5345,
+            14.3
+          ]
+        ]
+      },
+      {
+        "area_mm2": 2.4344818881106822,
+        "bounds_mm": [
+          [
+            -8.401538351241236,
+            -20.25,
+            14.3
+          ],
+          [
+            -5.499999999999999,
+            -18.5345,
+            14.3
+          ]
+        ]
+      },
+      {
+        "area_mm2": 7.068583470577036,
+        "bounds_mm": [
+          [
+            5.499999999999999,
+            7.4655000000000005,
+            14.3
+          ],
+          [
+            8.5,
+            10.4655,
+            14.3
+          ]
+        ]
+      },
+      {
+        "area_mm2": 7.068583470577036,
+        "bounds_mm": [
+          [
+            -8.5,
+            7.4655000000000005,
+            14.3
+          ],
+          [
+            -5.499999999999999,
+            10.4655,
+            14.3
+          ]
+        ]
+      }
+    ],
+    "source_status": "build_fdm_revision.py is generated base only; final native is authoritative"
+  },
+  "owner_pose_comparison": [
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF OLED protective cover missing from STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-layout.json",
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF OLED protective cover missing from STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "source": "input/owner-edited-R07-timeline-667.json",
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "active_feature_warnings": [],
+  "export_validation": {
+    "report": "export-verification.json",
+    "closed_manifold_consistently_wound_single_component_STLs": 3,
+    "Fusion_archive_limit": "ZIP directory inspected; standard-library CRC check does not support Fusion compression method 93. No round-trip reopen claimed."
+  }
+}

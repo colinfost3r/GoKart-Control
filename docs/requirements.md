@@ -69,6 +69,120 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - These presentation changes do not change VESC settings or LoRa packet formats.
   On-device acceptance and the actual course package remain open.
 
+## Heltec bar enclosure — November 11, 2026
+
+- Owner requests a new Fusion design for the Heltec V4 plus cabled L76K GPS,
+  attached at the kart's front-right horizontal bar. Measured bar diameter is
+  **0.995 in / 25.273 mm**.
+- Keep the case close to the board footprint and use **at most four installation
+  screws total**, including the collar. The earlier wide side-by-side layout was
+  rejected. Stack GPS inside the shell with the ceramic patch facing the sky.
+- The enclosure's long axis must run **parallel to the tube**, rotated 90 degrees
+  from the first compact layout. Keep the antenna canted toward the kart's outside.
+- Owner requested less than the initial 30-degree antenna tilt; the revised design
+  uses **15 degrees from vertical**. Add a **2 in / 50.8 mm antenna reference** for
+  clearance visualization. Only that antenna length is confirmed; its diameter,
+  base and the actual SMA bulkhead dimensions remain fit assumptions.
+- Use a small captured/indexed insert for antenna orientation without additional
+  screws. Printed alternatives can change the tilt; do not claim a freely tilting
+  joint if the physical design requires a replacement insert.
+- Intended materials: **ASA or PETG**. Printer, connector fit, cable routing,
+  printed clamp/clip fit and outdoor GPS/radio acceptance remain to be checked.
+  This is an accessory prototype, not a validated environmental or structural rating.
+
+## Owner-edited enclosure revision — November 11, 2026
+
+- The owner manually edited the Fusion model after R03: antenna placement, shell
+  shape and GPS placement in that edited model are the new geometric reference.
+  Capture the input revision before making further changes; do not reset it to
+  the earlier generated layout.
+- Replace the GPS retention with a simple slide-in tray and one end clip/latch.
+  The owner can hot-glue the GPS into its carrier. Keep glue and retaining forces
+  off the ceramic antenna and preserve connector access.
+- Add a compact OLED viewing opening aligned to the actual display reference.
+- Fix the antenna at the owner's edited position. The latest instruction is to
+  integrate the owner-shaped top with the lid and provide a proper SMA mounting
+  seat, hole and nut/tool access. The earlier removable/indexed antenna and fixed
+  case-web layouts are superseded.
+- Use one normal rectangular enclosure sized for both boards, with a flush GPS
+  tray end. The owner rejected the added rear bay because it looked like separate
+  pieces stuck together and authorizes rebuilding the shell around the preserved
+  component positions.
+- Retain the compact layout, parallel tube orientation, four installation screws
+  maximum, and ASA/PETG prototype material choice. Printed fit and outdoor use
+  remain unvalidated.
+
+## Enclosed GPS wiring and side-supported socket — November 11, 2026
+
+- Keep the complete GPS-to-Heltec harness inside the same rectangular case.
+  The wires leave the GPS connector, turn downward and pass below the GPS to the
+  Heltec GPS port; they must not exit through a rear notch or external tray.
+- Provide at least **4 mm behind the GPS connector** for the cable turn. Measure
+  the modeled clearance from the bare socket body, as explicitly confirmed by
+  the owner, and distinguish it from the unmeasured mated plug and wire bend envelope.
+- Support the GPS PCB from the sides in an internal socket/cradle, leaving the
+  underside open for its components and wiring. Use a simple retaining clip;
+  no load on the ceramic patch. This supersedes the external slide-out tray.
+- Keep the antenna integrated into the lid, OLED opening, parallel tube mount,
+  plain rectangular exterior and four installation screws maximum. Lengthen the
+  rectangle only as needed for connector clearance and internal routing.
+
+## FDM GPS supports and external clamp screw clearance — November 11, 2026
+
+- The internal GPS supports must extend to the case floor for FDM printing.
+  Preserve the central wire route and clearance to the Heltec PCB/components;
+  use floor-backed ribs with printable sloped transitions where a direct post
+  would cross the board. Retain a working flexible end clip.
+- Move the two tube-clamp mounting bolts outward so their hardware and straight
+  tool access clear the case. Update both clamp halves and matching nut/head
+  seats together. Keep the main rectangular enclosure compact.
+- Retain the two lid screws, three printed parts, four installation screws total,
+  owner hardware placement and the previously confirmed internal cable clearance.
+  Floor-backed GPS features do not establish that the complete clamp/case can be
+  printed without any supports; assess the chosen print orientation separately.
+
+## Owner base extension and recessed #4 lid — November 11, 2026
+
+- Preserve the owner's latest lower-container/base extension and manual edits.
+  Archive the current Fusion model before modifying the lid or its fastening.
+- Replace lid machine screws/nuts with #4 self-tapping screws. Screw thread type,
+  head and length must be explicit; a chosen prototype pilot does not qualify
+  every #4 screw or every FDM material.
+- Seat/locate the lid on a chamfered perimeter sill with practical printed
+  clearance and bearing support, rather than relying on two screws for location.
+- Preserve board/GPS/antenna placement, interior harness space, floor-backed GPS
+  supports and service access. Keep two lid screws unless otherwise requested.
+- The input's missing upper-left clamp ear is a separate unresolved owner edit;
+  preserve the extended base and obtain the owner's choice before restoring it.
+- The right clamp ear also has an inherited zero-thickness attachment. A finite
+  connecting web is pending the owner's choice; do not distribute the diagnostic
+  case STL as print-ready.
+
+## Approved clamp repairs and screw selection — November 11, 2026
+
+- Owner authorizes selecting the lid screws: use two #4 ×1/2-inch pan/rounded-head
+  TRS thread-forming screws intended for plastic, modeled around McMaster 92295A103.
+  Retain the 2.65 mm adjustable prototype pilots; printed fit needs checking.
+- Restore the missing upper-left clamp ear while keeping the owner's extended base.
+- Add a finite-thickness connection to the right clamp ear while keeping the
+  extended shape and outside dimensions. Validate both ear connections, tube
+  clearance, lower-collar alignment and fastener access before releasing print files.
+- Preserve the recessed R08 lid, hardware placement and owner GPS support edits.
+  Keep the as-edited R08 archive as provenance; repairs belong in a new revision.
+
+## Sculpted enclosure and top-access clamp screws — November 11, 2026
+
+- Restore/include the bottom clamp part in the complete assembly and give the
+  exterior a machined bicycle-component appearance inspired by Hope Technology.
+  Preserve functional interfaces, the extended base, hardware positions, internal
+  supports and wire clearance. Use restrained exterior facets/chamfers suitable
+  for an ASA/PETG FDM prototype; branding is not requested.
+- Reverse the two M4 clamp fasteners: standard Allen socket heads go on top,
+  fully counterbored, with a chamfered entry; hex nuts go underneath.
+- Preserve the M4 axes and tube/split interfaces. Replace obsolete pockets and
+  counterbores cleanly, check actual screw stack and nut access, and show the
+  complete upper/lower assembly clearly. Lid #4 screws remain as selected.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.
