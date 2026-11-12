@@ -36,8 +36,11 @@ def main():
     ssid, pw = kv.get("WIFI_SSID", ""), kv.get("WIFI_PASSWORD", "")
     if not ssid or not pw:
         sys.exit(f"{env}: WIFI_SSID / WIFI_PASSWORD not set")
-    s = serial.Serial(port, 115200, timeout=2)
-    time.sleep(0.5)
+    s = serial.Serial()
+    s.port, s.baudrate, s.timeout = port, 115200, 2
+    s.dtr = s.rts = False        # asserted DTR/RTS resets or holds the ESP32 via the usb bridge
+    s.open()
+    time.sleep(3)
     s.reset_input_buffer()
     s.write(f"wifi {ssid} {pw}\n".encode())
     s.flush()

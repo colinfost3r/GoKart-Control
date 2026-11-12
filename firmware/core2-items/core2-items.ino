@@ -16,7 +16,7 @@
 #include <ArduinoOTA.h>
 #include <Preferences.h>
 
-#define FW_VERSION "core2-0.3.0"
+#define FW_VERSION "core2-0.3.1"
 
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
@@ -27,6 +27,8 @@ static const uint8_t ROT = 2;                 // fixed for the bar cradle (owner
 // link / inventory (written from the ESP-NOW callback)
 static volatile bool frameFresh = false;
 static uint8_t rxItems[3], rxN = 0, rxSeq = 0, rxKart = 0;
+static volatile uint8_t kartPin = 0;          // 0.3.1: NVS "kart" -- 0 = any kart, N = only kart N's broadcasts
+//                                               (two karts now broadcast at once; unpinned would flicker between them)
 static uint8_t heltecMac[6]; static bool heltecKnown = false;
 static uint32_t lastRxMs = 0;
 
@@ -74,6 +76,7 @@ static void onRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len
   if (len != (int)sizeof(GkInvFrame)) return;
   const GkInvFrame* f = (const GkInvFrame*)data;
   if (f->m0 != 'G' || f->m1 != 'I' || f->ver != 1) return;
+  if (kartPin && f->kart != kartPin) return;   // pinned: other karts' frames are not ours
   rxKart = f->kart; rxSeq = f->seq; rxN = f->n > 3 ? 3 : f->n;
   for (int i = 0; i < 3; i++) rxItems[i] = f->items[i];
   memcpy(heltecMac, info->src_addr, 6); heltecKnown = true;
@@ -217,7 +220,7 @@ static void draw() {
   cv.setTextDatum(top_left);
   cv.setFont(&fonts::DejaVu18);
   cv.setTextColor(link ? TFT_GREEN : TFT_RED);
-  cv.drawString(link || kart ? (String("KART ") + kart) : "NO KART", 10, 8);
+  cv.drawString(link || kart ? (String("KART ") + kart) : kartPin ? (String("KART ") + kartPin) : "NO KART", 10, 8);
   cv.setTextDatum(top_right);
   cv.setTextColor(TFT_DARKGREY);
   cv.drawString(String(M5.Power.getBatteryLevel()) + "%", W - 10, 8);
@@ -303,6 +306,7 @@ static void draw() {
 void setup() {
   auto cfg = M5.config();
   M5.begin(cfg);
+  Serial.begin(115200);                  // explicit: the USB console must work whatever cfg defaults to
   M5.Display.setRotation(ROT);
   M5.Display.setBrightness(200);
   WiFi.mode(WIFI_STA);
@@ -312,6 +316,7 @@ void setup() {
   esp_now_register_recv_cb(onRecv);
   esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
   prefs.begin("core2", false);
+  kartPin = prefs.getUChar("kart", 0);
   wifiSsid = prefs.getString("ssid", "");
   wifiPass = prefs.getString("pass", "");
   if (wifiSsid.length()) {
@@ -345,9 +350,21 @@ static void otaStart() {
   ArduinoOTA.begin();
 }
 
-/* USB console (one-time setup + checks): wifi SSID PASS | wifi clear | status */
+/* USB console (one-time setup + checks): kart N|any | wifi SSID PASS | wifi clear | status */
 static void usbCommand(char* line) {
-  if (!strncmp(line, "wifi ", 5)) {
+  if (!strncmp(line, "kart ", 5)) {
+    char* a = line + 5;
+    if (!strcmp(a, "any") || !strcmp(a, "0")) {
+      prefs.putUChar("kart", 0); kartPin = 0;
+      Serial.println("kart pin cleared: any kart");
+    } else {
+      int n = atoi(a);
+      if (n < 1 || n > 8) { Serial.println("usage: kart 1-8 | kart any"); return; }
+      prefs.putUChar("kart", (uint8_t)n); kartPin = (uint8_t)n;
+      locked = false; n = 0;                 // drop the current lock: only the pinned kart from now on
+      Serial.printf("pinned to kart %u\n", kartPin);
+    }
+  } else if (!strncmp(line, "wifi ", 5)) {
     char* a = line + 5;
     if (!strcmp(a, "clear")) {
       prefs.remove("ssid"); prefs.remove("pass");
@@ -363,13 +380,13 @@ static void usbCommand(char* line) {
     WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
     wifiTrying = true; wifiGiveUpMs = millis() + 25000;
   } else if (!strcmp(line, "status")) {
-    Serial.printf("%s kart %u locked %d ch %u wifi %s ip %s ota %d vbus %d mV batt %d%%\n",
-                  FW_VERSION, kart, locked, scanCh,
+    Serial.printf("%s pin %u kart %u locked %d ch %u wifi %s ip %s ota %d vbus %d mV batt %d%%\n",
+                  FW_VERSION, kartPin, kart, locked, scanCh,
                   WiFi.status() == WL_CONNECTED ? wifiSsid.c_str() : "down",
                   WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString().c_str() : "-",
                   otaUp, M5.Power.getVBUSVoltage(), M5.Power.getBatteryLevel());
   } else if (line[0]) {
-    Serial.println("commands: wifi SSID PASS | wifi clear | status");
+    Serial.println("commands: kart 1-8|any | wifi SSID PASS | wifi clear | status");
   }
 }
 
