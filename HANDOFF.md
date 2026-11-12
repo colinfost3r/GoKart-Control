@@ -25,6 +25,11 @@ Later the same day Eamon's branch was merged through `c39df6a` (Pi fastboot, `co
 0.2.2–0.3.2, release images) so PR5 no longer conflicts. No M5/player/host source changed;
 details and two cautions are in the [Claude handoff](docs/CLAUDE_HANDOFF.md).
 
+That afternoon the candidate Core2 and Heltec applications were installed on kart 3 over USB
+with the VESC off; identity, pins, pairing and Wi-Fi/OTA settings were retained. VESC
+reconnection, modes and pedal/reverse coexistence are not yet rechecked on them.
+[Install record](hardware/m5/2026-11-12-kart3-player-update/README.md).
+
 ## Overnight Core2 display candidate — November 12, 2026 (not installed)
 
 The map now fills 320×240 with compact GPS MPH and measured VESC pack volts relayed by

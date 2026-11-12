@@ -2,8 +2,14 @@
 
 **Start here. This supersedes the earlier display-only handoff.** The owner objected that real
 host downloads and item firing were unfinished. Those paths are now implemented and reviewed
-in the native player candidate. Nothing was flashed, reset, driven or written to a VESC during
-this work. Offline validation does not establish hardware acceptance.
+in the native player candidate. Offline validation does not establish hardware acceptance.
+
+**Update, November 12 afternoon: both kart 3 accessories now run the candidate.** The Core2 and
+Heltec applications were written over USB with the VESC off; identity, VESC pins, pairing and
+Wi-Fi/OTA settings were retained and the pair re-linked. Nothing was driven and nothing was
+written to a VESC. VESC reconnection, mode control, wired pedal/reverse coexistence, screen and
+touch are **not yet checked** on the new applications. See
+[the install record](../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
 ## Project and Git
 
@@ -107,17 +113,22 @@ Legacy base/repeaters ignore type5; updated repeater is required only for relay-
 identity coverage. The first test can use direct host/player LoRa with no base. This is freshness,
 not cryptographic LoRa replay protection. Course download and own-kart commands are authenticated.
 
-## Known installed kart-3 checkpoint — not the new candidate
+## Installed on kart 3 — candidate applications since November 12
 
-Both accessory applications are still from **`4a582f0`**:
+| Installed target | SHA-256 | Reports |
+| --- | --- | --- |
+| Heltec `kart-m5-espnow` | `d43662645457f51283010d655cc2f60d5740adafc015adc59910e70fd136cab9` | `kart-0.3.3`, built Nov 12 08:55:51 |
+| Core2 `m5-espnow` | `894a1a34537b5894110ddb120b2419f18b0fad8432b0e7acac775306ce58d3ac` | `m5-v1.5`, answers `m5_game` |
 
-| Installed target | SHA-256 |
-| --- | --- |
-| Heltec `kart-m5-espnow` | `11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2` |
-| Core2 `m5-espnow` | `996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a` |
+The previous `4a582f0` pair (Heltec `11e556e8…21f2`, Core2 `996c4387…9b0a`) was read back from
+flash before the update and is kept privately for rollback; see the
+[install record](../hardware/m5/2026-11-12-kart3-player-update/README.md). The VESC observations
+below were made on that previous pair and have **not** been repeated on the candidate.
 
-- Core2 v1.3 / K010-V13, Heltec WiFi LoRa 32 V4.3 + L76K. Encrypted local pair,
-  last aligned channel 6. Existing private NVS contains pairing and Wi-Fi/OTA credentials.
+- Core2 v1.3 / K010-V13, Heltec WiFi LoRa 32 V4.3 + L76K. Encrypted local pair; channel 6 on
+  November 11, channel 2 after this update because the Heltec follows the Wi-Fi access point.
+  Existing private NVS contains pairing and Wi-Fi/OTA credentials.
+- Opening either USB port with DTR/RTS cleared reboots that board; the driver default does not.
 - VESC BLE **`f7:bd:23:cc:62:0e`**, UUID **`37004e000951343037353739`**.
   Physical Flipsky **75100 Pro V2.0**, firmware 6.02/test0, reports `75_300_R2`, `no_hw_limits`.
   Do not replace its firmware based on the reported hardware string alone.

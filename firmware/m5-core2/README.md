@@ -28,10 +28,15 @@ firmware **6.02**, hardware **75_300_R2**. Heltec reported `writes:true`, `id_ok
 `limits_ok:true`, baseline source `read`; Core2 reported `mode_ready:true`. ESP-NOW driver,
 received and peer channels all matched **6**, with alignment confirmed.
 
-| Installed application | Source | SHA-256 |
+| Application at that checkpoint | Source | SHA-256 |
 | --- | --- | --- |
 | Heltec `kart-m5-espnow` | `4a582f0` | `11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2` |
 | Core2 `m5-espnow` | `4a582f0` | `996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a` |
+
+**Since November 12 kart 3 runs the native-player candidate instead** (Heltec `d4366264…b9`,
+Core2 `894a1a34…d3ac`), installed with the VESC off. The settings and readbacks above were
+observed on the `4a582f0` pair and are not yet repeated on the candidate; see the
+[install record](../../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
 Both segmented USB uploads were verified and preserved NVS. Full rollback images, pairing keys
 and OTA credentials remain private. A later Core2 radio-busy touch-feedback patch was built
