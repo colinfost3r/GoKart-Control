@@ -16,7 +16,7 @@
 #include <ArduinoOTA.h>
 #include <Preferences.h>
 
-#define FW_VERSION "core2-0.3.2"
+#define FW_VERSION "core2-0.3.3"
 
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
@@ -87,7 +87,12 @@ static void sendUse(uint8_t slot) {
   if (!heltecKnown) return;
   esp_now_peer_info_t peer = {};
   memcpy(peer.peer_addr, heltecMac, 6);
-  peer.channel = 0; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
+  // 0.3.3: channel 0 ("current") can still resolve to the OLD AP channel after a manual
+  // re-tune (the WiFi-drop path): unicasts then die silently while broadcasts keep landing
+  // (field 2026-11-12: USING... flashed, the kart never heard a use). Pin to the real channel.
+  uint8_t cur; wifi_second_chan_t sc;
+  if (esp_wifi_get_channel(&cur, &sc) != ESP_OK || cur < 1 || cur > 14) cur = 0;
+  peer.channel = cur; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
   esp_now_del_peer(heltecMac); esp_now_add_peer(&peer);
   GkUseFrame f = {'G', 'U', 1, kart, slot, ++useSeq};
   esp_now_send(heltecMac, (const uint8_t*)&f, sizeof f);
@@ -457,6 +462,7 @@ void loop() {
     uint8_t cur; wifi_second_chan_t sc;
     if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur >= 1 && cur <= 13) scanCh = cur;
   }
+  if (useTries >= 3 && ms - useSentMs > 2000) useTries = 0;  // 0.3.3: retries spent + nothing changed: let the driver tap again
   if (useTries && useTries < 3 && ms - useSentMs > 120) {   // use: 3 sends, the Pi de-duplicates by seq
     GkUseFrame f = {'G', 'U', 1, kart, useSlot, useSeq};
     esp_now_send(heltecMac, (const uint8_t*)&f, sizeof f);
