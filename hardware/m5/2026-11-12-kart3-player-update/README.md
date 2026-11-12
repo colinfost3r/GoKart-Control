@@ -30,10 +30,10 @@ pin) with `id_ok`, `limits_ok`, baseline source `read` and zero CRC errors, and 
 Core2 mode holds produced NORMAL 0.75 / 36102 ERPM, ECO 0.50 / 21661 ERPM and SPORT 1.00 /
 150000 ERPM, each written and verified, the same values as November 10. The wheel was run
 forward to 25528 ERPM and in reverse to about −14000 ERPM over several cycles; all 142 samples
-showed fault 0 and the VESC link never dropped. Final state: ECO, stopped.
+showed fault 0 and the VESC link never dropped. Final state: ECO, stopped. The owner confirmed forward
+and reverse felt as smooth and consistent as on November 11.
 
-**Not verified here.** The owner's judgement of pedal smoothness and direction; pit
-STOP/SLOW/BOOST; a sustained soak; touch and page switching; GPS; course download, JOIN and
+**Not verified here.** Pit STOP/SLOW/BOOST; a sustained soak; a VESC cold boot; touch and page switching; GPS; course download, JOIN and
 FIRE; OTA. The Core2 game state read `Error`, consistent with a JOIN tap while no host is paired. Free heap on the Heltec with Wi-Fi up is 45.7 kB, against 59.2 kB on the
 previous application. With BLE also connected its low-water mark was 37.8 kB and had fallen
 about 1.2 kB over a few minutes; it has not been soak-tested.

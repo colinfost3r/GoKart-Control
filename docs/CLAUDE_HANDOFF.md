@@ -10,8 +10,9 @@ Wi-Fi/OTA settings were retained and the pair re-linked. Nothing was driven and 
 written to a VESC by the update. The owner confirmed the new map screen appears. With the VESC
 then powered, the Heltec reconnected to the pinned controller, ECO/NORMAL/SPORT from the Core2
 were written and verified at the November 10 values, and the wheel ran forward and reverse
-with fault 0 throughout. Still open: the owner's judgement of pedal feel, pit STOP/SLOW/BOOST,
-a sustained soak, GPS, and everything that needs the host (course download, JOIN, FIRE). See
+with fault 0 throughout; the owner confirmed pedal feel matched November 11. Still open: pit
+STOP/SLOW/BOOST, a sustained soak, a VESC cold boot, GPS, and everything that needs the host
+(course download, JOIN, FIRE). See
 [the install record](../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
 ## Project and Git
