@@ -1,6 +1,6 @@
 # Prebuilt images
 
-> **Current images: kart 0.3.3, base and repeater 0.2.2, Core2 item screen 0.3.1** (2026-11-12, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
+> **Current images: kart 0.3.3, base and repeater 0.2.2, Core2 item screen 0.3.2** (2026-11-12, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy
 > `build/<sketch>/<sketch>.ino.merged.bin` here under a new version name, add the row and the
@@ -19,6 +19,7 @@ check what you got.
 | `core2-items-0.2.2.merged.bin` | M5Stack Core2 | power follows the kart key: USB power lost -> 15 s on-screen countdown -> power off (tap to stay on) | `c70d1cd812c5147864c0d444eaa3a19c80a94949d3f1c7b98e57c8545bb78228` |
 | `core2-items-0.3.0.merged.bin` | M5Stack Core2 | OTA over the pit AP (joins at boot, ArduinoOTA as gokart-core2.local; `wifi SSID PASS` over USB once, NVS) | `e92c9f7e2111a4ec3d6318a13ead7ab2fe9b952d3dbb668300993547263781b3` |
 | `core2-items-0.3.1.merged.bin` | M5Stack Core2 | kart pinning (`kart 1-8\|any` on the USB console, NVS): two karts broadcast now, a unit shows only its own kart | `d400f39dd64e0ea78bb3f0db9e67f1e4d3a83b31cc7247891f094bc0c8a5051c` |
+| `core2-items-0.3.2.merged.bin` | M5Stack Core2 | kart-first channels: on WiFi with the pinned kart silent 15 s, drop WiFi and hunt (two shop APs share the SSID on different channels); per-kart OTA hostname gokart-core2-N | `04248c956b044721ea16e5edac2d62100d34a0028d0944404641e71f5c651095` |
 | `kart-heltec-v4-ble-0.3.1.merged.bin` | Heltec WiFi LoRa 32 V4.3 | 0.3.0 with the five new item codes (boost3/star/magnet/hotlap/shield) and charge counts in the Core2 frames | `4d403b51b4793b804a459f72f2e19634efde77a7d5a8cda24f48689f29f892f3` |
 | `core2-items-0.2.0.merged.bin` | M5Stack Core2 | item screen with the five new cards (dash-matched art, charge badge, per-item action labels) | `4a41df3a2fdff984bbe9b5c7d7b872d92470831ac1af4f39c57d7b03986587d8` |
 | `kart-heltec-v4-ble-0.3.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node 0.3.0: 0.2.7 + ESP-NOW Core2 item-screen bridge (`inv` line in, broadcast out, `invuse` relay) | `76f38e10ccc228ae6729db796d8f506811ad2550e6e3f438413d17f5335549f1` |
@@ -124,6 +125,14 @@ Radio unchanged (interoperates with the 0.2.1 base and repeater).
   inventory frame. Flashed on kart 2 over WiFi (espota).
 - `core2-items-0.2.0.merged.bin` draws the new cards, the "x3" charge badge, and per-item action
   text (hot lap arms, shield says it blocks by itself). Flashed over USB.
+
+## core2-items 0.3.2 (2026-11-12, the kart comes first)
+
+Field bug: the shop has two APs on the SSID on different channels. Kart 2's Core2 joined the
+ch-6 AP for OTA while kart 2's Heltec sat pinned to the ch-9 AP -- the item screen never heard
+its kart while WiFi was up. 0.3.2 drops WiFi whenever the pinned kart has been silent 15 s
+after a join and goes hunting (OTA then waits for the next boot). OTA hostnames are per kart
+(gokart-core2-N), since two units on one network collided on gokart-core2.local.
 
 ## core2-items 0.3.1 (2026-11-12, kart pinning + serial fix)
 

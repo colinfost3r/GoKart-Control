@@ -16,7 +16,7 @@
 #include <ArduinoOTA.h>
 #include <Preferences.h>
 
-#define FW_VERSION "core2-0.3.1"
+#define FW_VERSION "core2-0.3.2"
 
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
@@ -329,7 +329,9 @@ void setup() {
 }
 
 static void otaStart() {
-  ArduinoOTA.setHostname("gokart-core2");
+  static char host[20];
+  snprintf(host, sizeof host, "gokart-core2-%u", kartPin);   // 0.3.2: per-kart mDNS name (two units collided)
+  ArduinoOTA.setHostname(host);
   ArduinoOTA.onStart([]() {
     otaBusy = true;
     M5.Display.fillScreen(TFT_BLACK);
@@ -397,6 +399,7 @@ void loop() {
   if (wifiTrying) {
     if (WiFi.status() == WL_CONNECTED) {
       wifiTrying = false; otaUp = true;
+      lastRxMs = ms;                     // 0.3.2: give the kart the full grace from WiFi-join time
       otaStart();
       Serial.printf("wifi %s ota gokart-core2.local ch %d\n",
                     WiFi.localIP().toString().c_str(), WiFi.channel());
@@ -411,6 +414,13 @@ void loop() {
     ArduinoOTA.handle();
     if (WiFi.status() != WL_CONNECTED) { otaUp = false; dirty = true; }   // drove away: stay put
     if (otaBusy) { delay(2); return; }   // mid-update: no draws, no power-off, no ESP-NOW sends
+    // 0.3.2: the kart comes first. Two shop APs share the SSID on different channels; when WiFi
+    // parks us where the pinned kart's Heltec is not, drop WiFi and go find the kart.
+    if (!otaBusy && ms - lastRxMs > 15000) {
+      otaUp = false;
+      WiFi.disconnect(false);            // keep the radio; no reconnect (autoReconnect is off)
+      locked = false; scanHopMs = 0; dirty = true;
+    }
   }
 
   while (Serial.available()) {           // USB console: wifi SSID PASS | wifi clear | status
