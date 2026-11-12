@@ -108,14 +108,17 @@ A pit STOP always wins. **Sounds** are synthesized in the browser (`static/sound
 file on pit and kart): countdown lights, GO, boost, mud, item roulette, lap, finish, STOP.
 Kart panel speakers are fed over HDMI audio.
 
-The [compact Heltec/GPS enclosure prototype](hardware/cad/heltec-bar-enclosure/r07-fdm-supports/)
-follows the owner-edited antenna/GPS placement. Its 79 × 36 mm rectangular shell
-holds a GPS socket supported down to the case floor and a fully enclosed harness
-route, with an OLED viewing opening and integral antenna mount in the lid. The
-wider clamp moves its two bolts clear of the case. It uses four installation screws
-and mounts parallel to the owner's 0.995-inch bar.
+The [compact Heltec/GPS enclosure prototype](hardware/cad/heltec-bar-enclosure/r08-recessed-lid/)
+preserves the owner's extended lower shell and board/antenna placement. A stepped
+lid locates in a chamfered perimeter sill and uses two #4 plastic thread-forming
+screws. The internal GPS supports and enclosed harness remain. The owner input is
+missing its upper-left clamp ear; clamp completion and physical fit remain open.
 Editable Fusion source, print files and fit assumptions are documented in the
 [mechanical handoff](docs/mechanical/README.md). Physical prototype checks remain open.
+
+R08 print status: the lid and lower collar meshes pass; the owner-edited case is
+**not print-ready** because its right clamp ear has a zero-thickness attachment.
+The base extension remains preserved. See the [R08 diagnostic](hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md).
 
 ## Repository map
 

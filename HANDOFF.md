@@ -1,6 +1,43 @@
 # Collaborator handoff
 
-## FDM GPS supports and outboard clamp bolts R07 — November 11, 2026
+## Recessed lid and #4 screws R08 — November 11, 2026
+
+[R08](hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md) derives from the
+owner's extended R07 at timeline 677. The exact native input, layout and view were
+archived before work. The extended lower shell/skirt and lower collar are retained.
+Independent Boolean comparisons found no added or removed material below Z2.49 mm
+and no change anywhere on the lower collar.
+
+The lid's lower edge locates **1.5 mm** into a perimeter rim with **0.3 mm side
+clearance**, a **0.5 mm 45° entry chamfer** and approximately **1 mm ledge bearing**.
+The cap top and antenna stay at their existing height. The former M3 nut pockets
+and clearance passages are filled. New lid axes are (13,−29) and (−13,28) mm.
+
+The working screw selection is **#4 × 1/2 inch rounded-head thread-forming screws
+for plastic**, using McMaster 92295A103 as the reference. These are TRS plastic
+screws, not an interchangeable generic #4 sheet-metal or wood screw. Blind pilot
+diameter is **2.65 mm**, depth **12 mm**, with **3.4 mm lid clearance holes**.
+Nominal screw tips have **1.8 mm** bottom clearance. Owner confirmation of existing
+screw hardware is still open; actual FDM pilot fit and retention need a trial.
+
+**Clamp status:** the authoritative owner input has no upper-left clamp ear.
+That was not silently restored, because the owner requested preserving the base.
+A question is pending about restoring only that ear while retaining the extension.
+Do not treat this prototype as a complete accepted clamp assembly.
+
+**Case export blocked:** the owner-edited right clamp ear meets the extended base
+only along three zero-thickness edges (four native faces at each edge). The native
+model and STEP preserve this geometry; the case STL is quarantined as
+`diagnostics/case-as-edited-NOT-PRINT-READY.stl`. The lid and lower collar pass mesh
+checks. A connecting web needs an owner decision before the case is printable.
+The hidden historical R07 feature at timeline 607 also retains a lost-profile
+warning; it was not rebuilt over the owner edits. See the R08 diagnostic reports.
+
+All 492 offline repository tests passed in eight suites, zero skipped. Those
+software tests are separate from the CAD and physical-fit checks. No firmware,
+controller settings, hardware calibration or kart operation changed.
+
+## R07 FDM supports and outboard clamp checkpoint — November 11, 2026
 
 The owner requested GPS supports that reach the case floor for FDM printing and
 mounting screws moved clear of the enclosure. [R07](hardware/cad/heltec-bar-enclosure/r07-fdm-supports/README.md)

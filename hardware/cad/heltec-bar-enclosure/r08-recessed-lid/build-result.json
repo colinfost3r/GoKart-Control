@@ -1,0 +1,39 @@
+{
+  "document": "GoKart Heltec Recessed Lid R08",
+  "timeline_count": 719,
+  "input_archive": "owner-extended-R07-timeline-677.f3d",
+  "owner_input_case_volume_cm3": 41.79749747830008,
+  "lid_screw_axes_mm": [
+    [
+      13,
+      -29
+    ],
+    [
+      -13,
+      28
+    ]
+  ],
+  "pilot_diameter_mm": 2.65,
+  "pilot_depth_mm": 12,
+  "screw_under_head_length_mm": 12.7,
+  "screw_tip_z_mm": 17.3,
+  "pilot_bottom_z_mm": 15.5,
+  "tip_clearance_mm": 1.8,
+  "rim_top_z_mm": 29,
+  "cap_top_z_mm": 30,
+  "locating_depth_mm": 1.5,
+  "side_clearance_mm": 0.3,
+  "rim_entry_chamfer_mm": 0.5,
+  "ledge_bearing_nominal_mm": 1,
+  "lower_lid_bounds_xy_mm": [
+    [
+      -15.7,
+      -43.7
+    ],
+    [
+      15.7,
+      30.7
+    ]
+  ],
+  "base_scope": "No modifications intended below Z2.5; exact owner base and lower collar retained, including missing upper-left clamp ear pending owner clarification"
+}

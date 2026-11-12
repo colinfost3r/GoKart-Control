@@ -141,6 +141,23 @@ This explicit persistent maintenance tune is separate from temporary supervisory
   Floor-backed GPS features do not establish that the complete clamp/case can be
   printed without any supports; assess the chosen print orientation separately.
 
+## Owner base extension and recessed #4 lid — November 11, 2026
+
+- Preserve the owner's latest lower-container/base extension and manual edits.
+  Archive the current Fusion model before modifying the lid or its fastening.
+- Replace lid machine screws/nuts with #4 self-tapping screws. Screw thread type,
+  head and length must be explicit; a chosen prototype pilot does not qualify
+  every #4 screw or every FDM material.
+- Seat/locate the lid on a chamfered perimeter sill with practical printed
+  clearance and bearing support, rather than relying on two screws for location.
+- Preserve board/GPS/antenna placement, interior harness space, floor-backed GPS
+  supports and service access. Keep two lid screws unless otherwise requested.
+- The input's missing upper-left clamp ear is a separate unresolved owner edit;
+  preserve the extended base and obtain the owner's choice before restoring it.
+- The right clamp ear also has an inherited zero-thickness attachment. A finite
+  connecting web is pending the owner's choice; do not distribute the diagnostic
+  case STL as print-ready.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.

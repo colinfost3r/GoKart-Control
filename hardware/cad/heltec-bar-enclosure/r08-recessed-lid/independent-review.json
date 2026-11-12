@@ -1,0 +1,313 @@
+{
+  "revision": "R08",
+  "date": "2026-11-11",
+  "physical_hardware_tested": false,
+  "result": "Lid/interface checks pass; case export BLOCKED by inherited non-manifold clamp attachment; full assembly not print-ready",
+  "geometry": {
+    "document": "GoKart Heltec Recessed Lid R08",
+    "timeline_count": 719,
+    "selected": {
+      "hardware_or_cover": 42,
+      "routing_or_fastener_reference": 11,
+      "printed": 3
+    },
+    "remaining_intersections": [
+      {
+        "a": "Open CASCADE STEP translator 6.8 1.1.1/Body1",
+        "b": "R08 Owner base and recessed sill/Body1",
+        "volume_mm3": 0.000510976913711545,
+        "bounds_mm": [
+          [
+            -9.25,
+            -21.000000000000007,
+            6.94128074
+          ],
+          [
+            9.25,
+            11.2155,
+            6.9413
+          ]
+        ]
+      },
+      {
+        "a": "R08 Owner base and recessed sill/Body1",
+        "b": "REF R08 number4 plastic screws nominal/Body1",
+        "volume_mm3": 8.32212307857643,
+        "bounds_mm": [
+          [
+            11.5776,
+            -30.422399999999996,
+            17.3
+          ],
+          [
+            14.4224,
+            -27.577600000000004,
+            27.2474
+          ]
+        ]
+      },
+      {
+        "a": "R08 Owner base and recessed sill/Body1",
+        "b": "REF R08 number4 plastic screws nominal/Body2",
+        "volume_mm3": 8.32212307857643,
+        "bounds_mm": [
+          [
+            -14.4224,
+            26.577599999999997,
+            17.3
+          ],
+          [
+            -11.5776,
+            29.4224,
+            27.2474
+          ]
+        ]
+      }
+    ],
+    "inherited_cover_fit": [
+      {
+        "a": "GPS-Module1/Body3",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.22057640606521983,
+        "bounds_mm": [
+          [
+            -4.415000000000028,
+            -22.034500000000005,
+            13.700000000000001
+          ],
+          [
+            4.4149999999999725,
+            -21.950000000000035,
+            14.000000000000002
+          ]
+        ]
+      }
+    ],
+    "floor_support_samples": [
+      {
+        "x_mm": -11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      }
+    ],
+    "bare_gps_socket_to_rear_inner_wall_mm": 4.247279753981701,
+    "route_reference_to_print_minimum_mm": {
+      "REF R06 internal wire route 8x2mm assumed": 0.25000000000000355,
+      "REF R06 GPS mating plug12x3x2p5 assumed": 0.7106335201775946,
+      "REF R06 Heltec P3 mating plug12x5x2p7 assumed": 0.7500000000000018
+    },
+    "print_solids": {
+      "R08 Owner base and recessed sill": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R08 Stepped lid for number4 screws": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R08 Owner lower collar": {
+        "solid": true,
+        "lumps": 1
+      }
+    }
+  },
+  "sill_and_preservation": {
+    "document": "GoKart Heltec Recessed Lid R08",
+    "timeline_count": 719,
+    "owner_extended_base_comparison": {
+      "region_z_max_mm": 2.49,
+      "new_minus_owner_mm3": 0,
+      "owner_minus_new_mm3": 0
+    },
+    "owner_lower_collar_comparison": {
+      "new_minus_owner_mm3": 0,
+      "owner_minus_new_mm3": 0
+    },
+    "antenna_print_above_lid_comparison": {
+      "region_z_min_mm": 30.01,
+      "new_minus_owner_mm3": 0,
+      "owner_minus_new_mm3": 0
+    },
+    "locating_side_gap_min_mm": 0.3000000000000025,
+    "perimeter_bearing_samples": [
+      {
+        "xy_mm": [
+          15.2,
+          0
+        ],
+        "case_below": true,
+        "lid_above": true
+      },
+      {
+        "xy_mm": [
+          -15.2,
+          0
+        ],
+        "case_below": true,
+        "lid_above": true
+      },
+      {
+        "xy_mm": [
+          0,
+          -43.2
+        ],
+        "case_below": true,
+        "lid_above": true
+      },
+      {
+        "xy_mm": [
+          0,
+          30.2
+        ],
+        "case_below": true,
+        "lid_above": true
+      }
+    ],
+    "pilot_samples": [
+      {
+        "xy_mm": [
+          13,
+          -29
+        ],
+        "bottom_material": true,
+        "bore_above_bottom_empty": true,
+        "tip_empty": true,
+        "lid_clearance_empty": true,
+        "pilot_side_wall_material": true
+      },
+      {
+        "xy_mm": [
+          -13,
+          28
+        ],
+        "bottom_material": true,
+        "bore_above_bottom_empty": true,
+        "tip_empty": true,
+        "lid_clearance_empty": true,
+        "pilot_side_wall_material": true
+      }
+    ],
+    "tip_clearance_mm": 1.8,
+    "scope": "Temporary geometry only; no native geometry or visibility changed. Upper-left clamp ear remains missing as in owner input."
+  },
+  "expected_thread_engagement": "Each simplified #4 major-diameter screw envelope intentionally overlaps its smaller pilot by 8.322123 mm\u00b3. This represents material engaged by thread forming, not a full physical thread simulation. No screw-envelope intersection with lid.",
+  "inherited_fit_limits": [
+    "Nominal PCB support rounding contact approximately0.0000193mm deep persists.",
+    "GPS receiver intersects conservative OLED-cover proxy by0.220576mm\u00b3; actual hardware fit remains unmeasured.",
+    "Cable/plug envelopes, FDM screw retention and clip flex remain fit assumptions."
+  ],
+  "repository_checks": {
+    "passed": 492,
+    "suites": 8,
+    "skipped": 0,
+    "source_log": "repository-validation.txt"
+  },
+  "fastener_reference": {
+    "part": "McMaster 92295A103",
+    "type": "#4 \u00d7 1/2 inch rounded-head TRS thread-forming screw for plastic",
+    "head_diameter_mm": 5.5626,
+    "head_height_mm": 2.032,
+    "threads_per_inch": 20,
+    "supplier_drill": "37 gauge",
+    "prototype_pilot_mm": 2.65,
+    "source": "https://www.mcmaster.com/products/90380A108/",
+    "limit": "Verified supplier table lists this part and drill; model pilot is a prototype assumption for the actual printed material, not generic #4 sheet-metal or wood screws."
+  },
+  "assembly_print_ready": false,
+  "case_export_limitation": {
+    "source": "case-topology-diagnostic.json",
+    "native_nonmanifold_edge_count": 3,
+    "face_incidence_per_edge": 4,
+    "location": "Right clamp ear attachment at X18 mm, Y +/-12 mm, Z -16.25..0 mm",
+    "action": "Preserved owner base; repair decision pending; diagnostic STL clearly segregated"
+  },
+  "retained_history_warning": {
+    "timeline_index": 607,
+    "feature": "45deg front socket transition",
+    "component": "hidden R07 Case",
+    "issue": "Lost sketch/profile reference; cached geometry retained. Old feature chain not rebuilt."
+  }
+}

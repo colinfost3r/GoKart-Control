@@ -1,0 +1,394 @@
+{
+  "status": "Lid revision complete; case print release BLOCKED by inherited zero-thickness clamp-ear attachment. Physical assembly remains incomplete.",
+  "document": "GoKart Heltec Recessed Lid R08",
+  "timeline_count": 719,
+  "authoritative_input": "input/owner-extended-R07-timeline-677.f3d",
+  "owner_features_retained": [
+    {
+      "index": 670,
+      "name": "OffsetFaces1",
+      "warning": ""
+    },
+    {
+      "index": 671,
+      "name": "Extrude25",
+      "warning": ""
+    },
+    {
+      "index": 672,
+      "name": "Extrude26",
+      "warning": ""
+    },
+    {
+      "index": 673,
+      "name": "Extrude27",
+      "warning": ""
+    },
+    {
+      "index": 674,
+      "name": "Sketch1",
+      "warning": ""
+    },
+    {
+      "index": 675,
+      "name": "Extrude28",
+      "warning": ""
+    },
+    {
+      "index": 676,
+      "name": "Chamfer1",
+      "warning": ""
+    }
+  ],
+  "owner_pose_comparison": [
+    {
+      "component": "REF Heltec V4.3.1 official STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        -2.220446049250313e-16,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        -2.220446049250313e-16,
+        0.0,
+        2.45745,
+        0.0,
+        0.0,
+        1.0,
+        0.85,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF GPS accessory alternate revision",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        5.134781488891349e-16,
+        -2.2702360117554623e-15,
+        5.134781488891349e-16,
+        0.0,
+        -1.0,
+        -3.100000000000003,
+        0.0,
+        1.0,
+        0.0,
+        1.7200000000000002,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF OLED protective cover missing from STEP",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "REF 2inch antenna envelope diameter7mm assumed",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        0.8191520442889918,
+        -0.5735764363510462,
+        -6.938893903907227e-18,
+        -0.7550505415383404,
+        0.5735764363510463,
+        0.8191520442889921,
+        -6.9388939039072276e-18,
+        1.0059600904649926,
+        -3.408046177737845e-18,
+        1.9327990328222278e-17,
+        0.9999999999999997,
+        1.551447648878403e-18,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "component": "new ant mount",
+      "max_matrix_difference": 0.0,
+      "transform_cm": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "component": "R08 Owner base and recessed sill",
+      "file": "case-recessed-sill",
+      "solid": true,
+      "connected_solids": 1,
+      "volume_cm3": 43.442406820706154,
+      "bounds_mm": [
+        [
+          -18.0,
+          -46.00000000000001,
+          -16.25
+        ],
+        [
+          33.0,
+          33.0,
+          29.000000000000004
+        ]
+      ],
+      "manifold_status": "FAIL: three native/STL edges have four incident faces; isSolid/one-lump does not establish printability",
+      "step": "case-recessed-sill.step",
+      "stl": "diagnostics/case-as-edited-NOT-PRINT-READY.stl"
+    },
+    {
+      "component": "R08 Stepped lid for number4 screws",
+      "file": "stepped-lid",
+      "solid": true,
+      "connected_solids": 1,
+      "volume_cm3": 7.293359045905113,
+      "bounds_mm": [
+        [
+          -18.0,
+          -46.0,
+          14.3
+        ],
+        [
+          19.38969553462584,
+          33.0,
+          39.50271411896337
+        ]
+      ],
+      "step": "stepped-lid.step",
+      "stl": "stepped-lid.stl"
+    },
+    {
+      "component": "R08 Owner lower collar",
+      "file": "lower-collar",
+      "solid": true,
+      "connected_solids": 1,
+      "volume_cm3": 14.676929878136049,
+      "bounds_mm": [
+        [
+          -33.0,
+          -12.000000000000002,
+          -34.0
+        ],
+        [
+          33.0,
+          12.000000000000002,
+          -17.75
+        ]
+      ],
+      "step": "lower-collar.step",
+      "stl": "lower-collar.stl"
+    }
+  ],
+  "lid_revision": {
+    "document": "GoKart Heltec Recessed Lid R08",
+    "timeline_count": 719,
+    "input_archive": "owner-extended-R07-timeline-677.f3d",
+    "owner_input_case_volume_cm3": 41.79749747830008,
+    "lid_screw_axes_mm": [
+      [
+        13,
+        -29
+      ],
+      [
+        -13,
+        28
+      ]
+    ],
+    "pilot_diameter_mm": 2.65,
+    "pilot_depth_mm": 12,
+    "screw_under_head_length_mm": 12.7,
+    "screw_tip_z_mm": 17.3,
+    "pilot_bottom_z_mm": 15.5,
+    "tip_clearance_mm": 1.8,
+    "rim_top_z_mm": 29,
+    "cap_top_z_mm": 30,
+    "locating_depth_mm": 1.5,
+    "side_clearance_mm": 0.3,
+    "rim_entry_chamfer_mm": 0.5,
+    "ledge_bearing_nominal_mm": 1,
+    "lower_lid_bounds_xy_mm": [
+      [
+        -15.7,
+        -43.7
+      ],
+      [
+        15.7,
+        30.7
+      ]
+    ],
+    "base_scope": "No modifications intended below Z2.5; exact owner base and lower collar retained, including missing upper-left clamp ear pending owner clarification"
+  },
+  "parameters_mm": {
+    "r08_pilot": 2.6500000000000004,
+    "r08_pilot_depth": 12.000000000000002,
+    "r08_lid_clear": 3.4000000000000004
+  },
+  "lower_collar_volume_delta_cm3": 0.0,
+  "owner_base_scope": "Owner exterior/skirt geometry unchanged; independent review compares geometry below Z0. Obsolete M3 bores within pillars are intentionally filled for screw conversion.",
+  "screw_type": "#4 x 1/2 inch pan-head plastic thread-forming, modeled around McMaster92295A103; not generic sheet-metal screw",
+  "screw_reference": "Smooth crest and head envelopes; crest-to-pilot overlap is intentional thread-forming engagement, not an unexpected clash",
+  "mount_status": "Owner input upper-left clamp ear absent; preserved pending owner decision",
+  "known_fit_limits": [
+    "Inherited GPS receiver overlap with conservative OLED cover proxy:0.0845mm in Y and0.3mm in Z; actual accessory fit unverified",
+    "Actual mated GPS/P3 plugs, harness bundle and bend are unmeasured",
+    "Pilot diameter, screw torque, clip flex and ASA/PETG fit need a physical prototype",
+    "A recessed ledge is not a validated water seal"
+  ],
+  "feature_warnings": [
+    {
+      "name": "45deg front socket transition",
+      "message": "Profile 1 missing<b>1 Reference Failures</b><br/>The profile reference is lost and this feature is using cached geometry.<br/>Edit this feature and select new profile references.45deg front socket transition",
+      "timeline_index": 607,
+      "component": "R07 Case with floor-backed GPS supports",
+      "suppressed": false,
+      "scope": "Retained hidden R07 history; no repair/regeneration applied over owner geometry"
+    }
+  ],
+  "case_topology_diagnostic": {
+    "status": "BLOCKED: case is not print-ready; inherited edge-only right clamp-ear attachment",
+    "source_model": "GoKart Heltec Recessed Lid R08, timeline719",
+    "source_owner_archive": "input/owner-extended-R07-timeline-677.f3d",
+    "native_and_stl_agree": true,
+    "native_edges": [
+      {
+        "endpoints_mm": [
+          [
+            18,
+            -12,
+            -16.25
+          ],
+          [
+            18,
+            -12,
+            0
+          ]
+        ],
+        "incident_faces": 4
+      },
+      {
+        "endpoints_mm": [
+          [
+            18,
+            -12,
+            0
+          ],
+          [
+            18,
+            12,
+            0
+          ]
+        ],
+        "incident_faces": 4
+      },
+      {
+        "endpoints_mm": [
+          [
+            18,
+            12,
+            -16.25
+          ],
+          [
+            18,
+            12,
+            0
+          ]
+        ],
+        "incident_faces": 4
+      }
+    ],
+    "point_containment": [
+      {
+        "point_mm": [
+          17.99,
+          0,
+          -8
+        ],
+        "result": "outside"
+      },
+      {
+        "point_mm": [
+          18.01,
+          0,
+          -8
+        ],
+        "result": "inside ear"
+      },
+      {
+        "point_mm": [
+          17.99,
+          12.1,
+          -8
+        ],
+        "result": "inside case"
+      },
+      {
+        "point_mm": [
+          18.01,
+          12.1,
+          -8
+        ],
+        "result": "outside"
+      },
+      {
+        "point_mm": [
+          17.99,
+          0,
+          0.1
+        ],
+        "result": "inside case"
+      },
+      {
+        "point_mm": [
+          18.01,
+          0,
+          0.1
+        ],
+        "result": "outside"
+      }
+    ],
+    "interpretation": "The remaining upper-right ear contacts the case along edges only, not a finite-area material connection. This is native geometry, not an export tolerance or duplicate-triangle issue.",
+    "preservation": "No topology repair, owner-feature deletion, base material addition or ear restoration performed. Raw owner input and final native remain preserved.",
+    "required_resolution": "Owner-approved finite-thickness connecting web or equivalent clamp redesign; restoring missing upper-left ear is a separate open decision.",
+    "other_parts": "Lid and lower-collar STL edge incidence passed the root check; case STL is retained as diagnostic only.",
+    "stl_file": "diagnostics/case-as-edited-NOT-PRINT-READY.stl"
+  }
+}

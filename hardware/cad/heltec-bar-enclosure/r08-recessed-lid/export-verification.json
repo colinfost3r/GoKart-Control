@@ -1,0 +1,217 @@
+{
+  "operation": "offline_export_verification",
+  "status": "BLOCKED_CASE_AS_EDITED; lid_and_lower_collar_meshes_pass",
+  "assembly_print_ready": false,
+  "hardware_tested": false,
+  "files": {
+    "GoKart-Heltec-Recessed-Lid-R08.f3d": {
+      "sha256": "179ded91d957ffb34b4490e274835e076c27793d38d9f40296cb16f7706e6a9a",
+      "bytes": 8868956,
+      "zip_directory_readable": true,
+      "compression_methods": [
+        0,
+        93
+      ],
+      "crc_check": "Not performed: Python zipfile lacks Fusion compression method 93; no round-trip reopen claimed."
+    },
+    "build_lid_revision.py": {
+      "sha256": "6b19cf2ac8b91dd65fd499f6ec3e0aad987724a1d4cd444a0608bbe8038c0187",
+      "bytes": 7120,
+      "python_syntax_valid": true
+    },
+    "capture_owner_input.py": {
+      "sha256": "cdc896682095a6d46ae540d43ff310a4114323b856bc28dab04a58138f168f20",
+      "bytes": 2089,
+      "python_syntax_valid": true
+    },
+    "case-recessed-sill.step": {
+      "sha256": "a0cae49da96a1fd9b298df6c25227de681d22305ce2476fae9b8026e4ee3924c",
+      "bytes": 352044,
+      "step_envelope_valid": true,
+      "geometry_roundtrip_checked": false,
+      "print_ready": false,
+      "limitation": "Preserves nonmanifold owner clamp-ear attachment; format envelope only is valid"
+    },
+    "diagnostics/case-as-edited-NOT-PRINT-READY.stl": {
+      "sha256": "19cbdae1760c1146b596e506fadb627eed9c55d4e891bca49b8372b5c50c402e",
+      "bytes": 330184,
+      "triangles": 6602,
+      "closed_manifold": false,
+      "nonmanifold_edges": [
+        {
+          "vertices_mm": [
+            [
+              18.0,
+              -12.0,
+              -16.25
+            ],
+            [
+              18.0,
+              -12.0,
+              0.0
+            ]
+          ],
+          "incidence": 4
+        },
+        {
+          "vertices_mm": [
+            [
+              18.0,
+              -12.0,
+              0.0
+            ],
+            [
+              18.0,
+              12.0,
+              0.0
+            ]
+          ],
+          "incidence": 4
+        },
+        {
+          "vertices_mm": [
+            [
+              18.0,
+              12.0,
+              -16.25
+            ],
+            [
+              18.0,
+              12.0,
+              0.0
+            ]
+          ],
+          "incidence": 4
+        }
+      ],
+      "consistent_winding": true,
+      "vertex_connected_components": 1,
+      "bounds_mm": [
+        [
+          -18.0,
+          33.0
+        ],
+        [
+          -46.0,
+          33.0
+        ],
+        [
+          -16.25,
+          29.0
+        ]
+      ],
+      "extent_mm": [
+        51.0,
+        79.0,
+        45.25
+      ],
+      "print_ready": false,
+      "classification": "Known native zero-thickness clamp-ear attachment, retained unchanged; NOT a passing mesh"
+    },
+    "export_revision.py": {
+      "sha256": "e34864a0ec67deea605f0190344980070c8e7659844160d004d76243c3267d95",
+      "bytes": 5562,
+      "python_syntax_valid": true
+    },
+    "independent_review.py": {
+      "sha256": "2b9ef1a8c2588bd69e886d6fbaa8219590022ff93130904d2da53961dfd31f5c",
+      "bytes": 3400,
+      "python_syntax_valid": true
+    },
+    "independent_sill_review.py": {
+      "sha256": "e2ffc96d29fed0903911de378dfa831659bf893583762e735c1c536863f884f8",
+      "bytes": 2951,
+      "python_syntax_valid": true
+    },
+    "input/owner-extended-R07-timeline-677.f3d": {
+      "sha256": "29f8ef4e15f385b1a477cd28aa8d7bea4f3afa51a760d356fc76a8987a5919f5",
+      "bytes": 10248638,
+      "zip_directory_readable": true,
+      "compression_methods": [
+        0,
+        93
+      ],
+      "crc_check": "Not performed: Python zipfile lacks Fusion compression method 93; no round-trip reopen claimed."
+    },
+    "lower-collar.step": {
+      "sha256": "f529f48c1fbb7ae9e8cba1cba3fd580ac076b9e418ee455480d724c7544b7759",
+      "bytes": 26972,
+      "step_envelope_valid": true,
+      "geometry_roundtrip_checked": false
+    },
+    "lower-collar.stl": {
+      "sha256": "cd66f5bfc3596127dd7242c00c28568f9c051a919314f3eaf3899781d1a32a24",
+      "bytes": 102184,
+      "triangles": 2042,
+      "closed_manifold": true,
+      "nonmanifold_edges": [],
+      "consistent_winding": true,
+      "vertex_connected_components": 1,
+      "bounds_mm": [
+        [
+          -33.0,
+          33.0
+        ],
+        [
+          -12.0,
+          12.0
+        ],
+        [
+          -34.0,
+          -17.75
+        ]
+      ],
+      "extent_mm": [
+        66.0,
+        24.0,
+        16.25
+      ],
+      "mesh_checks_pass": true
+    },
+    "make_previews.py": {
+      "sha256": "4902fce74ff9c7e5621028a80c977e2781e2dc8c0d7b40b4944249c0901934b8",
+      "bytes": 2409,
+      "python_syntax_valid": true
+    },
+    "stepped-lid.step": {
+      "sha256": "1ccd6a497e428f40aaba71a0995fb2a9a4de81fdfdab6eaf2e6e6b621b7c3160",
+      "bytes": 114950,
+      "step_envelope_valid": true,
+      "geometry_roundtrip_checked": false
+    },
+    "stepped-lid.stl": {
+      "sha256": "bdd4ce0baf932315e652948fca6c1eaf0a2efa2a5f3a12f621979b426b6ca9c1",
+      "bytes": 750984,
+      "triangles": 15018,
+      "closed_manifold": true,
+      "nonmanifold_edges": [],
+      "consistent_winding": true,
+      "vertex_connected_components": 1,
+      "bounds_mm": [
+        [
+          -18.0,
+          19.386377
+        ],
+        [
+          -46.0,
+          33.0
+        ],
+        [
+          14.3,
+          39.502037
+        ]
+      ],
+      "extent_mm": [
+        37.386377,
+        79.0,
+        25.202037
+      ],
+      "mesh_checks_pass": true
+    },
+    "verify_exports.py": {
+      "sha256": "20ac703d7261de649a19f9093731b569979ac343e8ce93124816d9ca7dca885f",
+      "bytes": 5344,
+      "python_syntax_valid": true
+    }
+  }
+}

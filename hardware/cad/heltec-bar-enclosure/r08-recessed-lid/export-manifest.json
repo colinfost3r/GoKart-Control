@@ -1,0 +1,142 @@
+{
+  "revision": "R08",
+  "assembly_print_ready": false,
+  "case_status": "Owner base retained; diagnostic nonmanifold attachment; pending connecting-web decision",
+  "files": [
+    {
+      "path": "GoKart-Heltec-Recessed-Lid-R08.f3d",
+      "bytes": 8868956,
+      "sha256": "179ded91d957ffb34b4490e274835e076c27793d38d9f40296cb16f7706e6a9a"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5467,
+      "sha256": "6ed9ce769a89a22fabd72e4483b281556b30f9ed9f6e1e54270b47728d2efcd0"
+    },
+    {
+      "path": "assembled-preview.png",
+      "bytes": 36030,
+      "sha256": "a11715c671abf6b60fee9ae25a6bc403cf7b7d9040c892bdfc3e28bce64efd47"
+    },
+    {
+      "path": "build-result.json",
+      "bytes": 894,
+      "sha256": "1633a5b2688146823fe1d54f223a7f0811868dae9ec4d5801cc63a4499aafefb"
+    },
+    {
+      "path": "build_lid_revision.py",
+      "bytes": 7120,
+      "sha256": "6b19cf2ac8b91dd65fd499f6ec3e0aad987724a1d4cd444a0608bbe8038c0187"
+    },
+    {
+      "path": "capture_owner_input.py",
+      "bytes": 2089,
+      "sha256": "cdc896682095a6d46ae540d43ff310a4114323b856bc28dab04a58138f168f20"
+    },
+    {
+      "path": "case-recessed-sill.step",
+      "bytes": 352044,
+      "sha256": "a0cae49da96a1fd9b298df6c25227de681d22305ce2476fae9b8026e4ee3924c"
+    },
+    {
+      "path": "case-topology-diagnostic.json",
+      "bytes": 2291,
+      "sha256": "dee9d910910fb866b1b295b3031ad451c80a60057cb15a82fbc54507fa48d43a"
+    },
+    {
+      "path": "diagnostics/case-as-edited-NOT-PRINT-READY.stl",
+      "bytes": 330184,
+      "sha256": "19cbdae1760c1146b596e506fadb627eed9c55d4e891bca49b8372b5c50c402e"
+    },
+    {
+      "path": "export-verification.json",
+      "bytes": 5713,
+      "sha256": "30e34d4e6f44ee8a7a2f79573929e9ebb666c3af4ed83627199adc95f4bdc1a4"
+    },
+    {
+      "path": "export_revision.py",
+      "bytes": 5562,
+      "sha256": "e34864a0ec67deea605f0190344980070c8e7659844160d004d76243c3267d95"
+    },
+    {
+      "path": "independent-review.json",
+      "bytes": 8202,
+      "sha256": "a5be0b8a2ead3668cc3344de20c731a9b5a765945a7b16a9c8169a9161345261"
+    },
+    {
+      "path": "independent_review.py",
+      "bytes": 3400,
+      "sha256": "2b9ef1a8c2588bd69e886d6fbaa8219590022ff93130904d2da53961dfd31f5c"
+    },
+    {
+      "path": "independent_sill_review.py",
+      "bytes": 2951,
+      "sha256": "e2ffc96d29fed0903911de378dfa831659bf893583762e735c1c536863f884f8"
+    },
+    {
+      "path": "input/owner-extended-R07-timeline-677.f3d",
+      "bytes": 10248638,
+      "sha256": "29f8ef4e15f385b1a477cd28aa8d7bea4f3afa51a760d356fc76a8987a5919f5"
+    },
+    {
+      "path": "input/owner-input-view.png",
+      "bytes": 44231,
+      "sha256": "b81954f6c7916064a82823e94b0c18a74b9b19c57753f0170ab3e779834d8123"
+    },
+    {
+      "path": "input/owner-layout.json",
+      "bytes": 30813,
+      "sha256": "58741519d88b6574a254ee0bcf5ed9d74cb906b38f039db40c567533a7042c2c"
+    },
+    {
+      "path": "lid-underside-preview.png",
+      "bytes": 37665,
+      "sha256": "b7505bd238f3661cc55513bdb6a68a0d6f1d8aee57c8a2a91ab9903e35c381c1"
+    },
+    {
+      "path": "lower-collar.step",
+      "bytes": 26972,
+      "sha256": "f529f48c1fbb7ae9e8cba1cba3fd580ac076b9e418ee455480d724c7544b7759"
+    },
+    {
+      "path": "lower-collar.stl",
+      "bytes": 102184,
+      "sha256": "cd66f5bfc3596127dd7242c00c28568f9c051a919314f3eaf3899781d1a32a24"
+    },
+    {
+      "path": "make_previews.py",
+      "bytes": 2409,
+      "sha256": "4902fce74ff9c7e5621028a80c977e2781e2dc8c0d7b40b4944249c0901934b8"
+    },
+    {
+      "path": "model-audit.json",
+      "bytes": 9737,
+      "sha256": "d55e99bbb2420a9ade0c9acd1116db458c67db2e0fb827d045a358f9b7537dec"
+    },
+    {
+      "path": "open-sill-preview.png",
+      "bytes": 49508,
+      "sha256": "a8425669bd3f6a7f0a2660544cf3e6f781e69580017b9f3c1382cbe301b1b81c"
+    },
+    {
+      "path": "repository-validation.txt",
+      "bytes": 1429,
+      "sha256": "e1bc3eab73c87c40ca5d31558e817a06638026de5a61c921d6ba62f2a496a002"
+    },
+    {
+      "path": "stepped-lid.step",
+      "bytes": 114950,
+      "sha256": "1ccd6a497e428f40aaba71a0995fb2a9a4de81fdfdab6eaf2e6e6b621b7c3160"
+    },
+    {
+      "path": "stepped-lid.stl",
+      "bytes": 750984,
+      "sha256": "bdd4ce0baf932315e652948fca6c1eaf0a2efa2a5f3a12f621979b426b6ca9c1"
+    },
+    {
+      "path": "verify_exports.py",
+      "bytes": 5344,
+      "sha256": "20ac703d7261de649a19f9093731b569979ac343e8ce93124816d9ca7dca885f"
+    }
+  ]
+}

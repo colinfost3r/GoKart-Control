@@ -4,7 +4,11 @@ Updated 2026-11-11. Mechanical specialist lane for GoKart Control, created at th
 owner's request with the project conversation as context. This brief records the
 starting point. The current deliverable is a fit-check prototype, not a production release.
 
-**Current CAD work:** [FDM GPS supports and outboard clamp bolts R07](../../hardware/cad/heltec-bar-enclosure/r07-fdm-supports/README.md). The GPS supports reach the floor, with sloped transitions where needed to clear the Heltec PCB and the internal harness. The two M4 tube-clamp axes move outward to ±26 mm and the clamp width increases to 66 mm, with a 12 mm diameter tool-access allowance. The main 79 × 36 mm shell, integrated antenna lid, OLED service opening, owner component positions, horizontal 0.995-inch tube, ASA/PETG and four installation screws remain. The owner-confirmed 4 mm rear-clearance reference is the bare GPS socket body. Actual harness and printed fit remain unmeasured. Earlier [R06](../../hardware/cad/heltec-bar-enclosure/r06-internal-harness/README.md), [R05](../../hardware/cad/heltec-bar-enclosure/r05-rectangular/README.md) and [R03](../../hardware/cad/heltec-bar-enclosure/r03-parallel/README.md) files remain as history.
+**Current CAD work:** [recessed lid and #4 screws R08](../../hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md). The owner's extended lower shell and lower collar are preserved. The lid gains a 1.5 mm locating step, 0.3 mm side clearance, a chamfered entry and perimeter ledge support. Two #4 ×1/2-inch plastic thread-forming screws replace the M3 bolts/nuts. The screw selection and 2.65 mm prototype pilot need actual-hardware/FDM fit confirmation. The owner's input is missing its upper-left clamp ear; restoration is pending their choice, so the clamp is not assembly-ready. Earlier [R07](../../hardware/cad/heltec-bar-enclosure/r07-fdm-supports/README.md) and prior revisions remain as history.
+
+R08 print status: the lid and lower collar meshes pass; the owner-edited case is
+**not print-ready** because its right clamp ear has a zero-thickness attachment.
+The base extension remains preserved. See the [R08 diagnostic](../../hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md).
 
 The owner chose to coordinate this specialist through the existing project chat.
 Prefix a request with **CAD agent:** to route mechanical work to this specialist;
