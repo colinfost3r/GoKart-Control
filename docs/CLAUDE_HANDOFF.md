@@ -56,9 +56,18 @@ profile, replays an item or writes persistent VESC settings. Existing mode/pit g
 Eamon source through **c21baf8** is now integrated by three-way source comparison: timed freeplay
 laps, 5-box default, Pi inventory persistence and no Wi-Fi reconnect scans while driving. One new
 upstream test was updated to supply fresh controller state after proving a stale item use is refused;
-our existing freshness guard was retained. The c21 merged binary was not copied. Later `15f731a`
-(Pi fastboot), `c4731bd` and `59976df` (separate `core2-items` power/OTA) remain reviewed, not merged.
-No new remote changes appeared at the final fetch. Never substitute `core2-items` for this dashboard.
+our existing freshness guard was retained.
+
+Later on November 12, Eamon's branch was merged through **`c39df6a`** (merge `5af0e6a`) so PR5 no
+longer conflicts: Pi fastboot, separate `core2-items` 0.2.2–0.3.2 (key power, pit-AP OTA, kart
+pinning), `set_wifi.py`, and his release images/notes. The merge changed no M5 dashboard, player
+Heltec, host `kart` or Pi server source; the candidate binaries and their manifest stay valid.
+Never substitute `core2-items` for this dashboard. Two things to know:
+
+- Eamon's released `kart-heltec-v4-ble-0.3.3.merged.bin` and this branch's `kart` build both
+  report `kart-0.3.3` but are different firmware. Identify an installed image by hash, not version.
+- The manifest's build-input hash for `firmware/core2-items/core2-items.ino` predates the merge.
+  None of the eight candidate targets compile that file.
 
 ## Next session: coordinated kart3 and host acceptance
 
@@ -167,10 +176,10 @@ hashes, final tests, independent review and limitations. Run all suites before e
 
 ```sh
 PYTHON=/Users/cofo/.platformio/penv/bin/python \
-ARDUINOJSON_DIR=/private/tmp/gokart-arduino/user/libraries/ArduinoJson/src \
+ARDUINOJSON_DIR=$HOME/.local/share/gokart-arduino/user/libraries/ArduinoJson/src \
   tools/run_tests.sh
-PATH=/private/tmp/gokart-arduino/bin:$PATH \
-ARDUINO_CONFIG_FILE=/private/tmp/gokart-arduino/arduino-cli.yaml \
+PATH=$HOME/.local/share/gokart-arduino/bin:$PATH \
+ARDUINO_CONFIG_FILE=$HOME/.local/share/gokart-arduino/arduino-cli.yaml \
   firmware/build.sh m5-espnow
 ```
 

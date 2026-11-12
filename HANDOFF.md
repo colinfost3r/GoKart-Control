@@ -21,6 +21,10 @@ boot binding and speculative boost stacking. Native effects use fixed durations;
 remain a per-player snapshot. Physical RF, NVS, LCD/touch and effects still require acceptance.
 No hardware was touched. Installed accessories remain `4a582f0`; VESC −5 A/filter unchanged.
 
+Later the same day Eamon's branch was merged through `c39df6a` (Pi fastboot, `core2-items`
+0.2.2–0.3.2, release images) so PR5 no longer conflicts. No M5/player/host source changed;
+details and two cautions are in the [Claude handoff](docs/CLAUDE_HANDOFF.md).
+
 ## Overnight Core2 display candidate — November 12, 2026 (not installed)
 
 The map now fills 320×240 with compact GPS MPH and measured VESC pack volts relayed by
