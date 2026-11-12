@@ -229,7 +229,7 @@ void demo(uint32_t now) {
   char line[1000];
   snprintf(line,sizeof line,"{\"t\":\"display\",\"v\":1,\"kart\":3,\"boot\":1,\"token\":0,\"mode_ready\":false,\"radio\":true,\"pit\":true,\"rate\":2,\"speed_cal\":1,\"modes\":[{\"mph\":15,\"scale\":0.5},{\"mph\":25,\"scale\":0.75},{\"mph\":0,\"scale\":1}]}");
   state.ingest(line,now);
-  for(int i=1;i<=8;++i){double a=now/9000.0+i*0.78;
+  for(int i=1;i<=8;++i){double a=now/9000.0+m5dash::PreviewMap::kartPhase(i);
     snprintf(line,sizeof line,"{\"t\":\"%s\",\"kart\":%d,\"lat\":%.7f,\"lon\":%.7f,\"fix\":true,\"gps_age_s\":0,\"sats\":10,\"gps_kph\":22,\"vesc_link\":true,\"volts\":79.4,\"motor_a\":12,\"batt_a\":4,\"esc_c\":32,\"fault\":0,\"mode_actual\":1,\"mode_confirmed\":true}",i==3?"self":"fleet",i,41.0938+0.0003*sin(a),-73.4163+0.0005*cos(a));
     state.ingest(line,now);
     if(playerPreview.gpsLost&&i==3){state.karts[i].fix=false;state.karts[i].fixReported=false;}

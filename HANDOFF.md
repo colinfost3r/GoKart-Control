@@ -1,5 +1,32 @@
 # Collaborator handoff
 
+## Core2 map context and HUD — November 11, 2026 (source/rehearsal, not installed)
+
+The owner requested geographic context, a visible start/finish line and boost/pickup
+markers, then replaced the orientation/scale labels with speed and battery percentage.
+The updated [preview](docs/previews/core2-player-rehearsal/index.html) opens directly on MAP.
+
+- `PreviewMap.h` draws 212 clipped OSM street/building/water/rail segments from the exact
+  `sono-map.geojson` extract used by the Pi. The shop crop is real geography; the loop,
+  checkered gate, boost arrows, item box and all kart positions are simulated. These
+  layers only render in the no-output demo, never against an arbitrary live course.
+- `DisplayMetrics.h` supplies fresh GPS MPH and the Pi’s existing clamped 60–84 V battery
+  estimate to the MAP header. Missing/stale telemetry shows dashes, not zero. Percentage
+  is an estimate and can dip under load; it is not measured BMS charge. DASH retains volts.
+- Removed the distance scale and `N UP / 70 M` label. North-up following still spans 70 m
+  vertically. Map attribution moved to the game menu and preview credits, off the driving
+  map. ODbL source/attribution is retained with the generated geometry.
+- The Pi’s aerial path is a pit Wi-Fi download into its local cache, not Google Maps.
+  Manresa’s preset references local-only SkyFi imagery with CT ECO imagery available as
+  a fallback asset. The repository shop preset uses CT ECO. No active Pi was queried.
+- Generic background/game-package storage, host transfer, live item rendering and lap
+  authority remain unimplemented. Do not infer finish timing or motor effects from symbols.
+
+Validation: 496 offline tests across eight suites passed, zero skipped; all three Core2
+images compile. [Manifest](docs/validation/m5-map-context-2026-11-11.json). Browser map and
+game-menu credit placement were checked. No hardware, VESC settings, Heltec transport or
+LoRa protocol changed. Eamon upstream remains `59976df` reviewed / `a5a4c22` integrated.
+
 ## Core2 UI rehearsal — November 11, 2026 (source/bench candidate, not installed)
 
 Hunter-style native DASH and following MAP views now share `DriverView.h`: segmented speed,

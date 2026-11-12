@@ -4,6 +4,7 @@
 Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
 **Offline Core2 rehearsal available:** [open the interactive preview](docs/previews/core2-player-rehearsal/index.html) · [tomorrow’s test sequence](docs/m5-offline-rehearsal.md). Native Hunter-style pages and a no-output demo are built in source; no hardware update is implied.
+**Map rehearsal updated:** real shop-area street/building outlines from the Pi’s OSM extract, a simulated checkered start/finish gate, boost/pickup markers, and a speed/battery header. Credits are in the game menu; no distance scale is shown. Battery % uses the Pi’s voltage estimate. These game markers/background remain demo-only; no firmware was flashed.
 **Next player-mode direction (planned):** Core2 owns map/course storage and player logic;
 Heltec retains GPS/LoRa/VESC supervision. Join-only UI, ESP-NOW host-course downloads,
 Hunter styling on both pages and an invite/page button are specified in the

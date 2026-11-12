@@ -31,6 +31,34 @@ The compiler needs ArduinoJson headers; set `ARDUINOJSON_DIR` when they are outs
 usual Arduino library directory. `--write-scenes` additionally exports all 30 SVG scenes.
 The preview can be regenerated without Python packages or an internet connection.
 
+## Background map, game symbols and header
+
+The Pi uses `kart/server/mapsync.py` to download `/map/package.json`, its image and zones
+from the pit over Wi-Fi into a local cache. The repository shop preset uses CT ECO aerial
+imagery; the Manresa preset references Eamon’s local-only SkyFi image with CT ECO assets
+available as a fallback. Those are georeferenced images, not Google Maps tiles. Its MAP
+style additionally uses the cached SoNo OpenStreetMap extract.
+
+The Core2 demo now reuses a 240 m square shop crop from that **same OSM extract**, quantized
+to decimetres and drawn as quiet outlines. Rebuild with `python3 tools/m5/export_preview_map.py`.
+Source/ODbL attribution: [Pi map notes](../pit/server/map/SONO-MAP.md); the full derivative
+geometry remains in `pit/server/map/sono-map.geojson`. Credits are in the demo GAME menu
+and below the browser preview, keeping the driving map clear.
+
+The loop, checkered START/FINISH gate, green boost arrows and gold `?` pickup box are
+**demonstration overlays**, not surveyed course/game data. Gold 3 is the own kart;
+blue numbers identify other karts. Nearby markers are clipped to the follow view.
+A fixed 70 m vertical span and north-up orientation remain, but their label and the
+scale bar are removed at the owner’s request. The upper-left card shows GPS MPH and
+estimated battery percentage instead. The battery estimate matches the Pi’s linear
+60 V = 0%, 84 V = 100% rule, clamped; `~` marks it as approximate. It is not BMS state
+of charge and can sag under load. Lost GPS hides speed; lost VESC/link hides battery.
+
+Live builds use the same telemetry header but do **not** draw invented game markers or
+the shop demo background. Full host background/zone/lapline packaging and download are
+still needed; the current USB course upload accepts an outline only. This preview is
+not evidence of lap counting, pickups, boost effects or real radio synchronization.
+
 ## Standalone demo interaction
 
 - Upper-right MAP/DASH changes page. A touch remains consumed until release; dragging the

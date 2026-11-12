@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-11",
+  "scope": "Core2 map context rehearsal and live-capable speed/battery HUD source",
+  "base_commit": "92dd3a7",
+  "hardware_accessed": false,
+  "vesc_settings_changed": false,
+  "host_course_transfer_implemented": false,
+  "live_game_commands_implemented": false,
+  "tests": {
+    "command": "PYTHON=<project-python> ARDUINOJSON_DIR=<ArduinoJson/src> tools/run_tests.sh",
+    "tests": 496,
+    "suites": 8,
+    "skipped": 0,
+    "result": "ALL PASSED"
+  },
+  "builds": {
+    "m5-demo": {
+      "sha256": "b04e647b70971d5ed81d3361c313f091358f3d52a4c3af179be5d410220b01fb",
+      "bytes": 578848,
+      "compiled": true,
+      "uploaded": false
+    },
+    "m5": {
+      "sha256": "3dd2980f810e122936028d692d703e7a82212955257b1ae75acf12da9e3d2d01",
+      "bytes": 618480,
+      "compiled": true,
+      "uploaded": false
+    },
+    "m5-espnow": {
+      "sha256": "bf888b4aae4ce611cb681895f20aa40d24eb7c9128408f81355aab24d8409c81",
+      "bytes": 1328768,
+      "compiled": true,
+      "uploaded": false
+    }
+  },
+  "sources": {
+    "firmware/m5-core2/DriverView.h": "6237a31e411f7b4ab67d0da069707980f75b4e6cdc572d759a638ed7d422c035",
+    "firmware/m5-core2/DisplayMetrics.h": "fd57f92353ed223019ffcaf8dbe25b62c375077dbf06d0abb66bddbf1e1fab83",
+    "firmware/m5-core2/PreviewMap.h": "fbe2ddc3add9edaa40949ef400537c06b61cadb8b31db6d11e10de05f725086b",
+    "firmware/m5-core2/preview_shop_lines.inc": "8aa0133f4aa94f40056ff6f256e9ffd9505168d28de080a1656e1bfacbee85d9",
+    "firmware/m5-core2/m5-core2.ino": "39be86a23e2a4bb2e294bdd2fd434453871d7d10ee19b0d83f2b3ab4485837b6"
+  },
+  "visual_checks": {
+    "shared_native_renderer": true,
+    "scenes": 30,
+    "checked": "MAP: geography, separated finish/boost/pickup symbols, speed/battery card; GAME menu credit; no driving-map scale/attribution",
+    "browser_capture": "docs/previews/core2-player-rehearsal/map-context-browser.jpg",
+    "not_verified": "Physical LCD readability/touch and live RF behavior"
+  },
+  "battery_estimate": {
+    "source": "kart/server/kartcore.py:battery_percent",
+    "empty_v": 60,
+    "full_v": 84,
+    "clamped": true,
+    "not_bms_soc": true,
+    "stale_unknown": true
+  },
+  "map": {
+    "source": "pit/server/map/sono-map.geojson",
+    "generated_segments": 212,
+    "geographic_crop": "shop, not Manresa",
+    "game_geometry": "synthetic demo only",
+    "credits": "GAME menu and browser footer"
+  },
+  "upstream": {
+    "reviewed": "59976df",
+    "integrated": "a5a4c22"
+  }
+}

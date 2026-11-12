@@ -69,6 +69,19 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - These presentation changes do not change VESC settings or LoRa packet formats.
   On-device acceptance and the actual course package remain open.
 
+## Core2 map presentation refinement — November 11, 2026
+
+- Show real surrounding geography beneath the host course, using the Pi’s map sources.
+  Prefer lightweight roads/buildings/shoreline for this small display; no Google dependency.
+- Make the host’s start/finish gate, boost pads and item pickups distinct overlays.
+- Top-left card shows kart GPS speed in MPH and battery percentage. Match the Pi’s current
+  voltage-based estimate (60–84 V) and label it approximate; unknown/stale data stays unknown.
+- Omit the distance scale and north/span label; retain north-up fixed-scale follow behavior.
+  Put map attribution in accessible credits/menu, outside the driving map.
+- Current implementation status: native demo/preview has real shop background plus simulated
+  game symbols; live builds have the speed/battery header. Host background/game download,
+  actual lap/zone rendering and hardware acceptance are still pending.
+
 ## Core2 player-only game and sharing — November 11, 2026
 
 - Core2 owns the course/map and player game logic (including inventory); Heltec supplies

@@ -42,7 +42,9 @@ No Core2 HOST, draw-track, create-course or edit-box controls are added.
 Implementation constraints (proposed contract, not existing wire fields):
 
 - Package geographic track points, supported boxes/zones, lap/start geometry and gameplay
-  metadata actually required by the selected game; no aerial tiles. An outline alone is
+  metadata actually required by the selected game, plus a bounded optional background
+  layer (roads/buildings/shoreline) with source/attribution. Reuse the Pi’s geographic
+  assets; the first compact vector implementation need not transfer full aerial tiles. An outline alone is
   insufficient for matching host item locations. Preserve coordinates/units/IDs/rules from
   the source. A WGS84 course must not be replaced by the illustrative SoNo art/demo loop.
 - Manifest binds publisher/host ID, game instance, schema, course ID/revision, byte count,
@@ -81,7 +83,10 @@ instrument organization to 320x240. Preserve the DSEG license if its glyphs are 
 Course geometry remains a simple line; SoNo artwork is not the Manresa route.
 
 - DASH: existing telemetry, truthful unavailable/stale fields, verified mode controls.
-- MAP/GAME: own-kart follow map, nearby players and one prominent item/FIRE control; keep
+- MAP/GAME: own-kart follow map with geographic context, a checkered start/finish gate,
+  boost/pickup symbols, nearby players and one prominent item/FIRE control. Top-left card
+  shows GPS MPH and estimated battery percentage; omit the scale and orientation label.
+  Keep map credits accessible from the menu, off the driving view; keep
   game join/details in an overlay so they do not consume the driving map permanently.
 - A dedicated edge button toggles DASH and MAP/GAME. Page changes send no mode/join/fire
   request and cancel in-progress control holds; one touch cannot activate both pages.

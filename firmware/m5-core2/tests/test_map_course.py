@@ -77,9 +77,21 @@ class MapCourseTests(unittest.TestCase):
                     if scene=='stopped':self.assertIn('PIT STOP ACTIVE',text)
                     if scene=='slow':self.assertIn('PIT SLOW / 5 MPH',text)
                     if page=='map' and scene=='live':self.assertIn('UNAVAILABLE / NO ITEM DATA',text)
+                    if page=='map':
+                        self.assertNotIn('N UP',text)
+                        self.assertNotIn('20m /',text)
+                        self.assertIn('--%' if scene=='link-lost' else '~81%',text)
+                        if scene=='ready':
+                            self.assertIn('START/FINISH',text)
+                            self.assertNotIn('OpenStreetMap contributors',text)
+                        if scene in ('live','no-course'):self.assertNotIn('START/FINISH',text)
+                    if scene in ('invitation','joined','download','download-error'):
+                        self.assertIn('OpenStreetMap contributors',text)
                     for e in labels:
                         self.assertLessEqual(float(e.attrib['x'])+float(e.attrib['textLength']),320)
                         self.assertLessEqual(float(e.attrib['y']),240)
+    def test_native_display_metrics(self):
+        self.assertIn('stale telemetry passed',self.native(ROOT/'firmware/m5-core2/tests/display_metrics_test.cpp'))
     def test_player_preview_states(self):
         self.assertIn('timer wrap passed',self.native(ROOT/'firmware/m5-core2/tests/player_preview_test.cpp'))
     def test_demo_touch_cannot_request_modes_or_double_fire(self):

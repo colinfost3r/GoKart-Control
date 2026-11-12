@@ -3,6 +3,8 @@
 // Procedural seven-segment numerals are original; no embedded font artwork.
 #include "MapView.h"
 #include "PlayerPreview.h"
+#include "PreviewMap.h"
+#include "DisplayMetrics.h"
 #include <cstdio>
 
 namespace m5dash {
@@ -40,10 +42,57 @@ template<class Canvas> class DriverView {
       label(preview->stage==PlayerPreview::Stage::Ready||preview->stage==PlayerPreview::Stage::Used?"GAME":"JOIN",222,51,1,palette::amber);
     }
   }
+  void previewMarks(const MapView& v,const Course& course) {
+    // These points refer ONLY to the 48-point demo loop, never to a live course.
+    if(course.count!=48)return;
+    auto point=[&](size_t i,double& x,double& y,int margin){
+      return v.project(course.lat[i],course.lon[i],x,y)&&v.contains(x,y,margin);
+    };
+    double x,y;
+    if(point(12,x,y,30)){
+      int px=lround(x),py=lround(y);
+      c.fillRect(px-5,py-13,10,26,palette::bg);
+      for(int row=0;row<6;++row)for(int col=0;col<2;++col)
+        c.fillRect(px-4+col*4,py-12+row*4,4,4,(row+col)%2?palette::bg:palette::text);
+      const int lx=std::max(5,std::min(239,px-36));
+      c.fillRoundRect(lx-2,py+15,78,12,2,palette::panel);
+      label("START/FINISH",lx,py+17,1,palette::text);
+    }
+    if(point(21,x,y,12)){
+      int px=lround(x),py=lround(y);
+      c.fillRoundRect(px-9,py-9,19,19,3,palette::panel);
+      c.drawRoundRect(px-9,py-9,19,19,3,palette::eco);
+      for(int dy=-3;dy<=3;dy+=6){
+        c.drawLine(px-5,py+dy+2,px,py+dy-2,palette::eco);
+        c.drawLine(px,py+dy-2,px+5,py+dy+2,palette::eco);
+      }
+    }
+    if(point(8,x,y,12)){
+      int px=lround(x),py=lround(y);
+      c.fillRoundRect(px-8,py-8,17,17,3,palette::panel);
+      c.drawRoundRect(px-8,py-8,17,17,3,palette::amber);
+      label("?",px-3,py-4,1,palette::amber);
+    }
+  }
+  void mapTelemetry(const State& state,uint32_t now) {
+    box({7,26,187,40},palette::line);
+    const float mph=gpsMph(state,now),pct=batteryPercent(state,now);char b[16];
+    if(std::isfinite(mph))std::snprintf(b,sizeof b,"%.0f",mph);else std::snprintf(b,sizeof b,"--");
+    label(b,15,35,2,palette::cyan);label("MPH",49,42,1,palette::muted);
+    c.drawLine(82,32,82,59,palette::line);
+    const uint16_t ink=!std::isfinite(pct)?palette::muted:pct<20?palette::bad:pct<40?palette::amber:palette::eco;
+    c.drawRect(93,39,16,11,ink);c.fillRect(109,42,2,5,ink);
+    if(std::isfinite(pct))c.fillRect(95,41,int(std::lround(pct*12/100)),7,ink);
+    if(std::isfinite(pct))std::snprintf(b,sizeof b,"~%.0f%%",pct);else std::snprintf(b,sizeof b,"--%%");
+    label(b,119,35,2,ink);
+  }
   void map(const State& state,const Course& course,uint32_t now,const PlayerPreview* preview) {
     const auto v=MapView::make(state,course,now);
-    for(int x=20;x<320;x+=40)c.drawLine(x,v.top,x,v.top+v.height-1,palette::panel);
-    for(int y=27;y<v.top+v.height;y+=40)c.drawLine(2,y,317,y,palette::panel);
+    if(preview)PreviewMap::draw(c,v);
+    else {
+      for(int x=20;x<320;x+=40)c.drawLine(x,v.top,x,v.top+v.height-1,palette::panel);
+      for(int y=27;y<v.top+v.height;y+=40)c.drawLine(2,y,317,y,palette::panel);
+    }
     if(v.valid) {
       auto segment=[&](size_t a,size_t b){double x0,y0,x1,y1;
         if(v.project(course.lat[a],course.lon[a],x0,y0)&&v.project(course.lat[b],course.lon[b],x1,y1)&&v.clip(x0,y0,x1,y1)){
@@ -52,6 +101,7 @@ template<class Canvas> class DriverView {
       };
       for(size_t i=1;i<course.count;++i)segment(i-1,i);
       if(course.closed&&course.count>2)segment(course.count-1,0);
+      if(preview)previewMarks(v,course);
       for(unsigned i=1;i<=8;++i) {
         const auto& k=state.karts[i];if(!k.positionFresh(now)||(i==state.self&&!state.live(now)))continue;
         double x,y;if(!v.project(k.lat,k.lon,x,y)||!v.contains(x,y,11))continue;
@@ -62,8 +112,7 @@ template<class Canvas> class DriverView {
       }
     }
     if(!v.following){box({9,83,302,38},palette::amber);label(v.valid?"OWN GPS UNAVAILABLE / COURSE OVERVIEW":"WAITING FOR OWN GPS / COURSE",17,98,1,palette::amber);}
-    box({7,27,99,23},palette::line);label("N UP  /  70 M",15,35,1,palette::muted);
-    if(!v.following){c.fillRect(8,28,97,21,palette::panel);label("OVERVIEW",16,35,1,palette::muted);}
+    mapTelemetry(state,now);
     const char* status=!state.live(now)?"LINK LOST / POSITION UNAVAILABLE":!v.following?"Waiting for a fresh own GPS fix":course.count?course.name:"GPS ONLY / NO COURSE LOADED";
     if(preview&&preview->stage==PlayerPreview::Stage::HostLost)status="HOST LOST / DEMO SESSION ENDED";
     label(status,8,190,1,palette::muted);
@@ -75,8 +124,8 @@ template<class Canvas> class DriverView {
   }
   void dash(const State& state,uint32_t now,const char* notice,int heldMode,uint32_t holdMs,bool holdFired) {
     const auto& k=state.karts[state.self];const bool live=state.live(now),vesc=live&&k.vesc;
-    const bool speed=live&&k.positionFresh(now)&&std::isfinite(k.gpsKph)&&k.gpsKph>=0&&k.gpsKph<160.0f;
-    int mph=speed?int(std::lround(k.gpsKph*0.621371)):-1;
+    const float speedMph=gpsMph(state,now);const bool speed=std::isfinite(speedMph);
+    int mph=speed?int(std::lround(speedMph)):-1;
     label("VELOCITY",12,31,1,palette::muted);
     digit(mph<0?-1:mph/10,12,52,42,63,speed?palette::cyan:palette::dim);
     digit(mph<0?-1:mph%10,64,52,42,63,speed?palette::cyan:palette::dim);
@@ -112,7 +161,7 @@ template<class Canvas> class DriverView {
     else if(p.stage==PlayerPreview::Stage::TransferError)line="Download failed / old course kept";
     label(line,24,101,1);
     if(p.stage==PlayerPreview::Stage::Downloading){c.drawRect(24,121,272,8,palette::line);c.fillRect(25,122,int(p.progress(now)*270/100),6,palette::cyan);}
-    else label("UI REHEARSAL / NO RADIO OUTPUT",24,122,1,palette::muted);
+    label("(c) OpenStreetMap contributors",24,132,1,palette::muted);
     box(layout::close);label("CLOSE",58,158,1);
     box(layout::join,p.stage==PlayerPreview::Stage::Downloading?palette::dim:palette::amber);
     label(p.stage==PlayerPreview::Stage::Downloading?"WAIT":p.stage==PlayerPreview::Stage::Ready||p.stage==PlayerPreview::Stage::Used?"LEAVE":"JOIN",215,158,1,palette::amber);

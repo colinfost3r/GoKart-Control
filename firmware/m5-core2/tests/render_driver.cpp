@@ -48,7 +48,7 @@ int main(int argc,char** argv){
   state.cap[0]=15;state.cap[1]=25;state.cap[2]=0;
   m5dash::Course course;course.closed=true;course.count=48;std::snprintf(course.name,sizeof course.name,"DEMO LOOP / NOT A SURVEYED COURSE");
   for(size_t i=0;i<48;++i){double a=i*6.283185307179586/48;course.lat[i]=41.0938+0.0003*std::sin(a);course.lon[i]=-73.4163+0.0005*std::cos(a);}
-  for(unsigned i=1;i<=8;++i){auto& k=state.karts[i];double a=phase+i*0.78;
+  for(unsigned i=1;i<=8;++i){auto& k=state.karts[i];double a=phase+m5dash::PreviewMap::kartPhase(i);
     k.seen=true;k.received=now;k.vesc=true;k.confirmed=true;k.mode=1;k.fault=0;k.fix=true;k.fixReported=true;k.hasPosition=true;k.fixReceived=now;k.sats=10;
     k.lat=41.0938+0.0003*std::sin(a);k.lon=-73.4163+0.0005*std::cos(a);k.gpsKph=22;k.volts=79.4;k.motorA=12;k.battA=4;k.escC=32;
   }
