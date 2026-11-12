@@ -33,6 +33,15 @@ static uint32_t scanHopMs = 0; static uint8_t scanCh = 1; static bool locked = f
 static uint32_t useSentMs = 0; static uint8_t useSeq = 0, useTries = 0, useSlot = 0;
 static uint32_t lastDrawMs = 0; static bool dirty = true;
 
+/* USB power follows the kart key (cradle USB): key on boots the Core2 (the AXP powers up on
+ * VBUS insert), and when VBUS goes away the battery would run for hours, so we power off after
+ * a short on-screen countdown. A tap during the countdown keeps it on (handheld use) until USB
+ * power is next seen, which re-arms the auto-off. */
+static uint32_t vbusLostMs = 0;                 // 0 = VBUS present (or stay-on armed)
+static bool stayOn = false;                     // tapped during the countdown: no auto-off
+static uint32_t vbusPollMs = 0;
+static const uint32_t OFF_AFTER_MS = 15000;     // key off -> power off this much later
+
 /* Names, colors and shapes mirror the dash (app.js ITEM_SVG / ITEM_COLOR / ITEM_SUB).
    Codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud, 6 boost3, 7 star, 8 magnet,
    9 hotlap, 10 shield; a frame byte is code | (charges-1)<<4. */
@@ -197,6 +206,23 @@ static void draw() {
   cv.drawString(String(M5.Power.getBatteryLevel()) + "%", W - 10, 8);
   cv.fillCircle(W / 2, 17, 6, link ? TFT_GREEN : TFT_RED);
 
+  if (vbusLostMs) {                      // kart keyed off: full-screen countdown to power off
+    uint32_t left = millis() - vbusLostMs;
+    int secs = left >= OFF_AFTER_MS ? 0 : (int)((OFF_AFTER_MS - left) / 1000) + 1;
+    cv.setTextDatum(middle_center);
+    cv.setFont(&fonts::DejaVu24);
+    cv.setTextColor(TFT_ORANGE);
+    cv.drawString("KART OFF", W / 2, H / 2 - 56);
+    cv.setFont(&fonts::DejaVu56);
+    cv.setTextColor(TFT_WHITE);
+    cv.drawString(String(secs), W / 2, H / 2 + 4);
+    cv.setFont(&fonts::DejaVu18);
+    cv.setTextColor(TFT_DARKGREY);
+    cv.drawString("TAP TO STAY ON", W / 2, H / 2 + 64);
+    cv.pushSprite(0, 0);
+    cv.deleteSprite();
+    return;
+  }
   if (!link) {
     cv.setTextDatum(middle_center);
     cv.setTextColor(TFT_WHITE);
@@ -300,9 +326,30 @@ void loop() {
     useTries++;
   }
 
+  // usb power follows the kart key: VBUS gone -> countdown -> power off (getVBUSVoltage -1 = no PMIC
+  // support on this unit: never auto-off). VBUS back re-arms stay-on.
+  if (ms - vbusPollMs > 500) {
+    vbusPollMs = ms;
+    int16_t mv = M5.Power.getVBUSVoltage();
+    if (mv > 4000) {
+      if (vbusLostMs || stayOn) dirty = true;
+      vbusLostMs = 0; stayOn = false;
+    } else if (mv >= 0 && !vbusLostMs && !stayOn) {
+      vbusLostMs = ms ? ms : 1; dirty = true;
+    }
+    if (vbusLostMs) {
+      dirty = true;                      // the countdown digit ticks
+      if (ms - vbusLostMs > OFF_AFTER_MS) { M5.Display.fillScreen(TFT_BLACK); M5.Power.powerOff(); }
+    }
+  }
+
   // touch: swipe = pick a slot, tap = use (rotation is fixed: no gestures can flip it)
   static bool down = false; static int x0 = 0, y0 = 0; static uint32_t downMs = 0; static bool acted = false;
   auto t = M5.Touch.getDetail();
+  if (t.isPressed() && vbusLostMs) {     // tap during the countdown: stay on, swallow the gesture
+    vbusLostMs = 0; stayOn = true; dirty = true;
+    down = true; acted = true; x0 = t.x; y0 = t.y; downMs = ms;
+  }
   if (t.isPressed() && !down) { down = true; acted = false; x0 = t.x; y0 = t.y; downMs = ms; }
   else if (t.isPressed() && down && !acted) {
     int dx = t.x - x0;

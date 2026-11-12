@@ -1,6 +1,6 @@
 # Prebuilt images
 
-> **Current images: kart 0.3.3, base and repeater 0.2.2, Core2 item screen 0.2.1** (2026-11-11, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
+> **Current images: kart 0.3.3, base and repeater 0.2.2, Core2 item screen 0.2.2** (2026-11-11, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy
 > `build/<sketch>/<sketch>.ino.merged.bin` here under a new version name, add the row and the
@@ -16,6 +16,7 @@ check what you got.
 | `kart-heltec-v4-ble-0.3.2.merged.bin` | Heltec WiFi LoRa 32 V4.3 | ESP-NOW channel pinned across WiFi reconnect scans (stored AP channel, re-set 6 s after each retry), broadcasts every 400 ms | `da66b5f7c6958bd9f91deaa9f2668c191e5f43ef22d1d85cf65073528b7484ca` |
 | `kart-heltec-v4-ble-0.3.3.merged.bin` | Heltec WiFi LoRa 32 V4.3 | WiFi reconnect scans only while the kart is stationary (VESC/GPS speed gate), channel re-pin 2.5 s after a retry | `faf7cef3f319c4e2bacb43c776c12d2b186dc2681ccc38ff51de1ee10a8088ed` |
 | `core2-items-0.2.1.merged.bin` | M5Stack Core2 | rides out WiFi-scan gaps (6 s link grace, rehunt only after 20 s, from the last good channel) | `9816b295836c68a339f9b8106ac77bf3ed5de9856c71e33fae7d2d4582b900f0` |
+| `core2-items-0.2.2.merged.bin` | M5Stack Core2 | power follows the kart key: USB power lost -> 15 s on-screen countdown -> power off (tap to stay on) | `c70d1cd812c5147864c0d444eaa3a19c80a94949d3f1c7b98e57c8545bb78228` |
 | `kart-heltec-v4-ble-0.3.1.merged.bin` | Heltec WiFi LoRa 32 V4.3 | 0.3.0 with the five new item codes (boost3/star/magnet/hotlap/shield) and charge counts in the Core2 frames | `4d403b51b4793b804a459f72f2e19634efde77a7d5a8cda24f48689f29f892f3` |
 | `core2-items-0.2.0.merged.bin` | M5Stack Core2 | item screen with the five new cards (dash-matched art, charge badge, per-item action labels) | `4a41df3a2fdff984bbe9b5c7d7b872d92470831ac1af4f39c57d7b03986587d8` |
 | `kart-heltec-v4-ble-0.3.0.merged.bin` | Heltec WiFi LoRa 32 V4.3 | kart node 0.3.0: 0.2.7 + ESP-NOW Core2 item-screen bridge (`inv` line in, broadcast out, `invuse` relay) | `76f38e10ccc228ae6729db796d8f506811ad2550e6e3f438413d17f5335549f1` |
@@ -121,6 +122,15 @@ Radio unchanged (interoperates with the 0.2.1 base and repeater).
   inventory frame. Flashed on kart 2 over WiFi (espota).
 - `core2-items-0.2.0.merged.bin` draws the new cards, the "x3" charge badge, and per-item action
   text (hot lap arms, shield says it blocks by itself). Flashed over USB.
+
+## core2-items 0.2.2 (2026-11-11, power follows the kart key)
+
+The cradle feeds the Core2 from the kart's USB, and the AXP PMIC already boots it when VBUS
+appears -- but at key-off the internal battery kept it running for hours. 0.2.2 watches VBUS
+(M5.Power.getVBUSVoltage, AXP192 and AXP2101 alike): power gone -> a full-screen 15 s countdown
+("KART OFF / TAP TO STAY ON") -> clean M5.Power.powerOff(). A tap during the countdown keeps it
+on for handheld use until USB power is next seen, which re-arms the auto-off. Units whose PMIC
+cannot report VBUS (reading -1) never auto-off.
 
 ## 0.3.3 kart (2026-11-11, no WiFi scans while driving)
 
