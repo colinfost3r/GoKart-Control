@@ -7,8 +7,9 @@ in the native player candidate. Offline validation does not establish hardware a
 **Update, November 12 afternoon: both kart 3 accessories now run the candidate.** The Core2 and
 Heltec applications were written over USB with the VESC off; identity, VESC pins, pairing and
 Wi-Fi/OTA settings were retained and the pair re-linked. Nothing was driven and nothing was
-written to a VESC. VESC reconnection, mode control, wired pedal/reverse coexistence, screen and
-touch are **not yet checked** on the new applications. See
+written to a VESC. The owner confirmed the new map screen appears. VESC reconnection, mode
+control, wired pedal/reverse coexistence and touch are **not yet checked** on the new
+applications. See
 [the install record](../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
 ## Project and Git

@@ -41,10 +41,11 @@
     "core2-upload.log": "493c89962b2e4bdf6df0ba683ef237e5f69797000dee121272fb095b488e78eb",
     "heltec-upload.log": "2fb36bd53000f5633e39f63352d33958e2427126ee6c7708c99a0298be2d3b9f"
   },
+  "operator_report": "owner confirmed after the update that the Core2 shows the new full-screen map with the DASH/MAP button and FIRE box",
   "not_verified": [
     "VESC connection, identity, limits and mode control with the new Heltec application (VESC was off)",
     "wired throttle/reverse coexistence with the new applications",
-    "screen appearance and touch behaviour (not reported by the operator in this record)",
+    "touch behaviour, page switching and maintenance screen (six touches registered; not individually checked)",
     "GPS, map follow and speed (no fix indoors)",
     "course download, JOIN and FIRE (host kart not updated, no course pairing)",
     "Core2 or Heltec OTA with the new applications",

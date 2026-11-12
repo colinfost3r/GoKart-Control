@@ -21,10 +21,11 @@ NVS were not written.
 The Core2 answers the new `m5_game` and `share status` commands, shows kart 3 live data, and
 keeps its OTA configuration and `gokart-display-3` hostname. The encrypted pair re-linked with
 aligned channels; the channel moved from 6 to 2 because the Heltec followed the Wi-Fi access
-point. No course peer is configured on either board yet.
+point. No course peer is configured on either board yet. The owner confirmed the Core2 shows the new
+full-screen map with the DASH/MAP button and FIRE box.
 
 **Not verified here.** VESC connection, identity and mode control with the new Heltec
-application; wired throttle and reverse coexistence; screen and touch; GPS; course download,
+application; wired throttle and reverse coexistence; touch and page switching; GPS; course download,
 JOIN and FIRE; OTA. Free heap on the Heltec with Wi-Fi up is 45.7 kB, against 59.2 kB on the
 previous application; watch `heap_min` once BLE is connected.
 
