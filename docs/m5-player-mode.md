@@ -1,129 +1,132 @@
-# Core2 player mode and host course sharing
+# Core2 native player and host course sharing
 
-Owner decisions: November 11, 2026. **Design/implementation brief, not deployed firmware.**
-This supersedes the earlier suggestion to put native map/inventory logic on the Heltec.
-The current no-SD follow map and Hunter-style two-page UI are implemented but not installed.
-The [offline rehearsal](m5-offline-rehearsal.md) simulates invitation/download/item states.
-Real JOIN, native inventory, FIRE and wireless host-course downloads remain to be implemented.
+November 12, 2026: implemented in source and offline-tested on `v1.5/m5-core2`.
+**Not installed or RF/motor accepted.** The earlier browser rehearsal is synthetic.
+See [current handoff](CLAUDE_HANDOFF.md) and [native renderer fixtures](previews/core2-native-player/index.html).
 
-## Responsibility split
+## Ownership
 
-| Component | Responsibility |
-| --- | --- |
-| Core2 | Store the course; render the following line map and Hunter-style DASH/GAME pages; place markers from fresh Heltec GPS/fleet data; detect local course/item interactions; manage player inventory and user intent; request JOIN/LEAVE/FIRE. No hosting or course authoring. |
-| Own Heltec | GPS, VESC BLE, LoRa fleet/session/attack transport, validation and arbitration of supervisory requests, verified results back to Core2. Remains the only accessory allowed to talk to the VESC. |
-| Host Pi and host Heltec | Existing course authoring/game hosting, plus a new course publisher/export bridge. Host capability is required; the current upstream image does not provide this download service. |
-| VESC | Wired pedal/reverse, motor loop and protections. Map rendering or UI failure must not alter driving. |
+Core2 renders the map, stores a downloaded course, evaluates local item/zone entry and manages
+inventory and deliberate JOIN/LEAVE/FIRE. Heltec owns GPS, LoRa, exclusive VESC BLE and all
+existing supervisory guards. Wired driving inputs remain VESC-owned. No Pi/SD/cable is added
+to the player. Eamon's host Pi authors the course and publishes through its existing USB owner
+to its host Heltec. Core2 has no host or course-editing function.
 
-Core2 can own application/game state without owning motor control. Requested effects go
-through typed, bounded, fresh authenticated messages to the Heltec's existing command policy.
-Do not route display input to the unrestricted USB console or open a second VESC connection.
-Use Eamon's item IDs, quantities/charges, targeting and session rules; port the relevant Pi
-logic with equivalent tests instead of creating a separate incompatible item system.
+## Implemented path
 
-## Proposed course download path
+1. Host Pi runs the updated `kart/server` (including `m5_course.py`) and a running freeplay
+   host session. Its Heltec runs this branch's `kart` build and has course peers provisioned.
+2. Pi exports the course, start/finish, boost/mud/item zones and up to 64 nearby OSM line
+   segments. USB publication is ACK-paced. Host pause/end withdraws the publication; a new
+   session/explicit republish gets a new random instance. No second serial process is opened.
+3. A paired nearby Core2 sees an invitation. JOIN downloads from host Heltec over ESP-NOW,
+   validates the complete package and writes/readbacks an inactive NVS slot before committing
+   its selector. A bad download preserves the previous course. No SD or flash erase is needed.
+4. The explicit JOIN gesture then requests that host session through the Core2's own encrypted
+   Heltec link. Playing begins only on the returned session/result. A failed/unavailable JOIN
+   requires another deliberate press; a cached map never automatically joins.
+5. Fresh GPS selects boxes and the nearest same-session shell target within 25 m. FIRE sends
+   one typed, token-bound request to own Heltec. Heltec independently rechecks identity,
+   freshness, session/generation, STOP/GRID, pending writes, baseline and target range.
+6. Heltec uses Eamon's existing attack/ACK and bounded temporary BOOST/SLOW paths. No saved
+   tune, throttle command, firmware update or generic USB console string is accepted here.
 
-```text
-Host creates/publishes course on its existing Pi
-    -> host Heltec over USB (new bounded publishing bridge)
-    -> joining Core2 over ESP-NOW while nearby (new course-only peer/service)
-    -> validated local course cache; Core2 renders and runs player logic
+The real map draws cached context, course, S/F and zones beneath fresh kart markers. It follows
+own GPS in a north-up 70 m view. DASH/MAP toggles and the invite button consume whole touches.
+Small GPS MPH/pack volts and compact FIRE retain Hunter's cyan/amber design. Credits appear
+for five seconds at startup. Host loss, generation change, own Heltec reboot/link loss and OTA
+cancel local game intent/inventory, with no control replay or driving-state restoration.
 
-Own Heltec <-> Core2: existing encrypted telemetry/request link remains
-Kart-to-kart during play: existing Heltec LoRa session/position/attack protocol
-```
+## Package, trust and compatibility
 
-The owner requests downloading the host's course after creation, rather than manually
-preloading every player. For the first implementation, JOIN initiates synchronization;
-READY is shown only after the intended course is complete, validated and saved, and session
-join has been acknowledged. A cache hit requires matching host, course revision and digest.
-No Core2 HOST, draw-track, create-course or edit-box controls are added.
+- Binary `GKG1`, rules v1, little-endian WGS84 e7 coordinates, bounded counts and CRC32.
+  Maximum 3,684 bytes: 128 track points, 16 zones, 64 background segments. The host's routes
+  up to 200 points use Eamon's Douglas–Peucker at a fixed 1 m tolerance; if still over128,
+  publication refuses with an error instead of silently increasing distortion.
+- Circle/polygon boost/mud/item zones and one segment lapline are supported. Unknown rules,
+  zones, invalid geometry, oversize data, wrong host and bad CRC are refused.
+- `GCS1` ESP-NOW uses 192-byte data chunks, fresh 64-bit download challenge, host boot/digest
+  binding, bounded timeout/retries and per-peer HMAC-SHA256 truncated to128 bits. Keys are
+  separate from the encrypted own-kart pairing. Course peers cannot send control frames.
+  Both radios must already share a channel. The course service does not hop away from own Heltec.
+- Course-only pairing uses `share pair ID MAC KEY` over USB, namespace `coursepeer`; it never
+  replaces the existing control peer/callback. `share status` emits `share_radio` plus `share`.
+- LoRa telemetry stays 46/47/54 bytes and commands stay14. New optional `GK_MSG_COURSE=5`
+  carries a 14-byte header+package digest+host boot. Once per2s a publishing host substitutes
+  this for one scheduled telemetry transmission; no extra slot or longer airtime is added.
+  At2Hz host telemetry averages1.5Hz, at1Hz it averages0.5Hz. Other karts keep their rate.
+  Legacy base/repeaters ignore type5. For relayed course-generation coverage, update the
+  repeater too; direct host-player LoRa is enough for the first test. The pit need not change
+  to keep existing telemetry/control. New COURSE handling does not add LoRa authentication;
+  it retains the existing fleet radio trust model.
+- Generation freshness expires after6.5s. Rolling sequence/retired boot checks suppress
+  reordered/duplicate identities. JOIN/FIRE binds package digest **and** host boot, received
+  through the authenticated local link. Gameplay thus continues outside ESP-NOW download
+  range while fresh host LoRa remains available. Identity loss ends the local game, not driving.
+- Package stores are in Core2 `m5game`, two blobs plus atomic selector. Loading is read-only;
+  NVS exhaustion/readback failure prevents activation. Physical power-loss/space acceptance
+  still needs hardware. Pairing, OTA secrets and vehicle NVS are separate and preserved.
 
-Implementation constraints (proposed contract, not existing wire fields):
+## Native rules and deliberate limits
 
-- Package geographic track points, supported boxes/zones, lap/start geometry and gameplay
-  metadata actually required by the selected game, plus a bounded optional background
-  layer (roads/buildings/shoreline) with source/attribution. Reuse the Pi’s geographic
-  assets; the first compact vector implementation need not transfer full aerial tiles. An outline alone is
-  insufficient for matching host item locations. Preserve coordinates/units/IDs/rules from
-  the source. A WGS84 course must not be replaced by the illustrative SoNo art/demo loop.
-- Manifest binds publisher/host ID, game instance, schema, course ID/revision, byte count,
-  content digest and required capabilities. Reject unsupported effect/rule types visibly;
-  do not silently omit them and claim full compatibility. Define bounded package limits
-  against real Eamon course exports before fixing the new schema/storage format.
-- Use small numbered chunks, application acknowledgements, bounded retries and final
-  digest/schema checks. Retrying course data is allowed; it must never replay a motor/game
-  command. Stage separately and retain the old valid course until successful commit/readback.
-  Existing USB outline schema1 is not a full game package; preserve its migration/fallback.
-- Source authentication is separate from a checksum. Provision course-peer trust separately
-  from each kart's private Core2/Heltec control keys; never publish keys or reuse another
-  kart's control credentials. A course-only peer must not be able to send mode/FIRE commands.
-- Extend one ESP-NOW dispatcher to distinguish the existing local peer from a course publisher;
-  do not install a second callback that steals the paired display link. Host builds must
-  also preserve Eamon's existing Pi/item-screen ESP-NOW service. Keep telemetry and
-  control priority over bulk transfer, use bounded queues, initially serve one downloader at
-  a time, and pause/abort downloads during maintenance or channel misalignment.
-- All participating Wi-Fi/ESP-NOW radios must share the transfer channel. Reconcile host,
-  own Heltec and Core2 channel configuration before transfer; do not hop away from the working
-  local pair to download. ESP-NOW is a nearby provisioning path, not a LoRa-range promise.
-- A host may be heard over LoRa while out of ESP-NOW reach: show HOST AVAILABLE / MOVE CLOSER
-  or DOWNLOAD UNAVAILABLE, never READY. Once cached, map rendering does not need ongoing
-  ESP-NOW contact with the host. Live gameplay still follows the LoRa session freshness rules.
-- Do not switch an active course silently when the host edits it. Show UPDATE AVAILABLE and
-  apply a deliberate stopped/staging rejoin flow. A download/reboot/reconnect alone neither
-  joins a game nor changes modes. No queued FIRE or effect request is replayed after recovery.
+The roll weights match Eamon's current multiplayer table: boost22, shell24, lightning12,
+rocket8, boost3 6, star6, shield8, magnet6, empty8 percent. Shell and lightning occupy the
+separate attack slot; three other carried slots use oldest-first FIRE. Shell uses nearest fresh
+same-session peer within25m; lightning uses existing all-peer attack semantics. BOOST is7s at
+75%, ROCKET10s at100%, BOOST3 has three7s charges, STAR8s at100% plus immunity, MAGNET20s
+doubles circular item pickup range. SHIELD is explicitly armed with FIRE and blocks one
+incoming hit or mud application. Existing controller ceilings and pit restrictions win.
 
-## Two-page UI and notification
+This is a light native player, not full Pi game parity:
 
-Both pages follow Hunter's original graphics at `315710e`, refined through `5629924`:
-`kart/server/static/retro.css`, `display.js`, `instruments.js`, and `font-segments.css`.
-The current upstream restyle rollback is not the requested aesthetic reference. Adapt the
-segmented numerals, restrained cyan/amber palette, muted labels, clear state colors and
-instrument organization to 320x240. Preserve the DSEG license if its glyphs are used.
-Course geometry remains a simple line; SoNo artwork is not the Manresa route.
+- Fixed-duration boosts do **not** stack speculative remaining time. Refused/unknown commands
+  cannot lengthen a later boost. A transmitted item is consumed even if refused/unknown, with
+  no automatic retry; a busy local radio that never sends retains the item.
+- Shared boxes are the published starting snapshot, with per-player entry/cooldown. Pi-local
+  randomized box respawns are not broadcast continuously. A full native inventory drops a
+  new carried item instead of automatically applying it. Inventory does not survive reconnect,
+  course change or reboot. Hotlap/race ranking/global pickup arbitration are outside this version.
+- S/F counts/times local crossings; it is not pit-authoritative race ranking. No photographic
+  map tiles or Google Maps. OSM context is limited to geography already present in the host
+  repository; an uncharted location can have course/zones but no surrounding line work.
+- One fresh paired host invitation is selected at a time; there is no multi-host browser.
+- FIRE acceptance means the local Heltec accepted an attack/effect request. It does not prove
+  the remote kart was slowed; inspect LoRa attack ACKs and actual VESC readback during acceptance.
 
-- DASH: existing telemetry, truthful unavailable/stale fields, verified mode controls.
-- MAP/GAME: own-kart follow map with geographic context, a checkered start/finish gate,
-  boost/pickup symbols, nearby players and one compact corner item/FIRE control. The map
-  fills 320×240; a small top-left card shows GPS MPH and measured VESC pack volts relayed
-  by Heltec. There is no measured SOC field; do not synthesize a percentage. Omit the kart
-  header, scale and orientation label. Show map attribution only on the five-second startup
-  screen, retaining source/license metadata. Game join/details remain a temporary overlay.
-- A dedicated edge button toggles DASH and MAP/GAME. Page changes send no mode/join/fire
-  request and cancel in-progress control holds; one touch cannot activate both pages.
-- Fresh joinable-host notification: a pulsing on-screen dot next to that button, a short
-  invitation label and optional one-shot vibration. Opening it shows the host(s), course
-  download state and an explicit JOIN action. Acknowledging/dismissing stops the repeated
-  flash for that invitation; changed/new invitations can notify again. Clear stale invites.
-- The stock Core2 v1.3 has power/reset hardware buttons and three front virtual touch
-  buttons. The proposed first version uses the screen edge button/dot; it does not assume
-  a dedicated physical side-button LED exists or repurpose reset/power. A front touch-button
-  shortcut can be added after checking mounted access. Swipe is optional, not required.
-- Existing LoRa `session == host ID` advertises a freeplay game. Do not confuse this with
-  pit grid/countdown or report a scheduled race from that byte alone. Support explicit
-  published-game metadata for richer race labels; leave current pit control precedence intact.
-- Host presence does not imply a fresh GPS fix, usable course or accepted join. Show those
-  states separately. Notification loss or leaving the map must not affect normal driving.
+## Deployment and first test
 
-## Implementation and acceptance order
+Build application targets `m5-espnow` (Core2), `kart-m5-espnow` (commissioned player Heltec),
+and `kart` (host Heltec), plus deploy updated host Pi server files. Generic `core2-items` is a
+different Pi-dependent product. Preserve each device's NVS and record application hashes.
+Do not overwrite Eamon's kart1/2 firmware while he is using it; coordinate the host deployment.
 
-1. Port Hunter presentation and page/notification state; simulate available/expired hosts,
-   missing GPS, download progress and touch conflicts without opening device ports.
-2. Define the host export and versioned game package against Eamon's actual course/item data.
-   Add publisher + authenticated ESP-NOW course transfer + Core2 persistence together.
-3. Port player logic to Core2 and add typed session/inventory/effect requests/results across
-   the own-Heltec link. Preserve full pit arbitration, dedupe, expiry and no reconnect replay.
-4. Offline failure tests: truncated/corrupt/duplicate packages, wrong host/keys, revised course,
-   power interruption, unsupported rules, channel mismatch, two invitations and no stale FIRE.
-5. Supervised display-only test: real course, outdoor own/peer GPS, download then reboot/cache,
-   page button/invite, host loss and telemetry latency during download. No motor effects.
-6. Two-kart game acceptance with Eamon's updated host; only then separately commission real
-   motor effects. Existing kart3 tune/filter/profile acceptance remains the baseline.
+1. While stationary, keep existing own-kart pairing. Read `share status` on host Heltec and
+   Core2 to obtain Wi-Fi station MACs/channel; confirm kart IDs with normal `status`.
+2. Generate a private course-only plan (default opens no device):
 
-As inspected: our branch has Eamon through `a5a4c22`; upstream is `59976df`, with newer
-inventory/timing and separate Pi-dependent Core2 power/OTA work. Review/integrate those
-changes as part of implementation; this brief does not merge them or flash either accessory.
+   ```sh
+   python3 tools/m5/pair_course.py --host-id 2 --kart-id 3 \
+     --host-mac HOST_WIFI_MAC --core2-mac CORE2_WIFI_MAC \
+     --plan firmware/build/bench-private/course-2-3.json
+   ```
 
-Technical references: [M5 Core2 v1.3 hardware](https://docs.m5stack.com/en/core/Core2_v1.3),
-[ESP-NOW channel/peer/packet constraints](https://docs.espressif.com/projects/esp-idf/en/release-v5.5/esp32/api-reference/network/esp_now.html).
-These describe hardware/API capabilities, not measured project range or transfer performance.
+   Stop the host Pi's serial service while USB provisioning from a computer. Rerun the same
+   command with `--apply --host-port /dev/cu.HOST --core2-port /dev/cu.CORE2`. It verifies both
+   identities and channel before writes, records secrets0600, and does not reboot either board.
+   Restart accessories while stationary; restore the host Pi's sole serial ownership. Each new
+   player needs its own pairwise key. Use the original private plan for recovery, never Git.
+3. Host a course. Updated Pi publishes automatically once host/package/peer service is ready.
+   Optional local retry: `POST /api/m5/course/publish` under existing command access controls.
+   `share status` on host reports package bytes; Core2 `status` emits `m5_game` progress/digest.
+4. First prove download, cache across a Core2 restart, cancel, wrong channel, interrupted
+   transfer and new-course replacement. No motor test is implied by a complete download.
+5. With operator/wheels lifted/pedal released/cutoff, verify VESC identity and fresh mode
+   state, explicit JOIN, GPS pickup, one FIRE, exactly one command outcome, pit precedence
+   and loss/recovery without replay. Use a second participating kart for shell/lightning ACKs.
+6. Accept kart3 first. Only then provision4/5 with separate IDs/pairings and target-specific
+   VESC calibration/tune preparation. USB remains the supported VESC tune/Lisp maintenance path.
+
+Offline coverage: Python exporter/publisher and actual host lifecycle; native package transfer,
+retry/corruption/cache and live player state under ASan/UBSan; production `.ino` dispatch,
+fresh-generation/STOP/SLOW/duplicate guards; existing full protocol/UI/transport suites.
+Physical ESP-NOW/LoRa transfer, LCD/touch/NVS power-loss behavior and motor effects remain untested.

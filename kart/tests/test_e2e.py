@@ -598,6 +598,18 @@ class ServerPieces(unittest.TestCase):
                 self.assertIn('"what":"x"', f.read())
             log.close()
 
+    def test_saved_inventory_is_restorable_within_a_day(self):
+        # owner 2026-11-11: carried boxes survive power cycles via game-state.json's saved_wall
+        doc = {"v": 1, "saved_wall": time.time() - 3600,
+               "inventory": [{"item": "boost", "secs": 7, "scale": 0.75}], "shields": 1}
+        self.assertEqual(self.ks.App._inv_restorable(doc),
+                         ([{"item": "boost", "secs": 7, "scale": 0.75}], 1))
+        self.assertIsNone(self.ks.App._inv_restorable(dict(doc, saved_wall=time.time() - 2 * 86400)))
+        self.assertIsNone(self.ks.App._inv_restorable(dict(doc, inventory=[], shields=0)))
+        self.assertIsNone(self.ks.App._inv_restorable(dict(doc, saved_wall=None)))
+        self.assertIsNone(self.ks.App._inv_restorable(None))
+        self.assertIsNone(self.ks.App._inv_restorable({"v": 2, "saved_wall": time.time()}))
+
     def test_session_log_unwritable_dir_falls_back(self):
         log = self.ks.SessionLog("/proc/definitely/not/here", max_mb=10)
         log.write("event", what="ok")
@@ -610,7 +622,7 @@ class ServerPieces(unittest.TestCase):
                                               freeplay="on", freeplay_boxes=9))
         self.assertEqual((cfg["map_fps"], cfg["kart_id"], cfg["sound"], cfg["sun_mode"], cfg["map_orientation"], cfg["rotate"]),
                          (15, 2, True, True, "heading_up", 0))
-        self.assertEqual((cfg["freeplay"], cfg["freeplay_boxes"]), (True, 3))
+        self.assertEqual((cfg["freeplay"], cfg["freeplay_boxes"]), (True, 5))
         self.assertEqual(cfg["pit_urls"], ["http://x"])
         self.assertEqual(len(w), 9, w)
         cfg, w = self.ks.validate_config(dict(self.ks.DEFAULTS, freeplay=False, freeplay_boxes=6))

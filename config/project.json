@@ -173,13 +173,13 @@
       ],
       "map_revision_2026_11_11": {
         "viewport": "north-up, own-kart follow at fixed local scale",
-        "course_storage": "validated internal NVS outline; optional SD fallback",
-        "course_provisioning": "explicit USB upload; no automatic LoRa course transfer",
-        "fire": "unavailable until native no-Pi inventory/game authority exists",
+        "course_storage": "bounded full game package in internal NVS; legacy USB outline/optional SD fallback retained",
+        "course_provisioning": "authenticated host ESP-NOW download; USB legacy outline remains",
+        "fire": "native typed single-use game request; fresh session/course/identity required; not hardware accepted",
         "hardware_verified": false
       },
       "player_mode_plan_2026_11_11": {
-        "status": "requirements_and_proposal_only_not_implemented_or_deployed",
+        "status": "implemented_offline_candidate_not_deployed",
         "role": "join_existing_host_only",
         "core2_owns": [
           "course_cache",
@@ -387,5 +387,17 @@
       "current_temporary_profile": "ECO"
     }
   },
-  "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending"
+  "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending",
+  "native_player_candidate_2026_11_12": {
+    "status": "implemented_offline_not_installed",
+    "guide": "docs/m5-player-mode.md",
+    "host_update_required": true,
+    "player_pi_required": false,
+    "course_only_pairing_required": true,
+    "host_generation": "optional 14-byte LoRa type5 replaces one host telemetry slot every2s",
+    "maximum_package_bytes": 3684,
+    "live_fire_implemented": true,
+    "hardware_tested": false,
+    "upstream_source_integrated": "c21baf8 (binary release and later item-screen/fastboot commits excluded)"
+  }
 }

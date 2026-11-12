@@ -1,9 +1,10 @@
 # Core2 course map without a Pi or SD card
 
-This is a display-only implementation. It has offline tests and requires a new Core2 build;
-**it has not been flashed or physically accepted by this change**. Heltec firmware, pairing,
-LoRa protocol and VESC settings are unchanged. FIRE is visibly unavailable until an
-authoritative item/session implementation is connected; touching it sends nothing.
+This guide covers the **legacy USB outline** path, which remains available. The November12
+native player adds full host package download, JOIN and typed FIRE; follow the
+[current player guide](../../docs/m5-player-mode.md) for that workflow and its required host/
+Heltec updates. Native gameplay is source-tested, not installed or physically accepted.
+USB outline upload alone never joins a session or enables item effects.
 
 The display starts on a north-up map that follows its own fresh position. The map shows
 70 metres vertically. Distant peers do not shrink the view; only fresh markers inside it

@@ -17,6 +17,9 @@
 #include "GoKartProtocol.h"
 #include "VescLink.h"
 #include "M5DisplayLink.h"
+#include "GameRequest.h"
+#include "GamePackage.h"
+#include "CourseGeneration.h"
 #include "VerifiedBaseline.h"
 #include "config.h"
 #include "cmd_types.h"
@@ -31,6 +34,7 @@ struct Text:std::string {
 };
 struct Console {
   std::vector<std::string> lines;
+  void print(const char*s){lines.emplace_back(s);}
   int printf(const char* fmt,...){char b[600];va_list args;va_start(args,fmt);
     int n=vsnprintf(b,sizeof b,fmt,args);va_end(args);lines.emplace_back(b);return n;}
 } Serial;
@@ -80,6 +84,20 @@ static m5link::Gate m5Gate;
 static uint32_t m5Request=0;
 static CmdRef m5Owner=NO_OWNER;
 static uint8_t m5Result=GK_RES_NONE;
+static uint32_t m5GameRequest=0,m5JoinedCourse=0,m5JoinedBoot=0;static uint8_t m5GameResult=0,m5Shield=0;static CmdRef m5GameOwner=NO_OWNER;
+static uint32_t m5StarUntil=0;static m5game::Generation courseGeneration[9];
+static uint8_t gameSession=0,gameScore=0,atkTo=0,atkItem=0,atkSeq=0,atkAckMask=0;static uint32_t atkStartMs=0;
+static bool gameLineDirty=false,radioOk=true;static const char*gameEnded=nullptr;
+static GkTelemetry fleet[9]{};static uint32_t fleetMs[9]{};
+#define GAME_PEER_MAX_AGE_MS 10000
+#define GAME_SLOW_MPH 5
+#define GAME_LIGHTNING_SECS 3
+#define GAME_SHELL_SECS 4
+#define GAME_SRC 0xFD
+struct CourseRadio {struct Publisher {void clear(){}}server;} courseRadio;
+static void attackEnd(const char*,const char*){atkTo=0;}
+static void emitAttack(uint8_t,uint8_t,uint8_t,const char*,const char*,uint8_t){}
+static void fillTelemetry(GkTelemetry&t,bool){t={};t.flags=GK_FLAG_GPS_FIX;t.lat_e7=410000000;t.lon_e7=-730000000;t.gps_age_s=0;}
 #include "production_control.inc"
 
 static void setup(){
@@ -286,9 +304,29 @@ static void testWrongBaselineIdentity(){
   serviceVesc();assert(!origValid&&vescIdentityBad&&!bleConnected);
   assert(prefs.writes==0&&vesc.writes.empty()&&vesc.custom.empty());
 }
+static void testGame(){
+  courseGeneration[2].accept(222,0x12345,1,nowMs);fleetMs[2]=nowMs;fleet[2].session=2;
+  fleet[2].flags=GK_FLAG_GPS_FIX;fleet[2].lat_e7=410000000;fleet[2].lon_e7=-730000000;
+  uint32_t requestId=500;
+  auto send=[&](m5game::Action action,uint16_t arg=0,uint32_t digest=0x12345){
+    m5Gate.rotate(++requestId,nowMs);char line[62];size_t n=m5game::encode(line,sizeof line,{m5Gate.token,requestId,2,action,arg,digest,222});assert(n);line[n-1]=0;
+    assert(m5HandleGame(line));auto count=vesc.writes.size();m5HandleGame(line);assert(vesc.writes.size()==count);
+  };
+  send(m5game::Action::Join);assert(gameSession==2&&m5JoinedCourse==0x12345&&m5GameResult==GK_RES_APPLIED);
+  send(m5game::Action::Shell,2);assert(atkTo==2&&atkItem==GK_ITEM_SHELL&&vesc.writes.empty());atkTo=0;
+  send(m5game::Action::Boost,7<<8|75,0x98765);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.empty());
+  send(m5game::Action::Boost,7<<8|75);assert(vesc.writes.size()==1);completeWrite();assert(cmdEnt(m5GameOwner)->result==GK_RES_APPLIED);
+  stopActive=true;send(m5game::Action::Boost,7<<8|75);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==1);stopActive=false;
+  slowActive=true;send(m5game::Action::Boost,7<<8|75);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==1);slowActive=false;
+  send(m5game::Action::Shield);assert(m5Shield==1);applyHit(2,GK_ITEM_SHELL,8);assert(!m5Shield&&vesc.writes.size()==1);
+  send(m5game::Action::Star);completeWrite();assert(m5StarUntil>nowMs);auto count=vesc.writes.size();send(m5game::Action::Mud,4);assert(vesc.writes.size()==count);
+  courseGeneration[2].seen=nowMs-6501;send(m5game::Action::Shell,2);assert(!atkTo&&m5GameResult==GK_RES_REJECTED);
+  send(m5game::Action::Leave);assert(!gameSession&&!m5JoinedCourse&&!m5Shield&&!m5StarUntil&&vesc.writes.size()==count);
+}
 int main(int argc,char** argv){
   assert(argc>=2);setup();std::string scenario=argv[1];
-  if(scenario=="guard"){assert(argc==3);testGuard(argv[2]);}
+  if(scenario=="game")testGame();
+  else if(scenario=="guard"){assert(argc==3);testGuard(argv[2]);}
   else if(scenario=="passthrough")testPassthrough();else if(scenario=="ack")testAck();
   else if(scenario=="stop-start")testStopStart();else if(scenario=="timers")testTimers();
   else if(scenario=="link-change")testLinkChange();else if(scenario=="ceiling")testCeiling();

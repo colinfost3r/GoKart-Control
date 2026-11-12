@@ -34,24 +34,24 @@ Neither a base station nor an SD card is needed for own telemetry/direct peer GP
 a validated course can be provisioned to Core2 internal NVS over USB, with optional SD fallback.
 The north-up viewport follows a fresh own fix at a fixed local scale; distant peers do not
 change the zoom. Without a fresh own fix it shows the available course with explicit status.
-The base provides central pit/race functions. Neither it nor LoRa currently distributes course
+The base provides central pit/race functions. The legacy outline path does not distribute course
 geometry to the Core2. See the [M5 guide](../firmware/m5-core2/README.md) for provisioning.
 
 Eamon's `core2-items` is a separate Pi-owned inventory accessory. Its raw ESP-NOW receive
 callback is excluded from paired M5 builds, preserving authenticated link ownership. The M5
-FIRE button remains unavailable until native inventory/game authority is ported; relaying
-`invuse` to an absent Pi would not implement firing.
+player now uses native inventory and typed requests through own Heltec; it does not relay
+`invuse` to an absent Pi. Deployment still requires physical acceptance.
 
-## Planned Core2 player logic and course download (November 11, 2026)
+## Core2 native player and course sharing (November 12, source candidate)
 
-The owner now assigns native map/course storage, inventory and local player logic to Core2.
-Heltec keeps GPS/LoRa, exclusive VESC BLE and supervisory validation/arbitration. This expands
-Core2 beyond its currently implemented display role without moving motor control into the UI.
-The proposed publication path is host Pi -> host Heltec USB -> nearby Core2 ESP-NOW -> local
-validated game-package cache. It requires new host publishing and a course-only peer service
-coexisting with the private own-Heltec link on one channel. LoRa remains the gameplay link.
-The current USB outline format is not a complete host game package. Neither publisher nor
-wireless course transfer exists yet. [Design and acceptance](m5-player-mode.md).
+Core2 owns the cached map/course, inventory, local GPS entry/crossing and user JOIN/LEAVE/FIRE.
+The updated host Pi exports a bounded package through its existing USB owner to host Heltec;
+a separately authenticated course-only ESP-NOW service transfers it to Core2. Own Heltec
+continues to own all VESC communication and supervisory guards. No Pi/SD is added to the player.
+A short LoRa COURSE identity substitutes for one host telemetry slot every2s to bind gameplay
+to current host boot/package beyond download range. Existing telemetry/command layouts remain.
+No automatic join, effect replay or driving-state restore follows link loss/reboot/OTA.
+[Protocol, native rules, deployment and limits](m5-player-mode.md). Not physically accepted yet.
 
 ## Boundaries
 

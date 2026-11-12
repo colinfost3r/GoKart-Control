@@ -36,7 +36,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='gokart-preview-') as tmp:
         exe = Path(tmp)/'render'
         subprocess.run([compiler, '-std=c++17', '-Wall', '-Wextra', '-Werror',
-                        '-I'+str(include), '-I'+str(ROOT/'firmware/m5-core2'),
+                        '-I'+str(include), '-I'+str(ROOT/'firmware/m5-core2'), '-I'+str(ROOT/'firmware/libraries/M5Game/src'),
                         '-I'+str(ROOT/'firmware/libraries/M5DisplayLink'),
                         str(ROOT/'firmware/m5-core2/tests/render_driver.cpp'), '-o', str(exe)], check=True)
         for scene in SCENES:

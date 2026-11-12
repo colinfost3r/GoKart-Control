@@ -23,10 +23,11 @@ with `m5-demo`, then `m5-espnow` + `kart-m5-espnow-readonly` (or `m5` + `kart-m5
 Both initial Heltec targets keep every VESC write disabled. Use the repeat-build checklist below;
 do not downgrade/re-pair the working kart 3 simply to repeat first-unit steps.
 
-**New map source, awaiting deployment:** the [no-SD follow map](COURSE_MAP.md) starts on a
-70 m own-follow view with a disabled FIRE button. Internal course provisioning is ready for
-bench testing; installed kart-3 acceptance above remains the earlier application. Preserve
-its backup and record a separate display-only deployment before claiming the new UI works.
+**November12 native player candidate, awaiting deployment:** the 70m follow map now includes
+host package download/cache, JOIN and native FIRE. [Current coordinated host/player procedure](../../docs/m5-player-mode.md)
+supersedes the earlier outline-only milestone. The installed kart3 checkpoint above remains
+unchanged; preserve its backup and record new display, transfer/session and effect acceptance
+separately. The [USB outline guide](COURSE_MAP.md) is still available for display-only setup.
 
 ## Bring to the bench
 

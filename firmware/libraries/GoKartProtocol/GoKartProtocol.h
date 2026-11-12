@@ -158,6 +158,7 @@ enum GkMsgType : uint8_t {
   GK_MSG_TELEMETRY = 0x01,   // kart -> everyone, 1 or 2 Hz
   GK_MSG_COMMAND   = 0x02,   // base -> one kart or all
   GK_MSG_BASE_INFO = 0x03,   // base -> everyone once a second: time, sync phase, pit fix, race state
+  GK_MSG_COURSE = 0x05, // optional host course generation; replaces a host telemetry slot, never a command
   GK_MSG_REPEATER_INFO = 0x04, // repeater -> base heartbeat every 5 s, right after it relays a beacon
 };
 
@@ -250,6 +251,12 @@ struct GkTelemetry {
 enum GkGameItem : uint8_t { GK_ITEM_NONE = 0, GK_ITEM_SHELL = 1, GK_ITEM_LIGHTNING = 2 };
 static inline const char* gkItemName(uint8_t i) { return i == GK_ITEM_SHELL ? "shell" : i == GK_ITEM_LIGHTNING ? "lightning" : "none"; }
 
+struct GkCourseInfo {
+  GkHeader h;
+  uint32_t digest;        // package CRC includes random instance; zero withdraws publication
+  uint32_t boot;          // host radio boot identity
+};
+
 struct GkCommandMsg {
   GkHeader h;             // h.dst = kart id or GK_ADDR_ALL, h.seq = command id
   uint8_t  cmd;           // GkCommand
@@ -303,6 +310,7 @@ static inline uint8_t gkValidate(const uint8_t* buf, size_t len) {
   if ((h->version & 0x7F) != GK_PROTO_VERSION || h->fleet != GK_FLEET_ID) return 0;
   switch (h->type) {
     case GK_MSG_TELEMETRY: return (len == sizeof(GkTelemetry) || len == GK_TELEMETRY_LEN_V1 || len == GK_TELEMETRY_LEN_V0) ? h->type : 0;
+    case GK_MSG_COURSE: return len == sizeof(GkCourseInfo) ? h->type : 0;
     case GK_MSG_COMMAND:   return len == sizeof(GkCommandMsg) ? h->type : 0;
     case GK_MSG_BASE_INFO: return (len == sizeof(GkBaseInfo) || len == GK_BASEINFO_LEN_V0) ? h->type : 0;
     case GK_MSG_REPEATER_INFO: return len == sizeof(GkRepeaterInfo) ? h->type : 0;

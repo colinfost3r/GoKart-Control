@@ -31,6 +31,7 @@ class TouchRequestTests(unittest.TestCase):
 #include "DisplayState.h"
 #include "PlayerPreview.h"
 #include "ScreenLifecycle.h"
+#include "LiveGame.h"
 #define M5_USE_ESPNOW 1
 #define M5_DEMO 0
 #define M5_MODE_HOLD_MS 650
@@ -45,11 +46,17 @@ struct FakeTouch {Detail detail;Detail getDetail()const{return detail;}};
 struct Device {FakeTouch Touch;} M5;
 struct Maintenance {bool on=false;bool active()const{return on;}bool updating()const{return false;}bool restarting()const{return false;}void stop(){on=false;}void start(){on=true;}} maintenance;
 struct Radio {
-  bool available=true,accept=true;int calls=0;char sent[48]{};
+  bool available=true,accept=true;int calls=0;char sent[80]{};
   bool canSend(uint32_t)const{return available;}
   bool sendLine(const char* p,uint32_t){++calls;std::strcpy(sent,p);return accept;}
   void setChannelSearchEnabled(bool){}
 } wireless;
+m5dash::LiveGame liveGame;
+struct CourseRadio{m5game::share::Receiver client;} courseRadio;
+uint32_t esp_random(){return 124;}
+uint32_t nextRequest(){return ++requestId;}
+bool gameSend(const char*line,uint32_t now){return !maintenanceMenu&&!maintenance.active()&&wireless.canSend(now)&&wireless.sendLine(line,now);}
+
 void ready(uint32_t now){state.self=3;state.karts[3].seen=true;state.karts[3].received=now;state.karts[3].vesc=true;state.metaSeen=true;state.metaMs=now;state.modeReady=true;state.token=123;}
 void press(){M5.Touch.detail.down=true;M5.Touch.detail.edge=true;}
 void held(){M5.Touch.detail.edge=false;}
@@ -90,7 +97,7 @@ int main(){
             path=Path(tmp);(path/'touch.cpp').write_text(harness)
             subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror',
                 '-fsanitize=address,undefined','-g','-I'+str(include),
-                '-I'+str(ROOT/'firmware/m5-core2'),'-I'+str(ROOT/'firmware/libraries/M5DisplayLink'),
+                '-I'+str(ROOT/'firmware/m5-core2'),'-I'+str(ROOT/'firmware/libraries/M5Game/src'),'-I'+str(ROOT/'firmware/libraries/M5DisplayLink'),
                 str(path/'touch.cpp'),'-o',str(path/'touch')],check=True)
             subprocess.run([str(path/'touch')],check=True,timeout=10)
 

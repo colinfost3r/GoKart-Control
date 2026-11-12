@@ -31,7 +31,7 @@ class MapCourseTests(unittest.TestCase):
         include=next((p for p in [Path(os.environ.get('ARDUINOJSON_DIR','/missing')),Path('/private/tmp/gokart-arduino/user/libraries/ArduinoJson/src'),Path.home()/'Arduino/libraries/ArduinoJson/src'] if (p/'ArduinoJson.h').exists()),None)
         self.assertIsNotNone(include,'ArduinoJson headers required')
         with tempfile.TemporaryDirectory() as t:
-            exe=Path(t)/'check';subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-g','-I'+str(include),'-I'+str(ROOT/'firmware/m5-core2'),'-I'+str(BASE/'firmware/libraries/M5DisplayLink'),str(path),'-o',str(exe)],check=True)
+            exe=Path(t)/'check';subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-g','-I'+str(include),'-I'+str(ROOT/'firmware/m5-core2'), '-I'+str(ROOT/'firmware/libraries/M5Game/src'),'-I'+str(BASE/'firmware/libraries/M5DisplayLink'),str(path),'-o',str(exe)],check=True)
             return subprocess.run([str(exe)],check=True,capture_output=True,text=True).stdout
     def test_native_map_upload_and_storage(self):
         result=self.native(ROOT/'firmware/m5-core2/tests/map_course_test.cpp')
@@ -66,7 +66,7 @@ class MapCourseTests(unittest.TestCase):
         include=Path(os.environ.get('ARDUINOJSON_DIR','/private/tmp/gokart-arduino/user/libraries/ArduinoJson/src'))
         with tempfile.TemporaryDirectory() as t:
             exe=Path(t)/'render'
-            subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-I'+str(include),'-I'+str(ROOT/'firmware/m5-core2'),'-I'+str(BASE/'firmware/libraries/M5DisplayLink'),str(ROOT/'firmware/m5-core2/tests/render_driver.cpp'),'-o',str(exe)],check=True)
+            subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-I'+str(include),'-I'+str(ROOT/'firmware/m5-core2'), '-I'+str(ROOT/'firmware/libraries/M5Game/src'),'-I'+str(BASE/'firmware/libraries/M5DisplayLink'),str(ROOT/'firmware/m5-core2/tests/render_driver.cpp'),'-o',str(exe)],check=True)
             for page in ('map','dash'):
                 for scene in ('startup','invite','invitation','joined','download','ready','used','download-error','host-lost','gps-lost','link-lost','no-course','fault','stopped','slow','live'):
                     svg=subprocess.check_output([str(exe),scene,page],text=True);doc=ET.fromstring(svg)

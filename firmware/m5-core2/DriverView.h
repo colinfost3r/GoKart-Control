@@ -5,6 +5,7 @@
 #include "PlayerPreview.h"
 #include "PreviewMap.h"
 #include "DisplayMetrics.h"
+#include "LiveGame.h"
 #include <cstdio>
 
 namespace m5dash {
@@ -34,12 +35,17 @@ template<class Canvas> class DriverView {
       {x+t,y+h-t,w-2*t,t},{x,y+half+t,t,half-2*t},{x,y+t,t,half-t},{x+t,y+half-2,w-2*t,t}};
     for(unsigned i=0;i<7;++i)if(bits&(1u<<i))c.fillRoundRect(seg[i].x,seg[i].y,seg[i].w,seg[i].h,1,color);
   }
-  void navigation(bool map,uint32_t now,const PlayerPreview* preview) {
+  void navigation(bool map,uint32_t now,const PlayerPreview* preview,const LiveGame* game,const m5game::share::Receiver* receiver,const State&state) {
     box(layout::page,palette::cyan);label(map?"DASH":"MAP",layout::page.x+8,layout::page.y+15,1,palette::cyan);
     if(preview&&preview->available()) {
       box(layout::invite,preview->notify(now)?palette::amber:palette::line);
       c.fillCircle(243,16,4,preview->notify(now)?palette::amber:palette::dim);
       label(preview->stage==PlayerPreview::Stage::Ready||preview->stage==PlayerPreview::Stage::Used?"GAME":"JOIN",231,29,1,palette::amber);
+    }
+    if(game&&receiver&&game->available(state,*receiver,now)){
+      box(layout::invite,game->notify(state,*receiver,now)?palette::amber:palette::line);
+      c.fillCircle(243,16,4,game->notify(state,*receiver,now)?palette::amber:palette::dim);
+      label(game->active()?"GAME":"JOIN",231,29,1,palette::amber);
     }
   }
   void previewMarks(const MapView& v,const Course& course) {
@@ -72,6 +78,23 @@ template<class Canvas> class DriverView {
       label("?",px-3,py-4,1,palette::amber);
     }
   }
+  void liveGeometry(const MapView&v,const LiveGame&game,bool background){
+    const auto&p=game.package;if(!p.valid()||!v.valid)return;
+    auto line=[&](m5game::Point a,m5game::Point b,uint16_t color){double x0,y0,x1,y1;
+      if(v.project(a.lat,a.lon,x0,y0)&&v.project(b.lat,b.lon,x1,y1)&&v.clip(x0,y0,x1,y1))c.drawLine(lround(x0),lround(y0),lround(x1),lround(y1),color);
+    };
+    if(background){for(size_t i=0;i<p.lines();++i)line(p.line(i,false),p.line(i,true),palette::dim);return;}
+    if(p.hasLap()){
+      auto a=p.lapA(),b=p.lapB();line(a,b,palette::text);double x,y;
+      if(v.project((a.lat+b.lat)/2,(a.lon+b.lon)/2,x,y)&&v.contains(x,y,16)){c.fillRect(lround(x)-9,lround(y)-7,24,14,palette::bg);label("S/F",lround(x)-8,lround(y)-3,1,palette::text);}
+    }
+    for(size_t i=0;i<p.zones();++i){auto z=p.zone(i);uint16_t color=z.type==m5game::ZoneType::Boost?palette::eco:z.type==m5game::ZoneType::Mud?palette::sport:palette::amber;
+      if(z.shape)for(size_t j=0;j<z.count;++j)line(z.points[j],z.points[(j+1)%z.count],color);
+      else {for(unsigned j=0;j<24;++j){double a=j*6.28318530718/24,b=(j+1)*6.28318530718/24,r=z.radiusCm/100.0,co=std::max(.0001,std::cos(z.center.lat*.01745329252));
+        line({z.center.lat+sin(a)*r/111320,z.center.lon+cos(a)*r/(111320*co)},{z.center.lat+sin(b)*r/111320,z.center.lon+cos(b)*r/(111320*co)},color);}}
+      double x,y;if(v.project(z.center.lat,z.center.lon,x,y)&&v.contains(x,y,12)){box({int(lround(x))-9,int(lround(y))-9,18,18},color);label(z.type==m5game::ZoneType::Item?"?":z.type==m5game::ZoneType::Boost?">":"~",lround(x)-3,lround(y)-3,1,color);}
+    }
+  }
   void mapTelemetry(const State& state,uint32_t now) {
     box({4,4,128,26},palette::line);
     const float mph=gpsMph(state,now),volts=packVolts(state,now);char b[16];
@@ -81,9 +104,10 @@ template<class Canvas> class DriverView {
     if(std::isfinite(volts))std::snprintf(b,sizeof b,"%.1f V",volts);else std::snprintf(b,sizeof b,"-- V");
     label(b,76,13,1,palette::text);
   }
-  void map(const State& state,const Course& course,uint32_t now,const PlayerPreview* preview) {
+  void map(const State& state,const Course& course,uint32_t now,const PlayerPreview* preview,const LiveGame*game) {
     const auto v=MapView::make(state,course,now);
     if(preview)PreviewMap::draw(c,v);
+    else if(game)liveGeometry(v,*game,true);
     else {
       // GPS/course-only live view needs no decorative grid.
       (void)v;
@@ -97,6 +121,7 @@ template<class Canvas> class DriverView {
       for(size_t i=1;i<course.count;++i)segment(i-1,i);
       if(course.closed&&course.count>2)segment(course.count-1,0);
       if(preview)previewMarks(v,course);
+      else if(game)liveGeometry(v,*game,false);
       for(unsigned i=1;i<=8;++i) {
         const auto& k=state.karts[i];if(!k.positionFresh(now)||(i==state.self&&!state.live(now)))continue;
         double x,y;if(!v.project(k.lat,k.lon,x,y)||!v.contains(x,y,11))continue;
@@ -112,10 +137,20 @@ template<class Canvas> class DriverView {
     if(status){box({7,145,244,26},palette::amber);label(status,15,154,1,palette::amber);}
     if(preview)label("DEMO",8,225,1,palette::muted);
     bool armed=preview&&preview->stage==PlayerPreview::Stage::Ready&&!preview->gpsLost&&!preview->linkLost;
+    if(game)armed=game->canFire(state,now);
     box(layout::fire,armed?palette::amber:palette::dim);
     label("FIRE",275,193,1,armed?palette::amber:palette::muted);
     const char* item=armed?"SHELL":preview&&preview->stage==PlayerPreview::Stage::Used?"USED":"--";
-    label(item,armed?272:281,218,1,armed?palette::amber:palette::muted);
+    if(game)item=LiveGame::name(game->item());
+    label(item,layout::fire.x+(layout::fire.w-int(strlen(item))*6)/2,218,1,armed?palette::amber:palette::muted);
+    if(game&&game->active()){
+      char line[40];if(game->pending)snprintf(line,sizeof line,"SENDING");
+      else if(game->result==5)snprintf(line,sizeof line,"OUTCOME UNKNOWN");
+      else if(game->item()==LiveGame::Item::Shell){auto target=game->target(state,now);if(target)snprintf(line,sizeof line,"TARGET %u",target);else snprintf(line,sizeof line,"NO TARGET IN RANGE");}
+      else if(game->charges()>1)snprintf(line,sizeof line,"%u CHARGES",game->charges());
+      else if(game->laps)snprintf(line,sizeof line,"LAP %u / %.1fs",game->laps,game->lastLapMs/1000.0);else line[0]=0;
+      if(line[0]){c.fillRect(5,220,246,16,palette::bg);label(line,9,225,1,palette::muted);}
+    }
   }
   void dash(const State& state,uint32_t now,const char* notice,int heldMode,uint32_t holdMs,bool holdFired) {
     const auto& k=state.karts[state.self];const bool live=state.live(now),vesc=live&&k.vesc;
@@ -161,6 +196,16 @@ template<class Canvas> class DriverView {
     box(layout::join,p.stage==PlayerPreview::Stage::Downloading?palette::dim:palette::amber);
     label(p.stage==PlayerPreview::Stage::Downloading?"WAIT":p.stage==PlayerPreview::Stage::Ready||p.stage==PlayerPreview::Stage::Used?"LEAVE":"JOIN",215,158,1,palette::amber);
   }
+  void liveInvitation(const LiveGame&game,const m5game::share::Receiver&receiver,uint32_t now){
+    if(!game.overlay)return;box({12,69,296,118},palette::amber);char line[44];
+    snprintf(line,sizeof line,"KART %u / %s",game.active()?game.package.host():receiver.host(),game.active()?"PLAYING":"HOST COURSE");label(line,24,80,1,palette::amber);
+    label(game.note,24,101,1);
+    if(game.stage==LiveGame::Stage::Downloading){c.drawRect(24,121,272,8,palette::line);c.fillRect(25,122,int(receiver.progress()*270/100),6,palette::cyan);}
+    else if(!game.active()&&!receiver.available(now))label("Needs host pairing + same channel",24,121,1,palette::muted);
+    box(layout::close);label(game.stage==LiveGame::Stage::Downloading?"CANCEL":"CLOSE",58,158,1);
+    box(layout::join,game.busy()?palette::dim:palette::amber);label(game.busy()?"WAIT":game.active()?"LEAVE":"JOIN",215,158,1,palette::amber);
+  }
+
 public:
   explicit DriverView(Canvas& canvas):c(canvas){}
   void startup(bool demo) {
@@ -172,11 +217,12 @@ public:
     label("openstreetmap.org/copyright",55,176,1,palette::muted);
   }
   void draw(const State& state,const Course& course,uint32_t now,bool mapPage,bool demo,bool beginner,
-            const char* notice=nullptr,int heldMode=-1,uint32_t holdMs=0,bool holdFired=false,const PlayerPreview* preview=nullptr) {
+            const char* notice=nullptr,int heldMode=-1,uint32_t holdMs=0,bool holdFired=false,const PlayerPreview* preview=nullptr,const LiveGame*game=nullptr,const m5game::share::Receiver*receiver=nullptr) {
     c.fillScreen(palette::bg);char b[54];const auto& k=state.karts[state.self];
     (void)demo; // Demo status is in its footer/notice, never a persistent top bar.
-    if(mapPage)map(state,course,now,preview);else dash(state,now,notice,heldMode,holdMs,holdFired);
-    navigation(mapPage,now,preview);if(preview)invitation(*preview,now);
+    if(mapPage)map(state,course,now,preview,game);else dash(state,now,notice,heldMode,holdMs,holdFired);
+    navigation(mapPage,now,preview,game,receiver,state);if(preview)invitation(*preview,now);
+    if(game&&receiver)liveInvitation(*game,*receiver,now);
     // Controller restrictions/faults remain visible on either page and above game overlays.
     const char* alert=nullptr;
     if(state.live(now)&&k.vesc){

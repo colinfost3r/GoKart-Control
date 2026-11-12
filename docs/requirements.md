@@ -1,3 +1,7 @@
+> Current implementation checkpoint: native host-course sharing and light Core2 gameplay are
+> implemented but not physically accepted. [Details/limits](m5-player-mode.md). Dated scopes below
+> record decisions over time; later player requirements supersede the original game deferral.
+
 # Requirements and implementation brief
 
 Updated 2026-11-05. The connected kart is the primary hardware baseline; the
@@ -80,9 +84,9 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - Fill the 320×240 display with the map and compact corner controls. Omit the distance scale
   and north/span label; retain north-up fixed-scale following. Show map attribution for five
   seconds at startup only, with source/license metadata retained in code.
-- Current implementation status: native demo/preview has real shop background plus simulated
-  game symbols; live builds have the compact speed/voltage card. Host background/game download,
-  actual lap/zone rendering and hardware acceptance are still pending.
+- Current implementation status: host package/background download, native lap/zone rendering
+  and player requests are implemented in the November12 candidate. Offline previews use synthetic
+  inputs. Physical download/radio/storage/motor acceptance remains pending.
 
 ## Core2 player-only game and sharing — November 11, 2026
 
@@ -91,7 +95,7 @@ This explicit persistent maintenance tune is separate from temporary supervisory
 - Join an existing host only; no Core2 course creation, mapping or hosting controls.
 - Download the host's published course over ESP-NOW into Core2 storage, then use the local
   cache. This replaces manual preloading as the target workflow; host publishing and
-  course-transfer firmware still need implementation. No Pi or SD is added to the player.
+  course-transfer firmware are implemented in the November12 candidate; hardware acceptance remains. No Pi or SD is added to the player.
 - Both DASH and MAP/GAME follow Hunter's original visual/type examples. Provide an easy
   page button back to kart modes and a flashing invitation indicator next to it. The
   proposed hardware-free realization is an on-screen edge button/dot, with swipe optional.

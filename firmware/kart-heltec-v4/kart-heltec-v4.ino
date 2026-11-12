@@ -60,6 +60,10 @@
 #include "cmd_types.h"
 #include <M5DisplayLink.h>
 #include <VerifiedBaseline.h>
+#include <GameRequest.h>
+#include <CourseGeneration.h>
+#include <CourseRadio.h>
+m5game::share::Radio courseRadio(true);
 #if GK_M5_ESPNOW
 #include <M5EspNowSettings.h>
 m5now::Link m5Wireless;
@@ -68,6 +72,8 @@ m5now::Settings m5WirelessSettings;
 #if !VESC_TRANSPORT_UART
 #include <NimBLEDevice.h>
 #endif
+
+static bool courseReceive(const esp_now_recv_info_t* i,const uint8_t* d,int n){return courseRadio.receive(i,d,n);}
 
 // ---------------------------------------------------------------- settings
 Preferences prefs;
@@ -247,6 +253,9 @@ uint8_t  ackFrom = 0, ackSeq = 0; uint32_t ackMs = 0;
 uint8_t  hitSeq[GK_MAX_KARTS + 1]; uint32_t hitMs[GK_MAX_KARTS + 1];   // last hit accepted per attacker
 uint8_t  gameScore = 0;
 uint32_t gameLineMs = 0; bool gameLineDirty = false, gameLineQuiet = true;
+m5game::Generation courseGeneration[9];
+uint32_t m5JoinedBoot=0,m5JoinedCourse=0, lastCourseTx=0;
+uint8_t m5Shield = 0; uint32_t m5StarUntil = 0;
 const char* gameEnded = nullptr;                  // "host lost" / "host left": carried by the next game line
 
 // ---------------------------------------------------------------- display / misc
@@ -264,6 +273,7 @@ m5link::Lines<80> m5Lines;
 uint32_t m5Boot = 0, m5Drops = 0, m5Request = 0;
 CmdRef m5Owner = NO_OWNER;
 uint8_t m5Result = GK_RES_NONE;
+uint32_t m5GameRequest = 0; uint8_t m5GameResult = GK_RES_NONE; CmdRef m5GameOwner = NO_OWNER;
 bool m5WasReady = false; uint32_t m5LinkSession = 0;
 #endif
 static void m5Emit(const char* line) {
@@ -783,8 +793,13 @@ static bool m5ModeReady() {
          wState == W_IDLE && rampIdx < 0 && !otaInProgress && !baselineSuspect;
 }
 static void m5Report();
+static bool m5HandleGame(const char* line);
+static bool kartHosting(uint8_t k);
+static bool courseFresh(uint8_t k){return k>=1&&k<=8&&courseGeneration[k].fresh(millis());}
+
 static void m5HandleLine(const char* line) {
 #if GK_M5_LINK
+  if (m5HandleGame(line)) return;
   m5link::Request r;
   // Execute against current time, never a delayed callback's timestamp.
   if (!m5link::decode(line, r) || !m5Gate.accept(r, millis())) return;
@@ -802,6 +817,8 @@ static void serviceM5() {
   uint32_t now = millis();
 #if GK_M5_ESPNOW
   m5Wireless.poll(now);
+  if (m5Wireless.ready()) courseRadio.begin();
+  courseRadio.poll(kartId, gameSession == kartId, !otaInProgress && m5Wireless.canSend(millis()), millis());
 #endif
   bool ready = m5ModeReady();
   bool rotated = m5Gate.expired(now) || ready != m5WasReady || m5LinkSession != vescLinkUpMs;
@@ -809,7 +826,7 @@ static void serviceM5() {
   m5WasReady = ready; m5LinkSession = vescLinkUpMs;
   if (rotated) m5Report();
 #if GK_M5_ESPNOW
-  // Only the existing fixed, CRC/token checked mode frame is parsed. Never usbCommand().
+  // Only typed CRC/token-checked display requests. Never usbCommand().
   for (unsigned budget=0; budget<4; ++budget) {
     const char* line=m5Wireless.readLine(millis());
     if (!line) break;
@@ -828,16 +845,25 @@ static void m5Report() {
 #if GK_M5_LINK
   CmdEnt* e = cmdEnt(m5Owner);
   uint8_t result = e ? e->result : (m5Owner.src >= 0 ? GK_RES_UNKNOWN : m5Result);
-  char b[640];
+  uint8_t hosts = 0; for (uint8_t k = 1; k <= GK_MAX_KARTS; ++k) if (kartHosting(k)) hosts |= 1u << (k-1);
+  CmdEnt* gameEntry = cmdEnt(m5GameOwner);
+  uint8_t gameResult = gameEntry ? gameEntry->result : (m5GameOwner.src >= 0 ? GK_RES_UNKNOWN : m5GameResult);
+  uint8_t courseHosts=0;for(uint8_t k=1;k<=8;++k)if(courseFresh(k))courseHosts|=1u<<(k-1);
+  char b[1100];
   int n = snprintf(b, sizeof b,
     "{\"t\":\"display\",\"v\":1,\"kart\":%u,\"boot\":%lu,\"token\":%lu,\"mode_ready\":%s,"
     "\"request\":%lu,\"result\":%u,\"radio\":%s,\"pit\":%s,\"base_rssi\":%d,\"rate\":%u,"
-    "\"speed_cal\":%.3f,\"drops\":%lu,\"modes\":[{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f}]}",
+    "\"speed_cal\":%.3f,\"drops\":%lu,\"modes\":[{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f}],"
+    "\"game_v\":1,\"game_session\":%u,\"hosts\":%u,\"game_request\":%lu,\"game_result\":%u,\"game_ready\":%s,\"shield\":%u,\"star_ms\":%lu,\"course_hosts\":%u,\"courses\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],\"course_boots\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu]}",
     kartId, (unsigned long)m5Boot, (unsigned long)(m5Gate.consumed ? 0 : m5Gate.token), gkBool(m5ModeReady()),
     (unsigned long)m5Request, result, gkBool(radioOk), gkBool(baseHeardMs && millis()-baseHeardMs < 30000),
     (int)baseRssi, reportRate, speedCal, (unsigned long)m5Drops,
     MODES[0].topMph, MODES[0].currentMaxScale, MODES[1].topMph, MODES[1].currentMaxScale,
-    MODES[2].topMph, MODES[2].currentMaxScale);
+    MODES[2].topMph, MODES[2].currentMaxScale,
+    gameSession, hosts, (unsigned long)m5GameRequest, gameResult, gkBool(m5ModeReady() && radioOk), m5Shield,
+    (unsigned long)(int32_t(m5StarUntil-millis())>0 ? m5StarUntil-millis() : 0), courseHosts,
+    (unsigned long)courseGeneration[1].digest,(unsigned long)courseGeneration[2].digest,(unsigned long)courseGeneration[3].digest,(unsigned long)courseGeneration[4].digest,(unsigned long)courseGeneration[5].digest,(unsigned long)courseGeneration[6].digest,(unsigned long)courseGeneration[7].digest,(unsigned long)courseGeneration[8].digest,
+    (unsigned long)courseGeneration[1].boot,(unsigned long)courseGeneration[2].boot,(unsigned long)courseGeneration[3].boot,(unsigned long)courseGeneration[4].boot,(unsigned long)courseGeneration[5].boot,(unsigned long)courseGeneration[6].boot,(unsigned long)courseGeneration[7].boot,(unsigned long)courseGeneration[8].boot);
   if (n > 0 && n < (int)sizeof b) m5Emit(b);
 #endif
 }
@@ -1174,8 +1200,10 @@ static void attackEnd(const char* result, const char* why) {
   atkTo = 0; atkItem = 0; atkAckMask = 0; gameLineDirty = true;
 }
 static void gameLeave(const char* ended) {
+  if (gameSession == kartId) courseRadio.server.clear();
   if (!gameSession) return;
   if (atkTo) attackEnd("timeout", "session ended");
+  m5JoinedBoot=m5JoinedCourse=0; m5Shield = 0; m5StarUntil = 0;
   gameSession = 0; gameScore = 0; gameEnded = ended; gameLineDirty = true;
 }
 static void gameAttack(uint8_t to, uint8_t item) {
@@ -1195,7 +1223,9 @@ static void gameAttack(uint8_t to, uint8_t item) {
 static void applyHit(uint8_t from, uint8_t item, uint8_t seq) {
   const uint8_t secs = item == GK_ITEM_LIGHTNING ? GAME_LIGHTNING_SECS : GAME_SHELL_SECS;
   const char* why = nullptr;
-  if (stopActive) why = "stopped"; else if (raceHold) why = "grid hold";
+  if (int32_t(m5StarUntil-millis())>0) why = "star";
+  else if (m5Shield) { --m5Shield; why = "shield"; }
+  else if (stopActive) why = "stopped"; else if (raceHold) why = "grid hold";
   else if (!writesEnabled()) why = "writes off"; else if (!vescUp() || !origValid) why = "no vesc";
   if (!why) { slowSecs = secs; handleCommand(GAME_SRC, ++usbSeq, GK_CMD_SLOW, GAME_SLOW_MPH, 0, 0); }
   Serial.printf("{\"t\":\"hit\",\"kart\":%u,\"from\":%u,\"item\":\"%s\",\"seq\":%u,\"secs\":%u,\"applied\":%s,\"why\":",
@@ -1223,6 +1253,7 @@ static void gameOnPeer(uint8_t k) {
   }
 }
 static void serviceGame() {
+  if(m5JoinedCourse&&(!courseFresh(gameSession)||courseGeneration[gameSession].digest!=m5JoinedCourse||courseGeneration[gameSession].boot!=m5JoinedBoot))gameLeave("course changed or lost");
   const uint32_t now = millis();
   if (atkTo && now - atkStartMs >= GAME_ATTACK_MS) attackEnd(atkTo == GK_ADDR_ALL ? "done" : "timeout", nullptr);
   if (ackFrom && now - ackMs >= GAME_ACK_HOLD_MS) { ackFrom = 0; ackSeq = 0; }
@@ -1242,6 +1273,57 @@ static void serviceGame() {
   if (gameLineDirty || (active && now - gameLineMs >= 1000) || (!active && !gameLineQuiet)) {
     emitGame(hosts, peers); gameLineMs = now; gameLineDirty = false; gameLineQuiet = !active; gameEnded = nullptr;
   }
+}
+
+// Typed paired-display game requests use the existing session/attack/effect paths.
+// No replay, host creation, motor-output command or persistent settings write is accepted.
+static bool m5HandleGame(const char* line) {
+#if GK_M5_LINK
+  if (strncmp(line, "m5game ", 7)) return false;
+  m5game::Request r;
+  if (!m5game::decode(line,r) || !m5Gate.accept({r.token,r.id,0},millis())) return true;
+  m5GameRequest=r.id; m5GameResult=GK_RES_REJECTED; m5GameOwner=NO_OWNER;
+  if (r.action==m5game::Action::Leave) {
+    if (r.session==gameSession) {gameLeave(nullptr);m5GameResult=GK_RES_APPLIED;}
+    return true;
+  }
+  if (!m5ModeReady() || !radioOk || !courseFresh(r.session) || courseGeneration[r.session].digest!=r.course||courseGeneration[r.session].boot!=r.boot) return true;
+  if (r.action==m5game::Action::Join) {
+    if(r.session==kartId || !kartHosting(r.session))return true;
+    if(gameSession!=r.session){gameLeave(nullptr);gameSession=r.session;gameScore=0;gameEnded=nullptr;gameLineDirty=true;}
+    m5JoinedBoot=r.boot;m5JoinedCourse=r.course;m5GameResult=GK_RES_APPLIED;return true;
+  }
+  if(m5JoinedCourse!=r.course||m5JoinedBoot!=r.boot)return true;
+  if(gameSession!=r.session || gameSession==kartId || !kartHosting(r.session))return true;
+  if(r.action==m5game::Action::Shell || r.action==m5game::Action::Lightning){
+    if(atkTo)return true; // Never replace another attack with a second press.
+    uint8_t target=r.action==m5game::Action::Shell?uint8_t(r.arg):GK_ADDR_ALL;
+    if(target!=GK_ADDR_ALL){
+      if(!peerInMySession(target))return true;
+      GkTelemetry own;fillTelemetry(own,false);
+      const auto& other=fleet[target];
+      if(!(own.flags&GK_FLAG_GPS_FIX) || !(other.flags&GK_FLAG_GPS_FIX) || own.gps_age_s>2 || other.gps_age_s>2 || millis()-fleetMs[target]>3000)return true;
+      if(m5game::distance({own.lat_e7/1e7,own.lon_e7/1e7},{other.lat_e7/1e7,other.lon_e7/1e7})>25.0)return true;
+    }else{bool peer=false;for(uint8_t k=1;k<=GK_MAX_KARTS;++k)peer|=peerInMySession(k);if(!peer)return true;}
+    gameAttack(target,target==GK_ADDR_ALL?GK_ITEM_LIGHTNING:GK_ITEM_SHELL);
+    m5GameResult=atkTo==target?GK_RES_APPLIED:GK_RES_REJECTED;return true;
+  }
+  if(r.action==m5game::Action::Shield){m5Shield=1;m5GameResult=GK_RES_APPLIED;return true;}
+  if((r.action==m5game::Action::Boost||r.action==m5game::Action::Star)&&slowActive)return true;
+  if(r.action==m5game::Action::Mud&&int32_t(m5StarUntil-millis())>0){m5GameResult=GK_RES_APPLIED;return true;}
+  if(r.action==m5game::Action::Mud&&m5Shield){--m5Shield;m5GameResult=GK_RES_APPLIED;return true;}
+  if(r.action==m5game::Action::Mud){slowSecs=uint8_t(r.arg);handleCommand(0xFE,++usbSeq,GK_CMD_SLOW,GAME_SLOW_MPH,0,0);}
+  else {boostSecs=r.action==m5game::Action::Star?8:uint8_t(r.arg>>8);uint8_t scale=r.action==m5game::Action::Star?100:uint8_t(r.arg&255);
+    handleCommand(0xFE,++usbSeq,GK_CMD_BOOST,scale,0,0);
+
+  }
+  int8_t idx=cmdLastIdx[1];if(idx>=0){auto&e=cmdHist[1][idx];m5GameOwner={1,idx,e.seq,e.ms};m5GameResult=e.result;
+    if(r.action==m5game::Action::Star&&(e.result==GK_RES_ACCEPTED||e.result==GK_RES_APPLIED))m5StarUntil=millis()+8000;
+  }
+  return true;
+#else
+  (void)line;return false;
+#endif
 }
 
 // ---------------------------------------------------------------- lora
@@ -1274,6 +1356,12 @@ static void serviceLoraRxOne() {
   const uint32_t irqUs = loraIrqMicros;
   if (h->src == GK_ADDR_BASE && !relayed) { baseRssi = (int8_t)constrain(rssi, -127.0f, 0.0f); baseHeardMs = millis(); }   // a repeater copy is not how we hear the pit
   switch (type) {
+    case GK_MSG_COURSE: {
+      if(h->src<1||h->src>8||h->src==kartId)break;
+      GkCourseInfo c;memcpy(&c,buf,sizeof c);if(!c.boot)break;
+      courseGeneration[h->src].accept(c.boot,c.digest,c.h.seq,millis());
+      break;
+    }
     case GK_MSG_TELEMETRY:
       if (h->src >= 1 && h->src <= GK_MAX_KARTS && h->src != kartId) {
         // Repeater copy of a packet already heard directly: drop it (the kart Pi would count it twice).
@@ -1352,7 +1440,13 @@ static void serviceLoraTx() {
   // packet so a pit base or repeater still on 0.2.1 keeps decoding this kart; the game bytes it would
   // carry are all 0 anyway (receivers on 0.2.2+ pad a short packet with zeros).
   const bool gameIdle = !t.session && !t.atk_to && !t.ack_from && !t.score;
-  int st = radio.transmit((uint8_t*)&t, gameIdle ? GK_TELEMETRY_LEN_V1 : sizeof t);
+  int st;
+  // One data-only course identity replaces a scheduled telemetry packet every two seconds.
+  // It is shorter than telemetry and never opens a second LoRa slot. Old nodes ignore type 5.
+  if(gameSession==kartId&&courseRadio.ready()&&millis()-lastCourseTx>=2000){
+    GkCourseInfo c{};c.h=t.h;c.h.type=GK_MSG_COURSE;c.digest=courseRadio.server.package().digest();c.boot=courseRadio.boot();
+    st=radio.transmit((uint8_t*)&c,sizeof c);lastCourseTx=millis();
+  }else st = radio.transmit((uint8_t*)&t, gameIdle ? GK_TELEMETRY_LEN_V1 : sizeof t);
   loraIrq = false;                       // the TX-done interrupt also raised DIO1
   radio.startReceive();
   digitalWrite(PIN_LED, LOW);
@@ -1384,7 +1478,15 @@ static void serviceWifi() {
     logf("wifi %s ota host %s.local", WiFi.localIP().toString().c_str(), host);
   }
   if (otaStarted) ArduinoOTA.handle();
-  if (!up && millis() - wifiRetryMs > 30000) { wifiRetryMs = millis(); WiFi.reconnect(); }
+  if (!up && millis() - wifiRetryMs > 30000) {
+    // never scan while the kart is moving: a reconnect scan drags the radio across channels for
+    // seconds, and every broadcast off espnowCh is one the Core2 (locked there) cannot hear.
+    // WiFi only matters at the pit (OTA), and the kart is stopped there.
+    float e1 = mphToErpm(1.5f);
+    bool moving = (vescUp() && e1 > 0 && fabsf((float)vesc.values().erpm) > e1)
+               || (gps.speed.isValid() && gps.speed.age() < 3000 && gps.speed.kmph() > 4.0);
+    if (!moving) { wifiRetryMs = millis(); WiFi.reconnect(); }
+  }
 }
 
 // Recover the last AP channel after a failed Wi-Fi scan. Both display variants use
@@ -1400,7 +1502,7 @@ static void serviceEspnowChannel() {
   if (WiFi.status() == WL_CONNECTED) {
     uint8_t ch = (uint8_t)WiFi.channel();
     if (ch >= 1 && ch <= 13 && ch != espnowCh) { espnowCh = ch; prefs.putUChar("espch", ch); }
-  } else if (millis() - wifiRetryMs > 6000) {
+  } else if (millis() - wifiRetryMs > 2500) {
     uint8_t cur; wifi_second_chan_t sc;
     if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur != espnowCh)
       esp_wifi_set_channel(espnowCh, WIFI_SECOND_CHAN_NONE);
@@ -1440,6 +1542,7 @@ static uint8_t invCode(const char* n) {
 }
 
 static void espnowOnRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+  if(courseReceive(info,data,len))return;
   if (len != (int)sizeof(GkUseFrame)) return;
   const GkUseFrame* f = (const GkUseFrame*)data;
   if (f->m0 != 'G' || f->m1 != 'U' || f->ver != 1 || f->kart != kartId) return;
@@ -1458,6 +1561,8 @@ static void serviceEspnow() {
     espnowUp = true;
     logf("espnow up (Core2 item screen, ch %u)", espnowCh);
   }
+  courseRadio.begin();
+  courseRadio.poll(kartId, gameSession==kartId, !otaInProgress, millis());
   if (usePending) {
     usePending = false;
     if (useSeqRx != useSeqDone) {
@@ -1490,9 +1595,11 @@ static void usbReport() {
   }
   Serial.println(buf);
   m5Emit(buf);
+  Serial.printf("{\"t\":\"course_host\",\"kart\":%u,\"ready\":%s}\n",kartId,courseRadio.ready()?"true":"false");
 }
 
 static void usbStatus() {
+  Serial.printf("{\"t\":\"course_host\",\"kart\":%u,\"ready\":%s}\n",kartId,courseRadio.ready()?"true":"false");
   const VescActiveLimits& L = vesc.limits();
   char ssid[72], mac[40], upin[40], hw[32];                 // console-typed / VESC-supplied text: escape for JSON
   gkJsonStr(ssid, sizeof ssid, wifiSsid.c_str()); gkJsonStr(mac, sizeof mac, vescMac.c_str());
@@ -1527,6 +1634,7 @@ static void clearBleRejection() {
 }
 
 static void usbCommand(char* line) {
+  if(courseRadio.command(line,Serial,kartId,millis()))return;
 #if GK_M5_ESPNOW
   if (m5WirelessSettings.command(line, m5Wireless, Serial)) return;
 #endif
@@ -1645,14 +1753,14 @@ static void usbCommand(char* line) {
   }
   else if (!strcmp(line, "session") && arg) {              // session host | join N | leave   (freeplay multiplayer, kart Pi)
     if (!strcmp(arg, "host")) {
-      if (gameSession != kartId) { if (atkTo) attackEnd("timeout", "session ended"); gameSession = kartId; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; }
+      if (gameSession != kartId) { if (atkTo) attackEnd("timeout", "session ended"); gameLeave(nullptr); gameSession = kartId; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; }
       logf("freeplay: hosting game %u", kartId);
     } else if (!strncmp(arg, "join", 4)) {
       int n = atoi(arg + 4);
       if (n < 1 || n > GK_MAX_KARTS) logf("usage: session join 1..8");
       else if (n == kartId) logf("session join %d: that is me (use session host)", n);
       else if (!kartHosting((uint8_t)n)) { logf("session join %d: kart %d is not hosting a game (or not heard for 10 s)", n, n); gameLineDirty = true; }
-      else { if (gameSession != n) { if (atkTo) attackEnd("timeout", "session ended"); gameSession = (uint8_t)n; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; } logf("freeplay: joined kart %d's game", n); }
+      else { if (gameSession != n) { if (atkTo) attackEnd("timeout", "session ended"); gameLeave(nullptr); gameSession = (uint8_t)n; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; } logf("freeplay: joined kart %d's game", n); }
     } else if (!strcmp(arg, "leave")) { bool was = gameSession; gameLeave(nullptr); logf(was ? "freeplay: left the game" : "freeplay: not in a game"); gameLineDirty = true; }
     else logf("usage: session host | join N | leave");
   }
@@ -1798,6 +1906,7 @@ void setup() {
 #endif
   wifiStart();
 #if GK_M5_ESPNOW
+  m5now::Link::setExtraReceiver(courseReceive);
   if (m5WirelessSettings.load()) {
     const auto& p=m5WirelessSettings.pair;
     m5Wireless.begin(m5now::Role::Heltec,p.peer,p.lmk,p.pmk);

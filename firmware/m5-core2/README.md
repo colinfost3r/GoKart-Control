@@ -2,11 +2,13 @@
 
 **November 12 candidate, not installed:** [Claude handoff](../../docs/CLAUDE_HANDOFF.md). Full-screen map, compact MPH/pack-voltage HUD, five-second startup credits and page-button hold for updates.
 
-**New source, not installed:** [Hunter-style native pages and no-output player rehearsal](../../docs/m5-offline-rehearsal.md). Live FIRE stays unavailable. The standalone `m5-demo` uses RAM-only simulated data and no UART/ESP-NOW command transport.
+**New source, not installed:** [Hunter-style native pages and no-output player rehearsal](../../docs/m5-offline-rehearsal.md). Real JOIN/download/native FIRE are now implemented for `m5-espnow`; see [player integration](../../docs/m5-player-mode.md). Physical acceptance is pending. The standalone `m5-demo` uses RAM-only simulated data and no UART/ESP-NOW command transport.
 
-Branch **`v1.5/m5-core2`**, sharing Eamon's kart 0.2.7 / base protocol and upstream work
-through `a9c8459` (original Pi/pit layout plus MAP/SAT; native M5 appearance unchanged). Owner confirmed **Core2 v1.3 / K010-V13**. This alternative to the Pi v2
-display provides telemetry, driver mode requests, base-station status and a simple north-up map.
+Branch **`v1.5/m5-core2`** now integrates Eamon source through `c21baf8` (kart0.3.3),
+preserving paired M5 safeguards and adding the native player path. The later separate
+`core2-items`/Pi-fastboot commits remain outside this candidate. Owner confirmed **Core2 v1.3 /
+K010-V13**. Existing kart3 installed evidence below remains the earlier `4a582f0` applications.
+
 
 **Kart 3 is commissioned for M5 mode selection as of 2026-11-10.** The owner selected ECO,
 NORMAL and SPORT on the Core2; each request received VESC readback confirmation. Wired throttle
@@ -60,19 +62,18 @@ VESC <-- BLE --> Heltec V4.3 + L76K <-- LoRa --> existing T-Beam / Pi 4 pit
 ```
 
 Heltec owns VESC identity, polling, motor profiles, calibration, LoRa and GPS. Core2 owns display
-and touch in the current implementation. The [approved player-mode direction](../../docs/m5-player-mode.md)
-extends the existing local course storage with inventory, local game logic and host-course
-downloads over ESP-NOW; these additions are not implemented yet. VESC supervision stays on Heltec.
+and touch, plus native inventory/local game logic and host course downloads over ESP-NOW.
+See [player integration](../../docs/m5-player-mode.md) for host deployment and acceptance. VESC supervision stays on Heltec.
 The original M5 BLE client/profile writer is not included. It must be replaced
 by this display image before using this topology. No two devices should connect to the same
 VESC. The motor's wired controls and protection stay with the VESC.
 
 The M5 targets are **opt-in**. Integration now includes Eamon's kart0.2.7 and 46/47/54-byte
-radio support; an idle kart still sends 47 bytes. M5 ignores the multiplayer-only fields.
+radio support; an idle kart still sends 47 bytes. Native player uses session/attack metadata.
 Active multiplayer requires updated base/repeater0.2.2; M5 game UI and physical game-command
 acceptance remain separate from the verified driver mode checks. Normal `kart`, `kart-uart`,
-base, repeater and Pi builds retain existing behavior. The M5 adapter changes no LoRa packet structs, IDs, frequency/rate/slots or
-pit APIs. Both local transports carry the existing `self` and `fleet` JSON plus display-only
+base, repeater and Pi builds retain existing behavior. Existing telemetry/command structs, IDs, frequencies and slots remain unchanged. Optional
+14-byte COURSE identities replace one host telemetry slot every2s; older nodes ignore them. Both local transports carry the existing `self` and `fleet` JSON plus display-only
 `display` metadata; existing USB telemetry stays compatible. ESP-NOW adds local USB pairing
 and diagnostics. See [SERIAL_PROTOCOL](SERIAL_PROTOCOL.md) for display messages and
 [wireless transport](../libraries/M5EspNowLink/README.md) for framing and recovery.
@@ -100,7 +101,8 @@ remains separate from kart 3's completed telemetry and driver-mode checks.
 - MAP: own kart plus up to seven other directly/repeater-heard kart positions, labeled by ID;
   own kart gets an amber ring. North up, fixed 70 m own-follow view, optional internally stored or SD course outline.
   Only fresh markers inside the current view are drawn; distant peers do not zoom the map out.
-  DASH opens the telemetry/mode screen. FIRE remains visibly unavailable and sends nothing.
+  DASH opens telemetry/modes. FIRE is enabled only with a live confirmed native session,
+  eligible inventory, fresh generation/controller state and (for shells) an in-range target.
   Missing GPS is unavailable, never an invented position at (0,0). This is not geofencing.
 - Hold ECO/NORMAL/SPORT for **650 ms** to request a mode on a commissioned write-capable
   companion; release before trying again. This works over ESP-NOW on kart 3 and is also supported by UART.
@@ -302,8 +304,8 @@ The new Core2 source starts on a close-follow map and stores a course internally
 provisioned over USB; **this change is not yet deployed or physically accepted**. No SD card
 or Pi is required. The map follows the own fresh fix at 70 m vertical span; distant karts do
 not change the zoom. DASH retains the existing telemetry/mode controls and the page-button
-hold opens OTA. FIRE is visibly disabled because authoritative item data is not yet
-available; it sends no command.
+hold opens OTA. This legacy outline upload remains available; the new native player workflow
+downloads a full host game package. See the player integration above for live JOIN/FIRE.
 
 Follow [course provisioning, diagnostics and acceptance](COURSE_MAP.md) to export the pit's
 track, validate it offline, and install it on the intended Core2. Internal storage is preferred;

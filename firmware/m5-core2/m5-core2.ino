@@ -9,16 +9,24 @@
 #include "CourseStorage.h"
 #include "DriverView.h"
 #include "ScreenLifecycle.h"
+#include "LiveGame.h"
+#include "GameStorage.h"
 #if M5_DEMO
 m5dash::PlayerPreview playerPreview;
 #endif
 #if M5_USE_ESPNOW
 #include <M5EspNowSettings.h>
+#include <CourseRadio.h>
 #include "DisplayMaintenance.h"
 m5now::Link wireless;
 m5now::Settings wirelessSettings;
 m5dash::DisplayMaintenance maintenance;
 bool maintenanceMenu=false;
+m5game::share::Radio courseRadio(false);
+m5dash::LiveGame liveGame;
+m5dash::GameStorage<m5dash::GameNvs> gameStorage;
+static bool courseReceive(const esp_now_recv_info_t*i,const uint8_t*d,int n){return courseRadio.receive(i,d,n);}
+
 
 #endif
 
@@ -41,6 +49,9 @@ static void displayStatus(){
   const uint32_t now=millis();const auto& k=state.karts[state.self];
   bool modeReady=state.canRequest(now);
 #if M5_USE_ESPNOW
+  Serial.printf("{\"t\":\"m5_game\",\"stage\":%u,\"host\":%u,\"course_bytes\":%u,\"digest\":\"%08lx\",\"progress\":%u,\"item\":\"%s\",\"charges\":%u,\"pending\":%lu,\"result\":%d}\n",unsigned(liveGame.stage),liveGame.package.host(),unsigned(liveGame.package.size()),(unsigned long)liveGame.package.digest(),courseRadio.client.progress(),m5dash::LiveGame::name(liveGame.item()),liveGame.charges(),(unsigned long)liveGame.pending,liveGame.result);
+#endif
+#if M5_USE_ESPNOW
   modeReady=modeReady&&!maintenance.active()&&wireless.channelAligned(now);
 #endif
   Serial.printf("{\"t\":\"m5_status\",\"fw\":\"m5-v1.5\",\"transport\":\"%s\",\"kart\":%d,\"live\":%s,\"vesc\":%s,\"mode_ready\":%s,\"page\":\"%s\",\"touch_enabled\":%s,\"touch_presses\":%lu,\"touch_x\":%d,\"touch_y\":%d,\"heap\":%lu,\"course_proto\":1,\"course_source\":\"%s\",\"course_points\":%u,\"course_error\":\"%s\",\"gps_reported_fix\":%s,\"gps_fresh\":%s,\"gps_has_position\":%s,\"gps_position_age_ms\":%ld,\"gps_sats\":%d,\"parse_errors\":%lu,\"map_follow\":%s}\n",
@@ -56,6 +67,7 @@ static void displayUsb(){
   while(budget--&&Serial.available()){
     const char* line=usbLines.feed((char)Serial.read(),millis());if(!line)continue;
 #if M5_USE_ESPNOW
+    if(courseRadio.command(line,Serial,state.self,millis()))continue;
     if(wirelessSettings.command(line,wireless,Serial))continue;
     if(!strcmp(line,"ota on"))wireless.setChannelSearchEnabled(false);
     if(maintenance.command(line,Serial)){
@@ -141,16 +153,50 @@ void draw(uint32_t now) {
   note="SIMULATION / MODE OUTPUT DISABLED";
 #endif
   m5dash::DriverView<M5Canvas> view(canvas);
-  view.draw(state,course,now,mapPage,M5_DEMO,M5_BEGINNER_MODE,note,heldMode,holdMs,holdFired,
+  const m5dash::Course* shownCourse=&course;
+#if M5_USE_ESPNOW
+  if(liveGame.package.valid())shownCourse=&liveGame.course;
+#endif
+  view.draw(state,*shownCourse,now,mapPage,M5_DEMO,M5_BEGINNER_MODE,note,heldMode,holdMs,holdFired,
 #if M5_DEMO
     &playerPreview
 #else
     nullptr
 #endif
+#if M5_USE_ESPNOW
+    , &liveGame, &courseRadio.client
+#endif
   );
   canvas.pushSprite(0,0);
 }
 #if M5_USE_ESPNOW && !M5_DEMO
+static bool gameSend(const char*line,uint32_t now){return !maintenanceMenu&&!maintenance.active()&&!maintenance.updating()&&!maintenance.restarting()&&wireless.canSend(now)&&wireless.sendLine(line,now);}
+static uint32_t nextRequest(){if(++requestId==0)++requestId;return requestId;}
+static void servicePlayer(uint32_t now){
+  auto& receiver=courseRadio.client;
+  if(maintenanceMenu||maintenance.active()||maintenance.updating()||maintenance.restarting()){
+    if(receiver.busy())receiver.cancel("Update mode; join again");
+    if(liveGame.active()||liveGame.busy())liveGame.fail("Update mode; join again");
+    return;
+  }
+  liveGame.tick(state,now);
+  if(liveGame.stage==m5dash::LiveGame::Stage::Downloading){
+    if(!liveGame.intentValid(state,now)){receiver.cancel("Link changed; join again");liveGame.fail("Link changed; join again");}
+    else if(receiver.stage==m5game::share::Receiver::Stage::Error)liveGame.fail(receiver.error);
+    else if(receiver.stage==m5game::share::Receiver::Stage::Complete){
+      if(!gameStorage.save(receiver.data(),receiver.size())||!liveGame.load(receiver.data(),receiver.size()))liveGame.fail("Save failed; previous course kept");
+      else {liveGame.courseBoot=receiver.boot();liveGame.stage=m5dash::LiveGame::Stage::Joining;liveGame.note="Course saved; joining";}
+      receiver.accepted();
+    }
+  }
+  if(!liveGame.busy()&&receiver.busy())receiver.cancel("Join canceled");
+  // This is the one outstanding explicit JOIN gesture, not a reconnect retry.
+  if(liveGame.stage==m5dash::LiveGame::Stage::Joining&&!liveGame.pending){
+    if(!liveGame.intentValid(state,now))liveGame.fail("Link changed; join again");
+    else if(!liveGame.request(m5game::Action::Join,0,state,nextRequest(),now,gameSend))liveGame.fail("Join unavailable; tap JOIN again");
+  }
+  liveGame.position(state,nextRequest(),now,gameSend,[](){return esp_random();});
+}
 static void requestWirelessMode(uint8_t mode,uint32_t now) {
   localModeNotice=nullptr;localModeNoticeMs=now;
   if(maintenance.active()||!state.canRequest(now)){
@@ -198,6 +244,25 @@ void touch(uint32_t now) {
     return;
   }
 #endif
+#if M5_USE_ESPNOW && !M5_DEMO
+  if(liveGame.overlay||(t.wasPressed()&&m5dash::layout::invite.contains(t.x,t.y))){
+    heldMode=-1;holdFired=false;
+    if(t.wasPressed()){
+      navigationTouch=true;
+      if(!liveGame.overlay)liveGame.opening();
+      else if(m5dash::layout::close.contains(t.x,t.y)){
+        if(courseRadio.client.busy())courseRadio.client.cancel("Download canceled");
+        if(liveGame.stage==m5dash::LiveGame::Stage::Downloading)liveGame.fail("Download canceled");
+        liveGame.overlay=false;
+      }else if(m5dash::layout::join.contains(t.x,t.y)&&!liveGame.busy()){
+        if(liveGame.active())liveGame.request(m5game::Action::Leave,0,state,nextRequest(),now,gameSend);
+        else if(state.live(now)&&state.metadataFresh(now)&&state.gameVersion==1&&wireless.canSend(now)&&courseRadio.client.begin(esp_random(),esp_random(),now))liveGame.downloadStarted(state);
+        else liveGame.fail("Host unavailable; move closer");
+      }
+    }
+    return;
+  }
+#endif
 #if M5_DEMO
   if(playerPreview.overlay || (t.wasPressed()&&m5dash::layout::invite.contains(t.x,t.y))){
     heldMode=-1;holdFired=false;
@@ -213,7 +278,10 @@ void touch(uint32_t now) {
 #if M5_DEMO
     if(t.wasPressed()&&m5dash::layout::fire.contains(t.x,t.y)){playerPreview.fire(now);navigationTouch=true;}
 #endif
-    return; // Live FIRE is unavailable; the demo changes only local simulated UI state.
+#if M5_USE_ESPNOW && !M5_DEMO
+    if(t.wasPressed()&&m5dash::layout::fire.contains(t.x,t.y)){liveGame.fire(state,nextRequest(),now,gameSend);navigationTouch=true;}
+#endif
+    return;
   }
   int at=(t.isPressed()&&t.y>=202&&t.y<240&&t.x>=0&&t.x<320)?std::min(2,t.x/107):-1;
   if(at<0||at!=heldMode){heldMode=at;holdMs=now;holdFired=false;}
@@ -256,9 +324,11 @@ void setup() {
   requestId=esp_random();
 #if M5_USE_ESPNOW
   Serial.begin(115200);
+  m5now::Link::setExtraReceiver(courseReceive);
   if(wirelessSettings.load()){
     const auto& p=wirelessSettings.pair;
     wireless.begin(m5now::Role::Display,p.peer,p.lmk,p.pmk);
+    courseRadio.begin();
   }
   wirelessSettings.status(wireless,Serial);
   maintenance.begin();
@@ -275,6 +345,9 @@ void setup() {
 
 #else
   loadCourse();
+#if M5_USE_ESPNOW
+  if(gameStorage.load(liveGame.package))liveGame.load(liveGame.package.data(),liveGame.package.size());
+#endif
 #endif
   startupScreen.begin(millis()); // Time five seconds of visible splash, after peripheral/storage initialization.
   draw(millis());displayStatus();
@@ -296,7 +369,13 @@ void loop() {
   while(budget--&&Serial2.available()){const char* s=lines.feed((char)Serial2.read(),millis());if(s)state.ingest(s,millis());}
 #endif
   now=millis(); // RX parsing can advance time: never test freshness against an earlier timestamp.
-  state.tick(now);touch(now);
+  state.tick(now);
+#if M5_USE_ESPNOW && !M5_DEMO
+  if(wireless.ready())courseRadio.begin();
+  courseRadio.poll(state.self,false,!maintenanceMenu&&!maintenance.active()&&!maintenance.updating()&&!maintenance.restarting()&&wireless.canSend(now),now);
+  servicePlayer(millis());
+#endif
+  touch(millis());
   if(uint32_t(now-drawMs)>=M5_DRAW_MS){drawMs=now;draw(now);}
   delay(1);
 }

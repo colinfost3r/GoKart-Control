@@ -3,18 +3,17 @@
 **M5 v1.5 branch:** `v1.5/m5-core2` adds a Core2 display option alongside the Pi v2.
 Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
 Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
-**Offline Core2 rehearsal available:** [open the interactive preview](docs/previews/core2-player-rehearsal/index.html) · [tomorrow’s test sequence](docs/m5-offline-rehearsal.md). Native Hunter-style pages and a no-output demo are built in source; no hardware update is implied.
-**November 12 display candidate:** full-screen follow map, smaller GPS MPH and measured VESC pack volts relayed by Heltec, compact corner FIRE and page controls. No persistent kart header, scale or credits; map attribution appears for five seconds at startup. Real shop geography and game markers remain demo-only. Nothing was flashed. **[Start here: Claude handoff and next test](docs/CLAUDE_HANDOFF.md).**
-**Next player-mode direction (planned):** Core2 owns map/course storage and player logic;
-Heltec retains GPS/LoRa/VESC supervision. Join-only UI, ESP-NOW host-course downloads,
-Hunter styling on both pages and an invite/page button are specified in the
-[player-mode brief](docs/m5-player-mode.md); they are not installed features.
-**November 11 map source update (not installed):** the no-Pi Core2 now supports a
-fixed-scale map following its own GPS position and a course outline stored internally,
-without an SD card. DASH/modes/OTA remain available. FIRE is visibly unavailable until
-native item authority exists. Eamon's six commits through a5a4c22 are integrated while
-preserving the paired M5 link. [Course setup](firmware/m5-core2/COURSE_MAP.md) ·
-[validation and deployment boundary](HANDOFF.md#m5-follow-map-and-eamon-integration--november-11-2026-source-ready-not-deployed).
+**November 12 native player candidate (not installed):** real host-course publication/download,
+internal cache, JOIN/LEAVE, native pickups/inventory and typed FIRE now accompany the compact
+Hunter-style DASH/MAP. The player needs only Core2 + Heltec; the host needs this branch's
+publisher/server and Heltec update. [Implementation and first test](docs/m5-player-mode.md) ·
+[actual renderer fixtures](docs/previews/core2-native-player/index.html) ·
+[clean Claude handoff](docs/CLAUDE_HANDOFF.md).
+
+Existing telemetry/command packets remain compatible. An optional short LoRa course identity
+replaces one host telemetry slot every2s; it keeps player actions bound to the current course.
+No hardware was flashed or VESC settings changed. Eamon's `c21baf8` source changes are integrated;
+later Pi fastboot/separate item-screen commits remain outside this candidate.
 
 Kart 3 has live VESC telemetry, authenticated Core2 Wi-Fi OTA and working ECO/NORMAL/SPORT
 selection over paired ESP-NOW. Matching control-capable images are installed; the operator

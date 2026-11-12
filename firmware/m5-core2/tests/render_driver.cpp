@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
+#include <vector>
 
 static std::string color(uint16_t c) {
   unsigned r=(c>>11)&31,g=(c>>5)&63,b=c&31;
@@ -59,9 +61,22 @@ int main(int argc,char** argv){
   if(!std::strcmp(scene,"stopped"))state.karts[3].stopped=true;
   if(!std::strcmp(scene,"slow"))state.karts[3].slow=5;
   bool live=!std::strcmp(scene,"live");
+  m5dash::LiveGame game;m5game::share::Receiver receiver;
+  bool native=argc>4&&!std::strncmp(scene,"native-",7);
+  if(native){
+    std::ifstream f(argv[4],std::ios::binary);std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(f)),{});
+    if(!game.load(bytes.data(),bytes.size()))return 2;course=game.course;
+    state.gameVersion=1;state.gameReady=true;state.token=123;state.gameSession=game.package.host();state.hosts=state.courseHosts=1u<<(state.gameSession-1);
+    state.hostCourse[state.gameSession]=game.package.digest();state.hostBoot[state.gameSession]=game.courseBoot=222;
+    for(auto&k:state.karts)k.session=state.gameSession;
+    game.stage=m5dash::LiveGame::Stage::Playing;game.collect(m5dash::LiveGame::Item::Shell);
+    if(!std::strcmp(scene,"native-join")){game.stage=m5dash::LiveGame::Stage::Idle;game.overlay=true;game.note="Download course and join?";m5game::share::Message offer;offer.kind=m5game::share::Kind::Offer;offer.host=2;offer.boot=222;offer.digest=game.package.digest();offer.size=game.package.size();receiver.receive(offer,now);}
+    if(!std::strcmp(scene,"native-lost")){game.fail("Host course changed or lost");}
+  }
   std::cout<<"<svg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 320 240'>\n";
   SvgCanvas canvas;m5dash::DriverView<SvgCanvas> view(canvas);
   if(!std::strcmp(scene,"startup"))view.startup(true);
+  else if(native)view.draw(state,course,now,map,false,false,"Hold a mode button to request",-1,0,false,nullptr,&game,&receiver);
   else view.draw(state,course,now,map,!live,false,live?"Hold a mode button to request":"Mode controls disabled in demo",-1,0,false,live?nullptr:&p);
   std::cout<<"</svg>\n";
 }

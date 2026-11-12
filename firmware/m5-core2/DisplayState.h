@@ -12,6 +12,7 @@ struct Kart {
   bool seen=false, fixReported=false, fix=false, vesc=false, confirmed=false, stopped=false, writes=false;
   uint32_t received=0, fixReceived=0; bool hasPosition=false;
   double lat=0,lon=0; float gpsKph=NAN,volts=NAN,battA=NAN,motorA=NAN,escC=NAN;
+  uint8_t session=0;
   int mode=-1, fault=-1, sats=0, slow=0; float scale=NAN;
   bool online(uint32_t now) const { return seen && uint32_t(now-received)<=5000; }
   bool positionFresh(uint32_t now) const { return online(now)&&fix&&hasPosition&&uint32_t(now-fixReceived)<=3000; }
@@ -53,6 +54,8 @@ public:
   uint32_t boot=0, token=0, metaMs=0; bool metaSeen=false, modeReady=false, radio=false,pit=false;
   int rate=0,baseRssi=0; float speedCal=NAN,cap[3]={NAN,NAN,NAN},torque[3]={NAN,NAN,NAN};
   uint32_t pending=0,pendingMs=0; int requested=-1,result=0; bool pendingUnknown=false;
+  uint32_t hostCourse[9]{},hostBoot[9]{};uint8_t courseHosts=0;
+  uint8_t gameVersion=0,gameSession=0,hosts=0,gameResult=0,shield=0;uint32_t gameRequest=0,starMs=0;bool gameReady=false;
   uint32_t errors=0;
   bool live(uint32_t now) const {return self && karts[self].seen && uint32_t(now-karts[self].received)<=1500;}
   bool metadataFresh(uint32_t now) const { return metaSeen && uint32_t(now-metaMs)<700; }
@@ -76,6 +79,8 @@ public:
         if(pending){pending=0;pendingUnknown=true;result=5;}
       }
       boot=nextBoot;self=id;token=doc["token"];metaMs=now;metaSeen=true;
+      courseHosts=doc["course_hosts"]|0;for(unsigned i=1;i<=8;++i){hostCourse[i]=doc["courses"][i-1]|0;hostBoot[i]=doc["course_boots"][i-1]|0;}
+      gameVersion=doc["game_v"]|0;gameSession=doc["game_session"]|0;hosts=doc["hosts"]|0;gameRequest=doc["game_request"]|0;gameResult=doc["game_result"]|0;gameReady=doc["game_ready"]|false;shield=doc["shield"]|0;starMs=doc["star_ms"]|0;
       modeReady=doc["mode_ready"]|false;radio=doc["radio"]|false;pit=doc["pit"]|false;
       baseRssi=doc["base_rssi"]|0;rate=doc["rate"]|0;speedCal=value(doc["speed_cal"]);
       for(int i=0;i<3;++i){cap[i]=value(doc["modes"][i]["mph"]);torque[i]=value(doc["modes"][i]["scale"]);}
@@ -91,6 +96,7 @@ public:
     else if(id==self)return false;
     auto& k=karts[id];
     k.seen=true;k.received=now;k.vesc=doc["vesc_link"]|false;k.stopped=doc["stopped"]|false;
+    k.session=doc["session"]|0;
     k.writes=doc["writes"]|false;k.confirmed=doc["mode_confirmed"]|false;
     k.mode=doc["mode_actual"].is<int>()?doc["mode_actual"].as<int>():-1;
     if(k.mode<0||k.mode>2)k.mode=-1;

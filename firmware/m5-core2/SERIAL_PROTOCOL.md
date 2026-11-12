@@ -74,8 +74,9 @@ operation; simultaneous USB console inspection remains supported.
 The new source adds `course status`, `course begin LENGTH CRC32`, `course chunk OFFSET HEX`,
 `course commit`, `course abort` and `course clear` to the Core2 physical USB parser only.
 These are not Heltec/display-wire requests and cannot reach the VESC. See [COURSE_MAP](COURSE_MAP.md)
-for bounds, readback and internal/SD precedence. The protocol remains `m5mode`-only over the
-paired display link; the disabled FIRE button has no command frame.
+for bounds, readback and internal/SD precedence. The legacy outline path has no game command.
+Native player builds additionally support the typed `m5game` allowlist below; course data
+never enters the control parser.
 
 Core2 USB `status` adds `course_proto:1`, `course_source`, `course_points`, `course_error`,
 `gps_reported_fix`, `gps_fresh`, `gps_has_position`, `gps_position_age_ms`, `gps_sats`,
@@ -83,3 +84,23 @@ Core2 USB `status` adds `course_proto:1`, `course_source`, `course_points`, `cou
 A Heltec-reported fix is not accepted as fresh unless coordinates and source age validate.
 These additions diagnose absent course data separately from missing/stale GPS; they do not
 change incoming telemetry rates or any live motor-control contract.
+
+## Native player additions (November 12 candidate)
+
+`display` adds `game_v:1`, `game_session`, `hosts` (bitmask), `game_request`, `game_result`,
+`game_ready`, `shield`, `star_ms`, `course_hosts` (fresh-generation bitmask), and eight-element
+`courses` / `course_boots` arrays indexed by kart ID minus1. Unknown fields remain optional to
+legacy displays. Existing mode requests/metadata stay intact.
+
+`m5game TOKEN REQUEST SESSION ACTION ARG COURSE BOOT CRC` is a separate typed allowlist.
+TOKEN/REQUEST/COURSE/BOOT are8 hex digits, SESSION/ACTION2, ARG4, CRC4 (CRC16 over bytes before
+its separating space). Encoded line is59 bytes including newline. Action:1 JOIN,2 LEAVE,3 SHELL,
+4 LIGHTNING,5 BOOST,6 STAR,7 SHIELD,8 MUD. COURSE is full-package digest (including random
+instance); BOOT is the host identity from authenticated download and fresh LoRa generation.
+Shell ARG is target1..8, Boost is duration seconds high byte + percent low byte, Mud is seconds;
+others require zero. GameResult uses existing result codes; an accepted attack is not proof of
+remote effect. Duplicate/current-token/session/course/controller checks apply. Never forward
+this line into the USB command parser. [Full player contract](../../docs/m5-player-mode.md).
+
+Course-only `GCS1` peers and USB `share` provisioning are separate from this control protocol.
+Core2 `status` also emits `m5_game` with local stage/host/digest/progress/item/charges/pending/result.

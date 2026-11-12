@@ -258,9 +258,9 @@ function renderGame(game, fresh, st) {
   txt("boostLabel", kind === "boost" ? (sc !== null && sc >= 0.9 ? "ROCKET \u2192 SPORT" : "BOOST \u2192 NORMAL") + left : kind === "mud" ? "MUD" + left
     : kind === "stopped" ? "STOP" : kind === "grid" ? "GRID" : kind === "normal" ? `POWER ${Math.round(sc * 100)}%` : "POWER --");
 
-  // lap panel or the GAME OFF chip (freeplay running: its own chip instead; it has no lap line)
+  // lap panel or the GAME OFF chip (freeplay running: lap panel too once its synthesized line exists)
   const on = game.on === true, fpRun = freeRunning(S.freeplay);
-  show("lapPanel", on && !fpRun);
+  show("lapPanel", on && (!fpRun || game.lapline === true));
   show("gameChip", !on && !fpRun);
   show("lapStrip", on);
   if (!on) txt("gameChip", "GAME OFF");

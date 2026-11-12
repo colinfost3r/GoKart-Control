@@ -3,6 +3,24 @@
 **Current entry point: [Claude handoff — November 12](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Native host course and Core2 game candidate — November 12, 2026 (not installed)
+
+**Final offline validation: 511 tests across eight suites passed, zero skipped; eight firmware targets compiled.**
+
+The owner correctly rejected stopping at a display-only rehearsal. Source now implements the
+host publisher, authenticated course-only ESP-NOW transfer, complete bounded package/cache,
+JOIN/LEAVE, native pickup/inventory and typed FIRE through own Heltec. Fresh host boot/package
+is bound through a short optional LoRa COURSE packet; current telemetry/command layouts stay
+compatible. Updated host Pi + host Heltec and separate course pairing are required for the test.
+
+Eamon `c21baf8` source changes (laps/inventory/Wi-Fi/box count) were integrated without the merged
+binary, retaining local M5 safeguards. See [clean handoff](docs/CLAUDE_HANDOFF.md),
+[implementation/limits](docs/m5-player-mode.md), [native screens](docs/previews/core2-native-player/index.html)
+and [final manifest](docs/validation/m5-player-2026-11-12.json). Review caught/fixed stale publication,
+boot binding and speculative boost stacking. Native effects use fixed durations; starting boxes
+remain a per-player snapshot. Physical RF, NVS, LCD/touch and effects still require acceptance.
+No hardware was touched. Installed accessories remain `4a582f0`; VESC −5 A/filter unchanged.
+
 ## Overnight Core2 display candidate — November 12, 2026 (not installed)
 
 The map now fills 320×240 with compact GPS MPH and measured VESC pack volts relayed by

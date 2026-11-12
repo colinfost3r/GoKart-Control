@@ -125,3 +125,11 @@ image path), refuse the internal disk and any non-removable, virtual or read-onl
 disk id typed or `FLASH_CONFIRM` set to it, and verify the image hash and seed files. Their
 `secrets.env` and `build/` folders hold Wi-Fi and login passwords: both are gitignored; delete
 `build/` after flashing.
+
+### Native Core2 course pairing
+
+`tools/m5/pair_course.py` creates a private, pairwise host-Heltec↔Core2 course key plan.
+Default opens no device; `--apply` requires explicit USB ports and checks MACs, role, kart IDs
+and radio channel before saving course-only NVS. It does not alter own-kart pairing, reboot
+accessories or issue VESC commands. Preserve its0600 plan for recovery and keep it out of Git.
+[Exact procedure and host requirements](../docs/m5-player-mode.md#deployment-and-first-test).

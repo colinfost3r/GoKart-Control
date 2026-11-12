@@ -1,83 +1,102 @@
 # GoKart Control — Claude handoff, November 12, 2026
 
-**Start here.** This is the current M5 v1.5 test-preparation handoff. `HANDOFF.md` is the
-long chronological record; earlier dated sections describe earlier states. No hardware
-was accessed, flashed, reset or driven during this overnight display work.
+**Start here. This supersedes the earlier display-only handoff.** The owner objected that real
+host downloads and item firing were unfinished. Those paths are now implemented and reviewed
+in the native player candidate. Nothing was flashed, reset, driven or written to a VESC during
+this work. Offline validation does not establish hardware acceptance.
 
-## Open the right project
+## Project and Git
 
 - Canonical project: `~/Projects/50 Day/GoKart Control/`.
-- Active software worktree: `~/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5`.
-- Branch: **`v1.5/m5-core2`**. Remote: `git@github.com:colinfost3r/GoKart-Control.git`.
-- [Draft PR 5](https://github.com/colinfost3r/GoKart-Control/pull/5).
-- Read `AGENTS.md`, this file, then the relevant linked procedure. Check Git root/status
-  and fetch before starting and before pushing. Do not switch/reset the canonical checkout:
-  it contains separate CAD work. Do not force-push or overwrite another collaborator.
-- Owner authorizes ongoing coherent tested commits/pushes. Keep handoff, requirements and
-  `config/project.json` consistent. Keep passwords, pairing keys and full flash backups private.
+- Active worktree: `~/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5`.
+- Branch `v1.5/m5-core2`; remote `git@github.com:colinfost3r/GoKart-Control.git`.
+- [Draft PR5](https://github.com/colinfost3r/GoKart-Control/pull/5).
+- Read `AGENTS.md`, this document and [native player guide](m5-player-mode.md). Confirm the
+  Git root/status, fetch before work and before push. The canonical checkout includes separate
+  CAD work; do not reset/switch it or overwrite another collaborator. No force push.
+- Ongoing tested commits/pushes are owner-authorized. Keep credentials, pairing keys and full
+  flash backups private. All persistent work belongs under Projects, not Documents/Codex.
 
 ```sh
 cd "$HOME/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5"
 git rev-parse --show-toplevel
 git status --short --branch
 git fetch origin
-git log --oneline HEAD..origin/v1.5/m5-core2
 ```
 
-The final overnight source, preview and documentation are on this branch. The corresponding
-[test/build manifest](validation/m5-ready-2026-11-12.json) binds application hashes to source
-hashes. Locally frozen application images are under ignored
-`firmware/build/bench-candidates/2026-11-12/`; these local build artifacts are **not in Git**.
-A fresh clone can rebuild using the pinned ESP32 Arduino 3.3.8 toolchain. The compiled image
-hash can differ after rebuilding; record the bytes actually uploaded.
+The candidate manifest is [m5-player-2026-11-12.json](validation/m5-player-2026-11-12.json).
+Application binaries are frozen locally under ignored `firmware/build/bench-candidates/2026-11-12-player/`;
+they are not Git deliverables. Rebuild on a fresh machine and record the bytes actually uploaded.
+The older `2026-11-12/` bundle/manifest belongs to the display-only checkpoint `a21ed7c`.
 
-## Owner's intended outcome
+## What changed and what remains
 
-First test this evening's Core2 changes on **kart 3**, fix real display/touch/link issues,
-then commission two matching units as **karts 4 and 5**. **Karts 1 and 2 belong to Eamon's
-ongoing tests.** Player Core2 has no Pi and no SD. ESP-NOW connects each Core2 to its own
-Heltec; no I2C/UART cable is needed for that path.
-
-Core2 should own the following map/course cache and eventually join-only player/inventory
-logic. Heltec owns GPS, LoRa and exclusive VESC BLE supervision. User wants the host's course
-published/downloaded over ESP-NOW, Hunter's original cyan/amber instrument styling on both
-pages, a host notification and one compact FIRE control. Do not add host/course-editing UI
-to the Core2 or substitute Eamon's Pi-dependent item screen.
-
-Reliability comes first: wired throttle and reverse remain VESC-owned. Accessory/link loss
-must leave current driving settings alone. Boot/reconnect must not restore a profile, stop,
-replay a command or re-save configuration. Ordinary supervisory writes remain `store=0`.
-
-## What is actually ready
-
-| Capability | State at handoff |
+| Feature | Current state |
 | --- | --- |
-| Native Hunter-style DASH and full-screen 320×240 own-follow MAP | Built/tested, not uploaded |
-| Tiny GPS MPH + actual VESC pack volts relayed by Heltec | Built/tested; stale values become dashes; no estimated SOC |
-| No kart header, scale, permanent course-name strip or full-width FIRE footer | Implemented |
-| Attribution only at startup | Five visible seconds; nonblocking; source/license metadata retained |
-| Touch page toggle; 1.8 s page-button hold for updates | Implemented; overlay/held-touch isolation tested |
-| Fresh own/peer GPS, no-SD map, USB-uploaded persistent course outline | Source ready; new map still needs physical acceptance |
-| Real surrounding shop geography, S/F checker, boost/pickup and game interaction | **Demo only**; geography real, course/positions/game events synthetic |
-| Live JOIN, host course-package download, item authority and FIRE | **Not implemented**; live FIRE sends nothing |
-| VESC tune/filter on kart 3 | Previously saved and supervised bench-verified; unchanged overnight |
-| Karts 4/5 tune/filter replication | Offline preparation tool exists; target captures/application still needed |
+| Full 320×240 own-follow map; tiny GPS MPH + Heltec-relayed VESC pack volts | Implemented, not installed |
+| Hunter-style DASH/MAP, one FIRE, page/notification controls, 5s startup credits | Implemented; no permanent header/scale/credits |
+| Host Pi export and ACK-paced upload to its Heltec | Implemented; updated host software required |
+| Course-only authenticated ESP-NOW transfer, complete validation and two-slot NVS cache | Implemented; separate host↔Core2 pairing required |
+| Real JOIN/LEAVE, local boxes/inventory, typed single-use FIRE through own Heltec | Implemented; physical radio/effect acceptance pending |
+| Course/zone/S/F rendering and bounded OSM background from host repository | Implemented; not aerial imagery or an invented Manresa survey |
+| Host generation beyond ESP-NOW range | Optional short LoRa type5; host/player firmware must be updated |
+| VESC tune/filter, −5 A and own-kart pairing | Existing kart3 checkpoint unchanged |
+| Kart4/5 tune/filter replication | Offline preparation exists; per-target capture/apply acceptance still needed |
 
-The background is a compact crop of the Pi's cached SoNo OpenStreetMap extract. The Pi's
-photographic maps are downloaded from its pit server, not Google Maps. The demo is at the
-shop, **not a surveyed Manresa Island course**. Gold 3 is the own demo kart; blue numbers
-are peers. S/F, boost and pickup symbols do not establish lap timing or motor effects.
+The native player uses Eamon's item roll weights, session/attack semantics and existing Heltec
+BOOST/SLOW paths. Light-player limits are deliberate: starting box snapshot with local cooldowns,
+three carried slots plus an attack slot, explicit shield arming, fixed-duration non-stacking boosts,
+no reconnect inventory restoration, no global pickup arbitration or authoritative race ranking.
+See [exact behavior/limits](m5-player-mode.md#native-rules-and-deliberate-limits).
 
-Open [the self-contained rehearsal](previews/core2-player-rehearsal/index.html), or run:
+Core2 owns player UI/logic; Heltec retains exclusive VESC BLE, GPS, LoRa and supervisory guards.
+Wired throttle/reverse remain VESC-owned. Link loss/reboot/maintenance never restores a driving
+profile, replays an item or writes persistent VESC settings. Existing mode/pit guards remain.
 
-```sh
-python3 tools/m5/preview_driver.py --out /tmp/gokart-core2-preview --write-scenes
-```
+Eamon source through **c21baf8** is now integrated by three-way source comparison: timed freeplay
+laps, 5-box default, Pi inventory persistence and no Wi-Fi reconnect scans while driving. One new
+upstream test was updated to supply fresh controller state after proving a stale item use is refused;
+our existing freshness guard was retained. The c21 merged binary was not copied. Later `15f731a`
+(Pi fastboot), `c4731bd` and `59976df` (separate `core2-items` power/OTA) remain reviewed, not merged.
+No new remote changes appeared at the final fetch. Never substitute `core2-items` for this dashboard.
 
-There are 32 native-rendered scene/page combinations. Browser labels approximate LCD fonts;
-all browser scenarios, including LIVE, are fake. `m5-demo` initializes no radio/control link
-and cannot send a mode or motor command. It also has **no OTA**, so installing it requires a
-USB route back to `m5-espnow`. Do not leave the commissioned kart stuck on a demo image.
+## Next session: coordinated kart3 and host acceptance
+
+1. Identify physical USB/OTA endpoints and current app hashes; preserve NVS/rollback evidence.
+   Karts1/2 remain Eamon's. Coordinate the host update with him; do not overwrite an active test.
+   Kart3 first, then4/5. Establish operator, stationary kart, wheels lifted, pedal released and
+   cutoff before any powered vehicle test. Start display programming with VESC off.
+2. Build/select the matching **Core2 `m5-espnow`**, player **`kart-m5-espnow`**, and host **`kart`**
+   applications. Deploy the updated host `kart/server` tree including `m5_course.py`. Preserve
+   the existing private pairing/Wi-Fi/identity NVS; application-only updates, no whole-flash erase.
+   `m5-demo` is optional no-output rehearsal, has no OTA and needs USB to return to live firmware.
+3. Read `share status` to get host/Core2 station MACs/channel. Configure separate course-only
+   trust using [pair_course.py procedure](m5-player-mode.md#deployment-and-first-test). It checks
+   board MAC/role/ID/channel and saves a0600 private plan; never prints secrets or reboots boards.
+   Stop the Pi serial owner while provisioning the host from another computer, then restore it.
+   The player's own Heltec must be running so Core2 can identify kart3. Channel6 was the last
+   local pairing checkpoint; verify the host uses the same channel rather than guessing.
+4. Existing installed Core2 opens OTA by holding its old top status bar1.8s. The candidate uses
+   the upper-right DASH/MAP button held1.8s (or USB `ota on`). First press toggles page;
+   continuing hold opens updates. Use `tools/m5/ota_core2.py`, password file0600 and official
+   espota from ESP32 Arduino3.3.8. Core2 hostname is `gokart-display-3.local`; Heltec is `gokart-3.local`.
+   An upload ACK alone is not proof of reboot, correct identity, retained pairing or live link.
+5. Verify native pages, touch, maintenance BACK, GPS/voltage staleness and mode hold isolation.
+   Host a real course and inspect publication bytes/progress. On Core2 JOIN, prove actual
+   download, complete validation/cache, confirmed session, cancellation, interrupted transfer,
+   reboot cache and course replacement. Diagnostics: `status` emits `m5_game`; `share status`
+   emits `share_radio`/`share`. An empty background may mean the host has no geographic extract.
+6. Only after transfer/session passes, supervise native pickup/FIRE. Confirm exactly one
+   request, own Heltec result, remote attack ACK for shell/lightning, and actual VESC readback
+   for an effect. Also verify STOP/SLOW precedence, no replay after loss/OTA and smooth wired
+   driving coexistence. Do not infer a motor test from a simulated scene, idle log or earlier press.
+7. Archive per-device installed hashes and observations. Only then repeat accepted setup for4/5.
+
+LoRa compatibility: existing telemetry/commands are unchanged. Publishing substitutes one short
+COURSE packet per2s for host telemetry; host telemetry averages1.5Hz at rate2,0.5Hz at rate1.
+Legacy base/repeaters ignore type5; updated repeater is required only for relay-dependent course
+identity coverage. The first test can use direct host/player LoRa with no base. This is freshness,
+not cryptographic LoRa replay protection. Course download and own-kart commands are authenticated.
 
 ## Known installed kart-3 checkpoint — not the new candidate
 
@@ -102,56 +121,6 @@ Both accessory applications are still from **`4a582f0`**:
   [Saved −5 A evidence](../hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/README.md).
 
 Do not repeat the tune or reinstall the filter just to update the screen.
-
-## Next session: kart 3 first
-
-1. Identify physical USB ports, capture read-only accessory status and preserve existing
-   app/NVS rollback evidence. Never assume a previously used `/dev/cu.*` is the same board.
-   For any powered kart test, establish wheels lifted, released pedal, operator at cutoff.
-   Begin display programming with VESC off. No unattended motor test is queued.
-2. Choose either a spare/USB-connected Core2 demo rehearsal or the live **`m5-espnow`**
-   candidate. Use the manifest-matched application image, never `core2-items`, generic
-   `core2`, or a merged release image that could overwrite provisioned state.
-3. Leave the working Heltec application alone for the first display acceptance. The source
-   also has newer channel recovery; deploying that is a **separate** acceptance step after
-   the display works. New Heltec build hashes do not mean it is installed.
-4. Existing installed Core2 opens OTA by holding its **old top status bar** 1.8 seconds.
-   After this candidate is installed, hold the **upper-right DASH/MAP button** 1.8 seconds.
-   First press changes page; continuing the hold opens maintenance; sliding away cancels.
-   USB `ota on` is the alternative. Enable updates deliberately and wait for `ready:true`.
-5. Use the authenticated application-only uploader below. Verify upload ACK, actual reboot,
-   maintenance off, retained pairing/credentials, fresh telemetry, expected source/image record
-   and correct kart ID independently. An ACK alone is not hardware acceptance. No blind retry
-   after an uncertain upload. Keep USB recovery available.
-6. Check five-second startup then MAP, text at mounted distance, page toggle, compact controls,
-   stale GPS/link/voltage, and maintenance BACK held over each mode area. Mode requests require
-   a **fresh deliberate 650 ms hold**; neither startup nor navigation/overlay presses may send one.
-7. Get sky view. Verify real own position follows, fresh nearby peer labels, and no fabricated
-   GPS. A dark/empty map is diagnosable using `status`: `gps_fresh`, `gps_has_position`,
-   `gps_position_age_ms`, `course_source`, `course_points`, `map_follow`. A fix alone does not
-   supply a course/background. See [course provisioning](../firmware/m5-core2/COURSE_MAP.md).
-8. With the operator present and stopped, verify mode readbacks preserve −5 A and all unrelated
-   settings. Then explicitly coordinate any brief wired-pedal forward/reverse checks. Record
-   real observations; do not count an idle log or an earlier press as the current test.
-9. Archive results per device, including hashes, mode/link/readback outcomes, and limitations.
-   Only then repeat the accepted display process on new units.
-
-Core2 OTA command (placeholders must be resolved locally; **do not run unattended**):
-
-```sh
-python3 tools/m5/ota_core2.py \
-  --host gokart-display-3.local \
-  --image firmware/build/bench-candidates/2026-11-12/m5-espnow.app.bin \
-  --credentials /absolute/path/to/private-core2-credentials.json \
-  --espota /absolute/path/to/esp32/3.3.8/tools/espota.py
-```
-
-On Colin's current Mac, the official uploader is under
-`/private/tmp/gokart-arduino/data/packages/esp32/hardware/esp32/3.3.8/tools/espota.py`.
-Private credentials/rollback files live under ignored `firmware/build/bench-private/`;
-locate the intended kart's file without printing secrets. The uploader requires a 0600 file
-with `ota_password`. Use `gokart-display-3.local`, not Heltec's `gokart-3.local`.
-For USB, follow the existing segmented/NVS-preserving procedure; do not erase whole flash.
 
 ## Then karts 4 and 5: preserve calibration and identity
 
@@ -189,45 +158,34 @@ maintenance path for tune/filter work. No VESC firmware upgrade is needed for th
 A future BLE maintenance proxy would require separate ownership, framing/ACK/readback and
 failure review; do not turn ordinary reconnect code into a persistent writer.
 
-## Eamon/Hunter compatibility and remaining game work
+## Validation and artifacts
 
-Fetched upstream through **`59976df`**; integrated through **`a5a4c22`**. No new remote work
-appeared during final preparation. Four later Eamon commits remain reviewed, not merged:
-`c21baf8` Pi freeplay/laps/inventory/no-driving-scans, `15f731a` Pi fastboot,
-`c4731bd` separate item-screen power handling, `59976df` separate item-screen OTA.
-They do not by themselves implement no-Pi Core2 gameplay. Keep the paired M5 receive
-callback/encryption and existing pit precedence when integrating future changes.
+**Final offline validation: 511 tests across eight suites passed, zero skipped; eight firmware targets compiled.**
 
-The next implementation boundary is [the player-mode brief](m5-player-mode.md): agree a
-bounded host game package using Eamon's existing item/session rules, implement its publisher
-and authenticated ESP-NOW transfer/atomic cache, then native inventory/game requests through
-own Heltec. Test transfer/session correctness before any motor effects. Do not describe the
-preview's synthetic JOIN/download/SHELL as actual RF support. Hunter's original graphics at
-`315710e` through `5629924` remain the requested aesthetic reference.
-
-## Validation and known limits
-
-Run all offline suites before each push:
+The [candidate manifest](validation/m5-player-2026-11-12.json) records exact source/application
+hashes, final tests, independent review and limitations. Run all suites before each push:
 
 ```sh
 PYTHON=/Users/cofo/.platformio/penv/bin/python \
 ARDUINOJSON_DIR=/private/tmp/gokart-arduino/user/libraries/ArduinoJson/src \
   tools/run_tests.sh
-
 PATH=/private/tmp/gokart-arduino/bin:$PATH \
 ARDUINO_CONFIG_FILE=/private/tmp/gokart-arduino/arduino-cli.yaml \
   firmware/build.sh m5-espnow
 ```
 
-Also build `m5-demo`, `m5`, `kart-m5-espnow-readonly` and `kart-m5-espnow` when those candidates
-change. Paths above describe this Mac, not portable dependencies; a fresh machine follows
-`firmware/README.md`. All **499 tests across eight suites passed, zero skipped**, and all five candidates compiled.
-Exact image/source hashes are in the linked November 12 manifest. Native tests include ASan/UBSan. An independent subagent reviewed the
-final display changes: maintenance BACK no longer leaks a mode request, splash duration starts
-after initialization, and DEMO stays visible in error scenes. No unresolved code findings
-remained in that scope. Physical LCD readability/touch, OTA, live GPS/fleet/course persistence,
-RF coexistence and actual gameplay are separate acceptance tasks; none was tested overnight.
+Other affected targets: `kart-m5-espnow`, `kart-m5-espnow-readonly`, `kart`, `m5`, `m5-demo`,
+`base`, `repeater`. Native ASan/UBSan coverage includes host-export→chunk-transfer/retry→cache→
+JOIN→GPS pickup→FIRE, wrong/expired generation, loss/reboot, and production Heltec command
+handling. Existing touch, mode, transport, pit and VESC tooling checks remain in the suite.
+[Native renderer fixtures](previews/core2-native-player/index.html) use actual production UI
+with synthetic inputs; [older interactive rehearsal](previews/core2-player-rehearsal/index.html)
+is entirely simulated. Neither establishes hardware RF, GPS, storage power-loss or motor acceptance.
 
-Suggested first message to Claude: “Read AGENTS.md and docs/CLAUDE_HANDOFF.md on
-v1.5/m5-core2. Continue with the kart-3 display acceptance first, preserve all calibration,
-pairing and active VESC settings, and record actual installed versus candidate versions.”
+Review fixed stale host publication, boot/generation binding and rejected-boost duration state.
+Final source and documentation reviews found no additional functional showstopper; the physical acceptance gates above
+remain. No unattended hardware task, upload, VESC write or motor command is queued.
+
+Suggested Claude opening: “Read AGENTS.md and docs/CLAUDE_HANDOFF.md on v1.5/m5-core2.
+Coordinate the host update, then accept actual course download and native FIRE on kart3.
+Preserve calibration/pairing, distinguish installed from candidate, and record real observations.”

@@ -23,7 +23,7 @@ def section(source, start, end):
 def function(source, name):
     # Sketch functions end at column zero; nested blocks remain indented. Fail loudly if
     # a production refactor changes this convention, rather than testing stale copied code.
-    match = re.search(r'^static [^\n]*\b' + re.escape(name) + r'\([^\n]*', source, re.M)
+    match = next((m for m in re.finditer(r'^static [^\n]*\b' + re.escape(name) + r'\([^\n]*', source, re.M) if not m.group().rstrip().endswith(';')), None)
     if not match:
         raise AssertionError('Production function not found: ' + name)
     start = match.start()
@@ -54,7 +54,9 @@ class M5ControlRuntimeTests(unittest.TestCase):
                     '// ---------------------------------------------------------------- telemetry'),
             section(source, '// ---------------------------------------------------------------- vesc writes',
                     '// ---------------------------------------------------------------- M5 display UART'),
-            function(source, 'm5ModeReady'), function(source, 'm5HandleLine'),
+            function(source, 'm5ModeReady'),
+            *[function(source, f) for f in ('peerFresh','peerInMySession','kartHosting','courseFresh','gameLeave','gameAttack','m5HandleGame','applyHit')],
+            function(source, 'm5HandleLine'),
             function(source, 'serviceVesc'),
         ]
         (tmp / 'production_control.inc').write_text('\n'.join(parts))
@@ -66,11 +68,15 @@ class M5ControlRuntimeTests(unittest.TestCase):
             '-I' + str(ROOT / 'firmware/libraries/VescLink'),
             '-I' + str(ROOT / 'firmware/libraries/GoKartProtocol'),
             '-I' + str(ROOT / 'firmware/libraries/M5DisplayLink'),
+            '-I' + str(ROOT / 'firmware/libraries/M5Game/src'),
             '-I' + str(ROOT / 'firmware/kart-heltec-v4'),
             str(ROOT / 'firmware/tests/m5_control_runtime.cpp'), '-o', str(cls.binary)], check=True)
 
     def run_case(self, *args):
         subprocess.run([str(self.binary), *args], check=True, timeout=10)
+
+    def test_real_native_player_dispatch_and_generation(self):
+        self.run_case('game')
 
     def test_fresh_config_and_identity_before_mutation(self):
         for reason in ('stale', 'old-config', 'no-pin', 'old-identity', 'wrong-identity',

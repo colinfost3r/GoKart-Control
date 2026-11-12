@@ -5,6 +5,7 @@
 
 namespace m5now {
 std::atomic<Link*> Link::instance_{nullptr};
+std::atomic<Link::ExtraReceiver> Link::extraReceiver_{nullptr};
 static bool validUnicast(const uint8_t* mac) {
   if(!mac || (mac[0]&1))return false;
   uint8_t any=0;for(unsigned i=0;i<6;++i)any|=mac[i];return any;
@@ -72,6 +73,7 @@ void Link::end() {
   assembler_.clear();alignment_.invalidate();++radioEpoch_;std::memset(authKey_,0,sizeof authKey_);
 }
 void Link::receive(const esp_now_recv_info_t* info,const uint8_t* data,int length) {
+  auto extra=extraReceiver_.load();if(extra&&extra(info,data,length))return;
   Link* self=instance_;
   if(!self || !self->ready_ || !info || !info->src_addr || !info->des_addr || !data ||
      length<int(HEADER_SIZE+TAG_SIZE) || length>int(PACKET_MAX) ||

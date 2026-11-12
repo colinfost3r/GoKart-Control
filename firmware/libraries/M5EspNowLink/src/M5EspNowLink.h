@@ -15,6 +15,8 @@ struct Stats {
 };
 class Link {
 public:
+  using ExtraReceiver=bool(*)(const esp_now_recv_info_t*,const uint8_t*,int);
+  static void setExtraReceiver(ExtraReceiver receiver){extraReceiver_=receiver;}
   // Wi-Fi STA must share the Heltec's AP channel. Display discovers it without joining Wi-Fi.
   // Keys are caller-owned provisioning data. No open discovery, broadcast or default keys.
   bool begin(Role role,const uint8_t peer[6],const uint8_t lmk[16],const uint8_t pmk[16]);
@@ -43,6 +45,7 @@ private:
   struct Line { uint32_t born,id;uint16_t length;Kind kind;char text[MAX_LINE+1]; };
   struct Completed { uint32_t arrived,epoch,peerBoot;char text[MAX_LINE+1]; };
   static std::atomic<Link*> instance_;
+  static std::atomic<ExtraReceiver> extraReceiver_;
   static void receive(const esp_now_recv_info_t* info,const uint8_t* data,int length);
   static void sent(const esp_now_send_info_t* info,esp_now_send_status_t status);
   bool authenticate(const uint8_t* p,size_t n) const;

@@ -1,3 +1,7 @@
+> Historical no-output display rehearsal. Real host downloads and native FIRE were subsequently
+> implemented; use [the current player guide](m5-player-mode.md) and [handoff](CLAUDE_HANDOFF.md).
+> These browser/demo scenarios remain synthetic and never send commands.
+
 # Core2 offline rehearsal and next bench session
 
 This milestone changes the native Core2 presentation and adds an isolated demo. It does

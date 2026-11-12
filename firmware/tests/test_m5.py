@@ -26,7 +26,7 @@ class M5Tests(unittest.TestCase):
             exe = Path(tmp)/'test'
             subprocess.run([compiler, '-std=c++17', '-Wall', '-Wextra', '-Werror', '-fsanitize=address,undefined',
                             '-g', '-I'+str(include), '-I'+str(ROOT/'firmware/libraries/M5DisplayLink'),
-                            '-I'+str(ROOT/'firmware/libraries/GoKartProtocol'), '-I'+str(ROOT/'firmware/m5-core2'),
+                            '-I'+str(ROOT/'firmware/libraries/GoKartProtocol'), '-I'+str(ROOT/'firmware/m5-core2'), '-I'+str(ROOT/'firmware/libraries/M5Game/src'),
                             str(ROOT/'firmware/m5-core2/tests'/source), '-o', str(exe)], check=True)
             subprocess.run([str(exe)], check=True, timeout=30)
 

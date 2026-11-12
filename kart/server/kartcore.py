@@ -24,6 +24,7 @@ from __future__ import annotations
 import math
 import random
 import re
+import time
 from collections import deque
 from itertools import count
 
@@ -485,6 +486,7 @@ BOOST_DEFAULTS = {"secs": 5, "scale": 1.0, "cooldown_s": 20.0}
 ITEM_COOLDOWN_S = 15.0
 ITEM_REVEAL_S = 1.4
 ITEM_HOLD_CAP = 3              # held item-box prizes the driver can carry; a 4th takes effect at once
+INVENTORY_KEEP_S = 24 * 3600   # carried items survive a power cycle for this long (game-state.json saved_wall)
 HOLDABLE_ITEMS = ("boost", "rocket", "boost3", "star", "magnet", "hotlap", "shield")   # carried when item_hold is on
 MAGNET_S = 20                  # magnet: item boxes are picked up at double radius this long
 STAR_S = 8                     # star: SPORT power + immunity to mud for this long
@@ -1600,6 +1602,32 @@ class GameEngine:
         self._tag_prize_commands(recs, 0, now)
         return recs
 
+    def restore_inventory(self, items, shields, now):
+        """Carried items a previous run saved (export_state), after a restart or power cycle. Only into
+        an empty inventory of a running freeplay game; the caller checks saved_wall freshness."""
+        if self.inventory or self.pending_items or not self.active() or self.source != "freeplay":
+            return []
+        recs = []
+        for it in items if isinstance(items, (list, tuple)) else []:
+            if len(self.inventory) >= ITEM_HOLD_CAP or not isinstance(it, dict):
+                break
+            name = it.get("item")
+            if name not in HOLDABLE_ITEMS:
+                continue
+            d = {"item": name, "secs": int(it["secs"]) if _num(it.get("secs")) else 0,
+                 "scale": clamp_scale(it["scale"]) if _num(it.get("scale")) and it["scale"] else 0.0,
+                 "zone": "restored", "mono": now}
+            if name == "boost3":
+                ch = it.get("charges")
+                d["charges"] = int(max(1, min(BOOST3_CHARGES, ch))) if _num(ch) else BOOST3_CHARGES
+            self.inventory.append(d)
+        if _num(shields) and shields > 0:
+            self.shields = int(min(ITEM_HOLD_CAP, shields))
+        if self.inventory or self.shields:
+            self._rec(recs, "inventory_restored", now, items=[i["item"] for i in self.inventory],
+                      shields=self.shields)
+        return recs
+
     def _mud(self, now, recs, entered):
         muds = [z for z in self.areas if z.type == "mud" and z.id in self.inside]
         if not muds:
@@ -1763,8 +1791,12 @@ class GameEngine:
         system-wide, so they stay valid for another process in the same boot (checked by boot_id).
         Not exported (rebuilt from live data): zone inside/cooldowns, overrides, positions, SLOW."""
         r = self.race
-        return {"v": 1, "boot_id": boot_id(), "saved_mono": now,
+        return {"v": 1, "boot_id": boot_id(), "saved_mono": now, "saved_wall": time.time(),
                 "lapline": self.lapline.raw if self.lapline else None,
+                "inventory": [{"item": i["item"], "secs": i["secs"], "scale": i["scale"],
+                               **({"charges": i["charges"]} if "charges" in i else {})}
+                              for i in self.inventory],
+                "shields": self.shields,
                 "lap": dict(self.lap, times=list(self.lap["times"])),
                 "race": {k: r[k] for k in ("hold", "go_at", "secs", "go_mono", "go_confirmed", "how", "finished",
                                            "position", "finish_mono", "finish_lap", "position_source", "last_pos")}}
@@ -1890,6 +1922,7 @@ class GameEngine:
                         "hotlap_target_s": self.hotlap["target"] if self.hotlap else None},
             "fw": self.fw,
             "mud_cmd": "slow" if self.timed_slow() else "boost",
+            "lapline": self.lapline is not None,
             "source": self.source,
             "race": self.race_snapshot(now),
             "track": self.track,
@@ -1915,8 +1948,8 @@ class GameEngine:
 # cap 25 mph) or ROCKET (1.0 = SPORT, uncapped), which lift the cap to the highest mode whose scale the boost
 # reaches (firmware 0.2.5; an in-between scale still lifts one mode), is felt. The course is one lap of this kart's own
 # filtered GPS positions (the loop-closing logic is a port of pit/server/pitcore.TrackRecorder).
-FREEPLAY_BOXES = 3           # config freeplay_boxes, 1-6
-FREEPLAY_BOXES_MAX = 6
+FREEPLAY_BOXES = 5           # config freeplay_boxes, 1-8
+FREEPLAY_BOXES_MAX = 8
 FP_BOX_R_M = 4.0             # ZONES.md item default
 FP_BOX_COOLDOWN_S = 15.0
 FP_BOX_SPACING_M = 15.0      # boxes at least this far apart ALONG the loop
@@ -1926,6 +1959,8 @@ FP_RESPAWN_AWAY_M = 20.0     # ... at least this far (straight line) from where 
 FP_PLACE_TRIES = 300
 FP_FILL_RETRY_S = 2.0        # a box that did not fit (short loop) is retried this often
 FP_TRACK_WIDTH_M = 6.0
+FP_LAP_HALF_M = 8.0          # synthesized start/finish line: half-length each side of the loop (forgiving)
+FP_LAP_MIN_S = 15            # a crossing within this of the last is not a lap (pit demo uses 20)
 FP_REC_MIN_SPACING_M = 1.5   # pitcore REC_* values
 FP_REC_JUMP_SLACK_M = 15.0
 FP_REC_START_RADIUS_M = 12.0
@@ -2370,11 +2405,34 @@ class FreeplayGame:
                  "zones": [{"id": b["id"], "type": "item", "name": b["name"], "shape": "circle",
                             "lat": b["lat"], "lon": b["lon"], "r_m": b["r_m"], "cooldown_s": FP_BOX_COOLDOWN_S}
                            for b in self.boxes]}
+            lap = self._lapline()
+            if lap is not None:
+                d["zones"].append(lap)      # timed laps + hotlap; also keeps the game on between respawns
             if self.course is not None:
                 d["track"] = {"points": [list(p) for p in self.course["points"]], "closed": True,
                               "width_m": self.course["width_m"]}
             self._doc = d
         return self._doc
+
+    def _lapline(self):
+        """Start/finish line across the loop at s=0 (where the recorded lap began / the pit track starts).
+        Perpendicular to the first few metres of the loop, FP_LAP_HALF_M each side."""
+        if self.loop is None or self.loop.L <= 0:
+            return None
+        (lat0, lon0) = self.loop.at(0.0)
+        (lat1, lon1) = self.loop.at(min(5.0, self.loop.L / 2))
+        m_lat = 111320.0
+        m_lon = 111320.0 * max(0.1, math.cos(math.radians(lat0)))
+        dn, de = (lat1 - lat0) * m_lat, (lon1 - lon0) * m_lon
+        n = math.hypot(dn, de)
+        if n < 0.5:
+            return None
+        pn, pe = -de / n, dn / n            # unit perpendicular (north, east components)
+        h = max(FP_LAP_HALF_M, (self.course.get("width_m") or 0.0) * 1.5 if self.course else 0.0)
+        return {"id": "fp-lap", "type": "lapline", "name": "Start / finish", "shape": "line",
+                "a": [round(lat0 + pn * h / m_lat, 7), round(lon0 + pe * h / m_lon, 7)],
+                "b": [round(lat0 - pn * h / m_lat, 7), round(lon0 - pe * h / m_lon, 7)],
+                "min_lap_s": FP_LAP_MIN_S}
 
     # -- persistence + display ------------------------------------------------------------------
     def export(self):
