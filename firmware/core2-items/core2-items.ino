@@ -16,7 +16,7 @@
 #include <ArduinoOTA.h>
 #include <Preferences.h>
 
-#define FW_VERSION "core2-0.3.3"
+#define FW_VERSION "core2-0.3.5"
 
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
@@ -72,6 +72,10 @@ static const uint16_t COLORS[11] = {0xFFFF, 0xFD80, 0xFEA0, 0x3EF0, 0xFF20, 0xC4
                                     0xFD80, 0xFEA0, 0xFAEB, 0x7EBF, 0x3D30};
 static const uint16_t C_FLAME = 0xFBC0, C_FLAMEIN = 0xFEA0, C_PORT = 0x2BDF;
 
+static void onSent(const wifi_tx_info_t* info, esp_now_send_status_t st) {
+  Serial.printf("tx cb: %s\n", st == ESP_NOW_SEND_SUCCESS ? "delivered" : "FAILED");   // USB console diagnostics
+}
+
 static void onRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
   if (len != (int)sizeof(GkInvFrame)) return;
   const GkInvFrame* f = (const GkInvFrame*)data;
@@ -93,9 +97,13 @@ static void sendUse(uint8_t slot) {
   uint8_t cur; wifi_second_chan_t sc;
   if (esp_wifi_get_channel(&cur, &sc) != ESP_OK || cur < 1 || cur > 14) cur = 0;
   peer.channel = cur; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
-  esp_now_del_peer(heltecMac); esp_now_add_peer(&peer);
+  esp_now_del_peer(heltecMac);
+  esp_err_t ra = esp_now_add_peer(&peer);
   GkUseFrame f = {'G', 'U', 1, kart, slot, ++useSeq};
-  esp_now_send(heltecMac, (const uint8_t*)&f, sizeof f);
+  esp_err_t rs = esp_now_send(heltecMac, (const uint8_t*)&f, sizeof f);
+  Serial.printf("use tx: kart %u slot %u seq %u ch %u mac %02x:%02x:%02x:%02x:%02x:%02x add=%d send=%d\n",
+                kart, slot, useSeq, cur, heltecMac[0], heltecMac[1], heltecMac[2],
+                heltecMac[3], heltecMac[4], heltecMac[5], (int)ra, (int)rs);
   useSentMs = millis(); useTries = 1; useSlot = slot;
 }
 
@@ -316,9 +324,11 @@ void setup() {
   M5.Display.setBrightness(200);
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
+  WiFi.setSleep(false);                  // modem-sleep while joined would nap the radio between beacons
   WiFi.setAutoReconnect(false);          // a reconnect scan would hop off the ESP-NOW channel
   esp_now_init();
   esp_now_register_recv_cb(onRecv);
+  esp_now_register_send_cb(onSent);
   esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
   prefs.begin("core2", false);
   kartPin = prefs.getUChar("kart", 0);
@@ -386,6 +396,9 @@ static void usbCommand(char* line) {
     wifiSsid = a; wifiPass = sp + 1;
     WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
     wifiTrying = true; wifiGiveUpMs = millis() + 25000;
+  } else if (!strcmp(line, "use")) {     // fire the selected card from the console (bench testing)
+    if (n > 0 && locked) sendUse((uint8_t)sel);
+    else Serial.printf("no item/lock (n=%u locked=%d)\n", n, locked);
   } else if (!strcmp(line, "status")) {
     Serial.printf("%s pin %u kart %u locked %d ch %u wifi %s ip %s ota %d vbus %d mV batt %d%%\n",
                   FW_VERSION, kartPin, kart, locked, scanCh,
