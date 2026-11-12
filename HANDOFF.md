@@ -1,6 +1,41 @@
 # Collaborator handoff
 
-## Recessed lid and #4 screws R08 — November 11, 2026
+## Connected clamp and recessed lid R09 — November 11, 2026
+
+[R09](hardware/cad/heltec-bar-enclosure/r09-clamp-repair/README.md) completes the
+owner-approved clamp repairs around the extended base. The missing upper-left ear
+is restored as a mirror of the surviving right ear, and two **4 mm thick side webs**
+connect the ears to the case floor. The intended **66 mm clamp width**, **52 mm M4
+bolt spacing** and **1.5 mm split gap** are retained. The extended skirt remains.
+
+Independent Boolean checks found **zero original case material removed**, and no
+change to the upper enclosure, recessed lid or lower collar. All three current
+native parts are single solids with valid two-coedge edges. The full-length
+25.273 mm tube reference has no interference and retains **0.125 mm radial
+clearance**. Both M4 bores are clear, and the nominal 12 mm driver corridors have
+**2 mm clearance** above the ear mounting plane.
+
+The owner delegated screw selection: use **two #4 ×1/2-inch rounded/pan-head TRS
+thread-forming screws for plastic**, reference **McMaster 92295A103**. The recessed
+lid retains its 1.5 mm locating step, 0.3 mm side clearance, chamfered entry and
+perimeter ledge. Its adjustable **2.65 mm pilot diameter** requires a printed fit
+check with the selected screws. The clamp still uses **two M4 ×30 socket-head
+screws and M4 nuts**, keeping four installation screws total.
+
+The exact R08 input and new editable Fusion/STEP/STL outputs, previews and audit
+scripts are archived with R09. R08's rejected diagnostic case STL remains history;
+use the R09 parts for the prototype. Physical screw fit, clamp grip, clip movement,
+unmeasured harness plugs and the inherited GPS/cover proxy clearance still need
+checking. The old hidden R07 history retains its timeline-607 lost-profile warning;
+current R09 native geometry and exported meshes are checked separately.
+All three final STL meshes pass closed-manifold, consistent-winding and single-component checks.
+
+All **492 offline tests passed**, eight suites, zero skipped. Eamon's new
+`c4731bd` changes Core2 key-power firmware/releases only; it has no enclosure
+interface changes and was not merged into this focused mechanical branch.
+No firmware, VESC settings or live hardware changed in this revision.
+
+## R08 recessed-lid checkpoint — superseded by R09
 
 [R08](hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md) derives from the
 owner's extended R07 at timeline 677. The exact native input, layout and view were
@@ -17,19 +52,19 @@ The working screw selection is **#4 × 1/2 inch rounded-head thread-forming scre
 for plastic**, using McMaster 92295A103 as the reference. These are TRS plastic
 screws, not an interchangeable generic #4 sheet-metal or wood screw. Blind pilot
 diameter is **2.65 mm**, depth **12 mm**, with **3.4 mm lid clearance holes**.
-Nominal screw tips have **1.8 mm** bottom clearance. Owner confirmation of existing
-screw hardware is still open; actual FDM pilot fit and retention need a trial.
+Nominal screw tips have **1.8 mm** bottom clearance. The owner subsequently delegated screw selection for R09; actual FDM pilot fit
+and retention still need a trial.
 
 **Clamp status:** the authoritative owner input has no upper-left clamp ear.
 That was not silently restored, because the owner requested preserving the base.
-A question is pending about restoring only that ear while retaining the extension.
+Restoration while retaining the extension was subsequently approved and completed in R09.
 Do not treat this prototype as a complete accepted clamp assembly.
 
 **Case export blocked:** the owner-edited right clamp ear meets the extended base
 only along three zero-thickness edges (four native faces at each edge). The native
 model and STEP preserve this geometry; the case STL is quarantined as
 `diagnostics/case-as-edited-NOT-PRINT-READY.stl`. The lid and lower collar pass mesh
-checks. A connecting web needs an owner decision before the case is printable.
+checks. The owner subsequently approved a connecting web, implemented in R09.
 The hidden historical R07 feature at timeline 607 also retains a lost-profile
 warning; it was not rebuilt over the owner edits. See the R08 diagnostic reports.
 

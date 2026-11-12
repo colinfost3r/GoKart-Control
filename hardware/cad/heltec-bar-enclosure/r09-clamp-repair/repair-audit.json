@@ -1,0 +1,58 @@
+{
+  "document": "GoKart Heltec Connected Clamp R09",
+  "timeline_count": 733,
+  "input_archive": "input/current-R08-before-R09.f3d",
+  "owner_base_preservation": "Additive repairs only; original body minus repaired body has zero volume",
+  "original_case_volume_cm3": 43.442406820706154,
+  "repaired_case_volume_cm3": 51.907489563648184,
+  "removed_original_volume_cm3": 0.0,
+  "mirrored_surviving_ear_volume_cm3": 5.345082742941999,
+  "webs_mm": [
+    {
+      "x": [
+        -18,
+        -14
+      ],
+      "y": [
+        -12,
+        12
+      ],
+      "z": [
+        -16.25,
+        0
+      ]
+    },
+    {
+      "x": [
+        14,
+        18
+      ],
+      "y": [
+        -12,
+        12
+      ],
+      "z": [
+        -16.25,
+        0
+      ]
+    }
+  ],
+  "web_thickness_mm": 4,
+  "tube_diameter_mm": 25.273,
+  "bore_diameter_mm": 25.523,
+  "minimum_web_to_bore_radial_allowance_mm": 1.2385,
+  "split_gap_mm": 1.5,
+  "M4_axes_xy_mm": [
+    [
+      -26,
+      0
+    ],
+    [
+      26,
+      0
+    ]
+  ],
+  "clamp_width_mm": 66,
+  "native_case_edges_have_two_coedges": true,
+  "note": "Periodic seam edges can have one unique face and two coedges; two-coedge topology is the intended check."
+}

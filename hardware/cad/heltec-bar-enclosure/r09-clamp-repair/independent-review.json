@@ -1,0 +1,412 @@
+{
+  "revision": "R09",
+  "date": "2026-11-11",
+  "physical_hardware_tested": false,
+  "result": "Native geometry and all three STL topology checks pass; physical FDM fit and structural validation remain open",
+  "clamp": {
+    "document": "GoKart Heltec Connected Clamp R09",
+    "timeline_count": 733,
+    "scope": "Temporary copies and Boolean operations; no native edits",
+    "owner_material_removed_mm3": 0,
+    "added_repair_material_mm3": 8465.08274294203,
+    "lid_differences_mm3": [
+      0,
+      0
+    ],
+    "lower_collar_differences_mm3": [
+      0,
+      0
+    ],
+    "topology": {
+      "case": {
+        "solid": true,
+        "lumps": 1,
+        "bad_edges": [],
+        "volume_cm3": 51.907489563648184
+      },
+      "lid": {
+        "solid": true,
+        "lumps": 1,
+        "bad_edges": [],
+        "volume_cm3": 7.293359045905113
+      },
+      "lower_collar": {
+        "solid": true,
+        "lumps": 1,
+        "bad_edges": [],
+        "volume_cm3": 14.676929878136049
+      }
+    },
+    "web_columns": [
+      {
+        "xy_mm": [
+          -16,
+          -10
+        ],
+        "range_z_mm": [
+          -16,
+          2
+        ],
+        "samples": 37,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          -16,
+          0
+        ],
+        "range_z_mm": [
+          -16,
+          2
+        ],
+        "samples": 37,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          -16,
+          10
+        ],
+        "range_z_mm": [
+          -16,
+          2
+        ],
+        "samples": 37,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          16,
+          -10
+        ],
+        "range_z_mm": [
+          -16,
+          2
+        ],
+        "samples": 37,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          16,
+          0
+        ],
+        "range_z_mm": [
+          -16,
+          2
+        ],
+        "samples": 37,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "xy_mm": [
+          16,
+          10
+        ],
+        "range_z_mm": [
+          -16,
+          2
+        ],
+        "samples": 37,
+        "all_material": true,
+        "missing_z_mm": []
+      }
+    ],
+    "clamp_bores": [
+      {
+        "axis_xy_mm": [
+          -26,
+          0
+        ],
+        "axis_clear": true,
+        "blocked_z_mm": []
+      },
+      {
+        "axis_xy_mm": [
+          26,
+          0
+        ],
+        "axis_clear": true,
+        "blocked_z_mm": []
+      }
+    ],
+    "full_length_nominal_tube": {
+      "case": {
+        "overlap_mm3": 0,
+        "minimum_clearance_mm": 0.12499999999999989
+      },
+      "lower_collar": {
+        "overlap_mm3": 0,
+        "minimum_clearance_mm": 0.12499999999999559
+      }
+    },
+    "case_to_collar": {
+      "overlap_mm3": 0,
+      "minimum_gap_mm": 1.5000000000000036
+    },
+    "driver_contact_at_ear_plane_mm": [
+      0,
+      0
+    ],
+    "driver_clearance_above_ear_mm": [
+      1.9999999999999996,
+      1.9999999999999996
+    ],
+    "driver_volume_intersection_mm3": [
+      0,
+      0
+    ],
+    "added_material_bounds_mm": [
+      [
+        -33,
+        -12.000000000000002,
+        -16.25
+      ],
+      [
+        18,
+        12.000000000000002,
+        0
+      ]
+    ],
+    "upper_case_differences_mm3": [
+      0,
+      0
+    ]
+  },
+  "hardware": {
+    "document": "GoKart Heltec Connected Clamp R09",
+    "timeline_count": 733,
+    "selected": {
+      "hardware_or_cover": 43,
+      "routing_or_fastener_reference": 11,
+      "printed": 3
+    },
+    "remaining_intersections": [
+      {
+        "a": "Open CASCADE STEP translator 6.8 1.1.1/Body1",
+        "b": "R09 Case with connected clamp ears/Body1",
+        "volume_mm3": 0.000510976913711545,
+        "bounds_mm": [
+          [
+            -9.25,
+            -21.000000000000007,
+            6.94128074
+          ],
+          [
+            9.25,
+            11.2155,
+            6.9413
+          ]
+        ]
+      },
+      {
+        "a": "REF R08 number4 plastic screws nominal/Body1",
+        "b": "R09 Case with connected clamp ears/Body1",
+        "volume_mm3": 8.322123078576423,
+        "bounds_mm": [
+          [
+            11.5776,
+            -30.422399999999996,
+            17.3
+          ],
+          [
+            14.4224,
+            -27.577600000000004,
+            27.2474
+          ]
+        ]
+      },
+      {
+        "a": "REF R08 number4 plastic screws nominal/Body2",
+        "b": "R09 Case with connected clamp ears/Body1",
+        "volume_mm3": 8.322123078576423,
+        "bounds_mm": [
+          [
+            -14.4224,
+            26.577599999999997,
+            17.3
+          ],
+          [
+            -11.5776,
+            29.4224,
+            27.2474
+          ]
+        ]
+      }
+    ],
+    "inherited_cover_fit": [
+      {
+        "a": "GPS-Module1/Body3",
+        "b": "REF OLED protective cover missing from STEP/Body1",
+        "volume_mm3": 0.22057640606521983,
+        "bounds_mm": [
+          [
+            -4.415000000000028,
+            -22.034500000000005,
+            13.700000000000001
+          ],
+          [
+            4.4149999999999725,
+            -21.950000000000035,
+            14.000000000000002
+          ]
+        ]
+      }
+    ],
+    "floor_support_samples": [
+      {
+        "x_mm": -11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": -14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.6,
+        "y_mm": -40.9,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -32.55,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 11.375,
+        "y_mm": -27.1,
+        "range_z_mm": [
+          2.55,
+          14.05
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      },
+      {
+        "x_mm": 14.7,
+        "y_mm": -21,
+        "range_z_mm": [
+          2.55,
+          14.35
+        ],
+        "samples": 51,
+        "all_material": true,
+        "missing_z_mm": []
+      }
+    ],
+    "bare_gps_socket_to_rear_inner_wall_mm": 4.247279753981701,
+    "route_reference_to_print_minimum_mm": {
+      "REF R06 internal wire route 8x2mm assumed": 0.25000000000000355,
+      "REF R06 GPS mating plug12x3x2p5 assumed": 0.7106335201775946,
+      "REF R06 Heltec P3 mating plug12x5x2p7 assumed": 0.7500000000000018
+    },
+    "print_solids": {
+      "R09 Case with connected clamp ears": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R09 Recessed lid": {
+        "solid": true,
+        "lumps": 1
+      },
+      "R09 Owner lower collar": {
+        "solid": true,
+        "lumps": 1
+      }
+    }
+  },
+  "interpretations": {
+    "thread_engagement": "The two approximately 8.322 mm3 overlaps between nominal #4 screw crests and pilot walls are intentional thread-forming engagement, not a clearance failure.",
+    "pcb_rounding_contact": "Inherited nominal PCB/support intersection of 0.000511 mm3 is approximately 0.00001926 mm deep and unchanged.",
+    "gps_cover_fit": "Inherited actual-fit uncertainty: conservative OLED cover proxy overlaps GPS receiver approximately 0.0845 mm in Y and 0.3 mm in Z; do not force physical assembly.",
+    "driver_plane": "Driver envelopes touch the intended ear mounting plane at Z0; volume interference is zero, and clearance to case/lid above that plane is 2 mm.",
+    "hardware_assumptions": "Screw/nut/tool and wire/plug references remain nominal or unmeasured. CAD checks do not establish printed retention, physical fits, or clamp endurance."
+  },
+  "repository_tests": {
+    "passed": 492,
+    "suites": 8,
+    "skipped": 0,
+    "evidence": "repository-validation.txt"
+  },
+  "approvals": {
+    "choose_lid_screws": true,
+    "restore_left_upper_ear": true,
+    "add_connecting_web": true,
+    "preserve_extended_base": true
+  },
+  "selected_lid_screw": {
+    "quantity": 2,
+    "type": "#4 x 1/2 inch rounded/pan-head TRS thread-forming screw for plastic",
+    "reference": "McMaster 92295A103",
+    "pilot_mm": 2.65,
+    "physical_fit_test_required": true
+  },
+  "export_checks": {
+    "evidence": "export-verification.json",
+    "all_three_stls_closed_manifold": true,
+    "all_three_stls_consistent_winding": true,
+    "one_connected_mesh_per_stl": true,
+    "native_round_trip_reopen_tested": false,
+    "native_archive_directory_readable": true
+  },
+  "retained_history_warning": {
+    "timeline_index": 607,
+    "feature": "45deg front socket transition",
+    "component": "hidden historical R07 case",
+    "status": "Lost-profile/cached-geometry warning retained; R09 bodies separately verified"
+  }
+}

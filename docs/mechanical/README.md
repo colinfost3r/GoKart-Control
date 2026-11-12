@@ -4,15 +4,9 @@ Updated 2026-11-11. Mechanical specialist lane for GoKart Control, created at th
 owner's request with the project conversation as context. This brief records the
 starting point. The current deliverable is a fit-check prototype, not a production release.
 
-**Current CAD work:** [recessed lid and #4 screws R08](../../hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md). The owner's extended lower shell and lower collar are preserved. The lid gains a 1.5 mm locating step, 0.3 mm side clearance, a chamfered entry and perimeter ledge support. Two #4 ×1/2-inch plastic thread-forming screws replace the M3 bolts/nuts. The screw selection and 2.65 mm prototype pilot need actual-hardware/FDM fit confirmation. The owner's input is missing its upper-left clamp ear; restoration is pending their choice, so the clamp is not assembly-ready. Earlier [R07](../../hardware/cad/heltec-bar-enclosure/r07-fdm-supports/README.md) and prior revisions remain as history.
+**Current CAD work:** [connected clamp and recessed lid R09](../../hardware/cad/heltec-bar-enclosure/r09-clamp-repair/README.md). The owner approved restoring the missing left ear and adding finite-thickness connections. Both ears now join the floor through 4 mm side webs; no original base material was removed. The extended skirt, lower collar, board/antenna positions and recessed lid are preserved. The 66 mm clamp retains its tube clearance, split gap and M4 access.
 
-R08 print status: the lid and lower collar meshes pass; the owner-edited case is
-**not print-ready** because its right clamp ear has a zero-thickness attachment.
-The base extension remains preserved. See the [R08 diagnostic](../../hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md).
-
-The owner chose to coordinate this specialist through the existing project chat.
-Prefix a request with **CAD agent:** to route mechanical work to this specialist;
-this is a conversation convention, not a built-in app mention.
+Use two #4 ×1/2-inch rounded/pan-head TRS screws for plastic (McMaster 92295A103 reference) for the lid, and two M4 ×30 socket-head screws with nuts for the clamp. The 2.65 mm lid pilot is a prototype fit requiring an actual PETG/ASA check. R09 supersedes [R08](../../hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md), whose nonmanifold case STL remains quarantined as diagnostic history. See the revision's geometry, export and physical-fit notes before printing.
 
 ## Scope and ownership
 

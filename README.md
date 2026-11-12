@@ -108,17 +108,13 @@ A pit STOP always wins. **Sounds** are synthesized in the browser (`static/sound
 file on pit and kart): countdown lights, GO, boost, mud, item roulette, lap, finish, STOP.
 Kart panel speakers are fed over HDMI audio.
 
-The [compact Heltec/GPS enclosure prototype](hardware/cad/heltec-bar-enclosure/r08-recessed-lid/)
-preserves the owner's extended lower shell and board/antenna placement. A stepped
-lid locates in a chamfered perimeter sill and uses two #4 plastic thread-forming
-screws. The internal GPS supports and enclosed harness remain. The owner input is
-missing its upper-left clamp ear; clamp completion and physical fit remain open.
-Editable Fusion source, print files and fit assumptions are documented in the
-[mechanical handoff](docs/mechanical/README.md). Physical prototype checks remain open.
-
-R08 print status: the lid and lower collar meshes pass; the owner-edited case is
-**not print-ready** because its right clamp ear has a zero-thickness attachment.
-The base extension remains preserved. See the [R08 diagnostic](hardware/cad/heltec-bar-enclosure/r08-recessed-lid/README.md).
+The [compact Heltec/GPS enclosure prototype](hardware/cad/heltec-bar-enclosure/r09-clamp-repair/)
+preserves the owner's extended base and board/antenna placement. R09 restores the
+missing clamp ear and adds 4 mm side webs; the recessed, chamfered lid uses two
+#4 ×1/2-inch plastic thread-forming screws. The GPS supports and enclosed harness
+remain unchanged. Editable Fusion, STEP/STL files, screw selection and validation
+are documented in the [mechanical handoff](docs/mechanical/README.md). Printed
+fit and clamp strength remain prototype checks.
 
 ## Repository map
 

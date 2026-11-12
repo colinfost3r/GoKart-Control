@@ -158,6 +158,18 @@ This explicit persistent maintenance tune is separate from temporary supervisory
   connecting web is pending the owner's choice; do not distribute the diagnostic
   case STL as print-ready.
 
+## Approved clamp repairs and screw selection — November 11, 2026
+
+- Owner authorizes selecting the lid screws: use two #4 ×1/2-inch pan/rounded-head
+  TRS thread-forming screws intended for plastic, modeled around McMaster 92295A103.
+  Retain the 2.65 mm adjustable prototype pilots; printed fit needs checking.
+- Restore the missing upper-left clamp ear while keeping the owner's extended base.
+- Add a finite-thickness connection to the right clamp ear while keeping the
+  extended shape and outside dimensions. Validate both ear connections, tube
+  clearance, lower-collar alignment and fastener access before releasing print files.
+- Preserve the recessed R08 lid, hardware placement and owner GPS support edits.
+  Keep the as-edited R08 archive as provenance; repairs belong in a new revision.
+
 ## Confirmed requirements
 
 - Category: 50 Day. Canonical project: ~/Projects/50 Day/GoKart Control/.
