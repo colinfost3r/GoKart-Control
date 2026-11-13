@@ -622,6 +622,8 @@ class App:
                 _, game = self.freeplay.select(pit_zones, now, demo=d is not None, race=race)
                 game += self.freeplay.tick(now)
                 zones, more = self.freeplay.select(pit_zones, now, demo=d is not None, race=race)
+                if d is None:
+                    self._stash_carried(zones, race)
                 game += more + self.game.set_zones(d.zones if d is not None else zones, now)
                 if self._game_pending is not None and d is None:
                     game += self.game.import_state(self._game_pending, now)
@@ -650,6 +652,22 @@ class App:
     # -- game timing across restarts -------------------------------------------
     def _load_game_state(self):
         return self._load_json(self.game_state_path)
+
+    def _stash_carried(self, zones, race):
+        """The pit takes the zones over mid-freeplay (START RACE, or the pit's own game): set_zones drops the
+        carried items with the game. Keep them for the freeplay that resumes afterwards, through the same
+        restore path a power cycle uses (_inv_pending). Full sweep 2026-11-13: a 5 s pit race silently wiped
+        both karts' boosts."""
+        g = self.game
+        if g.source != "freeplay" or not (g.inventory or g.shields) or zones == g.doc:
+            return
+        if (zones.get("source") if isinstance(zones, dict) else None) == "freeplay":
+            return
+        items = [{"item": i["item"], "secs": i["secs"], "scale": i["scale"],
+                  **({"charges": i["charges"]} if "charges" in i else {})} for i in g.inventory]
+        self._inv_pending = (items, g.shields)
+        self.log.write("event", what="inventory_stashed", items=[i["item"] for i in items], shields=g.shields,
+                       why="pit race" if race else "pit game")
 
     @staticmethod
     def _inv_restorable(doc):

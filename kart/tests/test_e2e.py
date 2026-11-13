@@ -612,6 +612,47 @@ class ServerPieces(unittest.TestCase):
         self.assertIsNone(self.ks.App._inv_restorable(None))
         self.assertIsNone(self.ks.App._inv_restorable({"v": 2, "saved_wall": time.time()}))
 
+    def test_carried_items_survive_a_pit_takeover(self):
+        # full sweep 2026-11-13: a 5 s pit race paused freeplay ("off at the pit"), set_zones dropped the
+        # carried boosts with the game, and the empty inventory got saved. _stash_carried keeps them in
+        # _inv_pending (the power-cycle restore path) for the freeplay that resumes afterwards.
+        sys.path.insert(0, os.path.join(KART, "tests"))
+        import test_core as tc
+        kc = self.ks.kartcore
+
+        class Log:
+            def __init__(self): self.recs = []
+            def write(self, kind, **kw): self.recs.append((kind, kw))
+        app = self.ks.App.__new__(self.ks.App)
+        app.game, app.log, app._inv_pending = kc.GameEngine(rng=tc.FixedRng(0.1), item_hold=True), Log(), None
+        doc = tc.zones_doc(tc.item_zone()); doc["source"] = "freeplay"
+        app.game.set_zones(doc, 0.0)
+        app.game.inventory.append({"item": "boost", "secs": 7, "scale": 0.75, "zone": "fp", "mono": 0.0})
+        app.game.inventory.append({"item": "boost3", "secs": 7, "scale": 0.75, "zone": "fp", "mono": 0.0, "charges": 3})
+        app.game.shields = 1
+        app._stash_carried(doc, True)                       # same document: nothing to stash
+        self.assertIsNone(app._inv_pending)
+        doc2 = dict(doc, version="freeplay-2")
+        app._stash_carried(doc2, False)                     # freeplay respawning a box: still freeplay
+        self.assertIsNone(app._inv_pending)
+        app._stash_carried(None, True)                      # START RACE at the pit: the pit's (empty) zones win
+        self.assertEqual(app._inv_pending, ([{"item": "boost", "secs": 7, "scale": 0.75},
+                                            {"item": "boost3", "secs": 7, "scale": 0.75, "charges": 3}], 1))
+        self.assertEqual([k for k, _ in app.log.recs], ["event"])
+        self.assertEqual((app.log.recs[0][1]["what"], app.log.recs[0][1]["why"]), ("inventory_stashed", "pit race"))
+        app.game.set_zones(None, 1.0)                       # the engine still drops them with the game ...
+        self.assertEqual((app.game.inventory, app.game.shields), ([], 0))
+        app.game.set_zones(dict(doc, version="freeplay-3"), 70.0)      # ... and freeplay resumes a minute later
+        recs = app.game.restore_inventory(*app._inv_pending, 70.5)     # what the ticker does with _inv_pending
+        self.assertEqual([r["ev"] for r in recs if r["ev"] == "inventory_restored"], ["inventory_restored"])
+        self.assertEqual([(i["item"], i.get("charges")) for i in app.game.inventory], [("boost", None), ("boost3", 3)])
+        self.assertEqual(app.game.shields, 1)
+        app._inv_pending = None
+        app.game.inventory.clear(); app.game.shields = 0
+        app._stash_carried(None, True)                      # nothing carried: nothing stashed, nothing logged
+        self.assertIsNone(app._inv_pending)
+        self.assertEqual(len(app.log.recs), 1)
+
     def test_session_log_unwritable_dir_falls_back(self):
         log = self.ks.SessionLog("/proc/definitely/not/here", max_mb=10)
         log.write("event", what="ok")
