@@ -53,6 +53,12 @@
   "sticks" on the ground. The filter accepts a change only with the pedal released and the
   motor under 50 ERPM (about 5 cm/s) for 250 ms; it was commissioned wheels-up only, on every
   kart. Do not install it on another kart, and do not call it accepted, without a ground test.
+- Reported by the owner 2026-11-13: the throttle cuts out on karts 4 and 5 when driven. Cause
+  not established. The package applied that morning raised motor current to 140 A and lowered
+  the absolute-current trip to 220 A on both, tested wheels-up only. Do not copy that package,
+  or any tune, to another kart on bench evidence alone. `tools/vesc/restore_fleet_tune.py` can
+  return each kart to its own captured settings; each use is a VESC write needing the owner's
+  go-ahead for that kart.
 - Explicit maintenance exception 2026-11-13 (kart 5 only): after reviewing kart 5's own capture
   the owner approved one persistent SET_MCCONF (the twelve reviewed tune fields plus the
   protection limits; on kart 5 only `l_abs_current_max` of those differed) and then the

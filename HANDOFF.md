@@ -3,6 +3,15 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Throttle cuts out on karts 4 and 5 — November 13, 2026
+
+Reported by the owner after the first driving on the tune applied that morning. Not
+diagnosed. The leading suspect is that tune: 140 A motor current with the absolute-current
+trip lowered to 220 A and a 500 ms stop after each trip. `tools/vesc/restore_fleet_tune.py`
+can put each kart's motor settings back to its own morning capture; it is tested offline and
+**has not been used**. Karts 4 and 5 should not carry other drivers until this and the
+direction switch are sorted. Details in the [Claude handoff](docs/CLAUDE_HANDOFF.md).
+
 ## Reverse filter sticks on the ground on karts 4 and 5 — November 13, 2026
 
 The owner reports the direction switch sticking in forward and in reverse when karts 4 and 5

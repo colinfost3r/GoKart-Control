@@ -251,6 +251,22 @@ only (35 tests, 11 mutations caught) and **has not been used**; each removal is 
 needing the owner's go-ahead for that kart. Kart 3 has the same filter but also a genuinely
 noisy switch wire, so removing it there brings the original fault back.
 
+**The throttle also cuts out on karts 4 and 5 (owner, same evening).** Not diagnosed: no
+fault code has been read. The leading suspect is the package applied that morning, which
+raised the motor current to 140 A and at the same time lowered the absolute-current trip to
+220 A on both karts (kart 4 had 120 A / 420 A and a 50 ms fault stop; kart 5 had 100 A / 300 A;
+kart 2, which drives daily, has 140 A / 240 A), with a 500 ms stop after every trip. The
+protection limits were copied from kart 3 at the agent's recommendation and none of it was
+tested under load. The owner was asked whether the Core2 shows VESC FAULT with a number when
+it cuts out, and not to power-cycle the VESCs so that their fault logs survive.
+`tools/vesc/restore_fleet_tune.py` now exists to put each kart's motor settings back to its
+own capture from that morning (15 settings on kart 4, 10 on kart 5), with the same binding and
+single-write discipline as the tool that changed them; offline-tested only and **not used**.
+`tools/vesc/read_faults.py` reads the VESC's own fault log (RAM only, read-only, also unused).
+Recommended order per kart, each step with the owner's go-ahead: read the fault log if the
+VESC has not been power-cycled, remove the filter, power-cycle, restore the settings. Other
+possible causes not excluded: the mode's speed cap, a pit SLOW or STOP, the battery.
+
 The owner asked whether the servo input could be used instead. Checked against the 6.02 source:
 with the app set to "ADC and UART" the firmware reads the reverse switch from the servo pin
 instead of RX, with an internal pull-up and **no debounce on either pin**. It is a different

@@ -242,6 +242,23 @@ the reverse-input filter tool for those packages; the
 `--apply --supervised --expect-blob-sha256` and the owner's go-ahead for that kart, and never
 activates, retries or cleans up. It cannot replace an installed copy in one step.
 
+`read_faults.py --port PORT --expected-uuid UUID --out NEW_DIR` (added 2026-11-13) reads the
+fault log a VESC has kept since it was powered: the identity read and the fixed terminal
+command `faults`, nothing else. It clears and changes nothing. The log is in RAM, so **read it
+before any power cycle**, with the Heltec off the VESC. No printed reply is reported as no
+answer, never as no faults. Not yet used on hardware.
+
+`restore_fleet_tune.py PACKAGE --kart-id N --expected-uuid UUID` (added 2026-11-13) puts a
+kart-4/5 controller's motor settings back to what they were before its package was applied.
+Offline by default: it lists each setting with its present and restored value. `--preflight-only`
+reads and checks. `--apply --acknowledge-persistent-write --expect-original-sha256 HASH` writes
+MCCONF once and reads it back. It writes the controller's current bytes with only the
+package's settings set back, so every other byte, including the offsets measured at this
+power-up, stays as read. It refuses if any other setting differs from the package's capture,
+which is what stops a temporary Heltec limit from being made permanent: **run it with the
+Heltec off the VESC and after a VESC power cycle.** Settings already put back by hand are
+left alone. It needs the owner's go-ahead for that kart and has not been used on hardware.
+
 `remove` (added 2026-11-13 after the filter proved too strict on the ground) is one supervised
 erase of exactly the package's stored script, with the same flags as `install`. It writes
 nothing. It refuses unless the stored bytes are the package's, the kart is at rest with the
