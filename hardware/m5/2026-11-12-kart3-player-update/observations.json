@@ -1,0 +1,235 @@
+{
+  "date": "2026-11-12",
+  "kart_id": 3,
+  "operator": "owner at the kart; uploads run from the bench Mac over USB",
+  "source_commit": "444c04c (candidate source; unchanged by later merge 5af0e6a)",
+  "candidate_manifest": "docs/validation/m5-player-2026-11-12.json",
+  "vesc_power": "off for the whole session (no BLE link, zero VESC packets before and after)",
+  "method": "esptool 4.9.0 write_flash of the application only at 0x10000, 460800 baud; bootloader, partition table, otadata and NVS not written",
+  "boards": {
+    "core2": {
+      "usb_port": "/dev/cu.usbserial-59740081161",
+      "mac": "3c:8a:1f:d7:57:28",
+      "active_slot_before": "app0",
+      "application_before": {
+        "target": "m5-espnow",
+        "source": "4a582f0",
+        "bytes": 1298688,
+        "sha256": "996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a",
+        "read_back_from_flash": true
+      },
+      "application_written": {
+        "target": "m5-espnow",
+        "bytes": 1356752,
+        "sha256": "894a1a34537b5894110ddb120b2419f18b0fad8432b0e7acac775306ce58d3ac",
+        "esptool_hash_verified": true,
+        "independent_readback": false
+      },
+      "after": {
+        "fw": "m5-v1.5",
+        "new_commands_answer": [
+          "m5_game",
+          "share status"
+        ],
+        "kart": 3,
+        "live": true,
+        "page": "map",
+        "espnow_peer": "f8:5b:1b:a2:db:10",
+        "linked": true,
+        "channel_aligned": true,
+        "ota_configured": true,
+        "ota_active": false,
+        "hostname": "gokart-display-3",
+        "course_peers": [],
+        "course_source": "none",
+        "heap": 147236
+      }
+    },
+    "heltec": {
+      "usb_port": "/dev/cu.usbmodem1101",
+      "mac": "f8:5b:1b:a2:db:10",
+      "active_slot_before": "app0",
+      "application_before": {
+        "target": "kart-m5-espnow",
+        "source": "4a582f0",
+        "reported_fw": "kart-0.2.7",
+        "bytes": 1330304,
+        "sha256": "11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2",
+        "read_back_from_flash": true
+      },
+      "application_written": {
+        "target": "kart-m5-espnow",
+        "bytes": 1348976,
+        "sha256": "d43662645457f51283010d655cc2f60d5740adafc015adc59910e70fd136cab9",
+        "esptool_hash_verified": true,
+        "independent_readback": false
+      },
+      "after": {
+        "fw": "kart-0.3.3",
+        "built": "Nov 12 2026 08:55:51",
+        "kart": 3,
+        "writes": true,
+        "transport": "ble",
+        "radio": true,
+        "vescmac": "f7:bd:23:cc:62:0e",
+        "uuid_pin": "37004e000951343037353739",
+        "vesc_link": false,
+        "id_ok": false,
+        "limits_ok": false,
+        "baseline_source": "none",
+        "wifi_joined": true,
+        "ota_host": "gokart-3.local",
+        "espnow_peer": "3c:8a:1f:d7:57:28",
+        "linked": true,
+        "channel_aligned": true,
+        "session": 0,
+        "hosting": false,
+        "course_peers": [],
+        "heap": 45736,
+        "heap_min": 45720
+      }
+    }
+  },
+  "espnow_channel": {
+    "before": 6,
+    "after": 2,
+    "note": "the Heltec joined Wi-Fi after the update and both radios followed the access point to channel 2"
+  },
+  "radio_counters": {
+    "before_kart_0.2.7_at_51s": {
+      "lora_rx": 31,
+      "lora_rx_bad": 132,
+      "sync": "free",
+      "heap_with_wifi": 59244
+    },
+    "after_kart_0.3.3_at_20s": {
+      "lora_rx": 43,
+      "lora_rx_bad": 32,
+      "sync": "beacon",
+      "heap_with_wifi": 45736
+    }
+  },
+  "environment": "karts 1 and 2 nearby in game session 2 hosted by kart 2, pit base heard; kart 3 stayed at session 0",
+  "side_effects": [
+    "opening a port with DTR/RTS cleared reboots either board; opening with the driver default does not",
+    "each esptool read or write reboots that board once"
+  ],
+  "private_capture_sha256": {
+    "core2-before-app0.bin": "996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a",
+    "heltec-before-app0.bin": "11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2",
+    "core2-before.log": "d22a51d70d731750852ae3b635fe435d80b8798d1a8a2b16b1ad5d9c7f163415",
+    "heltec-before.log": "fb6d77ca15111e56bbe278a6a95221d6ceb5136958ce77b4780fa38efcc774a5",
+    "core2-after.log": "a09b466d2a89fd6c71fe7f14348c554f14f7536bbbab3d7ddbffc0ce83d060e1",
+    "heltec-after.log": "ea4b941290c9a4b2e0114485805b22cfc3f4cfefb2f9cee05ab11d374f3af341",
+    "core2-upload.log": "493c89962b2e4bdf6df0ba683ef237e5f69797000dee121272fb095b488e78eb",
+    "heltec-upload.log": "2fb36bd53000f5633e39f63352d33958e2427126ee6c7708c99a0298be2d3b9f",
+    "heltec-vesc-on.log": "053f1c667a642f77a34f6858773d5f5903dcd439ed79f3d4703e071158d9a6b9",
+    "core2-vesc-on.log": "fff451adb4931fad07a7db55bc3250d16c9c10dbfee6e4212ee5427947d73594"
+  },
+  "operator_report": "owner confirmed after the update that the Core2 shows the new full-screen map with the DASH/MAP button and FIRE box",
+  "not_verified": [
+    "pit STOP/SLOW/BOOST; a 10-minute soak; a VESC cold boot with these applications",
+    "touch behaviour, page switching and maintenance screen (six touches registered; not individually checked)",
+    "GPS, map follow and speed (no fix indoors)",
+    "course download, JOIN and FIRE (host kart not updated, no course pairing)",
+    "Core2 or Heltec OTA with the new applications",
+    "independent post-write readback of either application"
+  ],
+  "vesc_on_check": {
+    "setup": "owner powered the VESC with the kart on USB and reported ready; console watched read-only (only `status` sent)",
+    "heltec": {
+      "vesc_fw": "6.02",
+      "vesc_hw": "75_300_R2",
+      "vesc_uuid": "37004e000951343037353739",
+      "uuid_matches_pin": true,
+      "id_ok": true,
+      "limits_ok": true,
+      "baseline_source": "read",
+      "baseline_suspect": false,
+      "revert_missed": false,
+      "vesc_packets": 1126,
+      "vesc_crc_err": 0,
+      "l_current_max": 140.0,
+      "l_in_current_max": 100.0,
+      "max_duty": 0.95,
+      "poles": 20,
+      "gear": 2.769,
+      "wheel_m": 0.406,
+      "heltec_rebooted_on_vesc_power": false
+    },
+    "mode_commands_from_core2": [
+      {
+        "seq": 1,
+        "mode": "NORMAL",
+        "scale": 0.75,
+        "erpm_cap": 36102,
+        "cap_mph": 25,
+        "seen": "already confirmed when the watch began"
+      },
+      {
+        "seq": 2,
+        "mode": "ECO",
+        "scale": 0.5,
+        "erpm_cap": 21661,
+        "cap_mph": 15,
+        "seen": "write and verify-ok log lines"
+      },
+      {
+        "seq": 3,
+        "mode": "SPORT",
+        "scale": 1.0,
+        "erpm_cap": 150000,
+        "cap_mph": 0,
+        "seen": "write and verify-ok log lines"
+      },
+      {
+        "mode": "ECO",
+        "scale": 0.5,
+        "erpm_cap": 21661,
+        "seen": "final state; command itself fell between captures"
+      }
+    ],
+    "matches_2026-11-10_readbacks": true,
+    "wheel_motion": {
+      "samples_2hz": 142,
+      "forward_erpm_max": 25528,
+      "reverse_erpm_min": -14000,
+      "reverse_note": "about -14k in the ECO trace, -5580 in the first watch",
+      "cycles_in_45s_eco_trace": "four forward and four reverse runs, each returning to zero",
+      "eco_forward_peak_erpm": 18000,
+      "faults_seen": [
+        0
+      ],
+      "vesc_link_dropped": false,
+      "motor_a_max_abs": 19.2,
+      "volts_min": 70.4,
+      "volts_max": 74.6,
+      "esc_c_max": 16.8
+    },
+    "core2": {
+      "vesc": true,
+      "mode_ready_at_rest": true,
+      "mode_ready_note": "read false once, around a mode change, then true on two later reads",
+      "page": "dash",
+      "touch_presses": 55,
+      "game_stage": "Error",
+      "game_stage_note": "consistent with a JOIN tap while no course host is paired (source path reports Host unavailable); not confirmed by the operator"
+    },
+    "heltec_heap": {
+      "free": 45572,
+      "heap_min_progression": [
+        38976,
+        38608,
+        37812
+      ],
+      "note": "low-water mark with Wi-Fi and BLE up; fell about 1.2 kB over a few minutes; not soak-tested"
+    },
+    "final_state": "ECO confirmed, zero ERPM, fault 0",
+    "not_established": [
+      "load, road or endurance behaviour",
+      "pit STOP/SLOW/BOOST with these applications",
+      "behaviour across a VESC cold boot with these applications"
+    ],
+    "operator_report": "owner confirmed forward and reverse felt as smooth and consistent as on 2026-11-11"
+  }
+}

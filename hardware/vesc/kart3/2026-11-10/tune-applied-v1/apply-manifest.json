@@ -1,0 +1,62 @@
+{
+  "started_at_utc": "2026-11-10T19:58:55.012963+00:00",
+  "mode": "apply_once",
+  "status": "acknowledged_runtime_readback_verified",
+  "source_sha256": {
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/trial.json": "dd9784a3e0c1eba39fba9326539cd272cfba414ba5ad8af3469547c1dc9b6eb7",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/proposed_motor_response.bin": "0e9daee85a51f3687b85007b68d8c933af5569431805bd3810eec999e5c37fa8",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/reference/manifest.json": "0e29a23e14ded6842c6056fd54db8a9a668239bad6152a2be500d91aca293e8a",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/reference/firmware.bin": "067690f5db0ba20ec2d73dfac1f7aeb72eafe4d55549c4f5eadad40e65902e69",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/reference/telemetry.bin": "0dc228aa475e4f9fa2bf8760d99a0f704078b7a8a851363c396e8cfbbc4aaf4a",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/reference/motor_configuration.bin": "80ca33b7e5e5b0bfc08d039337f20c1ecf7f04b8726e35e87d938d40af33f0b0",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/reference/app_configuration.bin": "df26cba6b5e919cab3b9601deb5845e6ab24a2d53da86728d81147aa84877d05",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/before/manifest.json": "986f37be6b1192f9392b53c8b028033e4016b0ee8472104aa422da11b31bc51a",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/before/firmware.bin": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/before/telemetry.bin": "ad990ce9fb04f4fbf362ede912d1c0f263d036136e13bbb67b9272dc4f293d35",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/before/motor_configuration.bin": "57cef3f6d0d726a477a785f6d2db73c1878871e9aa23f4c9c061cd99c7603b65",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart3/2026-11-10/tune-trial-v1/before/app_configuration.bin": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/third_party/vesc_tool/6.00/parameters_mcconf.xml": "b7cc767487bac6fc7526e29b4f71f54db4da0b29b9110b5de23d67fff74255b0",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/third_party/vesc_tool/6.00/parameters_appconf.xml": "33c64b9db644b524f5a90a85d3fc76130950cb7247c33cd915aa5bd0414f2436"
+  },
+  "expected_identity": {
+    "uuid": "37004e000951343037353739",
+    "firmware": "6.02",
+    "hardware": "75_300_R2"
+  },
+  "mutating_write_attempts": 1,
+  "ack_verified": true,
+  "readback_verified": true,
+  "retry_performed": false,
+  "rollback_performed": false,
+  "saved_flash_independently_verified": false,
+  "protocol_source": "https://github.com/vedderb/bldc/blob/f7c2b34e1cff2234cae98be3abf0cd50e249558f/comm/commands.c",
+  "persistence": "COMM_SET_MCCONF (13) stores the full motor configuration; runtime readback does not independently verify persistence across reboot.",
+  "before_sha256": {
+    "firmware": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5",
+    "motor_configuration": "57cef3f6d0d726a477a785f6d2db73c1878871e9aa23f4c9c061cd99c7603b65",
+    "app_configuration": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d",
+    "telemetry": "954d53263558d652e8874f65a038ac6c370444209779df661c248a7796be3bd0"
+  },
+  "write_command": 13,
+  "do_not_retry_this_application": true,
+  "interrupted_intent_warning": "If this process ends before its final journal, the write may have started even if the recorded attempt count is zero.",
+  "write_frame_sha256": "21a11399ff9e194c53565952ce55c81f1b043bda0eba296bed4cb9115350412a",
+  "write_frame_bytes": 488,
+  "write_intent_at_utc": "2026-11-10T19:58:55.040506+00:00",
+  "full_frame_accepted_at_utc": "2026-11-10T19:58:55.047980+00:00",
+  "ack_received_at_utc": "2026-11-10T19:58:55.423061+00:00",
+  "after_sha256": {
+    "firmware": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5",
+    "motor_configuration": "0e9daee85a51f3687b85007b68d8c933af5569431805bd3810eec999e5c37fa8",
+    "app_configuration": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d",
+    "telemetry": "613567987f0dc4832f83db18fa10cb340ab3aedaf4d8501ae7e59c90c0b8de79"
+  },
+  "verified_motor_fields": 189,
+  "verified_app_fields": 187,
+  "verified_total_fields": 376,
+  "application_bytes_unchanged": true,
+  "all_nonallowlisted_motor_bytes_unchanged": true,
+  "full_write_frame_accepted": true,
+  "write_bytes_accepted": 488,
+  "finished_at_utc": "2026-11-10T19:58:55.486573+00:00"
+}

@@ -1,0 +1,396 @@
+{
+  "date": "2026-11-13",
+  "kart_id": 5,
+  "operator": "owner at the kart; uploads run from the bench Mac over USB",
+  "source_commit": "64e08cb (game rules; later merges change no source of these targets)",
+  "candidate_manifest": "docs/validation/m5-game-rules-2026-11-13.json",
+  "starting_state": "both boards fitted on kart 5 and never flashed (factory contents); not contradicted by the owner",
+  "method": "as for kart 4: full 16 MB read of each board kept privately, chip erase, kart ID stored by the no-radio helper before the kart firmware first ran, then bootloader, partition table, boot_app0 and application; esptool 4.9.0 at 460800 baud",
+  "boards": {
+    "heltec": {
+      "usb_port": "/dev/cu.usbmodem1101",
+      "mac": "a4:cb:8f:a0:20:34",
+      "kart_id_helper": {
+        "sketch": "firmware/provision-kart-id (-DKART_ID=5)",
+        "reported": {
+          "t": "provision_id",
+          "want": 5,
+          "before": 0,
+          "stored": 5,
+          "ok": true
+        }
+      },
+      "read_only_application": {
+        "target": "kart-m5-espnow-readonly",
+        "sha256": "483fc64247aa3c1a7ed73ba5dbdd798bb725c8b5855888122897976863681680",
+        "esptool_hash_verified": true
+      },
+      "first_status": {
+        "kart": 5,
+        "fw": "kart-0.3.3",
+        "built": "Nov 13 2026 10:36:28",
+        "writes": false,
+        "transport": "ble",
+        "radio": true,
+        "vescmac": "",
+        "uuid_pin": "",
+        "speed_cal": 2.48,
+        "heap": 123184
+      },
+      "application_now": {
+        "target": "kart-m5-espnow",
+        "candidate": "2026-11-13-game-rules",
+        "bytes": 1350896,
+        "sha256": "84e1da0ea79dbd576df5e4adc9bce04e8673aa305441943c29ea86d5bc7b4486",
+        "method": "application only at 0x10000; ID, pairing and pins kept",
+        "esptool_hash_verified": true
+      },
+      "status_on_control_build": {
+        "kart": 5,
+        "fw": "kart-0.3.3",
+        "built": "Nov 12 2026 19:42:53",
+        "writes": true,
+        "vescmac": "dd:d4:b8:ff:58:f6",
+        "vesc_fw": "6.02",
+        "vesc_uuid": "3d0020000951343037353739",
+        "uuid_pin": "3d0020000951343037353739",
+        "id_ok": true,
+        "limits_ok": true,
+        "baseline_source": "read",
+        "baseline_suspect": false,
+        "revert_missed": false,
+        "vesc_crc_err": 0,
+        "scale_max": 1.0,
+        "max_erpm": 150000,
+        "speed_cal": 2.48,
+        "heap": 54228,
+        "heap_min": 53528
+      }
+    },
+    "core2": {
+      "usb_port": "/dev/cu.usbserial-59740083521",
+      "mac": "3c:8a:1f:d7:53:44",
+      "application_now": {
+        "target": "m5-espnow",
+        "candidate": "2026-11-13-game-rules",
+        "bytes": 1357056,
+        "sha256": "0d904a89671272c08f794e848047e28341e6d232968723afdc3c017054e1a169",
+        "esptool_hash_verified": true
+      },
+      "first_status": {
+        "fw": "m5-v1.5",
+        "transport": "espnow",
+        "kart": 0,
+        "live": false
+      }
+    }
+  },
+  "boot_image_sha256": {
+    "firmware/build/bench-candidates/2026-11-13-upstream-035/heltec.bootloader.bin": "b68c1ed33c43a4290375213f24d608c125e31e22880d16d4a5dcba89e083716d",
+    "firmware/build/bench-candidates/2026-11-13-upstream-035/heltec.partitions.bin": "ace02503447d0f470692e65fa76002f2d77a92dc81cd3813d8aa66718d716da9",
+    "firmware/build/bench-candidates/2026-11-13-upstream-035/core2.bootloader.bin": "7beba41f723dba9efc2b108311f30e4db363d9e34dd32360810eb05734859c89",
+    "firmware/build/bench-candidates/2026-11-13-upstream-035/core2.partitions.bin": "bd0f7954aca2ef7d925ee21aaa1f3dc8822d1d6ce5cbbd26a135e5886bfff6ce",
+    "~/.local/share/gokart-arduino/data/packages/esp32/hardware/esp32/3.3.8/tools/partitions/boot_app0.bin": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
+  },
+  "pairing": {
+    "tool": "tools/m5/pair_espnow.py --kart-id 5 (fresh random keys; private recovery file kept out of Git)",
+    "core2": {
+      "configured": true,
+      "peer": "a4:cb:8f:a0:20:34",
+      "linked": true,
+      "channel": 1,
+      "rx_channel": 1,
+      "peer_channel": 1,
+      "channel_aligned": true,
+      "rssi": -23,
+      "tx_failed": 0,
+      "tx_dropped": 0,
+      "rx_dropped": 0,
+      "rx_invalid": 0
+    },
+    "heltec": {
+      "configured": true,
+      "peer": "3c:8a:1f:d7:53:44",
+      "linked": true,
+      "channel": 1,
+      "rx_channel": 1,
+      "peer_channel": 1,
+      "channel_aligned": true,
+      "rssi": -24,
+      "tx_failed": 0,
+      "tx_dropped": 2,
+      "rx_dropped": 2,
+      "rx_invalid": 0
+    },
+    "core2_status": {
+      "kart": 5,
+      "live": true,
+      "vesc": false,
+      "mode_ready": false,
+      "parse_errors": 0
+    },
+    "channel_note": "channel 1: neither board has Wi-Fi configured"
+  },
+  "vesc_binding": {
+    "order": "UUID pinned first, then the address",
+    "uuid_source": "read over USB from kart 5's controller the same day (hardware/vesc/kart5/2026-11-13/)",
+    "candidates_seen": 1,
+    "ble_address": "dd:d4:b8:ff:58:f6",
+    "console_log": [
+      "ble: 1 VESC in range, not connecting until pinned with vescmac",
+      "vesc uuid pinned to 3d0020000951343037353739",
+      "vesc address pinned to dd:d4:b8:ff:58:f6",
+      "ble connected dd:d4:b8:ff:58:f6 mtu 23 (write chunk 20)",
+      "vesc link up",
+      "vesc fw 6.02 75_300_R2 uuid 3d0020000951343037353739",
+      "controller baseline remembered (uuid 3d0020000951343037353739): scale 1.00, ERPM -150000..150000",
+      "vesc limits read: Imax 140 A, ERPM -150000..150000, duty 0.005..0.950, scale 1.00/1.00, poles 14 gear 2.769 wheel 0.406 m (baseline read)",
+      "mode SPORT adopted from the controller's live limits (no write)"
+    ],
+    "status": {
+      "kart": 5,
+      "writes": false,
+      "vescmac": "dd:d4:b8:ff:58:f6",
+      "vesc_fw": "6.02",
+      "vesc_hw": "75_300_R2",
+      "vesc_uuid": "3d0020000951343037353739",
+      "uuid_pin": "3d0020000951343037353739",
+      "id_ok": true,
+      "limits_ok": true,
+      "vesc_crc_err": 0,
+      "baseline_source": "read",
+      "poles": 14,
+      "gear": 2.769,
+      "wheel_m": 0.406,
+      "scale_max": 1.0,
+      "max_erpm": 150000,
+      "l_current_max": 140.0,
+      "l_in_current_max": 100.0
+    },
+    "uuid_matches_pin_and_usb": true
+  },
+  "read_only_telemetry": {
+    "heltec_self": {
+      "samples": 16,
+      "vesc_link_always": true,
+      "volts": [
+        82.9,
+        82.9
+      ],
+      "faults_seen": [
+        0
+      ]
+    },
+    "core2": {
+      "kart": 5,
+      "live": true,
+      "vesc": true,
+      "mode_ready": false,
+      "parse_errors": 0,
+      "linked": true,
+      "channel": 1,
+      "channel_aligned": true,
+      "rssi": -26
+    },
+    "read_only_soak": "not run on kart 5; the write-capable build was installed directly after this check"
+  },
+  "speed_factor": {
+    "stored": 2.48,
+    "note": "default 2.48 kept: kart 5's VESC stores 14 poles / 2.769 / 0.406 m, the numbers the default was measured against on kart 2"
+  },
+  "mode_check": {
+    "setup": "owner at the kart, wheels up; console logged read-only (only `status` sent); modes held on the Core2",
+    "mode_log_lines": [
+      [
+        12.8,
+        "vesc write scale 0.500, cap 15 mph = 15163 ERPM"
+      ],
+      [
+        13.3,
+        "vesc write verify ok (scale 0.500, ERPM 15163)"
+      ],
+      [
+        17.8,
+        "vesc write scale 0.750, cap 25 mph = 25272 ERPM"
+      ],
+      [
+        18.0,
+        "vesc write verify ok (scale 0.750, ERPM 25272)"
+      ],
+      [
+        23.4,
+        "vesc write scale 1.000, no speed cap (150000 ERPM)"
+      ],
+      [
+        23.8,
+        "vesc write verify ok (scale 1.000, ERPM 150000)"
+      ]
+    ],
+    "mode_commands": [
+      [
+        12.8,
+        {
+          "src": 254,
+          "seq": 1,
+          "cmd": 1,
+          "arg": 0,
+          "result": 1
+        }
+      ],
+      [
+        17.8,
+        {
+          "src": 254,
+          "seq": 2,
+          "cmd": 1,
+          "arg": 1,
+          "result": 1
+        }
+      ],
+      [
+        23.4,
+        {
+          "src": 254,
+          "seq": 3,
+          "cmd": 1,
+          "arg": 2,
+          "result": 1
+        }
+      ]
+    ],
+    "limit_readbacks_in_order": [
+      {
+        "scale_max": 1.0,
+        "max_erpm": 150000,
+        "cap_mph": 0
+      },
+      {
+        "scale_max": 0.5,
+        "max_erpm": 15163,
+        "cap_mph": 15
+      },
+      {
+        "scale_max": 0.75,
+        "max_erpm": 25272,
+        "cap_mph": 25
+      },
+      {
+        "scale_max": 1.0,
+        "max_erpm": 150000,
+        "cap_mph": 0
+      }
+    ],
+    "wheel_peak_erpm_by_mode": {
+      "SPORT": 40166,
+      "ECO": 14098,
+      "NORMAL": 22085
+    },
+    "motor_a_max_abs_by_mode": {
+      "SPORT": 82.6,
+      "ECO": 10.4,
+      "NORMAL": 26.4
+    },
+    "expected_caps": {
+      "ECO": 15163,
+      "NORMAL": 25272,
+      "SPORT": 150000
+    },
+    "faults_seen": [
+      0
+    ],
+    "vesc_link_dropped": false,
+    "resets": 0,
+    "volts": [
+      77.3,
+      83.0
+    ],
+    "final_state": "SPORT confirmed, zero ERPM, fault 0",
+    "operator_report": "owner reported the sequence done and that it felt right"
+  },
+  "soak": {
+    "conditions": "write-capable build, after the reverse-filter work and a VESC power cycle; VESC on and connected, wheels up, untouched; only `status` sent",
+    "seconds": 600,
+    "heltec": {
+      "resets": 0,
+      "self_samples": 1196,
+      "vesc_link_always_up": true,
+      "faults_seen": [
+        0
+      ],
+      "modes_seen": [
+        "SPORT"
+      ],
+      "erpm_max_abs": 0,
+      "heap_free_first": 54072,
+      "heap_free_last": 54104,
+      "heap_min_first": 53212,
+      "heap_min_last": 52980,
+      "vesc_crc_err_last": 0,
+      "id_ok_always": true,
+      "kart_id_always_5": true,
+      "remote_commands": {}
+    },
+    "core2": {
+      "resets": 0,
+      "status_samples": 40,
+      "live_always": true,
+      "vesc_always": true,
+      "heap_first": 147768,
+      "heap_last": 147768,
+      "parse_errors_last": 0,
+      "espnow_after": {
+        "configured": true,
+        "peer": "a4:cb:8f:a0:20:34",
+        "linked": true,
+        "channel": 1,
+        "rx_channel": 1,
+        "peer_channel": 1,
+        "channel_aligned": true,
+        "rssi": -28,
+        "tx_failed": 6,
+        "tx_dropped": 12,
+        "rx_dropped": 110,
+        "rx_invalid": 0
+      }
+    }
+  },
+  "private_capture_sha256": {
+    "boot-image-sha256.txt": "84b70228eea619d0299663995ca901e926ce60d28744d8a757a3a55a290b1203",
+    "core2-after-filter.log": "80b8d44a02b9cffde2938e4287b228323bd52ef95eb7a0130c6e8292cd459717",
+    "core2-after.log": "ab0516b894623ab58aad58f6018ea58a9e23e0cc95929cbfcb565afc4279145a",
+    "core2-control.log": "74c681e0769c8b6a61925011736cebfd831fd7f0dcce75b449df4a2f6f8387e0",
+    "core2-erase.log": "7669d6964927d3b71e5cfc0cbdeefb481de6f24fa0478ddfa3c9a41a0aaa92fe",
+    "core2-factory-read.log": "b1043b499fbe95b5eccd31b755eda179de4a193c76f6dc4678abe4498d55e2ec",
+    "core2-modes-end.log": "8f940a06dc44d95014aa7da5f3e955a442038fd5a9fb40f7c43fe19ea6796b2c",
+    "core2-paired.log": "ed5dbf71498a07567af2653f4b20380fd4d18f9aca3cca2d1ab2c53849c74d52",
+    "core2-soak-end.log": "abfe1d992bc80b93c23fdfb198867038acb503fce77ff297dcc96c4686cee2a8",
+    "core2-soak.tsv": "efccae8766266027292a89b8432f506555b11d17e5ce2012ab7bb62f8691dd37",
+    "core2-upload.log": "0e2bb464ac4df9592476d038f44a09adaf6f64518c1dbfaaa5d1e837834f32ba",
+    "core2-vesc-on.log": "798157d9eedd28bb94e05b4bed6f2ebbf484bbd0e052932a1e688c3569b24e98",
+    "heltec-after-filter.log": "c840f0a9ac96b28218416ae157cd40dfe19208d8075f5627409926e8f6fb7a82",
+    "heltec-after.log": "6da75720187ce40a6dfc8dbb2b0ff15349b6ed52444dbb9a1c0dc125050e678f",
+    "heltec-control-after.log": "7bf0108086bc450227a009eadca0a458c291e7b5a89c7727c449c0cf39068daa",
+    "heltec-control-upload.log": "6198fe8806df650eedfe00981b7ea16ce7528faa695eb2b0716e63e90218eac2",
+    "heltec-erase.log": "403ffb6598c28846931120e7f894562343a33223628d6d7dead4ef4702dc4223",
+    "heltec-factory-read.log": "63b55cb4df0ad595cc82e405cbb6a79218650d50db499887f60db57771e84825",
+    "heltec-modes.tsv": "f824c8651bbbd43e8abfb2914c43bd0f4c6e1e831f8e2c1c99158bc81cdd6816",
+    "heltec-paired.log": "173a177d99e9a9db9beba1f5f18b2ca7506dfd63f9356952846d577588d33255",
+    "heltec-pause.log": "0294c25d0581e126f162d2874feaa9af7dc712143d1d7e00db8ebc78b866a447",
+    "heltec-pin.log": "3e4dec5d05b143962f51666aed642d5055b76f102861eebf00bc0389edb202aa",
+    "heltec-provision-upload.log": "8854dce1d5d9147dbfec217ce1aae44647235ca0ed454835f2c77403b61e4502",
+    "heltec-provision.log": "1e43a058b0c3185f0539030274b305df96e0764810033470d4c567d255d62d17",
+    "heltec-resume.log": "60ed6a52401439cdb0b4f00d068fd61fa9a394837654090b59b7e331bbfa449b",
+    "heltec-soak.tsv": "3bf644c61d46537d427333b320f44e894ac045213af8944a85e5961fe23b3814",
+    "heltec-upload.log": "66b8247d949afb653295a3158f0a6a9f66180a2d634b962dbb190813e8053244",
+    "heltec-vesc-on.log": "8fbffa7839f04b05d5aa3cac8958c1e27d0fd62fea789ec5a67672a2ca2feaed",
+    "pair-output.json": "1408f12a90019fad0aa48e515bfff4fe7a36c0f3cbefb4671103d3af9d2fb1e4",
+    "pair-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "not_done": [
+    "Wi-Fi and OTA settings on either board",
+    "GPS, map and peer display (indoors); pit visibility and pit commands",
+    "link-loss and recovery tests; Core2 OTA",
+    "a GPS check of the speed factor on the road",
+    "reverse under the mode caps (reverse was run in the filter pedal check at the full tune)"
+  ]
+}

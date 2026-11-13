@@ -1,0 +1,19 @@
+{
+  "action": "observe",
+  "kart_id": 4,
+  "target_uuid": "55004d000951343037353739",
+  "firmware": "6.02",
+  "blob_sha256": "177ae066b9be9c5f16dca5fc7fbc217a444be13bd18e25925d8fd7651e8dfbae",
+  "blob_bytes": 3984,
+  "image_sha256": "76c9bfa7d1f2a0bd1bde2c1d79d06371c174722ecab7626f8ab5c9642bcc3807",
+  "image_bytes": 3992,
+  "complete": false,
+  "settings_written": false,
+  "activation_sent": false,
+  "started_utc": "2026-11-13T18:40:26.629126+00:00",
+  "flash_attempts": [],
+  "interpreter_side_effects": "REPL may initialise the interpreter; no stored code is run or changed",
+  "error": "ValueError: The prepared tune is not on this controller; apply and verify it before the filter: l_min_erpm",
+  "failure_policy": "Nothing was written. No further sends or retry.",
+  "finished_utc": "2026-11-13T18:40:26.649814+00:00"
+}

@@ -1,0 +1,44 @@
+{
+  "owner_confirmations": {
+    "trace02_pedal_was_pressed": false,
+    "trace03_reported_missed_start": true
+  },
+  "trace03_capture_complete": false,
+  "trace03_termination": "Host recorder interrupted after failure captured; no VESC reset/stop command sent. Original manifest retained complete=false KeyboardInterrupt.",
+  "trace03_samples": 518,
+  "longest_stationary_above_deadband_window": {
+    "count": 78,
+    "start_seconds": 16.479024958,
+    "end_seconds": 24.735736291,
+    "span_seconds": 8.256711332999998,
+    "decoded_pedal_range": [
+      0.336408,
+      0.970392
+    ],
+    "voltage_range": [
+      1.377343,
+      2.613593
+    ],
+    "iq_a_range": [
+      0.01,
+      0.16
+    ],
+    "median_iq_a": 0.05,
+    "erpm_values": [
+      0
+    ]
+  },
+  "filter_applied_values": [
+    0
+  ],
+  "fault_codes": [
+    0
+  ],
+  "any_timeout": false,
+  "any_kill": false,
+  "app_identical_final_status": true,
+  "motor_identical_final_status": true,
+  "leading_hypothesis": "Zero configured motor-braking limit interacting with modulation-sign-dependent FOC current clamp; plausible and source-backed, NOT proven by internal target capture during failure.",
+  "next_diagnostic": "Capture fixed foc_state/events immediately at above-deadband stationary failure, without holding pedal longer or changing tune.",
+  "after_missed_start_diagnostics": "No faults registered since startup; app output disabled nil; event ring APP_ADC set_current only; released-state FOC target 0 cannot establish in-failure internal target."
+}

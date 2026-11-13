@@ -1,0 +1,162 @@
+{
+  "source_length": 3732,
+  "source_sha256": "d530aeb20c81c185e25ba9b4954473a8bd7069fe5b59b1babeca3ca2b89e94dc",
+  "source_crc16": 883,
+  "max_payload": 397,
+  "steps": [
+    {
+      "kind": "allocate",
+      "expression": "(progn (define gk-rx-load-buffer (array-create 3733)) (bufclear gk-rx-load-buffer) (define gk-rx-load-pos 0) (print (list 'gk-rx-load-allocated (buflen gk-rx-load-buffer))))",
+      "payload_length": 175,
+      "expected_line": "(gk-rx-load-allocated 3733)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 0) (progn (bufcpy gk-rx-load-buffer 0 \"(progn (define gk-rx-filter-run nil) (define gk-rx-filter-active nil) (define gk-rx-filter-pid -1) (define gk-rx-filter-applied -1) (define gk-rx-filter-safe (lambda () (let ((rpm (get-rpm))) \" 0 192) (setvar 'gk-rx-load-pos 192) (print (list 'gk-rx-load-chunk 192 (crc16 gk-rx-load-buffer 192)))) (print 'gk-rx-load-reject))",
+      "payload_length": 388,
+      "expected_line": "(gk-rx-load-chunk 192 3799)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 192) (progn (bufcpy gk-rx-load-buffer 192 \"(and (<= (get-adc-decoded 0) 0.12) (>= rpm -50.0) (<= rpm 50.0) (= (get-fault) 0))))) (define gk-rx-filter-config-ok (lambda () (and (= (conf-get 'app-to-use) 2) (= (conf-get 'adc-ctrl-type) 3\" 0 192) (setvar 'gk-rx-load-pos 384) (print (list 'gk-rx-load-chunk 384 (crc16 gk-rx-load-buffer 384)))) (print 'gk-rx-load-reject))",
+      "payload_length": 392,
+      "expected_line": "(gk-rx-load-chunk 384 55084)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 384) (progn (bufcpy gk-rx-load-buffer 384 \")))) (define gk-rx-filter-worker (lambda () (progn (let ((candidate (gpio-read 'pin-rx)) (candidate-at (systime)) (safe-at (systime)) (safe-previous nil) (sample-at (systime))) (loopwhile gk-r\" 0 192) (setvar 'gk-rx-load-pos 576) (print (list 'gk-rx-load-chunk 576 (crc16 gk-rx-load-buffer 576)))) (print 'gk-rx-load-reject))",
+      "payload_length": 392,
+      "expected_line": "(gk-rx-load-chunk 576 38393)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 576) (progn (bufcpy gk-rx-load-buffer 576 \"x-filter-run (let ((raw (gpio-read 'pin-rx)) (safe (gk-rx-filter-safe)) (gap (secs-since sample-at))) (progn (setvar 'sample-at (systime)) (if (> gap 0.010) (progn (setvar 'candidate-at (systi\" 0 192) (setvar 'gk-rx-load-pos 768) (print (list 'gk-rx-load-chunk 768 (crc16 gk-rx-load-buffer 768)))) (print 'gk-rx-load-reject))",
+      "payload_length": 392,
+      "expected_line": "(gk-rx-load-chunk 768 61109)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 768) (progn (bufcpy gk-rx-load-buffer 768 \"me)) (setvar 'safe-at (systime)) (setvar 'safe-previous nil))) (if (not (gk-rx-filter-config-ok)) (progn (setvar 'gk-rx-filter-run nil) (print 'gk-rx-filter-config-changed))) (if (!= raw candi\" 0 192) (setvar 'gk-rx-load-pos 960) (print (list 'gk-rx-load-chunk 960 (crc16 gk-rx-load-buffer 960)))) (print 'gk-rx-load-reject))",
+      "payload_length": 392,
+      "expected_line": "(gk-rx-load-chunk 960 38860)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 960) (progn (bufcpy gk-rx-load-buffer 960 \"date) (progn (setvar 'candidate raw) (setvar 'candidate-at (systime)))) (if (and safe (not safe-previous)) (setvar 'safe-at (systime))) (setvar 'safe-previous safe) (if (and gk-rx-filter-run s\" 0 192) (setvar 'gk-rx-load-pos 1152) (print (list 'gk-rx-load-chunk 1152 (crc16 gk-rx-load-buffer 1152)))) (print 'gk-rx-load-reject))",
+      "payload_length": 395,
+      "expected_line": "(gk-rx-load-chunk 1152 56843)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 1152) (progn (bufcpy gk-rx-load-buffer 1152 \"afe (>= (secs-since safe-at) 0.250) (>= (secs-since candidate-at) 0.050)) (let ((desired (if (= candidate 0) 1 0))) (if (or (not gk-rx-filter-active) (!= desired gk-rx-filter-applied)) (if (an\" 0 192) (setvar 'gk-rx-load-pos 1344) (print (list 'gk-rx-load-chunk 1344 (crc16 gk-rx-load-buffer 1344)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 1344 12654)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 1344) (progn (bufcpy gk-rx-load-buffer 1344 \"d (= (if (= (gpio-read 'pin-rx) 0) 1 0) desired) (eq (gk-rx-filter-config-ok) t) (eq (gk-rx-filter-safe) t) gk-rx-filter-run (<= (secs-since sample-at) 0.010)) (progn (app-adc-override 2 desir\" 0 192) (setvar 'gk-rx-load-pos 1536) (print (list 'gk-rx-load-chunk 1536 (crc16 gk-rx-load-buffer 1536)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 1536 52520)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 1536) (progn (bufcpy gk-rx-load-buffer 1536 \"ed) (if (not gk-rx-filter-active) (progn (app-adc-detach 2 1) (setvar 'gk-rx-filter-active t))) (setvar 'gk-rx-filter-applied desired) (print (list 'gk-rx-filter-applied desired))) (progn (set\" 0 192) (setvar 'gk-rx-load-pos 1728) (print (list 'gk-rx-load-chunk 1728 (crc16 gk-rx-load-buffer 1728)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 1728 7944)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 1728) (progn (bufcpy gk-rx-load-buffer 1728 \"var 'candidate-at (systime)) (setvar 'safe-at (systime)) (setvar 'safe-previous nil)))))) (sleep 0.002))))) (print (list 'gk-rx-filter-stopped-holding gk-rx-filter-applied)) t))) (define gk-rx\" 0 192) (setvar 'gk-rx-load-pos 1920) (print (list 'gk-rx-load-chunk 1920 (crc16 gk-rx-load-buffer 1920)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 1920 65044)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 1920) (progn (bufcpy gk-rx-load-buffer 1920 \"-filter-start (lambda (preflight-ok) (if (or (not preflight-ok) gk-rx-filter-run gk-rx-filter-active (!= gk-rx-filter-pid -1) (not (gk-rx-filter-config-ok))) (progn (print 'gk-rx-filter-refuse\" 0 192) (setvar 'gk-rx-load-pos 2112) (print (list 'gk-rx-load-chunk 2112 (crc16 gk-rx-load-buffer 2112)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 2112 37605)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 2112) (progn (bufcpy gk-rx-load-buffer 2112 \"d) nil) (progn (setvar 'gk-rx-filter-run t) (setvar 'gk-rx-filter-pid (spawn 256 gk-rx-filter-worker)) (if (< gk-rx-filter-pid 0) (progn (setvar 'gk-rx-filter-run nil) (print 'gk-rx-filter-spa\" 0 192) (setvar 'gk-rx-load-pos 2304) (print (list 'gk-rx-load-chunk 2304 (crc16 gk-rx-load-buffer 2304)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 2304 41114)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 2304) (progn (bufcpy gk-rx-load-buffer 2304 \"wn-failed) nil) gk-rx-filter-pid))))) (define gk-rx-filter-stop (lambda () (progn (setvar 'gk-rx-filter-run nil) (if (and (>= gk-rx-filter-pid 0) (!= gk-rx-filter-pid (self))) (wait gk-rx-filt\" 0 192) (setvar 'gk-rx-load-pos 2496) (print (list 'gk-rx-load-chunk 2496 (crc16 gk-rx-load-buffer 2496)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 2496 58350)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 2496) (progn (bufcpy gk-rx-load-buffer 2496 \"er-pid)) (setvar 'gk-rx-filter-pid -1) (print (list 'gk-rx-filter-joined-holding gk-rx-filter-applied)) t))) (define gk-rx-filter-rollback (lambda (supervised-ok) (if (or (not supervised-ok) g\" 0 192) (setvar 'gk-rx-load-pos 2688) (print (list 'gk-rx-load-chunk 2688 (crc16 gk-rx-load-buffer 2688)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 2688 2945)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 2688) (progn (bufcpy gk-rx-load-buffer 2688 \"k-rx-filter-run (!= gk-rx-filter-pid -1) (not gk-rx-filter-active) (not (gk-rx-filter-config-ok))) (progn (print 'gk-rx-filter-rollback-refused) nil) (let ((started (systime)) (sample-at (syst\" 0 192) (setvar 'gk-rx-load-pos 2880) (print (list 'gk-rx-load-chunk 2880 (crc16 gk-rx-load-buffer 2880)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 2880 13327)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 2880) (progn (bufcpy gk-rx-load-buffer 2880 \"ime)) (ok t)) (progn (loopwhile (and ok (< (secs-since started) 0.250)) (progn (if (> (secs-since sample-at) 0.010) (setvar 'ok nil)) (setvar 'sample-at (systime)) (if (or gk-rx-filter-run (!=\" 0 192) (setvar 'gk-rx-load-pos 3072) (print (list 'gk-rx-load-chunk 3072 (crc16 gk-rx-load-buffer 3072)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 3072 43334)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 3072) (progn (bufcpy gk-rx-load-buffer 3072 \" gk-rx-filter-pid -1) (not (gk-rx-filter-config-ok)) (not (gk-rx-filter-safe)) (!= (if (= (gpio-read 'pin-rx) 0) 1 0) gk-rx-filter-applied)) (setvar 'ok nil)) (if (> (secs-since sample-at) 0.0\" 0 192) (setvar 'gk-rx-load-pos 3264) (print (list 'gk-rx-load-chunk 3264 (crc16 gk-rx-load-buffer 3264)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 3264 46056)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 3264) (progn (bufcpy gk-rx-load-buffer 3264 \"10) (setvar 'ok nil)) (sleep 0.002))) (if (and ok (eq (gk-rx-filter-safe) t) (eq (gk-rx-filter-config-ok) t) (not gk-rx-filter-run) (= gk-rx-filter-pid -1) (= (if (= (gpio-read 'pin-rx) 0) 1 0\" 0 192) (setvar 'gk-rx-load-pos 3456) (print (list 'gk-rx-load-chunk 3456 (crc16 gk-rx-load-buffer 3456)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 3456 13580)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 3456) (progn (bufcpy gk-rx-load-buffer 3456 \") gk-rx-filter-applied) (<= (secs-since sample-at) 0.010)) (progn (app-adc-detach 2 0) (setvar 'gk-rx-filter-active nil) (setvar 'gk-rx-filter-applied -1) (print 'gk-rx-filter-raw-rx-restored)\" 0 192) (setvar 'gk-rx-load-pos 3648) (print (list 'gk-rx-load-chunk 3648 (crc16 gk-rx-load-buffer 3648)))) (print 'gk-rx-load-reject))",
+      "payload_length": 397,
+      "expected_line": "(gk-rx-load-chunk 3648 12346)"
+    },
+    {
+      "kind": "chunk",
+      "expression": "(if (= gk-rx-load-pos 3648) (progn (bufcpy gk-rx-load-buffer 3648 \" t) (progn (print 'gk-rx-filter-rollback-not-at-rest-or-rx-disagrees) nil))))))) t)\\n\" 0 84) (setvar 'gk-rx-load-pos 3732) (print (list 'gk-rx-load-chunk 3732 (crc16 gk-rx-load-buffer 3732)))) (print 'gk-rx-load-reject))",
+      "payload_length": 289,
+      "expected_line": "(gk-rx-load-chunk 3732 883)"
+    },
+    {
+      "kind": "verify",
+      "expression": "(print (list 'gk-rx-load-verified gk-rx-load-pos (buflen gk-rx-load-buffer) (crc16 gk-rx-load-buffer 3732) (bufget-u8 gk-rx-load-buffer 3732)))",
+      "payload_length": 145,
+      "expected_line": "(gk-rx-load-verified 3732 3733 883 0)"
+    },
+    {
+      "kind": "eval_definitions_only",
+      "expression": "(if (and (= gk-rx-load-pos 3732) (= (buflen gk-rx-load-buffer) 3733) (= (crc16 gk-rx-load-buffer 3732) 883) (= (bufget-u8 gk-rx-load-buffer 3732) 0)) (progn (eval (read gk-rx-load-buffer)) (setvar 'gk-rx-load-buffer nil) (print (list 'gk-rx-load-ready gk-rx-filter-run gk-rx-filter-active gk-rx-filter-pid gk-rx-filter-applied))) (print 'gk-rx-load-reject))",
+      "payload_length": 359,
+      "expected_line": "(gk-rx-load-ready nil nil -1 -1)"
+    },
+    {
+      "kind": "cleanup",
+      "expression": "(progn (undefine '(gk-rx-load-buffer gk-rx-load-pos)) (gc) (print 'gk-rx-load-clean))",
+      "payload_length": 87,
+      "expected_line": "gk-rx-load-clean"
+    }
+  ],
+  "human_source_path": "/tmp/gokart-rx-filter-lifecycle-20261111/rx-filter-candidate.lisp",
+  "human_source_length": 7881,
+  "human_source_sha256": "1f49ab2370b5a5960723efd3e0a0b62dd1a9fd5549a2ed21ba9b1281b2def21f",
+  "compaction": "Remove semicolon line comments; assert remaining code has no double quotes; collapse whitespace to single spaces; append LF. Actual reader and 33 behavior cases passed.",
+  "required_preflight": [
+    "No existing copy or conflicting Lisp/input override; namespace absence is manual review, not inferred from no contexts.",
+    "Heltec/BLE disconnected; exclusive USB command route.",
+    "Exact kart UUID+firmware+full app configuration checked by owner before activation.",
+    "Only definitions load; no start/stop/rollback/motor/control/flash/STREAM command in plan."
+  ]
+}

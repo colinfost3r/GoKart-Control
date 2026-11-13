@@ -1,0 +1,55 @@
+{
+  "started_utc": "2026-11-11T16:43:25.682444+00:00",
+  "port": "/dev/cu.usbmodem3041",
+  "uuid_pin": "37004e000951343037353739",
+  "firmware_pin": "6.02",
+  "mode": "monitor",
+  "ownership_reviewed": true,
+  "monitor_file_sha256": "6ba5d52cec8608cf295b5a98a96b26a9bd6fea9ddd364db3dbc9a25150610e1f",
+  "complete": true,
+  "sent_actions": [
+    {
+      "action": "stats",
+      "frame_hex": "020186f14e03"
+    },
+    {
+      "action": "monitor",
+      "frame_hex": "0301958a286c657420282861202873797374696d652929202862202873797374696d65292920287220286770696f2d72656164202770696e2d7278292920286520302920286e20302929202870726f676e20286c6f6f707768696c6520283c2028736563732d73696e63652061292033302920286c65742028287620286770696f2d72656164202770696e2d7278292929202870726f676e202869662028213d2076207229202870726f676e2028736574766172202772207629202873657476617220276520282b2065203129292929202873657476617220276e20282b206e203129292028696620283e3d2028736563732d73696e6365206229203129202870726f676e20287072696e7420286c6973742028736563732d73696e636520612920722065206e20286765742d6164632d6465636f64656420302920286765742d72706d2920286765742d6661756c742929292028736574766172202762202873797374696d65292929292028736c65657020302e3030322929292920287072696e7420286c6973742027646f6e652065206e29292929006fe503"
+    }
+  ],
+  "interpreter_side_effects": "REPL may initialize interpreter; expression evaluation may pause/GC/resume it. No reset requested.",
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "stats_reply_seen": true,
+  "stats_note": "Reply proves evaluator exists, not that contexts are idle; absence is inconclusive.",
+  "monitor_done_seen": true,
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T16:44:01.699029+00:00"
+}

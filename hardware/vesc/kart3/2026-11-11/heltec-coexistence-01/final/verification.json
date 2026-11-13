@@ -1,0 +1,28 @@
+{
+  "verified_utc": "2026-11-11T19:31:28.433744+00:00",
+  "vesc_uuid": "37004e000951343037353739",
+  "persistent_motor_brake_min_a": -5,
+  "brake_min_scale": 1,
+  "current_temporary_mode": "ECO",
+  "motor_current_max_scale": 0.5,
+  "battery_regen_min_a": -12,
+  "all376fields_identical_to_reverse_trace": true,
+  "erpm": 0,
+  "iq_a": 0.0,
+  "fault_code": 0,
+  "timeout_active": false,
+  "kill_switch_active": false,
+  "operator_state": "Smooth reverse; now stopped in forward",
+  "direction_verification_scope": "Owner physical switch confirmation; no Lisp/rawRX state polling while Heltec ownsBLE",
+  "heltec_identity_and_limits_valid": true,
+  "core2_live_mode_ready": true,
+  "both_espnow_channel6_aligned": true,
+  "no_host_control_or_reset_commands": true,
+  "software_suite": {
+    "tests": 469,
+    "suites": 7,
+    "skipped": 0,
+    "all_passed": true,
+    "logs": "/var/folders/6z/rm70x7xx12zcy5pxlsqf82l80000gn/T/gokart-tests.rpskV8"
+  }
+}

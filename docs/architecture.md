@@ -7,7 +7,8 @@ choices remain open pending hardware checks.
 flowchart LR
   D[Hardwired driver inputs] --> V[VESC]
   V <-->|BLE preferred| H[Heltec V4.3 with GPS]
-  H <-->|USB serial: telemetry and UI requests| K[Kart Pi 3 B: display]
+  H <-->|USB serial: telemetry and UI requests| K[Kart Pi 3 B: v2 display]
+  H <-->|Paired ESP-NOW or UART: display data| M[M5 Core2: v1.5 display]
   K <-->|HDMI video + USB touch| T[LESOWN L7 1024x600]
   H <-->|LoRa| B[Pit base radio]
   B <-->|Serial| P[Pi 4 pit server]
@@ -15,14 +16,48 @@ flowchart LR
 ```
 
 The diagram shows one kart; repeat it up to eight times. Kart-to-kart position
-sharing can use direct reception or a pit fleet summary; choose after airtime
-and coverage measurements. Neither path is currently implemented.
+sharing uses direct/repeater reception in Eamon's current firmware. The M5 consumes those
+fleet reports through the Heltec; no new pit fleet broadcast is required. Coverage and
+eight-kart load measurements remain pending for the M5 assembly.
+
+## M5 v1.5 alternative (2026-11-10)
+
+The Core2 replaces the Pi/display assembly on a v1.5 kart. It does not replace the Heltec or
+share BLE ownership. Firmware reuses the same radio protocol and motor policy; the optional
+UART/paired ESP-NOW adapters and [display contract](../firmware/m5-core2/SERIAL_PROTOCOL.md) isolate local UI
+requests. Both display versions can participate in the same eight-kart fleet. Local map
+outlines are display data, not geofence enforcement. New map acceptance remains pending. The owner selected ESP-NOW for the local Heltec/Core2
+link on November 10; UART remains available. Each pair uses private provisioned keys; the
+Core2 follows the Heltec's Wi-Fi channel. This changes neither LoRa nor VESC BLE ownership.
+The first wireless target is compile-time read-only, including pit/USB/game VESC writes.
+Neither a base station nor an SD card is needed for own telemetry/direct peer GPS positions;
+a validated course can be provisioned to Core2 internal NVS over USB, with optional SD fallback.
+The north-up viewport follows a fresh own fix at a fixed local scale; distant peers do not
+change the zoom. Without a fresh own fix it shows the available course with explicit status.
+The base provides central pit/race functions. The legacy outline path does not distribute course
+geometry to the Core2. See the [M5 guide](../firmware/m5-core2/README.md) for provisioning.
+
+Eamon's `core2-items` is a separate Pi-owned inventory accessory. Its raw ESP-NOW receive
+callback is excluded from paired M5 builds, preserving authenticated link ownership. The M5
+player now uses native inventory and typed requests through own Heltec; it does not relay
+`invuse` to an absent Pi. Deployment still requires physical acceptance.
+
+## Core2 native player and course sharing (November 12, source candidate)
+
+Core2 owns the cached map/course, inventory, local GPS entry/crossing and user JOIN/LEAVE/FIRE.
+The updated host Pi exports a bounded package through its existing USB owner to host Heltec;
+a separately authenticated course-only ESP-NOW service transfers it to Core2. Own Heltec
+continues to own all VESC communication and supervisory guards. No Pi/SD is added to the player.
+A short LoRa COURSE identity substitutes for one host telemetry slot every2s to bind gameplay
+to current host boot/package beyond download range. Existing telemetry/command layouts remain.
+No automatic join, effect replay or driving-state restore follows link loss/reboot/OTA.
+[Protocol, native rules, deployment and limits](m5-player-mode.md). Not physically accepted yet.
 
 ## Boundaries
 
 | Component | Owns | Does not imply |
 | --- | --- | --- |
-| VESC | Hardwired throttle/reverse, motor control, configured protection | A tested guarantee of accessory-failure isolation |
+| VESC | Hardwired throttle/reverse, motor control, configured protection; kart3 now has a local persistent reverse-filter commissioning trial | A tested guarantee of accessory-failure isolation |
 | Kart Pi | Touchscreen rendering, map assets, presentation cache and UI requests | Ownership of the VESC link or control policy |
 | Heltec V4.3 + L76K | VESC BLE client, telemetry, GPS, LoRa, validation/serialization of supervisory requests | Verified timing, fault isolation or implemented profile writes |
 | Pit Pi 4 | Fleet/race state, authentication, command arbitration, radio session | An internet/cloud dependency |

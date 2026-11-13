@@ -1,0 +1,62 @@
+{
+  "started_utc": "2026-11-11T16:43:03.502235+00:00",
+  "port": "/dev/cu.usbmodem3041",
+  "uuid_pin": "37004e000951343037353739",
+  "firmware_pin": "6.02",
+  "mode": "inspect",
+  "ownership_reviewed": false,
+  "monitor_file_sha256": "6ba5d52cec8608cf295b5a98a96b26a9bd6fea9ddd364db3dbc9a25150610e1f",
+  "complete": true,
+  "sent_actions": [
+    {
+      "action": "stats",
+      "frame_hex": "020186f14e03"
+    },
+    {
+      "action": "contexts",
+      "frame_hex": "02078a3a6374787300a21003"
+    }
+  ],
+  "interpreter_side_effects": "REPL may initialize interpreter; expression evaluation may pause/GC/resume it. No reset requested.",
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "stats_reply_seen": false,
+  "stats_note": "Reply proves evaluator exists, not that contexts are idle; absence is inconclusive.",
+  "contexts": {
+    "all_context_headings_seen_in_order": true,
+    "quiet_tail_at_least_250ms": true,
+    "no_partial_frame": true,
+    "context_id_lines": [],
+    "snapshot": "no_contexts_reported",
+    "atomic_or_future_ownership_proof": false
+  },
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T16:43:07.519990+00:00"
+}

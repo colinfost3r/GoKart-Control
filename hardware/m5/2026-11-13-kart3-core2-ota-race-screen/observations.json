@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "kart": 3,
+  "date": "2026-11-13",
+  "board": "M5 Core2 (m5-espnow), hostname gokart-display-3",
+  "method": "over the air, tools/m5/ota_core2.py with the private credentials file; no USB connected",
+  "requested_by": "owner, who opened the update window on the Core2 screen",
+  "image": {
+    "candidate": "2026-11-13-race-screen",
+    "path": "firmware/build/bench-candidates/2026-11-13-race-screen/m5-espnow.app.bin",
+    "bytes": 1407424,
+    "sha256": "f0d74bdc86e316cc33603e3fcbb0a106f2303dcd748f4a421a90bbac3f38cdf6"
+  },
+  "replaced": {
+    "candidate": "2026-11-13-game-rules",
+    "sha256": "0d904a89671272c08f794e848047e28341e6d232968723afdc3c017054e1a169",
+    "still_in_slot": "app0 at 0x10000"
+  },
+  "attempts": [
+    {"started_utc": "2026-11-13T22:45:47Z", "timeout_s": 120, "result": "deadline reached", "after": "Core2 advertising update mode again within 50 s: not restarted, unchanged"},
+    {"started_utc": "2026-11-13T22:49:15Z", "timeout_s": 120, "result": "deadline reached", "after": "Core2 still advertising update mode: unchanged"},
+    {"started_utc": "2026-11-13T22:51:51Z", "timeout_s": 120, "result": "deadline reached",
+     "bytes_sent_by_uploader": [[4, 9216], [38, 101732], [72, 303736], [106, 572576]],
+     "bytes_sent_note": "seconds since start, cumulative bytes out of the uploader process (nettop)"},
+    {"started_utc": "2026-11-13T22:56:19Z", "timeout_s": 480, "result": "authenticated upload acknowledged", "finished_utc": "2026-11-13T22:59:16Z", "seconds": 177}
+  ],
+  "link": {
+    "router_ping_ms": [3.3, 5.0, 8.7],
+    "core2_ping_ms": [10.1, 50.5, 216.3],
+    "core2_ping_note": "min, average, max of 8; an earlier sample of 2 lost one packet and took 458 ms",
+    "cause_of_slow_link": "not examined"
+  },
+  "after": {
+    "wifi": "no reply to 3 pings 11 s after the acknowledgement, consistent with a restart into normal operation with updates off",
+    "boot_slot": "app1 at 0x650000 (inferred from the ESP32 update scheme; not read back)",
+    "console_checks": "none: no USB connected",
+    "owner_confirmation": "the owner reported that kart 3's screen looks right, after being asked to check street outlines or the SHOP AREA overview on the map, live battery volts on the dash and responding mode buttons; which of the three he looked at was not stated"
+  },
+  "heltec": "unchanged: 2026-11-13-game-rules kart-m5-espnow, reports kart-0.3.3; it does not send race_hold, race_go_ms or race_went_ms, so no countdown or GO is shown",
+  "vesc": "nothing selected or written by this update",
+  "private_log": "firmware/build/bench-private/kart3-race-screen-20261113/core2-ota.log (ignored)"
+}

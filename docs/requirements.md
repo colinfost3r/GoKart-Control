@@ -1,3 +1,7 @@
+> Current implementation checkpoint: native host-course sharing and light Core2 gameplay are
+> implemented but not physically accepted. [Details/limits](m5-player-mode.md). Dated scopes below
+> record decisions over time; later player requirements supersede the original game deferral.
+
 # Requirements and implementation brief
 
 Updated 2026-11-05. The connected kart is the primary hardware baseline; the
@@ -5,6 +9,101 @@ original GitHub app is historical reference. This file separates confirmed
 requirements from proposed implementation and unresolved details. See the
 [measured baseline](../hardware/vesc/baseline-kart/2026-11-05/README.md) and
 [handoff](../HANDOFF.md) for inspection findings and current implementation status.
+
+## Current owner decisions — 2026-11-10 controls and tune
+
+The owner explicitly requests M5 mode selection **and** all existing Eamon base-station command
+features (mode, STOP/START, SLOW/BOOST/RACE and the existing game-command paths). This supersedes
+older notes deferring those command features. Retain temporary `store=0` writes and shared protocol;
+keep link-loss/reconnect behavior unchanged, with no default-profile restore or command replay.
+
+The owner requests comparing **all 189 motor + 187 application settings** and aligning kart 3's tune
+with the kart 2 baseline. They confirm matching motor, battery/BMS, gearing and wheels. Kart 3 is
+75_300_R2 / firmware 6.02; kart 2's dated capture is 75_100_V2 / 6.00. Save complete current evidence
+and a named-field change list before tuning; preserve per-unit calibration, pedal endpoints and
+identities unless separately measured. Matching hardware models alone does not make calibration
+values interchangeable. The November 5 baseline is dated runtime evidence, not a fresh kart-2 export.
+Kart 3 USB capture is complete on November 10: 376 fields, 50 differences from that dated baseline.
+The owner then requested a Desktop backup and trial preserving calibration. Twelve motor settings
+were applied/read back at 19:58:55 UTC; all Hall/pedal/motor electrical calibration and all app
+settings remain unchanged. See the [complete review](kart3-tune-comparison.md) and handoff.
+This explicit persistent maintenance tune is separate from temporary supervisory profile writes.
+
+## M5 v1.5 owner decision — 2026-11-09
+
+- Add an M5Stack Core2 display option on distinct branch `v1.5/m5-core2`, sharing the current
+  Heltec kart supervisor and Eamon's existing base/pit protocol. Pi/LESOWN remains v2.
+- Initial scope: telemetry, ECO/NORMAL/SPORT requests, base-station connection/status and a
+  simple map of the kart and other heard karts. Heltec retains exclusive VESC/BLE ownership.
+- Preserve reliability-first behavior: loss/reconnection of the display does not change active
+  VESC settings, replay a request, or restore a saved/default mode. Keep actual and requested
+  modes distinct. No firmware deployment or motor test is implied by implementation/pushing.
+- Defer M5 game zones, aerial imagery and full Pi feature parity. SD course outlines are a
+  first implementation choice; course survey and hardware verification remain open.
+- Future tuning: owner reports the karts felt slow before field weakening was introduced.
+  Investigate RPM limits alone for ECO/NORMAL while preserving torque, retaining field weakening
+  for a possible boost mode. No final new cap, current or field-weakening values are approved.
+  Existing 95 A maximum field-weakening setting is baseline evidence, not a recommendation.
+
+## M5 bench decisions — 2026-11-10
+
+- Program the connected Core2 and Heltec for the first telemetry test; the VESC remains off
+  during accessory programming. This board is **kart 3**, superseding the earlier kart-1 choice
+  for this particular Heltec. Eamon remains kart 2.
+- Use ESP-NOW between this Core2 and Heltec; keep the wired UART option available. Pair only
+  the intended boards, retain private rollback/configuration evidence, and preserve LoRa/pit
+  compatibility. Initial deployment remains read-only for all VESC control paths.
+- No SD card is installed. Telemetry and live GPS positions must work without one. The base
+  station is optional for local telemetry and directly heard peers, not for central pit control.
+
+## M5 driving map — November 11, 2026
+
+- Owner requests a simple course line centered on and following the driver's kart,
+  making better use of the Core2 screen without adding a Raspberry Pi or imagery.
+- Keep the driving view focused on the map and a FIRE button; retain deliberate
+  access to DASH/mode selection and maintenance. Missing GPS/course data must have
+  an explicit explanation rather than a blank screen.
+- A course outline may live in Core2 internal flash; SD is optional. Provision a
+  validated outline before driving, with corrupt/incomplete uploads rejected.
+  The committed shop demo is not a surveyed Manresa course.
+- FIRE requires authoritative inventory, session/target rules and fresh authenticated
+  requests. Eamon's separate Pi-dependent item screen does not supply those rules
+  to a no-Pi kart. The first map revision keeps FIRE unavailable rather than sending
+  an unrestricted attack. Native no-Pi gameplay is still separate implementation.
+- These presentation changes do not change VESC settings or LoRa packet formats.
+  On-device acceptance and the actual course package remain open.
+
+## Core2 map presentation refinement — November 11, 2026
+
+- Show real surrounding geography beneath the host course, using the Pi’s map sources.
+  Prefer lightweight roads/buildings/shoreline for this small display; no Google dependency.
+- Make the host’s start/finish gate, boost pads and item pickups distinct overlays.
+- Latest owner refinement (overnight November 11–12): use the battery readings supplied
+  by Heltec. The current contract has VESC pack volts, not measured SOC: show fresh voltage
+  directly beside GPS MPH in a small card; unknown/stale stays unknown. Remove the kart header.
+- Fill the 320×240 display with the map and compact corner controls. Omit the distance scale
+  and north/span label; retain north-up fixed-scale following. Show map attribution for five
+  seconds at startup only, with source/license metadata retained in code.
+- Current implementation status: host package/background download, native lap/zone rendering
+  and player requests are implemented in the November12 candidate. Offline previews use synthetic
+  inputs. Physical download/radio/storage/motor acceptance remains pending.
+
+## Core2 player-only game and sharing — November 11, 2026
+
+- Core2 owns the course/map and player game logic (including inventory); Heltec supplies
+  fresh own/fleet GPS, LoRa session/attack transport and validated VESC supervision.
+- Join an existing host only; no Core2 course creation, mapping or hosting controls.
+- Download the host's published course over ESP-NOW into Core2 storage, then use the local
+  cache. This replaces manual preloading as the target workflow; host publishing and
+  course-transfer firmware are implemented in the November12 candidate; hardware acceptance remains. No Pi or SD is added to the player.
+- Both DASH and MAP/GAME follow Hunter's original visual/type examples. Provide an easy
+  page button back to kart modes and a flashing invitation indicator next to it. The
+  proposed hardware-free realization is an on-screen edge button/dot, with swipe optional.
+- New notification, course transfer and page switching never imply a join, mode write,
+  FIRE or reconnect replay. Apply existing reliability and explicit-command rules.
+- This advances player gameplay beyond the earlier deferred scope; full Pi parity and
+  photographic maps remain outside this iteration. See the [implementation brief](m5-player-mode.md)
+  for proposed transport/UI details and the distinction between requirements and installed code.
 
 ## Confirmed requirements
 
@@ -27,8 +126,10 @@ requirements from proposed implementation and unresolved details. See the
   for inspection and development; a wired replacement is not the chosen default.
 - Throttle, brake-related inputs, and reverse are wired directly to the ESC,
   independent of the dashboard. Pedal braking is mechanical. Motor regenerative
-  braking is disabled according to the owner; the runtime motor-braking limit
-  reads 0 A. The battery regen allowance remains -100 A; preserve current behavior.
+  braking was reported disabled by the owner. The dated kart-2 baseline has motor-braking
+  limit 0 A / battery regen -100 A; kart 3 originally read -50 A / -12 A. The supervised
+  November 10 trial changed motor braking to 0 A and retained battery regen -12 A. These are
+  allowances, not observed braking; no physical braking test has been performed.
 - Battery: owner reports 72 V nominal, 84 V fully charged, supplying the VESC.
   Present variation in achievable top speed with charge is acceptable.
 - Keep ECO/NORMAL/SPORT for now. Desired profile behavior primarily limits top
@@ -338,3 +439,21 @@ Store command history with telemetry for later inspection.
 - Exact V4.3 schematic: https://resource.heltec.cn/download/WiFi_LoRa_32_V4/Schematic/HTIT-WB32LAF_V4.3.pdf
 - Heltec expansion kit reference (not an identification of the owner's assembly):
   https://heltec.org/project/wifi-lora-32-v4-expansion-housing/
+
+## Owner-authorized reverse filter trial — November 11, 2026
+
+After a successful wheels-up forward/reverse RAM trial, the owner requested saving the VESC-local
+filter for continued testing. Kart3 now stores a UUID/fw/app-guarded autostart program; normal
+forward/reverse cold boots and switch response were verified. This is separate from tune/Hall/
+pedal configuration and does not make the Heltec or display responsible for wired driver inputs.
+
+Direction changes require stable RX50ms, pedal in the <=0.12 zero-demand region and |ERPM|<=50
+with fault0 for250ms. During slight throttle/coasting, the existing direction remains applied.
+The owner later reported that behavior and confirmed slight throttle/coasting was still present;
+retain the guard and instruct release, full stop, select direction, then pause before throttle.
+No threshold or torque setting was changed in response.
+
+Native ADC precedes Lisp at startup; watchdog boot can skip scripts. Keep the pedal released
+until active/correct-direction readiness is verified. The filter does not repair the measured
+external switch instability or establish fleet/endurance acceptance. See the
+[persistent handoff](../hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).

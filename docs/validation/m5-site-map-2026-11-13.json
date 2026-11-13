@@ -1,0 +1,155 @@
+{
+  "schema": 1,
+  "candidate": "M5 Core2 built-in street lines, 2026-11-13",
+  "branch": "v1.5/m5-core2",
+  "parent_commit": "d160f7f329820f76ccc44f3d8f89ef52e7a1b906",
+  "source_state": "the working tree on top of parent_commit, committed together with this manifest; exact inputs are hashed below",
+  "merged_upstream": "4b3308cbc482b21d6bd71e1caed60b9dec5e9b20",
+  "hardware_accessed": false,
+  "uploaded": false,
+  "vesc_settings_changed": false,
+  "not_installed_on": "any kart at the time of writing: the Core2s of karts 3, 4 and 5 run m5-espnow from 2026-11-13-game-rules",
+  "what_changed": "Core2 images only. The live map draws built-in OpenStreetMap street, building and shoreline outlines for two sites (SHOP: 600 m square, 3,045 lines; MANRESA: 1.5 km square, 1,541 lines). With no own fix and no course it shows an overview of the remembered site with no kart marker; the site is remembered in NVS namespace m5site. Inside a site the host package's context lines are not drawn over the built-in ones. USB status gains map_site and home_site. The demo scenes render byte-identically. No Heltec, base or repeater source changed: use the Heltec images of 2026-11-13-game-rules or 2026-11-13-upstream-035 with these.",
+  "compatibility": "Display only. No change to the Core2-Heltec link, the mode request path, the course package (rules version 2), pairing or OTA. Any Heltec image that works with the 2026-11-13-game-rules Core2 works with this one.",
+  "tests": {
+    "passed": 619,
+    "suites": 8,
+    "skipped": 0,
+    "log": "docs/validation/m5-site-map-2026-11-13-tests.txt",
+    "run_on": "the same working tree the images were built from",
+    "new": "firmware-map 15 -> 21: native site-map test against an unculled reference, table freshness, source licensing, Overpass conversion, rendered live/overview scenes, host-package line rule"
+  },
+  "build_toolchain": "ESP32 Arduino 3.3.8; application-only images",
+  "source_sha256": {
+    "firmware/m5-core2/SiteMap.h": "8cd262c85773e27cd1eaf174f65ea7cbf2f848f8970bdfe82a10c3cd8f4d51c7",
+    "firmware/m5-core2/site_lines.inc": "ae23e1b17f58cd6372b36358c496709cc71807812df8b988c01d204569c98284",
+    "firmware/m5-core2/DriverView.h": "f05c015f57fe72474a07f340dc23a041c3a04abc2aaa229fddfd74b4d8207463",
+    "firmware/m5-core2/PreviewMap.h": "34ffd1cf524905d20b711f05f8b8d74f1469f0df3a471b9c7dcea609f0617117",
+    "firmware/m5-core2/m5-core2.ino": "3a260b81546b52194219df0181e4adabc5747448bb51d3e9caba5ee187c1398f",
+    "firmware/m5-core2/COURSE_MAP.md": "930f6c9aee346335c5561643ddabf0151bbd64241cc8ec283b4a736c7b5d602b",
+    "firmware/m5-core2/SERIAL_PROTOCOL.md": "796063ec216cba6976878c7efc041c40f9e1b6d40642ebd86d4a0909e4b5c9ac",
+    "firmware/m5-core2/tests/site_map_test.cpp": "4576228f33b717fcb5d60672bac8f0ee2125ebef55dc181d68e95dd0937e430c",
+    "firmware/m5-core2/tests/render_driver.cpp": "e0e7562592b4d5df16eed9fa4e95b6a0c0126dcb4f6deb4e9d685753350f4b17",
+    "firmware/m5-core2/tests/test_map_course.py": "2586da05cb8a476c789f45be542f3f897df4d195978b68ea4564705b010dc128",
+    "tools/m5/export_site_maps.py": "4c0f5d616b9e705f7576cdfaf93a37e14a9990c7f284acb8f9ad6ac8324b1ec3",
+    "tools/m5/osm_site_geojson.py": "56fc0fb4bad20bf3f3e8f59365c6310008c8c35bdbdbe048e3be3ddc4856254b",
+    "pit/server/map/manresa-map.geojson": "f6bbea221cabbe62723982482a8d7bc8810510b128d65bd1b2c9215590d5203c",
+    "pit/server/map/MANRESA-MAP.md": "c64e30d8588c8bf6f1af0feae5dacc467481f862329c556e3f2ede94b7c51f37",
+    "pit/server/map/sono-map.geojson": "972bd8fc730e41b650fad02dab2b85ebad71bc37442b917901ae303858347baf"
+  },
+  "firmware_build_input_sha256": {
+    "firmware/libraries/M5DisplayLink/M5DisplayLink.h": "2041f7a9475b6e644e53a8d0de6c6e5c2eee1ba752ae6cec637a2c0e1eedd629",
+    "firmware/libraries/M5DisplayLink/VerifiedBaseline.h": "26917e55ebc014a719b95969ced0c77424211891ef94e8ce0eb591eaa3244853",
+    "firmware/libraries/M5EspNowLink/src/M5ChannelAlignment.h": "9c1511393ddfbb12c356eb1fa17f7c0d85d88f4ecbce7c39aadccc0665f87e35",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowFrame.h": "eea7f52035ff037ba16eff91443a1f3353a8e5685eb41f81dc8de88bbe8e9b33",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.cpp": "e54726c9232170292e2e7cc1f7c1de4bb3bf76900e42bf182c9eacb1257329b6",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.h": "83ba3178775b2a3b67ad21f04dfd464aaa36922e8648d22b93df383ffc88a213",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowSettings.h": "068fa762554ed2584be1c133a87ef493d20767cd92260cf979b5e9898b68d46b",
+    "firmware/libraries/M5EspNowLink/src/PairingRecord.h": "7c774b586c417c1f9a6cae48b93c4cb48a800207adc09f9c5ba9d229a1848eac",
+    "firmware/libraries/M5Game/src/CourseGeneration.h": "d2839a96a702e5cbac3c732066eac7068b98ba0a8a7485b6ce0e4cc1ca6e8238",
+    "firmware/libraries/M5Game/src/CourseRadio.h": "ec2f86decda8acf504e0d93cc3486180a639cd4e6489afd5eaa2530ebf22eb0a",
+    "firmware/libraries/M5Game/src/CourseTransfer.h": "7730d768764b8d178dcbccaa6cbf1ea9cf11d4c983694633f962dd5259b9a454",
+    "firmware/libraries/M5Game/src/GamePackage.h": "27c55f8bc1727f17a7370d9f85407ca2d4e63ccc5bd2726a8189003e4318d444",
+    "firmware/libraries/M5Game/src/GameRequest.h": "98f9a82eebcdbdadaa8fce0d5a441e96b28d29a82e3f43122bfc75e35973ba46",
+    "firmware/m5-core2/CourseStorage.h": "fc6daac98151d2e9ecb50dddb52d306e05dda79e50968cf0547caf479d87fe3c",
+    "firmware/m5-core2/DisplayMaintenance.h": "9ceadc77b097eae68519d09f0e7a32c058f12d27f3d8765e8bc82ef10f30a22e",
+    "firmware/m5-core2/DisplayMetrics.h": "5f2506b4c9d920fbe24ff155f4a296e62c8e97040eefd8ddbd04f74cc7fe1a2c",
+    "firmware/m5-core2/DisplayState.h": "50e535639592348aad210b2de3723ec773cc881725f740dbaf6d3b1b409464c8",
+    "firmware/m5-core2/DriverView.h": "f05c015f57fe72474a07f340dc23a041c3a04abc2aaa229fddfd74b4d8207463",
+    "firmware/m5-core2/GameStorage.h": "5b0164ef9e6462049aa621c6b0105ea44d225126a767cf71e33173bbf7902431",
+    "firmware/m5-core2/LiveGame.h": "d28d0dd6b1d3bf8e8f068e49f56a3ad6c7f936f64146df9ff109aadc7ca1d958",
+    "firmware/m5-core2/MapView.h": "e58ce8cf90588c87d0d2aa8721a730cf67c393ba69cc67eb739ef894a1e59f06",
+    "firmware/m5-core2/PlayerPreview.h": "f165e71848e74fabf780d803f05ac5b0924c577ac6ef05bf9d127e7dd75d8231",
+    "firmware/m5-core2/PreviewMap.h": "34ffd1cf524905d20b711f05f8b8d74f1469f0df3a471b9c7dcea609f0617117",
+    "firmware/m5-core2/ScreenLifecycle.h": "365d47db17c43f08828aac6cd38faa6a3c1d059a8b46f19ff65ceaaac272df87",
+    "firmware/m5-core2/SiteMap.h": "8cd262c85773e27cd1eaf174f65ea7cbf2f848f8970bdfe82a10c3cd8f4d51c7",
+    "firmware/m5-core2/config.h": "c2c2581e94f470424025b3fb0df9591b4403cffd183805b647259d3f139d6335",
+    "firmware/m5-core2/m5-core2.ino": "3a260b81546b52194219df0181e4adabc5747448bb51d3e9caba5ee187c1398f",
+    "firmware/m5-core2/preview_shop_lines.inc": "8aa0133f4aa94f40056ff6f256e9ffd9505168d28de080a1656e1bfacbee85d9",
+    "firmware/m5-core2/site_lines.inc": "ae23e1b17f58cd6372b36358c496709cc71807812df8b988c01d204569c98284"
+  },
+  "applications": [
+    {
+      "target": "m5-espnow",
+      "path": "firmware/build/bench-candidates/2026-11-13-site-map/m5-espnow.app.bin",
+      "bytes": 1406304,
+      "sha256": "0e28c0ff1537d9fc0a5e98fa0f4628d81f3b1497f738a80ca736b10b6f3a900d",
+      "compile_summary": [
+        "Sketch uses 1406155 bytes (21%) of program storage space. Maximum is 6553600 bytes."
+      ],
+      "compiler_warnings": 0,
+      "replaces": {
+        "candidate": "2026-11-13-game-rules",
+        "bytes": 1357056,
+        "sha256": "0d904a89671272c08f794e848047e28341e6d232968723afdc3c017054e1a169"
+      }
+    },
+    {
+      "target": "m5",
+      "path": "firmware/build/bench-candidates/2026-11-13-site-map/m5.app.bin",
+      "bytes": 664320,
+      "sha256": "1dfc247b2d7f15dcea6a1c30d8f692cdffff44c0e5f0e429d51da6bb689a0075",
+      "compile_summary": [
+        "Sketch uses 664179 bytes (10%) of program storage space. Maximum is 6553600 bytes."
+      ],
+      "compiler_warnings": 0,
+      "replaces": {
+        "candidate": "2026-11-13-game-rules",
+        "bytes": 614624,
+        "sha256": "2d451bf277bc2a22595a010cb2809165e41968e9b79d390dfa5e0247bdbe15f7"
+      }
+    },
+    {
+      "target": "m5-demo",
+      "path": "firmware/build/bench-candidates/2026-11-13-site-map/m5-demo.app.bin",
+      "bytes": 626464,
+      "sha256": "df9a3adbb1e5e42ec19f8744c1c62ba2c2e7246bed3f8e83cba1d054c944712f",
+      "compile_summary": [
+        "Sketch uses 626319 bytes (9%) of program storage space. Maximum is 6553600 bytes."
+      ],
+      "compiler_warnings": 0,
+      "replaces": {
+        "candidate": "2026-11-13-game-rules",
+        "bytes": 579920,
+        "sha256": "7c7678acef62623fe595bb49fb3a2b54a84133a03861113fce3a5204c15331cf"
+      }
+    }
+  ],
+  "first_install_images": {
+    "note": "unchanged from 2026-11-13-upstream-035; byte-identical to this build's own bootloader and partition table",
+    "core2.bootloader": {
+      "path": "firmware/build/bench-candidates/2026-11-13-upstream-035/core2.bootloader.bin",
+      "sha256": "7beba41f723dba9efc2b108311f30e4db363d9e34dd32360810eb05734859c89"
+    },
+    "core2.partitions": {
+      "path": "firmware/build/bench-candidates/2026-11-13-upstream-035/core2.partitions.bin",
+      "sha256": "bd0f7954aca2ef7d925ee21aaa1f3dc8822d1d6ce5cbbd26a135e5886bfff6ce"
+    }
+  },
+  "map_data": {
+    "license": "Map data (c) OpenStreetMap contributors, ODbL 1.0; attribution on the Core2 startup screen",
+    "shop": "pit/server/map/sono-map.geojson (extract of 2026-11-10, already in the repository)",
+    "manresa": "pit/server/map/manresa-map.geojson (Overpass API extract of 2026-11-13; query in pit/server/map/MANRESA-MAP.md)"
+  },
+  "review": {
+    "mutation_check": "11 mutations of the new drawing, culling, overview and remembered-site logic: 10 caught by the new tests; one (dropping the east-scale correction between a site and the view) did not compile under -Werror and is not separately pinned, its effect being far below one pixel between these two sites",
+    "open": [
+      "kart 3 speed calibration: 1.736 stored on kart 3's Heltec on 2026-11-13 and the caps read back; GPS check on the road pending",
+      "one status line later than 700 ms ends the Core2 game",
+      "FIRE triggers on a single tap",
+      "6.5 s without the host course packet ends the game",
+      "boost pad marked used before its request is accepted",
+      "request ID consumed on every loop pass"
+    ]
+  },
+  "not_verified": [
+    "anything on hardware: these images have not been flashed",
+    "frame time on a real Core2 with the Manresa overview (about 1,300 strokes per frame)",
+    "readability of the outline colours on the LCD in sunlight",
+    "registration of the outlines against a real GPS track at either site",
+    "the m5site NVS write on a real board",
+    "everything listed as not verified for 2026-11-13-game-rules"
+  ],
+  "deployment_guide": "firmware/m5-core2/COURSE_MAP.md",
+  "handoff": "docs/CLAUDE_HANDOFF.md"
+}

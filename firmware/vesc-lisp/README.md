@@ -1,4 +1,15 @@
-# On-VESC brake script (regen on STOP)
+# VESC-local experiments
+
+The [kart 3 reverse-input filter](reverse-input/README.md) is now saved in VESC Lisp storage
+at the owner's request. The earlier wheels-up forward/reverse trial passed; normal cold boots
+with each switch position and subsequent switch response were verified. The final state was
+active/forward. This is a kart-specific commissioning trial; startup gaps, watchdog suppression,
+held-direction failure behavior and the unresolved physical input fault remain documented.
+Tune/Hall/pedal settings were preserved; native measurement offsets recomputed on boot.
+The separate braking experiment below remains uninstalled. Never overwrite an existing script
+without reviewing its exact stored contents, runtime ownership and removal procedure.
+
+## On-VESC brake script (regen on STOP)
 
 `gokart_brake.lisp` runs inside the VESC (firmware 6.00 LispBM). When the pit presses
 STOP, the kart's Heltec ramps the drive current limit to zero AND sends this script a

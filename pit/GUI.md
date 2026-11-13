@@ -3,9 +3,14 @@
 
 # Hunter's pit graphics preview
 
-This is presentation work on `7Hunt3r/GoKart-Control`, branch
-`gui/driver-map-display`. It does not deploy to hardware, update the upstream
-project, or change the pit server, vehicle commands, race rules or firmware.
+This presentation work originated in `7Hunt3r/GoKart-Control`, branch `gui/driver-map-display`.
+It entered the shared project through `705bd91`; Eamon restored the original pit display at
+**`a9c8459`**. That final state is integrated into `v1.5/m5-core2`. This source merge does not
+deploy hardware or change the pit server, vehicle commands, race rules or firmware.
+
+The restyle descriptions and asset-sync instructions below are **archival**; their CSS/font
+files and sync helper were removed from this checkout. The simulator runner still works but
+serves the restored original pit layout.
 
 ## Working demo
 

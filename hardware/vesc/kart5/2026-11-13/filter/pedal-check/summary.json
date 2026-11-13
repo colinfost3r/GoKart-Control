@@ -1,0 +1,104 @@
+{
+  "samples": 1253,
+  "span_s": 129.7,
+  "faults_seen": [
+    0
+  ],
+  "runs": [
+    {
+      "at_s": 74.0,
+      "seconds": 2.8,
+      "direction": "reverse",
+      "peak_erpm": -8040,
+      "motor_a_max_abs": 11.4,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 78.8,
+      "seconds": 1.8,
+      "direction": "forward",
+      "peak_erpm": 11197,
+      "motor_a_max_abs": 35.0,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 81.9,
+      "seconds": 3.8,
+      "direction": "forward",
+      "peak_erpm": 14519,
+      "motor_a_max_abs": 14.5,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 86.7,
+      "seconds": 1.7,
+      "direction": "reverse",
+      "peak_erpm": -9656,
+      "motor_a_max_abs": 23.1,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 89.0,
+      "seconds": 1.0,
+      "direction": "reverse",
+      "peak_erpm": -4496,
+      "motor_a_max_abs": 12.7,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 91.1,
+      "seconds": 5.7,
+      "direction": "forward",
+      "peak_erpm": 34686,
+      "motor_a_max_abs": 82.7,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 98.0,
+      "seconds": 3.4,
+      "direction": "reverse",
+      "peak_erpm": -8216,
+      "motor_a_max_abs": 20.4,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 101.8,
+      "seconds": 2.6,
+      "direction": "reverse",
+      "peak_erpm": -14458,
+      "motor_a_max_abs": 23.7,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 105.3,
+      "seconds": 5.4,
+      "direction": "forward",
+      "peak_erpm": 10445,
+      "motor_a_max_abs": 15.9,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 111.9,
+      "seconds": 2.2,
+      "direction": "reverse",
+      "peak_erpm": -9303,
+      "motor_a_max_abs": 14.1,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 115.6,
+      "seconds": 1.7,
+      "direction": "forward",
+      "peak_erpm": 9252,
+      "motor_a_max_abs": 20.8,
+      "direction_flip_within_run": false
+    }
+  ],
+  "volts_min": 74.7,
+  "volts_max": 86.4,
+  "final": {
+    "erpm": 0,
+    "motor_current_a": 0.0,
+    "fault_code": 0
+  }
+}

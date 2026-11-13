@@ -1,0 +1,27 @@
+{"direction": "tx_attempt", "label": "read-0", "frame_hex": "020100000003", "elapsed_s": 6.874999999999937e-06}
+{"direction": "tx_return", "label": "read-0", "written_bytes": 6, "elapsed_s": 0.00021074999999999913}
+{"direction": "rx", "command": 0, "payload_hex": "00060237355f3330305f52320037004e00095134303735373900000000010000006e6f5f68775f6c696d69747300", "crc_verified": true, "elapsed_s": 0.0005518330000000016}
+{"direction": "tx_attempt", "label": ":ctxs", "frame_hex": "02078a3a6374787300a21003", "elapsed_s": 0.0006687080000000005}
+{"direction": "tx_return", "label": ":ctxs", "written_bytes": 12, "elapsed_s": 0.0007356669999999989}
+{"direction": "rx", "command": 135, "payload_hex": "872a2a2a2a2a2a2052756e6e696e6720636f6e7465787473202a2a2a2a2a2a", "crc_verified": true, "text": "****** Running contexts ******", "elapsed_s": 0.066760167}
+{"direction": "rx", "command": 135, "payload_hex": "872a2a2a2a2a2a20426c6f636b656420636f6e7465787473202a2a2a2a2a2a", "crc_verified": true, "text": "****** Blocked contexts ******", "elapsed_s": 0.06688483299999999}
+{"direction": "rx", "command": 135, "payload_hex": "872a2a2a2a2a2a20536c656570696e6720636f6e7465787473202a2a2a2a2a2a", "crc_verified": true, "text": "****** Sleeping contexts ******", "elapsed_s": 0.067016375}
+{"direction": "tx_attempt", "label": ":info", "frame_hex": "02078a3a696e666f0089ce03", "elapsed_s": 1.002769083}
+{"direction": "tx_return", "label": ":info", "written_bytes": 12, "elapsed_s": 1.0041677080000002}
+{"direction": "rx", "command": 135, "payload_hex": "872d2d284c4953502048454150292d2d", "crc_verified": true, "text": "--(LISP HEAP)--", "elapsed_s": 1.005219708}
+{"direction": "rx", "command": 135, "payload_hex": "87486561702073697a653a203139373132204279746573", "crc_verified": true, "text": "Heap size: 19712 Bytes", "elapsed_s": 1.005960417}
+{"direction": "rx", "command": 135, "payload_hex": "875573656420636f6e732063656c6c733a2030", "crc_verified": true, "text": "Used cons cells: 0", "elapsed_s": 1.0061496250000002}
+{"direction": "rx", "command": 135, "payload_hex": "874672656520636f6e732063656c6c733a2032343634", "crc_verified": true, "text": "Free cons cells: 2464", "elapsed_s": 1.00629775}
+{"direction": "rx", "command": 135, "payload_hex": "87474320636f756e7465723a2030", "crc_verified": true, "text": "GC counter: 0", "elapsed_s": 1.0064367500000002}
+{"direction": "rx", "command": 135, "payload_hex": "875265636f76657265643a2030", "crc_verified": true, "text": "Recovered: 0", "elapsed_s": 1.0065629580000002}
+{"direction": "rx", "command": 135, "payload_hex": "875265636f7665726564206172726179733a2030", "crc_verified": true, "text": "Recovered arrays: 0", "elapsed_s": 1.006677}
+{"direction": "rx", "command": 135, "payload_hex": "874d61726b65643a2030", "crc_verified": true, "text": "Marked: 0", "elapsed_s": 1.006793167}
+{"direction": "rx", "command": 135, "payload_hex": "872d2d2853796d626f6c20616e64204172726179206d656d6f7279292d2d", "crc_verified": true, "text": "--(Symbol and Array memory)--", "elapsed_s": 1.006940125}
+{"direction": "rx", "command": 135, "payload_hex": "874d656d6f72792073697a653a203430393620576f726473", "crc_verified": true, "text": "Memory size: 4096 Words", "elapsed_s": 1.007065375}
+{"direction": "rx", "command": 135, "payload_hex": "874d656d6f727920667265653a203333303820576f726473", "crc_verified": true, "text": "Memory free: 3308 Words", "elapsed_s": 1.0074461250000002}
+{"direction": "rx", "command": 135, "payload_hex": "87416c6c6f6361746564206172726179733a2030", "crc_verified": true, "text": "Allocated arrays: 0", "elapsed_s": 1.007595792}
+{"direction": "rx", "command": 135, "payload_hex": "8753796d626f6c207461626c652073697a653a2032383332204279746573", "crc_verified": true, "text": "Symbol table size: 2832 Bytes", "elapsed_s": 1.007712417}
+{"direction": "rx", "command": 135, "payload_hex": "87457874656e73696f6e733a203232322c206d617820323530", "crc_verified": true, "text": "Extensions: 222, max 250", "elapsed_s": 1.0079121670000002}
+{"direction": "tx_attempt", "label": "read-0", "frame_hex": "020100000003", "elapsed_s": 1.706841083}
+{"direction": "tx_return", "label": "read-0", "written_bytes": 6, "elapsed_s": 1.708210583}
+{"direction": "rx", "command": 0, "payload_hex": "00060237355f3330305f52320037004e00095134303735373900000000010000006e6f5f68775f6c696d69747300", "crc_verified": true, "elapsed_s": 1.7090820420000001}

@@ -1,0 +1,56 @@
+{
+  "samples": 725,
+  "span_s": 75.1,
+  "faults_seen": [
+    0
+  ],
+  "runs": [
+    {
+      "at_s": 11.0,
+      "seconds": 4.4,
+      "direction": "forward",
+      "peak_erpm": 14476,
+      "motor_a_max_abs": 46.8,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 17.8,
+      "seconds": 1.8,
+      "direction": "reverse",
+      "peak_erpm": -10874,
+      "motor_a_max_abs": 44.4,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 19.8,
+      "seconds": 0.5,
+      "direction": "reverse",
+      "peak_erpm": -1842,
+      "motor_a_max_abs": 14.0,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 20.7,
+      "seconds": 2.7,
+      "direction": "reverse",
+      "peak_erpm": -13056,
+      "motor_a_max_abs": 19.0,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 25.8,
+      "seconds": 1.6,
+      "direction": "forward",
+      "peak_erpm": 6983,
+      "motor_a_max_abs": 29.8,
+      "direction_flip_within_run": false
+    }
+  ],
+  "volts_min": 77.8,
+  "volts_max": 80.0,
+  "final": {
+    "erpm": 0,
+    "motor_current_a": 0.0,
+    "fault_code": 0
+  }
+}

@@ -148,6 +148,10 @@ void VescLink::parseMotorConfig(const uint8_t* p, uint16_t len) {
 void VescLink::handlePacket(const uint8_t* p, uint16_t len) {
   switch (p[0]) {
     case VESC_COMM_FW_VERSION: {
+      // Even a validly framed short reply must invalidate the previous UUID.
+      // Otherwise its new timestamp could make an old controller identity look
+      // freshly verified while this reply does not identify a controller at all.
+      uuidHex[0] = 0; fwSeenMs = 0;
       if (len < 4) return;
       fwMajor = p[1]; fwMinor = p[2];
       size_t n = 0; while (3 + n < len && p[3 + n] && n < sizeof(hwName) - 1) { hwName[n] = p[3 + n]; n++; }
@@ -157,8 +161,8 @@ void VescLink::handlePacket(const uint8_t* p, uint16_t len) {
         static const char* hx = "0123456789abcdef";
         for (int i = 0; i < 12; i++) { uuidHex[2 * i] = hx[p[end + 1 + i] >> 4]; uuidHex[2 * i + 1] = hx[p[end + 1 + i] & 15]; }
         uuidHex[24] = 0;
+        fwSeenMs = millis();
       }
-      fwSeenMs = millis();
       break;
     }
     case VESC_COMM_GET_VALUES: {

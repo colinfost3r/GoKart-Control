@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Decode captured payloads offline using the pinned VESC Tool 6.00 schemas."""
+"""Decode captured payloads offline for VESC 6.00/6.02 using verified compatible pinned schemas."""
 import argparse
 import json
 import math
 from pathlib import Path
 import struct
 import xml.etree.ElementTree as ET
-from capture import identity
+from capture import verified_identity
 
 DEFAULT_SCHEMA = Path(__file__).resolve().parents[2] / 'third_party/vesc_tool/6.00'
 
@@ -59,7 +59,7 @@ def decode_configuration(data, schema, command):
     expected = crc32c(signature_text.encode())
     if signature != expected:
         raise ValueError(f'Configuration schema signature mismatch: {signature:08x} != {expected:08x}')
-    values, labels = {}, {}
+    values, labels, bitfields, unknown_bits = {}, {}, {}, {}
     for name in order:
         param = params[name]
         kind, tx = int(param.findtext('type', '0')), int(param.findtext('vTx', '0'))
@@ -75,19 +75,25 @@ def decode_configuration(data, schema, command):
             raise ValueError(f'Unsupported field {name}: type {kind}, transport {tx}')
         values[name] = value
         enums = [x.text for x in param.findall('enumNames')]
-        if enums and isinstance(value, int) and 0 <= value < len(enums):
+        if kind == 4 and enums and 0 <= value < len(enums):
             labels[name] = enums[value]
+        elif kind == 6:
+            bitfields[name] = [label for bit, label in enumerate(enums) if value & (1 << bit)]
+            unknown = value & ~((1 << len(enums)) - 1)
+            if unknown:
+                unknown_bits[name] = unknown
     if reader.pos != len(data):
         raise ValueError(f'Unexpected trailing bytes: consumed {reader.pos}/{len(data)}')
     return {'schema_version': '6.00', 'signature_hex': f'{signature:08x}',
             'signature_verified': True, 'bytes_consumed': reader.pos,
-            'values': values, 'enum_labels': labels}
+            'values': values, 'enum_labels': labels,
+            'bitfield_labels': bitfields, 'bitfield_unknown_bits': unknown_bits}
 
 
 def decode_telemetry(data):
-    # Full COMM_GET_VALUES payload for this captured 6.00 format, including status byte.
+    # Full COMM_GET_VALUES payload for verified 6.00/6.02 formats, including status byte.
     if len(data) != 74 or data[0] != 4:
-        raise ValueError('Expected the 74-byte firmware-6.00 telemetry format')
+        raise ValueError('Expected the 74-byte firmware-6.00/6.02 telemetry format')
     reader, values = Reader(data, 1), {}
     fields = [('mosfet_temp_c','h',10), ('motor_temp_c','h',10),
         ('motor_current_a','i',100), ('battery_current_a','i',100), ('id_a','i',100),
@@ -106,20 +112,26 @@ def decode_telemetry(data):
     return values
 
 
-def decode_capture(directory, schema_dir=DEFAULT_SCHEMA):
-    ident = identity((directory / 'firmware.bin').read_bytes())
-    if ident['firmware'] != '6.00':
-        raise ValueError('Only firmware 6.00 is supported')
+def decode_payloads(payloads, schema_dir=DEFAULT_SCHEMA):
+    """Decode one immutable in-memory set of the four captured response payloads."""
+    ident = verified_identity(payloads['firmware'])
     result = {'identity': ident}
     for name, schema, command in [('motor_configuration','parameters_mcconf.xml',14),
                                   ('app_configuration','parameters_appconf.xml',17)]:
-        result[name] = decode_configuration((directory/(name+'.bin')).read_bytes(), schema_dir/schema, command)
-    result['telemetry'] = decode_telemetry((directory/'telemetry.bin').read_bytes())
+        result[name] = decode_configuration(payloads[name], schema_dir/schema, command)
+        result[name]['firmware_version'] = ident['firmware']
+    result['telemetry'] = decode_telemetry(payloads['telemetry'])
     # Preserve raw measurement while explicitly marking its physical validity.
     disabled = result['motor_configuration']['enum_labels'].get('m_motor_temp_sens_type') == 'Disabled'
     result['telemetry']['motor_temp_valid'] = False if disabled else None
     result['telemetry']['motor_temp_validity_reason'] = 'sensor_disabled_in_configuration' if disabled else 'sensor_wiring_not_verified'
     return result
+
+
+def decode_capture(directory, schema_dir=DEFAULT_SCHEMA):
+    payloads = {name: (directory/(name+'.bin')).read_bytes() for name in
+                ('firmware', 'telemetry', 'motor_configuration', 'app_configuration')}
+    return decode_payloads(payloads, schema_dir)
 
 
 def main():
@@ -132,7 +144,10 @@ def main():
     args.out.mkdir(parents=True, exist_ok=False)
     for name, content in decoded.items():
         (args.out/(name+'.json')).write_text(json.dumps(content, indent=2)+'\n')
-    print('Decoded identity, 189 motor fields, 187 app fields and telemetry; both schema signatures verified.')
+    print(f"Decoded firmware {decoded['identity']['firmware']}: identity, "
+          f"{len(decoded['motor_configuration']['values'])} motor fields, "
+          f"{len(decoded['app_configuration']['values'])} app fields and telemetry; "
+          'both schema signatures verified.')
 
 
 if __name__ == '__main__':

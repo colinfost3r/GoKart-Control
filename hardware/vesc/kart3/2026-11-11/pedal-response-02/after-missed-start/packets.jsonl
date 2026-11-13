@@ -1,0 +1,196 @@
+{"kind": "tx_attempt", "action": "identity", "frame_hex": "020100000003", "elapsed_s": 5.332999999999727e-06}
+{"kind": "tx_return", "action": "identity", "count": 6, "elapsed_s": 0.00015791700000000047}
+{"kind": "rx", "command": 0, "payload_hex": "00060237355f3330305f52320037004e00095134303735373900000000010000006e6f5f68775f6c696d69747300", "elapsed_s": 0.0005072500000000008}
+{"kind": "tx_attempt", "action": "events", "frame_hex": "0207146576656e7473d53303", "elapsed_s": 0.0006892920000000011}
+{"kind": "tx_return", "action": "events", "count": 12, "elapsed_s": 0.0007543750000000016}
+{"kind": "rx", "command": 21, "payload_hex": "152d3e206576656e7473200a", "text": "-> events \n", "elapsed_s": 0.0011285419999999997}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a203339312e35392073", "text": "Age    : 391.59 s", "elapsed_s": 0.0013894170000000004}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.0014274170000000003}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.0014608330000000017}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.0015288330000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3034340a", "text": "Param  : 0.044\n", "elapsed_s": 0.0016321250000000016}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a203339312e31392073", "text": "Age    : 391.19 s", "elapsed_s": 0.0017313330000000016}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.0017982500000000012}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.0019116669999999988}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.0020390830000000006}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.002122583000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a203339302e38342073", "text": "Age    : 390.84 s", "elapsed_s": 0.002381042}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.002416583}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.0024945830000000016}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.002526832999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3234320a", "text": "Param  : 0.242\n", "elapsed_s": 0.002596082999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035392e38302073", "text": "Age    : 59.80 s", "elapsed_s": 0.002754625}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.0028759580000000014}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.0029503329999999994}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.003037375000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.003199582999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035392e30372073", "text": "Age    : 59.07 s", "elapsed_s": 0.0033612499999999997}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.003393333000000002}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.0034651670000000016}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.0035006250000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3133380a", "text": "Param  : 0.138\n", "elapsed_s": 0.0036337079999999994}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035372e38372073", "text": "Age    : 57.87 s", "elapsed_s": 0.003709500000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.0037844170000000017}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.003961042000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.004041625}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.004118541999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035372e34322073", "text": "Age    : 57.42 s", "elapsed_s": 0.004382542}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.004437333000000002}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.004483457999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.004580167}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3536340a", "text": "Param  : 0.564\n", "elapsed_s": 0.004620916999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035362e31382073", "text": "Age    : 56.18 s", "elapsed_s": 0.004711375}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.004799500000000002}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.004886167}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.0049727500000000015}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.005058041999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035352e38362073", "text": "Age    : 55.86 s", "elapsed_s": 0.005303792000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.005393458}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.005428167000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.005461792}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3530300a", "text": "Param  : 0.500\n", "elapsed_s": 0.005544917}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035332e37302073", "text": "Age    : 53.70 s", "elapsed_s": 0.005710916999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.005794417}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.005879042000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.0059632919999999985}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.006051750000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035332e32392073", "text": "Age    : 53.29 s", "elapsed_s": 0.006284292}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.006373}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.006406749999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.006454250000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3330330a", "text": "Param  : 0.303\n", "elapsed_s": 0.006544042}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2035312e31372073", "text": "Age    : 51.17 s", "elapsed_s": 0.0067364170000000015}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.006826208}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.006915667}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.007005457999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.0070983750000000005}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2034322e38302073", "text": "Age    : 42.80 s", "elapsed_s": 0.007256542000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.007410375}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.007447333}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.007483832999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3034310a", "text": "Param  : 0.041\n", "elapsed_s": 0.007580291999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2034312e33322073", "text": "Age    : 41.32 s", "elapsed_s": 0.007678792}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.0077734580000000005}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.007809166999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.007958957999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.008054417000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2034302e38372073", "text": "Age    : 40.87 s", "elapsed_s": 0.008205625000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.008359749999999999}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.008395875}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.008491792000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3037380a", "text": "Param  : 0.078\n", "elapsed_s": 0.008591792000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033392e38342073", "text": "Age    : 39.84 s", "elapsed_s": 0.008690208000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.008725}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.008834208}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.008933375}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.009094000000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033392e33362073", "text": "Age    : 39.36 s", "elapsed_s": 0.009331042000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.009366833000000001}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.009413042}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.009515375000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3433310a", "text": "Param  : 0.431\n", "elapsed_s": 0.009551917000000004}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033372e36392073", "text": "Age    : 37.69 s", "elapsed_s": 0.009718750000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.009830083}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.009943749999999998}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.009982416999999997}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.010087166999999998}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033372e33312073", "text": "Age    : 37.31 s", "elapsed_s": 0.010291458}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.010408667}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.010446374999999997}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.010553292000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3433370a", "text": "Param  : 0.437\n", "elapsed_s": 0.010588583000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033352e38302073", "text": "Age    : 35.80 s", "elapsed_s": 0.010696292}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.010805125000000002}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.010915583000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.010953500000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.011067125}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033352e31362073", "text": "Age    : 35.16 s", "elapsed_s": 0.011175458000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.011365542000000003}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.011402625000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.011515833}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3238350a", "text": "Param  : 0.285\n", "elapsed_s": 0.011626167000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033332e33392073", "text": "Age    : 33.39 s", "elapsed_s": 0.011662000000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.011774583000000002}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.011810749999999998}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.011999582999999998}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.012116917000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033322e38342073", "text": "Age    : 32.84 s", "elapsed_s": 0.012235791999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.012367917000000003}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.012403792}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.012516457999999998}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3130310a", "text": "Param  : 0.101\n", "elapsed_s": 0.012636541999999997}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2033302e34312073", "text": "Age    : 30.41 s", "elapsed_s": 0.012824582999999997}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.01293675}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.013051542000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.013082832999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.013200208000000001}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032392e38362073", "text": "Age    : 29.86 s", "elapsed_s": 0.013397375}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.013517292000000004}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.013547917000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.013659292}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3933390a", "text": "Param  : 0.939\n", "elapsed_s": 0.013774958}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032382e34332073", "text": "Age    : 28.43 s", "elapsed_s": 0.013891333000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.014006292}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.014038333000000004}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.014156208}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.014272166999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032372e38342073", "text": "Age    : 27.84 s", "elapsed_s": 0.014389207999999997}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.01442125}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.014540667000000004}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.014658750000000002}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3333370a", "text": "Param  : 0.337\n", "elapsed_s": 0.014779125}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032352e35332073", "text": "Age    : 25.53 s", "elapsed_s": 0.014900832999999999}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.015019792}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.015137958000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.015257500000000004}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.015376833000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a2032342e37392073", "text": "Age    : 24.79 s", "elapsed_s": 0.015428958000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.015550958}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.015672625}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.0157035}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20312e3638370a", "text": "Param  : 1.687\n", "elapsed_s": 0.015917417}
+{"kind": "rx", "command": 21, "payload_hex": "15416765202020203a20302e30302073", "text": "Age    : 0.00 s", "elapsed_s": 0.016045417000000003}
+{"kind": "rx", "command": 21, "payload_hex": "15546872656164203a204150505f414443", "text": "Thread : APP_ADC", "elapsed_s": 0.016077417}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f746f7220203a2031", "text": "Motor  : 1", "elapsed_s": 0.016211582999999998}
+{"kind": "rx", "command": 21, "payload_hex": "15436f6d6d616e643a207365745f63757272656e74", "text": "Command: set_current", "elapsed_s": 0.016243625}
+{"kind": "rx", "command": 21, "payload_hex": "15506172616d20203a20302e3030300a", "text": "Param  : 0.000\n", "elapsed_s": 0.016369708}
+{"kind": "rx", "command": 21, "payload_hex": "154576656e747320746f74616c3a2033300a", "text": "Events total: 30\n", "elapsed_s": 0.016404958}
+{"kind": "tx_attempt", "action": "foc_state", "frame_hex": "020a14666f635f73746174653e6e03", "elapsed_s": 0.397178708}
+{"kind": "tx_return", "action": "foc_state", "count": 15, "elapsed_s": 0.397686458}
+{"kind": "rx", "command": 21, "payload_hex": "152d3e20666f635f7374617465200a", "text": "-> foc_state \n", "elapsed_s": 0.39861979200000003}
+{"kind": "rx", "command": 21, "payload_hex": "15464f432053746174653a", "text": "FOC State:", "elapsed_s": 0.398862958}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f6420643a20202020202d302e3030", "text": "Mod d:     -0.00", "elapsed_s": 0.39906375}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f6420713a2020202020302e3030", "text": "Mod q:     0.00", "elapsed_s": 0.40012237500000003}
+{"kind": "rx", "command": 21, "payload_hex": "154d6f64207120666c743a20302e3030", "text": "Mod q flt: 0.00", "elapsed_s": 0.400394542}
+{"kind": "rx", "command": 21, "payload_hex": "15447574793a202020202020302e3030", "text": "Duty:      0.00", "elapsed_s": 0.401081083}
+{"kind": "rx", "command": 21, "payload_hex": "1556643a20202020202020202d302e3039", "text": "Vd:        -0.09", "elapsed_s": 0.401520042}
+{"kind": "rx", "command": 21, "payload_hex": "1556713a2020202020202020302e3033", "text": "Vq:        0.03", "elapsed_s": 0.40173183300000004}
+{"kind": "rx", "command": 21, "payload_hex": "1550686173653a2020202020312e3438", "text": "Phase:     1.48", "elapsed_s": 0.402083458}
+{"kind": "rx", "command": 21, "payload_hex": "15565f616c7068613a2020202d302e3037", "text": "V_alpha:   -0.07", "elapsed_s": 0.40238108300000003}
+{"kind": "rx", "command": 21, "payload_hex": "15565f626574613a202020202d302e3033", "text": "V_beta:    -0.03", "elapsed_s": 0.402543792}
+{"kind": "rx", "command": 21, "payload_hex": "1569643a2020202020202020302e3030", "text": "id:        0.00", "elapsed_s": 0.402774167}
+{"kind": "rx", "command": 21, "payload_hex": "1569713a2020202020202020302e3030", "text": "iq:        0.00", "elapsed_s": 0.403154958}
+{"kind": "rx", "command": 21, "payload_hex": "1569645f66696c7465723a20302e3030", "text": "id_filter: 0.00", "elapsed_s": 0.403345125}
+{"kind": "rx", "command": 21, "payload_hex": "1569715f66696c7465723a20302e3030", "text": "iq_filter: 0.00", "elapsed_s": 0.40372979200000003}
+{"kind": "rx", "command": 21, "payload_hex": "1569645f7461726765743a20302e3030", "text": "id_target: 0.00", "elapsed_s": 0.404206917}
+{"kind": "rx", "command": 21, "payload_hex": "1569715f7461726765743a20302e3030", "text": "iq_target: 0.00", "elapsed_s": 0.40433225}
+{"kind": "rx", "command": 21, "payload_hex": "15695f6162733a2020202020302e3030", "text": "i_abs:     0.00", "elapsed_s": 0.404502875}
+{"kind": "rx", "command": 21, "payload_hex": "15695f6162735f666c743a20302e3030", "text": "i_abs_flt: 0.00", "elapsed_s": 0.404733083}
+{"kind": "rx", "command": 21, "payload_hex": "154f62735f78313a202020202d302e3033", "text": "Obs_x1:    -0.03", "elapsed_s": 0.404926542}
+{"kind": "rx", "command": 21, "payload_hex": "154f62735f78323a202020202d302e3033", "text": "Obs_x2:    -0.03", "elapsed_s": 0.405068292}
+{"kind": "rx", "command": 21, "payload_hex": "156c616d6264615f6573743a302e30323633", "text": "lambda_est:0.0263", "elapsed_s": 0.405178833}
+{"kind": "rx", "command": 21, "payload_hex": "1576645f696e743a202020202d302e3032", "text": "vd_int:    -0.02", "elapsed_s": 0.405278042}
+{"kind": "rx", "command": 21, "payload_hex": "1576715f696e743a20202020302e3031", "text": "vq_int:    0.01", "elapsed_s": 0.405381125}
+{"kind": "rx", "command": 21, "payload_hex": "156f66665f64656c61793a20302e3030", "text": "off_delay: 0.00", "elapsed_s": 0.405473333}
+{"kind": "rx", "command": 21, "payload_hex": "1520", "text": " ", "elapsed_s": 0.40556733300000003}
+{"kind": "tx_attempt", "action": "faults", "frame_hex": "0207146661756c74730d9a03", "elapsed_s": 0.779488917}
+{"kind": "tx_return", "action": "faults", "count": 12, "elapsed_s": 0.77960175}
+{"kind": "rx", "command": 21, "payload_hex": "152d3e206661756c7473200a", "text": "-> faults \n", "elapsed_s": 0.7800691670000001}
+{"kind": "rx", "command": 21, "payload_hex": "154e6f206661756c747320726567697374657265642073696e636520737461727475700a", "text": "No faults registered since startup\n", "elapsed_s": 0.780184875}
+{"kind": "tx_attempt", "action": "output-disabled", "frame_hex": "023d8a287072696e7420286c6973742027676b2d6f75747075742d64697361626c656420286170702d69732d6f75747075742d64697361626c65642929290006ff03", "elapsed_s": 1.1611115829999998}
+{"kind": "tx_return", "action": "output-disabled", "count": 66, "elapsed_s": 1.1612477499999998}
+{"kind": "rx", "command": 135, "payload_hex": "8728676b2d6f75747075742d64697361626c6564206e696c29", "text": "(gk-output-disabled nil)", "elapsed_s": 1.1685675}
+{"kind": "rx", "command": 135, "payload_hex": "873e2074", "text": "> t", "elapsed_s": 1.1688163749999998}
+{"kind": "tx_attempt", "action": "identity", "frame_hex": "020100000003", "elapsed_s": 1.548043417}
+{"kind": "tx_return", "action": "identity", "count": 6, "elapsed_s": 1.5488375419999998}
+{"kind": "rx", "command": 0, "payload_hex": "00060237355f3330305f52320037004e00095134303735373900000000010000006e6f5f68775f6c696d69747300", "elapsed_s": 1.5496521669999999}

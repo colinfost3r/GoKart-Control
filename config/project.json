@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "hardware_baseline_captured_application_not_implemented",
+  "status": "m5_telemetry_ota_local_modes_verified_kart3_tune_trial_applied",
   "project": "GoKart Control",
   "site": {
     "name": "Manresa Island",
@@ -88,7 +88,7 @@
     "verified_limits": null,
     "intent": "primarily_top_speed_limits_with_strong_acceleration; retain existing profiles pending inspection"
   },
-  "hardware_commands_enabled": false,
+  "hardware_commands_enabled": true,
   "features_deferred": [
     "driver_messages",
     "gradual_remote_stop",
@@ -111,7 +111,7 @@
     "pedal_brake": "mechanical",
     "regen_disabled_owner_reported": true,
     "regen_configuration_verified": true,
-    "regen_configuration_note": "Runtime motor braking current 0 A; battery regen allowance -100 A. No braking behavior tested."
+    "regen_configuration_note": "Dated kart2 baseline motor braking0 A/batteryregen-100 A. Kart3 original-50/-12 A; November10 trial applied motor braking0 A while preserving batteryregen-12 A and speed-PID brakingdisabled. Physical braking untested."
   },
   "dashboard": {
     "speed_units": "mph",
@@ -134,5 +134,270 @@
     "controller_id": 69,
     "firmware_name": "no_hw_limits",
     "motor_temp_sensors_wired": false
+  },
+  "display_variants": {
+    "m5_v1_5": {
+      "branch": "v1.5/m5-core2",
+      "hardware": "M5Stack Core2 v1.3 (K010-V13)",
+      "resolution": [
+        320,
+        240
+      ],
+      "heltec_transport": "Paired encrypted ESP-NOW; optional 3.3 V UART 230400 8N1",
+      "scope": [
+        "telemetry",
+        "mode_requests",
+        "pit_status",
+        "simple_fleet_map"
+      ],
+      "hardware_verified": true,
+      "development_kart_id": 3,
+      "sd_required": false,
+      "base_required_for_local_telemetry": false,
+      "initial_vesc_writes_enabled": false,
+      "hardware_verified_scope": [
+        "telemetry",
+        "dash_map_touch",
+        "core2_authenticated_ota",
+        "local_mode_readbacks"
+      ],
+      "additional_karts_planned": 2,
+      "additional_kart_ids": [
+        4,
+        5
+      ],
+      "current_vesc_writes_enabled": true,
+      "eamon_test_kart_ids": [
+        1,
+        2
+      ],
+      "map_revision_2026_11_11": {
+        "viewport": "north-up, own-kart follow at fixed local scale",
+        "course_storage": "bounded full game package in internal NVS; legacy USB outline/optional SD fallback retained",
+        "course_provisioning": "authenticated host ESP-NOW download; USB legacy outline remains",
+        "fire": "native typed single-use game request; fresh session/course/identity required; not hardware accepted",
+        "hardware_verified": false
+      },
+      "player_mode_plan_2026_11_11": {
+        "status": "implemented_offline_candidate_not_deployed",
+        "role": "join_existing_host_only",
+        "core2_owns": [
+          "course_cache",
+          "follow_map",
+          "player_inventory",
+          "local_game_logic",
+          "driver_ui"
+        ],
+        "heltec_owns": [
+          "gps",
+          "lora_sessions_attacks",
+          "vesc_ble",
+          "supervisory_validation"
+        ],
+        "course_download": "host_publisher_to_core2_over_espnow_nearby_then_local_cache",
+        "host_publisher_required": true,
+        "ui_reference": "Hunter retro driver graphics 315710e through 5629924, adapted to DASH and MAP/GAME",
+        "navigation_proposal": "on_screen_edge_page_button_with_pulsing_host_invitation_dot",
+        "implementation_brief": "docs/m5-player-mode.md"
+      },
+      "ui_rehearsal_2026_11_11": {
+        "status": "source_and_offline_demo_not_deployed",
+        "renderer": "firmware/m5-core2/DriverView.h",
+        "browser_preview": "docs/previews/core2-player-rehearsal/index.html",
+        "standalone_target": "m5-demo",
+        "live_game_commands": false,
+        "wireless_host_course_transfer": false,
+        "map_context": {
+          "background": "demo-only clipped Pi SoNo OSM geometry",
+          "game_symbols": "demo-only start_finish_boost_pickup",
+          "scale_label": false,
+          "credits": "five_second_startup_only",
+          "live_host_background_transfer": false,
+          "hud": "fresh GPS mph and measured VESC pack volts from Heltec; unknown when stale",
+          "viewport": "full_screen_320x240",
+          "persistent_kart_header": false,
+          "compact_fire": true
+        }
+      }
+    },
+    "pi_v2": {
+      "hardware": "Pi 3 B + LESOWN L7",
+      "heltec_transport": "USB serial"
+    }
+  },
+  "m5_control_request_2026_11_10": {
+    "m5_modes": true,
+    "full_existing_base_controls": true,
+    "target": "kart-m5-espnow",
+    "installed_target": "kart-m5-espnow",
+    "hardware_control_acceptance": "Core2 ECO/NORMAL/SPORT readback verified; operator confirmed; separate pit controls pending",
+    "tune_request": "Compare all motor/app settings and align shared tune to dated kart2 baseline; preserve per-unit calibration",
+    "same_drivetrain_battery_bms_owner_confirmed": true,
+    "full_kart3_usb_capture": "complete_2026_11_10_192831_utc_376_fields_50_different",
+    "rf_acceptance": "Authenticated exact-channel alignment verified on channel6 for both peers; range and eight-kart load pending",
+    "full_kart3_usb_capture_path": "hardware/vesc/kart3/2026-11-10/usb-before-tune",
+    "tune_applied": true,
+    "reference_is_current_kart2": false,
+    "latest_eamon_integrated": "a9c8459",
+    "desktop_backup": "/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10",
+    "current_usb_state": "2026-11-11 19:31 UTC: Heltec/Core2 coexistence bench passed, stationary/fault0; -5 A motor minimum/minscale1 preserved. Current temporary mode ECO. Owner confirms smooth F/R and now forward, pedal released and stopped. Both accessories live/mode-ready/channel6 aligned. Internal Lisp state not polled during BLE.",
+    "reverse_input_owner_report": "Throttle ADC1; maintained reverse switch RX to VESC signal GND, believed 10 k\u03a9 pull-up to 3.3 V. Nilight SPST toggle LED unused. Intermittent even from rest, predates November 10 tune, reported across eight karts/two switch types. App settings preserved; original branch noise measured. Persistent VESC-local filter bench trial installed; wiring cause/reliability still unresolved.",
+    "tune_applied_at_utc": "2026-11-10T19:58:55+00:00",
+    "tune_applied_path": "hardware/vesc/kart3/2026-11-10/tune-applied-v1",
+    "tune_verified_fields": 376,
+    "tune_changed_motor_fields": 12,
+    "tune_persistence_powercycle_verified": true,
+    "mode_commissioning_path": "hardware/m5/2026-11-10-kart3/mode-commissioning",
+    "installed_heltec_app_sha256": "11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2",
+    "installed_core2_app_sha256": "996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a",
+    "core2_busy_notice_candidate_installed": false,
+    "reverse_fault_predates_tune_owner_confirmed": true,
+    "kart3_physical_model_owner_report": "Flipsky 75100 Pro V2.0",
+    "reverse_conditioner_proposal": {
+      "status": "documented_not_built_or_installed",
+      "guide": "docs/reverse-input/prototype-v1/README.md",
+      "input": "5V_optocoupler_switch_loop_LED_terminal_unused",
+      "debounce": "MAX6817",
+      "output": "3.3V_PPM_requires_ADC_and_UART",
+      "current_input_still": "ADC_RX",
+      "heltec_alternative": "concept_only_reset_behavior_conflicts_with_reliability_requirement"
+    },
+    "reverse_next_test": {
+      "status": "persistent_kart3_filter_installed_normal_coldboots_passed_supervised_trial",
+      "guide": "firmware/vesc-lisp/reverse-input/README.md",
+      "first": "completed_RAM_trial_forward_reverse_then_stop_rollback_and_persistent_install",
+      "candidate": "VESC_local_buttons_only_filter_saved_with_guarded_autostart",
+      "firmware_upgrade_required": false,
+      "existing_kart3_firmware": "6.02_no_hw_limits",
+      "wiring_change_for_monitor": false,
+      "atom_model_confirmed": false,
+      "earliest_owner_hardware_session": "2026-11-11",
+      "monitor": "firmware/vesc-lisp/reverse-input/rx-monitor-compact.repl",
+      "filter_source": "firmware/vesc-lisp/reverse-input/rx-filter-autostart.lisp",
+      "filter_installed": true,
+      "filter_loader_implemented": true,
+      "offline_validation": {
+        "project_tests_passed": 457,
+        "project_suites": 7,
+        "project_tests_skipped": 0,
+        "lisp_mock_cases_passed": 33,
+        "lisp_host_heap_cons_cells": 2464,
+        "hardware_verified": true,
+        "fixed_monitor_sender_cases_passed": 24,
+        "lisp_autostart_cases_passed": 14,
+        "hardware_validation_scope": "single_kart_wheels_up_RAM_motion_and_persistent_stationary_normal_boots; not_fleet_endurance_or_abnormal_reset"
+      },
+      "next": "harness_repair_and_longer_loaded_acceptance_charged_pack_BMS_abnormal_reset_and_fleet_checks",
+      "monitor_observation": {
+        "date": "2026-11-11",
+        "samples": 13415,
+        "rx_edges": 0,
+        "rx_values": [
+          1
+        ],
+        "owner_confirms_reverse_selected": true,
+        "heltec_off": true,
+        "all_376_settings_unchanged": true,
+        "voltage_measurement_pending": true,
+        "decoded_pedal_min": 0.089921,
+        "decoded_pedal_max": 0.090987,
+        "native_deadband": 0.15,
+        "filter_guard_requires_review": true,
+        "evidence": "hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md"
+      },
+      "filter_release_guard": 0.12,
+      "native_adc_deadband": 0.15,
+      "filter_hardware_gate": "isolate_harness_before_activation",
+      "latest_observation": {
+        "date": "2026-11-11",
+        "evidence": "hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md",
+        "forward_rx_edges": 861,
+        "forward_samples": 13208,
+        "reverse_rx_edges": 0,
+        "reverse_samples": 13381,
+        "reverse_worked_owner_confirmed": true,
+        "forward_direction_unreliable_owner_reported": true,
+        "all_sampled_faults_zero": true,
+        "vesc_off_owner_confirmed": true,
+        "heltec_off": true,
+        "filter_installed": false,
+        "cause_not_isolated": true
+      },
+      "local_isolation_observation": {
+        "evidence": "hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md",
+        "closed_rx": 0,
+        "closed_edges": 0,
+        "closed_samples": 13428,
+        "open_test_complete": true,
+        "physical_wiring_independently_verified": false,
+        "open_rx": 1,
+        "open_edges": 0,
+        "open_samples": 13364,
+        "forward_rx": 1,
+        "forward_edges": 0,
+        "forward_samples": 13281,
+        "owner_confirms_smooth_forward": true,
+        "all_376_fields_unchanged": true,
+        "repair_complete": false
+      },
+      "persistent_evidence": "hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01",
+      "persistent_code_sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801",
+      "startup_limits": [
+        "native_ADC_reads_raw_RX_before_Lisp_qualifies",
+        "watchdog_boot_can_skip_Lisp",
+        "pedal_released_until_active_correct_direction_verified"
+      ],
+      "direction_change": "stable_RX_50ms_and_pedal_le_0.12_abs_ERPM_le_50_fault0_for_250ms; hold_previous_direction_during_throttle_or_coasting",
+      "heltec_coexistence_bench_verified": true,
+      "heltec_coexistence_evidence": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01"
+    },
+    "tune_persistence_powercycle_evidence": "hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01; only native startup measurement offsets changed",
+    "pedal_response_investigation": {
+      "status": "minus5_saved_coldboot_and_local_heltec_coexistence_bench_verified",
+      "evidence": "hardware/vesc/kart3/2026-11-11/pedal-response-03",
+      "native_current_request_a": 45.776,
+      "foc_iq_target_a": 0.05,
+      "mod_q_filter": -0.01,
+      "motor_brake_limit_a": -5,
+      "settings_changed": true,
+      "measurement_limit": "sequential rounded print/event snapshots; not cycle-atomic",
+      "next_step": "per-target kart4/5 captures and preparation; separate road/load/endurance/pit/range and charged-pack validation",
+      "motor_brake_limit_at_missed_start_a": 0,
+      "changed_field": "l_current_min",
+      "other_375_fields_preserved": true,
+      "persistence_powercycle_verified": true,
+      "heltec_coexistence_verified": true,
+      "temporary_trial_path": "hardware/vesc/kart3/2026-11-11/brake-limit-trial-01",
+      "persistent_save_path": "hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01",
+      "offline_validation": {
+        "project_tests_passed": 469,
+        "suites": 7,
+        "skipped": 0,
+        "independent_raw_sample_replay": true,
+        "fleet_preparation_tests": 12
+      },
+      "persistence_powercycle_evidence": "hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/coldboot-forward/verification.json",
+      "heltec_coexistence_scope": [
+        "stationary_ECO_NORMAL_SPORT_readbacks",
+        "wired_forward_ECO_wheels_up",
+        "wired_reverse_ECO_wheels_up",
+        "stable_BLE_ESPNOW_LoRa_during_recordings"
+      ],
+      "heltec_coexistence_evidence": "hardware/vesc/kart3/2026-11-11/heltec-coexistence-01",
+      "current_temporary_profile": "ECO"
+    }
+  },
+  "hardware_commands_enabled_scope": "Commissioned kart3 Heltec; full pit command implementation enabled, physical pit acceptance still pending",
+  "native_player_candidate_2026_11_12": {
+    "status": "implemented_offline_not_installed",
+    "guide": "docs/m5-player-mode.md",
+    "host_update_required": true,
+    "player_pi_required": false,
+    "course_only_pairing_required": true,
+    "host_generation": "optional 14-byte LoRa type5 replaces one host telemetry slot every2s",
+    "maximum_package_bytes": 3684,
+    "live_fire_implemented": true,
+    "hardware_tested": false,
+    "upstream_source_integrated": "c21baf8 (binary release and later item-screen/fastboot commits excluded)"
   }
 }

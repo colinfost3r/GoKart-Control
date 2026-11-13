@@ -7,10 +7,15 @@
 
 This graphics branch starts from Eamon's actual driver display at
 `b48c5ad3a7eca250ee8e119c96c344ee98f68587` (`eamon/firmware-lora-starter`).
-Its publishing destination is **7Hunt3r/GoKart-Control**, branch
-`gui/driver-map-display`. A fork records its relationship to the shared project,
-but saving here does not update that project. No upstream PR or deployment is
-part of this work.
+The graphics originated in **7Hunt3r/GoKart-Control**, branch `gui/driver-map-display`.
+Eamon integrated them at `705bd91`, then restored the original layout at **`a9c8459`**, keeping
+MAP/SAT artwork and FOLLOW behavior. This final state is integrated into `v1.5/m5-core2` with
+its roulette cancellation/suppression fixes preserved. Source integration does not deploy a Pi
+or change the native Core2 UI.
+
+The remaining restyle descriptions, deleted CSS/font files and asset-sync commands below are
+**archival instructions for the graphics branch**, not the current checkout. The simulator
+runner remains available but serves the current original layout with the MAP/SAT option.
 
 ## Open the simulator
 

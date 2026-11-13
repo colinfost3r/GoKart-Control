@@ -1,0 +1,22 @@
+{
+  "project_test_count": 469,
+  "suites": 7,
+  "skipped": 0,
+  "all_passed": true,
+  "log_path": "/var/folders/6z/rm70x7xx12zcy5pxlsqf82l80000gn/T/gokart-tests.YuNAdJ",
+  "suite_counts": {
+    "vesc-tools": 169,
+    "pit-core": 74,
+    "pit-e2e": 7,
+    "kart-core": 133,
+    "kart-mapsync": 9,
+    "kart-e2e": 18,
+    "firmware": 59
+  },
+  "persistent_writer_selftest": "passed",
+  "independent_writer_review": "passed; timing corrected before use; SHA3d8486476755d680155e8542d62130d5bdf663c8a6fd58d74a92400a0194d6ee",
+  "pinned_lisp_guard_cases_passed": 26,
+  "independent_trial_replay": "all1658 raw samples verified;78windows allrotation,17 instantaneous8Acriteria,0sustained",
+  "hardware_powercycle_persistence_verified": false,
+  "hardware_heltec_coexistence_verified": false
+}

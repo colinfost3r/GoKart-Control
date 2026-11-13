@@ -1,0 +1,71 @@
+{
+  "duration_seconds": 180,
+  "scope": "Read-only installed telemetry firmware; USB attachment resets accessories; no motor commands",
+  "boards": {
+    "heltec": {
+      "json_lines": 1378,
+      "live_vesc_reports": 344,
+      "first_live_s": 8.302757167024538,
+      "max_report_gap_s": 0.7884425839874893,
+      "median_report_gap_s": 0.5002129579661414,
+      "voltage_range": [
+        82.2,
+        82.3
+      ],
+      "fault_codes": [
+        0
+      ],
+      "max_abs_erpm": 0,
+      "vesc_false_reports_after_first_live": 0,
+      "writes_enabled_observed": false,
+      "espnow": {
+        "ready": true,
+        "linked": true,
+        "channel": 6,
+        "tx_packets": 2886,
+        "tx_failed": 21,
+        "tx_dropped": 33,
+        "rx_packets": 334,
+        "rx_dropped": 0,
+        "rx_invalid": 0
+      }
+    },
+    "core2": {
+      "json_lines": 110,
+      "status_samples": 37,
+      "live_vesc_samples": 34,
+      "first_live_s": 13.060241375002079,
+      "false_after_first_live": 0,
+      "mode_ready_observed": false,
+      "ota_active_observed": false,
+      "espnow": {
+        "ready": true,
+        "linked": true,
+        "channel": 5,
+        "tx_packets": 334,
+        "tx_failed": 0,
+        "tx_dropped": 0,
+        "rx_packets": 2854,
+        "rx_dropped": 11,
+        "rx_invalid": 0
+      }
+    }
+  },
+  "ended_at_utc": "2026-11-10T19:00:59.029794+00:00",
+  "installed_app_sha256": {
+    "heltec": "f55e3e53fe7c36cb0aa64371de528d9d1ac6d1f416b0b9bf3cdce68d7054453e",
+    "core2": "c090ce154e457343b4ab7b99ef39fd4b996fb826c23dc242543ea47d21c4cb63"
+  },
+  "private_capture_sha256": {
+    "heltec": "24c10758cd1c6f4b592b1690edc719958e83e42144826552c3bb0bf203d1a664",
+    "core2": "9a0db884beaa3a71007e73783db46b2abdc5493cc49fd491ea3ca388854f74ce"
+  },
+  "limitations": [
+    "Only installed read-only checkpoint, not the new control build or its 500 ms configuration polling",
+    "USB attachment causes accessory resets; first-live figures include that startup",
+    "Core2 status is sampled, not a lossless trace of every screen update",
+    "Boards report different channel values; diagnostic interpretation needs investigation before range/latency claims",
+    "RF drops/failures observed; no fault or VESC-link loss observed after acquisition in this short stationary test",
+    "No motor, configuration, firmware or control command sent to VESC"
+  ]
+}

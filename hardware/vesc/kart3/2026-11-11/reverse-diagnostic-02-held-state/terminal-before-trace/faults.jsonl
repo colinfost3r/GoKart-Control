@@ -1,0 +1,2 @@
+{"command": 21, "payload_hex": "152d3e206661756c7473200a", "crc_verified": true, "text": "-> faults \n"}
+{"command": 21, "payload_hex": "154e6f206661756c747320726567697374657265642073696e636520737461727475700a", "crc_verified": true, "text": "No faults registered since startup\n"}

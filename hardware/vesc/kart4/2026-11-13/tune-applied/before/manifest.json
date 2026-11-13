@@ -1,0 +1,72 @@
+{
+  "started_at_utc": "2026-11-13T17:38:45.305002+00:00",
+  "transport": "usb_serial",
+  "port": "/dev/cu.usbmodem3041",
+  "scope": "current_runtime_not_verified_saved_flash",
+  "capture_complete": true,
+  "queries": [
+    {
+      "command": 0,
+      "name": "firmware",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-13T17:38:45.305438+00:00",
+      "payload_bytes": 46,
+      "sha256": "be70713e6178661e8de479655646bda8befda06253ef73fc9af6e679cd5ee044"
+    },
+    {
+      "command": 14,
+      "name": "motor_configuration",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-13T17:38:45.306797+00:00",
+      "payload_bytes": 482,
+      "sha256": "72ef4955b20c00a18edcc6299d684a7d751d7fcea105803a46666821ba422208"
+    },
+    {
+      "command": 17,
+      "name": "app_configuration",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-13T17:38:45.307949+00:00",
+      "payload_bytes": 494,
+      "sha256": "31be8f2e7079e06b503574d7c609c64df76a83dc3dd10bfa5d930d8be7353716"
+    },
+    {
+      "command": 4,
+      "name": "telemetry",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-13T17:38:45.308394+00:00",
+      "payload_bytes": 74,
+      "sha256": "5673be7e443f198832fd0103d72c7b7535bc305f77dd8f0dcf37cf6970abc100"
+    }
+  ],
+  "procedure": "Guarded tune readback; four read commands only",
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "55004d000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "configuration_validation": {
+    "motor_configuration": {
+      "signature_hex": "2e43a161",
+      "schema_version": "6.00",
+      "field_count": 189,
+      "bytes_consumed": 482
+    },
+    "app_configuration": {
+      "signature_hex": "1d003a2c",
+      "schema_version": "6.00",
+      "field_count": 187,
+      "bytes_consumed": 494
+    }
+  },
+  "finished_at_utc": "2026-11-13T17:38:45.321529+00:00"
+}

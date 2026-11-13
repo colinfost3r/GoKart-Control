@@ -1,0 +1,69 @@
+{
+  "started_utc": "2026-11-11T18:08:21.092925+00:00",
+  "complete": true,
+  "commands": [
+    0,
+    4,
+    14,
+    17,
+    32,
+    138
+  ],
+  "motor_or_config_or_lifecycle_writes": false,
+  "script_sha256": "1f9c814c6211e48cbd05b1ebaec71ce1135ea34c1d5c4ed00bf98fc7d0e3af7a",
+  "note": "GET_VALUES resets telemetry averaging accumulators; REPL status may pause/GC evaluator. No output or filter-state mutation.",
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "status_before": {
+    "run": true,
+    "active": true,
+    "pid": 1507,
+    "applied": 0,
+    "rx": 1,
+    "adc": 0.087806,
+    "erpm": -3e-06,
+    "fault": 0
+  },
+  "rows": 375,
+  "status_after": {
+    "run": true,
+    "active": true,
+    "pid": 1507,
+    "applied": 0,
+    "rx": 1,
+    "adc": 0.087179,
+    "erpm": -7e-06,
+    "fault": 0
+  },
+  "app_unchanged": true,
+  "motor_unchanged": true,
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T18:09:01.420511+00:00"
+}

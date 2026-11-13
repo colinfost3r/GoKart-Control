@@ -1,0 +1,182 @@
+{
+  "scope": "Offline only; no device, serial, config store, native motor command or flash calls",
+  "pinned_firmware_commit": "f7c2b34e1cff2234cae98be3abf0cd50e249558f",
+  "pinned_lispbm_tree": "5173bfae688fb89e45fba09011e33404a4ee7c29",
+  "runner": "/tmp/gokart-lbm-602/tests/test_lisp_code_cps",
+  "runner_sha256": "b7e9f62ea33d75a17ddfee1eab6ac283c9f0f0bc2b02ca572dbd0ca6efad2ab1",
+  "runner_heap_cons_cells": 2464,
+  "expressions": {
+    "apply": {
+      "expression": "(print (list 'gk-brake-limit-result (if (and (= (conf-get 'l-current-min) 0.0) (eq (gk-rx-filter-safe) t) (eq (gk-rx-filter-config-ok) t) gk-rx-filter-run gk-rx-filter-active (= gk-rx-filter-applied 0) (= (gpio-read 'pin-rx) 1) (<= (get-vin) 82.0)) (conf-set 'l-current-min -5.0) nil) (conf-get 'l-current-min)))",
+      "expression_bytes": 312,
+      "vesc_payload_bytes_including_id_nul": 314,
+      "sha256": "eb43cc89e1c043171d3115577ae75740258a56e5c2324641e8348a73c9a77c35"
+    },
+    "restore": {
+      "expression": "(print (list 'gk-brake-limit-result (if (and (= (conf-get 'l-current-min) -5.0) (eq (gk-rx-filter-safe) t) (eq (gk-rx-filter-config-ok) t) gk-rx-filter-run gk-rx-filter-active (= gk-rx-filter-applied 0) (= (gpio-read 'pin-rx) 1) (<= (get-vin) 82.0)) (conf-set 'l-current-min 0.0) nil) (conf-get 'l-current-min)))",
+      "expression_bytes": 312,
+      "vesc_payload_bytes_including_id_nul": 314,
+      "sha256": "8ec30c5bf8626a859158674cedb12289e2cc00b496c08a9a462b700fe0bd8afc"
+    }
+  },
+  "results": [
+    {
+      "case": "apply-permitted-one-field-one-call.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "0cb2763061cf937fbe1dcbb0866482181e7926e1626616843a7b0e97a1f30a38"
+    },
+    {
+      "case": "apply-voltage-exact-boundary.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "3adc5fd75fc4028f42bdc99355e6825d5b60767a274c396b4c474097ecde227f"
+    },
+    {
+      "case": "apply-voltage-over-boundary.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "5f7d49a22155a7dfbba58c5fdc4f29245d8eef77bd4f087ae7a31c753434e3df"
+    },
+    {
+      "case": "apply-unsafe-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "13a2e8007690fedc5d9e3e608269c12d13f62c5448e79191d576ab01dbe488c1"
+    },
+    {
+      "case": "apply-safe-nonboolean-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "9ea3a288572d64f49782eee74847051e60c32f1898d5f75e3c6965b35193d198"
+    },
+    {
+      "case": "apply-config-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "8b9e914c74c180b1a099bbb376c0d9a1c153454ea3d53878c028a921f33b6223"
+    },
+    {
+      "case": "apply-config-nonboolean-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "dc8778a2aaea47a82ebc493f5b0ebaa761a2e7c7c5b45d1cea297f542f3e6108"
+    },
+    {
+      "case": "apply-worker-not-running-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "7e8b010b9ecd43cf30be2bdcad1246a0a1dd5ae8d21221d54946ea1397864136"
+    },
+    {
+      "case": "apply-filter-inactive-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "2af595ea5a34a611195a52127419d01e41f6b82fd0f057c485e7be3e15073ac7"
+    },
+    {
+      "case": "apply-reverse-applied-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "5869779b0888c1b525c2089bb73def370125ca4b3ae4e0de198be3524ff8f4d2"
+    },
+    {
+      "case": "apply-unarmed-direction-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "7d5e246174d794dda194c7ed463c720b408a79e80cba954dae5afe3f1735affa"
+    },
+    {
+      "case": "apply-raw-reverse-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "7f3b2f4ef628a2e2e2f44b3c837a730a3f2cb988ef31508ae3898bd4d7ae6875"
+    },
+    {
+      "case": "apply-wrong-existing-limit-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "504969dfcdc6294e7e4b325342f04ceafcd28b44e02ac1541431e5cba59f4d4f"
+    },
+    {
+      "case": "restore-permitted-one-field-one-call.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "4e68180481b06cccdd4ff756466ee4537187f4b8c2fb304b3b6549a2ed61e9f8"
+    },
+    {
+      "case": "restore-voltage-exact-boundary.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "207f951e6dda6cd8283b9924e767d0d641a8388eecaf4c483377578b9bce5a59"
+    },
+    {
+      "case": "restore-voltage-over-boundary.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "341c38f378921db03ad906b3e9f4003ee34c12bc0bcd32095092ff4883d7db92"
+    },
+    {
+      "case": "restore-unsafe-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "8d5d166c0099bff4ae1575a18a24a0fef843d59b93ad479c92a3153851dc9395"
+    },
+    {
+      "case": "restore-safe-nonboolean-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "e7b583c08554c61f51e0f73c5dfdc9167d1d91dcde3fbfaecb67400d68f7d879"
+    },
+    {
+      "case": "restore-config-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "ca72f52bef512f4d9d3fe3be94f3fa963136260d438a36f8d6572205f273c508"
+    },
+    {
+      "case": "restore-config-nonboolean-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "952571bb2b02b83ac123c5fe7ad22ef774b23dc9eeda833fb35a86ba92a58b07"
+    },
+    {
+      "case": "restore-worker-not-running-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "0c39fd35bc16b320924695de5691361a371e41719832095fec639f308e9cbc68"
+    },
+    {
+      "case": "restore-filter-inactive-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "b4774373ef2845f3e6b8ba4517ddc47a5f6c83d928fa13797d99fe93e8047e06"
+    },
+    {
+      "case": "restore-reverse-applied-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "85bead7365aff80485cb4842c3e172713d16512d12470d4078b87344c2171ec3"
+    },
+    {
+      "case": "restore-unarmed-direction-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "6e22ae60e777e474e05e8e2302b2d637ffe541c798051a14e0fe228a99db173e"
+    },
+    {
+      "case": "restore-raw-reverse-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "c52f84439a304d86b7ab4fcc0dd11832fd2203cad42e1d88ac797fe2caded300"
+    },
+    {
+      "case": "restore-wrong-existing-limit-refused.lisp",
+      "passed": true,
+      "exit_code": 1,
+      "source_sha256": "41ea4814962e58351ccd032785505f414cf9213b2b74c45e3df3a1b51a3b3d03"
+    }
+  ],
+  "all_passed": true,
+  "limits": "Native functions are mocked. This tests exact Lisp expression semantics, guard refusals and one-field setter call count/result. It does not prove MCU scheduling, hardware state or physical safety."
+}

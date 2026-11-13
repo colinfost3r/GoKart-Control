@@ -1,0 +1,30 @@
+[
+  {
+    "file": "install_rx_filter.py",
+    "sha256": "81e449b70d9b1cbd1e9d7617125850dc0b2e789bf7fc7e4ddee5f06127001b72"
+  },
+  {
+    "file": "test_install_rx_filter.py",
+    "sha256": "da948fc97dbfcf270f2247773453385658863c05c684d840e8af975be5fad89e"
+  },
+  {
+    "file": "codeblob.bin",
+    "sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801"
+  },
+  {
+    "file": "REVIEW.md",
+    "sha256": "893ed2a4095f56ce154e3f1049a8e6f42b41e6c210ec8d3be02a77caf2801ce1"
+  },
+  {
+    "file": "installer-independent-review.json",
+    "sha256": "0ef6911f76fe05d10c2cbe4a5f4516f9cf69d5d4810ec7c7b742bc93aaaf93dc"
+  },
+  {
+    "file": "rx_filter_control-used-by-installer.py",
+    "sha256": "b1dd286da2a75d78910064a9f1ebf06b0a0dc8d7ff35ab3f10b6081ca4582778"
+  },
+  {
+    "file": "rx_filter_control-used-for-boot-status.py",
+    "sha256": "3ec54159d27dc44c3f7485c4ebd0818771357bfa6129e599f52e224f29dd5b70"
+  }
+]

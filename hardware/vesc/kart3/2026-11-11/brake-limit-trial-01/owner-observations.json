@@ -1,0 +1,7 @@
+{
+  "temporary_trial_authorized": true,
+  "operator_report": "No\u2014starts are responding consistently",
+  "reverse_motion_intent": "Owner confirmed deliberate reverse near end; then forward, pedal released and stopped",
+  "ram_restore_zero": "Complete and exact readback verified 2026-11-11T18:39:58.815099+00:00",
+  "subsequent_request": "Owner now explicitly requests saving the tested setting and checking Heltec coexistence; separate following procedure"
+}

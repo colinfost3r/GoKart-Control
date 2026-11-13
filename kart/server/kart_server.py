@@ -63,6 +63,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import health  # noqa: E402
+import m5_course
+import secrets
 import kartcore  # noqa: E402
 from demo import Demo  # noqa: E402
 from link import Link  # noqa: E402
@@ -101,6 +103,7 @@ DEFAULTS = {
     "sun_mode": True,                   # driver page: opaque high-contrast SUN theme (the SUN button overrides it per device)
     "freeplay": True,                   # allow freeplay (FREEPLAY map button / POST /api/freeplay): kart-local item boxes, no pit
     "freeplay_boxes": 5,                # item boxes kept on the freeplay course (1-8)
+    "freeplay_speed": "eco",            # the game speed this host's course is played at by native Core2 players: "eco" or "normal"
     "mud_slow_secs": 4,                 # each mud command (zone repeat / MUD item): `slow 5 N` on Heltec kart-0.2.4+, else `boost N 0.5`
     "item_reveal_s": 1.4,
     "item_hold": True,                  # freeplay boost/rocket are carried (up to 3) and used later from the Core2 item screen or the dash; false = they fire at the prize-wheel reveal               # hold an item-box prize this long so it lands as the dash prize-wheel finishes (owner 2026-11-10); 0 = instant
@@ -120,7 +123,8 @@ CONFIG_RULES = {
 }
 CONFIG_BOOLS = ("beginner_mode", "remote_cmd", "game", "gps_correction", "demo", "sound", "sun_mode", "freeplay",
                 "item_hold", "music")
-CONFIG_CHOICES = {"map_orientation": ("heading_up", "north_up"), "rotate": (0, 180)}
+CONFIG_CHOICES = {"map_orientation": ("heading_up", "north_up"), "rotate": (0, 180),
+                  "freeplay_speed": tuple(m5_course.GAME_SPEEDS)}
 MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8", ".json": "application/json",
         ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
@@ -305,6 +309,12 @@ class App:
         self.freeplay = kartcore.FreeplayGame(
             boxes=int(cfg.get("freeplay_boxes", kartcore.FREEPLAY_BOXES)), allowed=fp_ok,
             why_not="off in this kart's config" + ("" if cfg.get("game", True) else " (game: false)"))
+        self.m5_publisher = m5_course.Publisher()
+        self._m5_share_ready = False
+        self._m5_was_eligible = False
+        self._m5_withdraw = False
+        self._m5_publish_key = None
+        self._m5_published_instance = 0
         self._fp_load_recs = self.freeplay.load(self._load_json(self.freeplay_path), time.monotonic())
         self._real_game = None             # the real kart's game timing, parked while demoing
         self._mismatch_logged = False
@@ -473,9 +483,11 @@ class App:
             if self.disp.heltec_reboots != self._reboots_seen:     # Heltec rebooted mid-session
                 self._reboots_seen = self.disp.heltec_reboots
                 self._status_due = now + 1.0                        # re-read fw/radio/gps details
-                self.game.set_fw(None)                              # maybe reflashed: old mud until the reply
+                pre += self.game.set_fw(None, now)                  # maybe reflashed: cancel old prizes too
                 self.log.write("event", what="heltec_reboot", uptime_s=msg.get("uptime_s"))
                 if not demo:                                        # the firmware forgot its freeplay session
+                    self._m5_publish_key = None
+                    self.m5_publisher.cancel("host restarted")
                     self.freeplay.set_fw(None)
                     pre += self.freeplay.multi_resync(now)
             if not self._mismatch_logged and self.configured_id and self.disp.heltec_id \
@@ -484,30 +496,36 @@ class App:
                 self.log.write("event", what="kart_id_mismatch", config=self.configured_id, heltec=self.disp.heltec_id)
                 print(f"{wall_iso()} WARNING: config kart_id {self.configured_id} but the Heltec says kart "
                       f"{self.disp.heltec_id}; showing the Heltec's id (fix config.json or the Heltec's `id`)", flush=True)
+            if not demo and isinstance(msg, dict):
+                if t == "course_host":
+                    self._m5_share_ready = msg.get("ready") is True and msg.get("kart") == self.disp.heltec_id
+                self.m5_publisher.reply(msg, now)
             game = pre
             if t == "status":
-                self.game.set_fw(msg.get("fw"))     # mud as a timed SLOW only on kart-0.2.4+ (kartcore.FW_TIMED_SLOW)
+                game += self.game.set_fw(msg.get("fw"), now)     # timed SLOW only on kart-0.2.4+
                 if not demo:
                     self.freeplay.set_fw(msg.get("fw"))     # multiplayer only on kart-0.2.5+ (kartcore.FW_MULTIPLAYER)
             if t == "cmd":
                 rec = self.cmds.on_cmd_line(msg, wall)
                 if rec:
                     self.log.write("cmd_echo", id=rec["id"], seq=rec["seq"], result=rec["result_name"])
-                res = self.game.on_cmd(msg, now)
+                res = self.game.on_cmd(msg, now, game)
                 if res:
                     self.log.write("game", ev="cmd_echo", seq=msg.get("seq"), arg=msg.get("arg"),
                                    result=res["result_name"])
             elif t == "self":
                 self.cmds.on_self(msg)
-                game = self.game.on_self(msg, now, wall)
+                game += self.game.on_self(msg, now, wall)
             elif t == "gps":
-                game = self.game.on_gps(msg, now)
+                game += self.game.on_gps(msg, now)
             elif t == "race":
-                game = self.game.on_race(msg, now, wall)
+                game += self.game.on_race(msg, now, wall)
             elif t in ("game", "hit", "attack") and not demo:
                 game = game + self.freeplay.on_multi_line(t, msg, now)     # multiplayer freeplay (kart-0.2.5)
                 if t == "hit" and msg.get("why") == "shield":
                     self._spend_shield(msg, game, now)                     # kart-0.3.6: the Heltec blocked it
+                zones, more = self.freeplay.select(self.maps.zones(), now)
+                game += more + self.game.set_zones(zones, now)          # session changes invalidate pending prizes now
             elif t == "invuse" and not demo:
                 invuse = msg                                               # Core2 item screen (kart-0.3.0); after the lock
             elif t == "fpgame" and not demo:
@@ -535,12 +553,15 @@ class App:
             if self.demo is not None:
                 self.log.write("event", what="link_up" if connected else "link_down", desc=desc, during="demo")
                 return
+            self._m5_share_ready = False
+            self._m5_publish_key = None
+            self.m5_publisher.cancel("host link changed")
             self.disp.on_link_change()
-            self.game.set_fw(None)                    # another Heltec / a reflash: unknown until its status reply
+            mp = self.game.set_fw(None, time.monotonic())  # another Heltec/reflash; cancel and log old prizes
             # multiplayer: the Heltec may have rebooted and forgotten its session; the wish is re-sent once its
             # status reply shows kart-0.2.5+ (FreeplayGame.multi_tick)
             self.freeplay.set_fw(None)
-            mp = self.freeplay.multi_resync(time.monotonic())
+            mp += self.freeplay.multi_resync(time.monotonic())
             if connected:
                 self.disp.simulation = False
                 self._status_due = time.monotonic() + 1.0     # ask for fw/radio/gps details soon
@@ -569,9 +590,36 @@ class App:
         records from a simulated line: they are never saved as the real kart's game state, even if
         the demo was stopped while the line was in flight (the reader thread could otherwise write
         the simulator's laps/race into game-state.json a few ms after demo_stop)."""
+        rejected_prizes = set()
+        queued_prizes = set()
         for r in recs:
+            token = r.get("prize_token")
+            if token is not None:
+                token = tuple(token)
+                if token in rejected_prizes:
+                    continue
+                # Delayed prize records leave the engine lock before reaching this method.
+                # Every command is rechecked immediately before enqueue. Later log/HUD
+                # records describe that accepted send, even if state changes meanwhile;
+                # they cannot retrospectively reject an already-queued motor effect.
+                if r["ev"] == "cmd" or token not in queued_prizes:
+                    with self.lock:
+                        valid = self.game.prize_current(token, time.monotonic())
+                        sent = valid and self._connected()
+                        if sent and r["ev"] == "cmd":
+                            sent = self._send_text(r["line"], wait=False)
+                            if sent:
+                                queued_prizes.add(token)
+                        if not sent:
+                            rejected_prizes.add(token)
+                            rejected = self.game.reject_prize(token, r.get("zone"), time.monotonic())
+                            for event in rejected:
+                                self.log.write("game", **event)
+                    if not sent:
+                        continue
             if r["ev"] == "cmd":
-                sent = self._connected() and self._send_text(r["line"], wait=False)
+                if token is None:
+                    sent = self._connected() and self._send_text(r["line"], wait=False)
                 self.log.write("game", **r, sent=bool(sent))
             else:
                 self.log.write("game", **r)
@@ -653,6 +701,7 @@ class App:
                 self._send_text("status", wait=False)
                 self._inv_line = None                  # status poll: resend the inventory line too
             self._push_inv()
+            self._publish_m5_course(now)
             self.log.flush()
 
     # -- game timing across restarts -------------------------------------------
@@ -697,6 +746,57 @@ class App:
             return doc if isinstance(doc, dict) else None
         except (OSError, ValueError):
             return None
+
+    def _publish_m5_course(self, now, force=False):
+        """Data-only publication through the existing serial owner; no second port client."""
+        with self.lock:
+            fp = self.freeplay
+            eligible = (self.demo is None and self._connected() and self._m5_share_ready
+                        and fp._hosting() and fp.phase == "ready" and not fp.pause_reason)
+            if not eligible and self._m5_was_eligible:
+                self._m5_was_eligible = False
+                self._m5_withdraw = True
+                self._m5_publish_key = None
+                self.m5_publisher.withdraw(now)
+            if self._m5_withdraw:
+                if self.m5_publisher.phase == "idle":
+                    self._m5_withdraw = False
+                else:
+                    if self.m5_publisher.phase == "error" and self._connected():
+                        self.m5_publisher.withdraw(now)
+                    line = self.m5_publisher.next_line(now)
+                    if line: self._send_text(line, wait=False)
+                    return
+            if not eligible:
+                if force: self.m5_publisher.cancel("host is not ready to publish")
+                if not fp._hosting(): self._m5_publish_key = None
+                return
+            self._m5_was_eligible = True
+            doc = fp.doc()
+            # Freeze the shared starting boxes when a course/session is published. Local
+            # box respawns do not silently replace a player's downloaded course mid-game.
+            # The game speed is part of the published rules: changing it republishes a new course identity.
+            speed = self.cfg.get("freeplay_speed", "eco")
+            key = json.dumps([fp._my_id(), fp.prize_epoch, doc.get("track"), speed], sort_keys=True)
+            if force:
+                self._m5_publish_key = None
+                self.m5_publisher.cancel("explicit republish")
+            if key != self._m5_publish_key:
+                self._m5_publish_key = key
+                self._m5_published_instance = secrets.randbits(32) or 1
+                try:
+                    geo = self._load_json(os.path.join(KART_ROOT, "..", "pit", "server", "map", "sono-map.geojson")) or {}
+                    background = m5_course.background_lines(geo, doc.get("track", {}).get("points", []))
+                    payload = m5_course.export(doc, host=fp._my_id(), instance=self._m5_published_instance,
+                                               revision=1, background=background,
+                                               name=f"Kart {fp._my_id()} course", speed=speed)
+                    self.m5_publisher.start(payload, now)
+                except (ValueError, TypeError, UnicodeError) as e:
+                    self.m5_publisher.cancel(str(e))
+                    self.log.write("event", what="m5_course_publish_refused", reason=str(e))
+            line = self.m5_publisher.next_line(now)
+            if line and not self._send_text(line, wait=False):
+                self.m5_publisher.cancel("host publication send failed")
 
     def _save_freeplay(self):
         with self.lock:
@@ -821,6 +921,8 @@ class App:
                     recs = fp.leave(now, why="driver")
                 else:
                     recs = fp.use(now)
+                zones, more = fp.select(self.maps.zones(), now)
+                recs += more + self.game.set_zones(zones, now)
         except kartcore.CommandError as e:
             self.log.write("op", who=who, action="freeplay", request=body, refused=str(e))
             raise
@@ -854,7 +956,10 @@ class App:
                     recs += fp.set_on(on, now)
                 elif "mode" not in body:
                     raise ValueError('expected {"on": true|false}, {"toggle": true}, {"mode": "track"|"roam"} or {"reset": true}')
-            recs += fp.select(self.maps.zones(), now, demo=self.demo is not None)[1]   # phase for the reply
+            zones, more = fp.select(self.maps.zones(), now, demo=self.demo is not None)
+            recs += more
+            if self.demo is None:
+                recs += self.game.set_zones(zones, now)     # off/reset must not wait for the next ticker
             eco = fp.take_eco(self.game.stopped, self.game.grid_hold())       # switched on: ECO is the base
         self.log.write("op", who=who, action="freeplay", request=body)
         self._game_out(recs)
@@ -1002,6 +1107,9 @@ class App:
         if not self._connected():
             self.log.write("op", who=who, action="cmd", request=body, refused="heltec link down")
             raise kartcore.CommandError("Heltec not connected; nothing sent")
+        with self.lock:
+            canceled = self.game.cancel_items(time.monotonic(), "operator command") if cmd in ("mode", "stop", "start", "race") else []
+        self._game_out(canceled)
         ok = self._send_text(line)
         now, wall = time.monotonic(), wall_iso()
         with self.lock:
@@ -1136,6 +1244,11 @@ class Handler(BaseHTTPRequestHandler):
             except kartcore.CommandError as e:
                 return self._json(409, {"ok": False, "error": str(e)})
             return self._json(200, {"ok": True, "demo": info})
+        if p == "/api/m5/course/publish":
+            if not self._local() and not app.cfg.get("remote_cmd"):
+                return self._json(403, {"ok": False, "error": "course publication only from host screen"})
+            app._publish_m5_course(time.monotonic(), force=True)
+            return self._json(409 if app.m5_publisher.phase=="error" else 200, {"phase": app.m5_publisher.phase, "error": app.m5_publisher.error})
         if p == "/api/freeplay":
             if not self._local() and not app.cfg.get("remote_cmd"):
                 return self._json(403, {"ok": False, "error": "freeplay only from the kart's own screen"})

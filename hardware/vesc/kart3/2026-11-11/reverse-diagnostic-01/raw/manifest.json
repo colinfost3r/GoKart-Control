@@ -1,0 +1,71 @@
+{
+  "started_at_utc": "2026-11-11T15:05:26.390587+00:00",
+  "transport": "usb_serial",
+  "port": "/dev/cu.usbmodem3041",
+  "scope": "current_runtime_not_verified_saved_flash",
+  "capture_complete": true,
+  "queries": [
+    {
+      "command": 0,
+      "name": "firmware",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-11T15:05:26.394751+00:00",
+      "payload_bytes": 46,
+      "sha256": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5"
+    },
+    {
+      "command": 4,
+      "name": "telemetry",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-11T15:05:26.498035+00:00",
+      "payload_bytes": 74,
+      "sha256": "82c7ca4abbad811e11874c2a09d53835fcc2a254ff47f5447ff1d12482365020"
+    },
+    {
+      "command": 14,
+      "name": "motor_configuration",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-11T15:05:26.602592+00:00",
+      "payload_bytes": 482,
+      "sha256": "01290405d0e86267d192a2fc13bbf2f8137afe27839512471d3bbb1a242b4953"
+    },
+    {
+      "command": 17,
+      "name": "app_configuration",
+      "crc_verified": true,
+      "captured_at_utc": "2026-11-11T15:05:26.709068+00:00",
+      "payload_bytes": 494,
+      "sha256": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d"
+    }
+  ],
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "configuration_validation": {
+    "motor_configuration": {
+      "signature_hex": "2e43a161",
+      "schema_version": "6.00",
+      "field_count": 189,
+      "bytes_consumed": 482
+    },
+    "app_configuration": {
+      "signature_hex": "1d003a2c",
+      "schema_version": "6.00",
+      "field_count": 187,
+      "bytes_consumed": 494
+    }
+  },
+  "finished_at_utc": "2026-11-11T15:05:26.877809+00:00"
+}

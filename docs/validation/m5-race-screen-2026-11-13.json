@@ -1,0 +1,266 @@
+{
+  "schema": 1,
+  "candidate": "M5 game rules + street lines + pit-race screen + upstream kart 0.3.6, 2026-11-13",
+  "branch": "v1.5/m5-core2",
+  "parent_commit": "7a5dbfbb137fde619eea566256628f5230589c2a",
+  "source_state": "the working tree on top of parent_commit, committed together with this manifest; exact inputs are hashed below",
+  "merged_upstream": "6e4c7882a9d198b14ba1cd60d4347087a456c63e",
+  "supersedes_in_source": "docs/validation/m5-upstream-036-2026-11-13.json (never installed)",
+  "hardware_accessed": true,
+  "uploaded": true,
+  "uploaded_to": "kart 3 Core2 only (m5-espnow), over the air on 2026-11-13; see hardware/m5/2026-11-13-kart3-core2-ota-race-screen/. No Heltec has any image of this candidate.",
+  "vesc_settings_changed": false,
+  "not_installed_on": "any Heltec; the Core2s of karts 4 and 5. Kart 3 Heltec and both boards of karts 4 and 5 run the 2026-11-13-game-rules images",
+  "what_changed": "Pit-race screen for the paired Core2, on top of 2026-11-13-upstream-036. The Heltec display line gains race_hold, race_go_ms and race_went_ms; the Core2 shows GRID HOLD with a countdown, GO for three seconds after the Heltec reports releasing the kart, and RACE / FINISHED with the position from the pit beacon. Display only: the only change outside reporting is one timestamp recorded when a grid hold ends in a GO on a kart that is not stopped. All three Heltec kart images and all three Core2 images are rebuilt; base and repeater are unchanged.",
+  "compatibility": "Both boards of a kart should be updated together to get the countdown: an older Heltec does not send the new fields and an older Core2 ignores them, and either mix otherwise behaves as before. The LoRa protocol and the course package (rules version 2) are unchanged. Host Heltec, host Pi server, player Heltec and player Core2 must all be from this source for course download, JOIN and FIRE. An M5 kart cannot join a ROAM freeplay.",
+  "tests": {
+    "passed": 632,
+    "suites": 8,
+    "skipped": 0,
+    "log": "docs/validation/m5-race-screen-2026-11-13-tests.txt",
+    "run_on": "the same working tree the images were built from",
+    "new": "Heltec harness scenario race-display; Core2 race_view_test.cpp; rendered race scenes; one-spelling check of the five race fields"
+  },
+  "build_toolchain": "ESP32 Arduino 3.3.8; application-only images",
+  "source_sha256": {
+    "AGENTS.md": "4164fae6fc663234be37506d14cfb6a7620799eabf12eb2121f628599d1278c4",
+    "config/project.json": "77b1a0e3f24939e772b1f1aacf546b99eea325dc8c4cbb57364e07766461e4b0",
+    "docs/host-update-plan.md": "5392299beb1a025400ea44cfa0db34ab5c27b6e4977de25018f9829ac496fb1d",
+    "docs/m5-player-mode.md": "b05a0fa8be4ad4d0fb9539b802205ecffced5c9174c395404e392cda4b0520bd",
+    "firmware/kart-heltec-v4/cmd_types.h": "241e9dfa1470eb88eb9882534088bdb61dba20fcc7c5b289fbcf958c432b56d1",
+    "firmware/kart-heltec-v4/config.h": "b8eda027fee98a222f73e8fa87dea0bce1d05e25b2e7962c4c64451ca030d970",
+    "firmware/kart-heltec-v4/kart-heltec-v4.ino": "55736db4b9c992f6160e5bea1cc6135a8b2ebb5d1fc7280a682d240e797fb9c3",
+    "firmware/libraries/GoKartProtocol/GoKartProtocol.h": "7dd8c97963a67b6defe5c3a8350003b41f763ad17774359291b578be1938acf8",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.cpp": "e54726c9232170292e2e7cc1f7c1de4bb3bf76900e42bf182c9eacb1257329b6",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.h": "83ba3178775b2a3b67ad21f04dfd464aaa36922e8648d22b93df383ffc88a213",
+    "firmware/libraries/M5Game/src/CourseGeneration.h": "d2839a96a702e5cbac3c732066eac7068b98ba0a8a7485b6ce0e4cc1ca6e8238",
+    "firmware/libraries/M5Game/src/CourseRadio.h": "ec2f86decda8acf504e0d93cc3486180a639cd4e6489afd5eaa2530ebf22eb0a",
+    "firmware/libraries/M5Game/src/CourseTransfer.h": "7730d768764b8d178dcbccaa6cbf1ea9cf11d4c983694633f962dd5259b9a454",
+    "firmware/libraries/M5Game/src/GamePackage.h": "27c55f8bc1727f17a7370d9f85407ca2d4e63ccc5bd2726a8189003e4318d444",
+    "firmware/libraries/M5Game/src/GameRequest.h": "98f9a82eebcdbdadaa8fce0d5a441e96b28d29a82e3f43122bfc75e35973ba46",
+    "firmware/m5-core2/COURSE_MAP.md": "930f6c9aee346335c5561643ddabf0151bbd64241cc8ec283b4a736c7b5d602b",
+    "firmware/m5-core2/DisplayState.h": "9b31f50754d9fbbfaf7c8665d2b64aaf377a6debc0b2d8076e662ac8457813ea",
+    "firmware/m5-core2/DriverView.h": "92a9d8cd7f90da8862f7a574d7706c41a6a5385ec371ef1568d576ca18203fe5",
+    "firmware/m5-core2/GameStorage.h": "5b0164ef9e6462049aa621c6b0105ea44d225126a767cf71e33173bbf7902431",
+    "firmware/m5-core2/LiveGame.h": "d28d0dd6b1d3bf8e8f068e49f56a3ad6c7f936f64146df9ff109aadc7ca1d958",
+    "firmware/m5-core2/PreviewMap.h": "34ffd1cf524905d20b711f05f8b8d74f1469f0df3a471b9c7dcea609f0617117",
+    "firmware/m5-core2/README.md": "9b6703282034e2a5c9ebcbe064b3d91e44c40a57cdfc59b567e6c08690a3113b",
+    "firmware/m5-core2/SERIAL_PROTOCOL.md": "dd227cd9a4bae8e31b43055ce94de299a7c068786d22abfc6d3c479c043ddfcc",
+    "firmware/m5-core2/SiteMap.h": "8cd262c85773e27cd1eaf174f65ea7cbf2f848f8970bdfe82a10c3cd8f4d51c7",
+    "firmware/m5-core2/m5-core2.ino": "3a260b81546b52194219df0181e4adabc5747448bb51d3e9caba5ee187c1398f",
+    "firmware/m5-core2/site_lines.inc": "ae23e1b17f58cd6372b36358c496709cc71807812df8b988c01d204569c98284",
+    "firmware/m5-core2/tests/race_view_test.cpp": "a150f803236ca253e68b542309ae5556eec8c00c4f59cb0afb7ec66de8369243",
+    "firmware/m5-core2/tests/render_driver.cpp": "c415e526bb8f6aaaeb6b81ccfa0ba2e607b91581df8124c3af13a68e879d52b9",
+    "firmware/m5-core2/tests/site_map_test.cpp": "4576228f33b717fcb5d60672bac8f0ee2125ebef55dc181d68e95dd0937e430c",
+    "firmware/m5-core2/tests/test_map_course.py": "66bd746166feae895dab137119d19857f25cdacf10d6118835a34e209534a8ac",
+    "firmware/tests/m5_control_runtime.cpp": "4d25329f702fffa1e07fb0d2b702522784e110bebc5012036a7d2ffc8e194d4c",
+    "firmware/tests/m5_game.cpp": "c4e74f0dbabcc78d3e09f0db478d9c7b44a25802dcd0db86266670b74f587377",
+    "firmware/tests/test_m5.py": "9146e55183d25bfbb5d44483129573d72b0c81be6e991c7de4e7c5dca773ca65",
+    "firmware/tests/test_m5_control_runtime.py": "538c2af5f0657d80cb268e5f996b01639cf38f3982d9d0c65e865053c7c470b3",
+    "firmware/tests/test_m5_game.py": "ea5ea41da8f08a1bacb07e9169ab2c92d8e1c68728a9e17ed45f4e2cb40a3402",
+    "firmware/tests/test_m5_touch_request.py": "7188c9f5645d808d401462921efd24782c43639c7655c42b84e40340b828caa4",
+    "firmware/tests/test_pair_course_fallback.py": "4890d81e5f62ebad0aef8d45116504258a1b658cd3bb02d83727bd7308943f35",
+    "firmware/tests/test_protocol.py": "7c58a0c25ccb9538602b798ed6cf2c845bbcf818ab890b7a56fdcd1344d27d48",
+    "kart/server/config.example.json": "793eaf1bc3c8f4ac5c3c313a56a5b7ac8ca3a06d4627b004b51c87921d49c427",
+    "kart/server/kart_server.py": "c009770df0376b5352e18afb1a7a93cd58825f2e0d9ae556f3f37eaff434b1b4",
+    "kart/server/kartcore.py": "6a9ac655bc7ef9908fae206f97891c2a9ed7007b7f0b9e3ad61a4b2b903dd002",
+    "kart/server/m5_course.py": "cdd935c43ebc81698ca213c8b539c4aafdfd5f87d9a9ff169758638a5078f5e2",
+    "kart/tests/test_core.py": "a491e9b4ff6c302356c0aec55765a4ad41f7139e417be26082ba9a690aab2669",
+    "kart/tests/test_e2e.py": "96e039d7c112e0cfed94eecb10052c3dd33462c27fda8de8dd73fe43c94e18d7",
+    "pit/server/map/MANRESA-MAP.md": "c64e30d8588c8bf6f1af0feae5dacc467481f862329c556e3f2ede94b7c51f37",
+    "pit/server/map/manresa-map.geojson": "f6bbea221cabbe62723982482a8d7bc8810510b128d65bd1b2c9215590d5203c",
+    "pit/server/map/sono-map.geojson": "972bd8fc730e41b650fad02dab2b85ebad71bc37442b917901ae303858347baf",
+    "tools/m5/export_site_maps.py": "4c0f5d616b9e705f7576cdfaf93a37e14a9990c7f284acb8f9ad6ac8324b1ec3",
+    "tools/m5/osm_site_geojson.py": "56fc0fb4bad20bf3f3e8f59365c6310008c8c35bdbdbe048e3be3ddc4856254b",
+    "tools/m5/pair_course.py": "d1cecd31b571919d90273e62fa5c8f49c3bd33d4187ccbc1cd238fe39026bdb5",
+    "tools/m5/pair_course_fallback.py": "b9df3e5afd748e6c48e62bcef2f3ceba181e7d33cc7e742d390e1c775b41c925",
+    "tools/m5/preview_driver.py": "909c1cdb0f897a84159fcbbcb05871085145c0decfdeb0b16f5ee436511b6fce"
+  },
+  "firmware_build_input_sha256": {
+    "firmware/base-tbeam-s3/base-tbeam-s3.ino": "099d369ba5e5886ec15ad86451026239edb71f9de679672f6e666463a9a999f8",
+    "firmware/base-tbeam-s3/config.h": "4cf6aa9630ce8cd37f4da7b09df46fba3619ef0e9218eb63e81a361bfb594b0e",
+    "firmware/core2-items/core2-items.ino": "9778d0c9596e706dd252255d4945a9edd2ecc9cbc9d776aee71cf16651097631",
+    "firmware/kart-heltec-v4/cmd_types.h": "241e9dfa1470eb88eb9882534088bdb61dba20fcc7c5b289fbcf958c432b56d1",
+    "firmware/kart-heltec-v4/config.h": "b8eda027fee98a222f73e8fa87dea0bce1d05e25b2e7962c4c64451ca030d970",
+    "firmware/kart-heltec-v4/kart-heltec-v4.ino": "55736db4b9c992f6160e5bea1cc6135a8b2ebb5d1fc7280a682d240e797fb9c3",
+    "firmware/libraries/GoKartProtocol/GoKartProtocol.h": "7dd8c97963a67b6defe5c3a8350003b41f763ad17774359291b578be1938acf8",
+    "firmware/libraries/M5DisplayLink/M5DisplayLink.h": "2041f7a9475b6e644e53a8d0de6c6e5c2eee1ba752ae6cec637a2c0e1eedd629",
+    "firmware/libraries/M5DisplayLink/VerifiedBaseline.h": "26917e55ebc014a719b95969ced0c77424211891ef94e8ce0eb591eaa3244853",
+    "firmware/libraries/M5DisplayLink/tests/baseline_test.cpp": "146d9fd2efd1c13afda21ac79f20a0e5c7504efcf4d54e380a61009f47c51da1",
+    "firmware/libraries/M5EspNowLink/src/M5ChannelAlignment.h": "9c1511393ddfbb12c356eb1fa17f7c0d85d88f4ecbce7c39aadccc0665f87e35",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowFrame.h": "eea7f52035ff037ba16eff91443a1f3353a8e5685eb41f81dc8de88bbe8e9b33",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.cpp": "e54726c9232170292e2e7cc1f7c1de4bb3bf76900e42bf182c9eacb1257329b6",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.h": "83ba3178775b2a3b67ad21f04dfd464aaa36922e8648d22b93df383ffc88a213",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowSettings.h": "068fa762554ed2584be1c133a87ef493d20767cd92260cf979b5e9898b68d46b",
+    "firmware/libraries/M5EspNowLink/src/PairingRecord.h": "7c774b586c417c1f9a6cae48b93c4cb48a800207adc09f9c5ba9d229a1848eac",
+    "firmware/libraries/M5EspNowLink/tests/channel_runtime_test.cpp": "b7caf31ac3ad47b0b5776b5a429f7cc01c67e4228361d5fc526cab2be03df8d6",
+    "firmware/libraries/M5EspNowLink/tests/channel_test.cpp": "4870a32849c8bddab3f2e25f831a05dd48bcbfe94c24bccca97d9b897b6f06af",
+    "firmware/libraries/M5EspNowLink/tests/frame_test.cpp": "07dd66e2a7726c8a4d3db48a4556906578862cbef2bb2f5a62dc6cb630cab521",
+    "firmware/libraries/M5EspNowLink/tests/stubs/Arduino.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5EspNowLink/tests/stubs/FakeRadio.h": "f15c2e4576e7f1909b5caaa28150c0c8a08a4fdb8bf5d436161ab2a9cc3f6d82",
+    "firmware/libraries/M5EspNowLink/tests/stubs/WiFi.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5EspNowLink/tests/stubs/esp_now.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5EspNowLink/tests/stubs/esp_system.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5EspNowLink/tests/stubs/esp_wifi.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5EspNowLink/tests/stubs/freertos/FreeRTOS.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5EspNowLink/tests/stubs/freertos/queue.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5EspNowLink/tests/stubs/mbedtls/md.h": "8a9673f9a175e55cf97a13100a2cff4fedcd15427e86e6d1f7add779a9bcc509",
+    "firmware/libraries/M5Game/src/CourseGeneration.h": "d2839a96a702e5cbac3c732066eac7068b98ba0a8a7485b6ce0e4cc1ca6e8238",
+    "firmware/libraries/M5Game/src/CourseRadio.h": "ec2f86decda8acf504e0d93cc3486180a639cd4e6489afd5eaa2530ebf22eb0a",
+    "firmware/libraries/M5Game/src/CourseTransfer.h": "7730d768764b8d178dcbccaa6cbf1ea9cf11d4c983694633f962dd5259b9a454",
+    "firmware/libraries/M5Game/src/GamePackage.h": "27c55f8bc1727f17a7370d9f85407ca2d4e63ccc5bd2726a8189003e4318d444",
+    "firmware/libraries/M5Game/src/GameRequest.h": "98f9a82eebcdbdadaa8fce0d5a441e96b28d29a82e3f43122bfc75e35973ba46",
+    "firmware/libraries/VescLink/VescLink.cpp": "82c7affcfb463445e25a2f75a76a5e866f64ebe6646ae6826b4b32e66821f9e9",
+    "firmware/libraries/VescLink/VescLink.h": "a671408d80c5988bc9d9573c50ec3aa7b9f67c1471c0ca6cd318f10652ffbe55",
+    "firmware/m5-core2/CourseStorage.h": "fc6daac98151d2e9ecb50dddb52d306e05dda79e50968cf0547caf479d87fe3c",
+    "firmware/m5-core2/DisplayMaintenance.h": "9ceadc77b097eae68519d09f0e7a32c058f12d27f3d8765e8bc82ef10f30a22e",
+    "firmware/m5-core2/DisplayMetrics.h": "5f2506b4c9d920fbe24ff155f4a296e62c8e97040eefd8ddbd04f74cc7fe1a2c",
+    "firmware/m5-core2/DisplayState.h": "9b31f50754d9fbbfaf7c8665d2b64aaf377a6debc0b2d8076e662ac8457813ea",
+    "firmware/m5-core2/DriverView.h": "92a9d8cd7f90da8862f7a574d7706c41a6a5385ec371ef1568d576ca18203fe5",
+    "firmware/m5-core2/GameStorage.h": "5b0164ef9e6462049aa621c6b0105ea44d225126a767cf71e33173bbf7902431",
+    "firmware/m5-core2/LiveGame.h": "d28d0dd6b1d3bf8e8f068e49f56a3ad6c7f936f64146df9ff109aadc7ca1d958",
+    "firmware/m5-core2/MapView.h": "e58ce8cf90588c87d0d2aa8721a730cf67c393ba69cc67eb739ef894a1e59f06",
+    "firmware/m5-core2/PlayerPreview.h": "f165e71848e74fabf780d803f05ac5b0924c577ac6ef05bf9d127e7dd75d8231",
+    "firmware/m5-core2/PreviewMap.h": "34ffd1cf524905d20b711f05f8b8d74f1469f0df3a471b9c7dcea609f0617117",
+    "firmware/m5-core2/ScreenLifecycle.h": "365d47db17c43f08828aac6cd38faa6a3c1d059a8b46f19ff65ceaaac272df87",
+    "firmware/m5-core2/SiteMap.h": "8cd262c85773e27cd1eaf174f65ea7cbf2f848f8970bdfe82a10c3cd8f4d51c7",
+    "firmware/m5-core2/config.h": "c2c2581e94f470424025b3fb0df9591b4403cffd183805b647259d3f139d6335",
+    "firmware/m5-core2/m5-core2.ino": "3a260b81546b52194219df0181e4adabc5747448bb51d3e9caba5ee187c1398f",
+    "firmware/m5-core2/preview_shop_lines.inc": "8aa0133f4aa94f40056ff6f256e9ffd9505168d28de080a1656e1bfacbee85d9",
+    "firmware/m5-core2/site_lines.inc": "ae23e1b17f58cd6372b36358c496709cc71807812df8b988c01d204569c98284",
+    "firmware/repeater-tbeam-s3/config.h": "ef8c361a3cdebd1088ad15b39dbd5397360484e4bc76f361d473273e358df6c0",
+    "firmware/repeater-tbeam-s3/repeater-tbeam-s3.ino": "2b81b769d3a123d363c6cbf959b97315f7fe399b2b492cb65357a98c57807f29",
+    "firmware/tests/vesc_link_stub/Arduino.h": "aaa1e5515ab273c2c45bbddc20dc5bd8be3fb967ed627647fa1d3fcbb955196e"
+  },
+  "applications": [
+    {
+      "target": "kart-m5-espnow",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/kart-m5-espnow.app.bin",
+      "bytes": 1351760,
+      "sha256": "ef260604a398799014df9c68eb3ca3b42cfe1ae3d4556b6b87ca3da83c1bbb70",
+      "compile_summary": [
+        "Sketch uses 1351619 bytes (42%) of program storage space. Maximum is 3145728 bytes."
+      ],
+      "built_for_this_candidate": true,
+      "replaces_in_2026-11-13-upstream-036": "047a902f865af0d967945ea89eb6b03814b7e7c4a89261382b742ce259f8ffcb",
+      "reports": "kart-0.3.6"
+    },
+    {
+      "target": "kart-m5-espnow-readonly",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/kart-m5-espnow-readonly.app.bin",
+      "bytes": 1344336,
+      "sha256": "f2f09c987b9f842a7133a20d611da58dbef6af2e27a8741f50d57db7cf89c332",
+      "compile_summary": [
+        "Sketch uses 1344195 bytes (42%) of program storage space. Maximum is 3145728 bytes."
+      ],
+      "built_for_this_candidate": true,
+      "replaces_in_2026-11-13-upstream-036": "34f8a088be66531410eed74336dc86f96c53b56b39d4291f615068683d349dfc",
+      "reports": "kart-0.3.6"
+    },
+    {
+      "target": "kart",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/kart.app.bin",
+      "bytes": 1334336,
+      "sha256": "9540b145a6eda81315fbf371e2f166b55e1f2257587c8ff278eddde7cd3ff70d",
+      "compile_summary": [
+        "Sketch uses 1334191 bytes (42%) of program storage space. Maximum is 3145728 bytes."
+      ],
+      "built_for_this_candidate": true,
+      "replaces_in_2026-11-13-upstream-036": "15f5921ad431a6de5eb112a643d53e30e386a966459faf60fd0ebb6d59cc5f75",
+      "reports": "kart-0.3.6"
+    },
+    {
+      "target": "m5-espnow",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/m5-espnow.app.bin",
+      "bytes": 1407424,
+      "sha256": "f0d74bdc86e316cc33603e3fcbb0a106f2303dcd748f4a421a90bbac3f38cdf6",
+      "compile_summary": [
+        "Sketch uses 1407275 bytes (21%) of program storage space. Maximum is 6553600 bytes."
+      ],
+      "built_for_this_candidate": true,
+      "replaces_in_2026-11-13-upstream-036": "0e28c0ff1537d9fc0a5e98fa0f4628d81f3b1497f738a80ca736b10b6f3a900d"
+    },
+    {
+      "target": "m5",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/m5.app.bin",
+      "bytes": 665424,
+      "sha256": "b4ac6ff7e2518255ae0f96cf3b5f8b5e0a091fd8f51a013e51fa68c1fc38da96",
+      "compile_summary": [
+        "Sketch uses 665279 bytes (10%) of program storage space. Maximum is 6553600 bytes."
+      ],
+      "built_for_this_candidate": true,
+      "replaces_in_2026-11-13-upstream-036": "1dfc247b2d7f15dcea6a1c30d8f692cdffff44c0e5f0e429d51da6bb689a0075"
+    },
+    {
+      "target": "m5-demo",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/m5-demo.app.bin",
+      "bytes": 627600,
+      "sha256": "363684c2339e5ddacc6eb6bae1527250b159bda135d71bbf0469dead4eed9812",
+      "compile_summary": [
+        "Sketch uses 627455 bytes (9%) of program storage space. Maximum is 6553600 bytes."
+      ],
+      "built_for_this_candidate": true,
+      "replaces_in_2026-11-13-upstream-036": "df9a3adbb1e5e42ec19f8744c1c62ba2c2e7246bed3f8e83cba1d054c944712f"
+    },
+    {
+      "target": "base",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/base.app.bin",
+      "bytes": 1089840,
+      "sha256": "34b61a3b8cfbd5904aae3e37280df7f5f2ba12ef7c3aa04f0ef178f8c1d63d23",
+      "compile_summary": [
+        "Sketch uses 1089696 bytes (32%) of program storage space. Maximum is 3342336 bytes."
+      ],
+      "identical_to_2026-11-13-upstream-035": true
+    },
+    {
+      "target": "repeater",
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/repeater.app.bin",
+      "bytes": 438720,
+      "sha256": "c36682c362d05cd7521bcad637b20eb4849a3b7f4c543a11129d06d6cf7cfbad",
+      "compile_summary": [
+        "Sketch uses 438575 bytes (13%) of program storage space. Maximum is 3342336 bytes."
+      ],
+      "identical_to_2026-11-13-upstream-035": true
+    }
+  ],
+  "first_install_images": {
+    "heltec.bootloader": {
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/heltec.bootloader.bin",
+      "sha256": "b68c1ed33c43a4290375213f24d608c125e31e22880d16d4a5dcba89e083716d"
+    },
+    "heltec.partitions": {
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/heltec.partitions.bin",
+      "sha256": "ace02503447d0f470692e65fa76002f2d77a92dc81cd3813d8aa66718d716da9"
+    },
+    "core2.bootloader": {
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/core2.bootloader.bin",
+      "sha256": "7beba41f723dba9efc2b108311f30e4db363d9e34dd32360810eb05734859c89"
+    },
+    "core2.partitions": {
+      "path": "firmware/build/bench-candidates/2026-11-13-race-screen/core2.partitions.bin",
+      "sha256": "bd0f7954aca2ef7d925ee21aaa1f3dc8822d1d6ce5cbbd26a135e5886bfff6ce"
+    }
+  },
+  "review": {
+    "mutation_check": "race screen: 5 mutations of the Heltec reporting and 8 of the Core2 logic and drawing, all caught. Street lines: 11 mutations of the new drawing, culling, overview and remembered-site logic: 10 caught by the new tests; one (dropping the east-scale correction between a site and the view) did not compile under -Werror and is not separately pinned, its effect being far below one pixel between these two sites",
+    "open": [
+      "kart 3 speed calibration: 1.736 stored on kart 3's Heltec on 2026-11-13 and the caps read back; GPS check on the road pending",
+      "one status line later than 700 ms ends the Core2 game",
+      "FIRE triggers on a single tap",
+      "6.5 s without the host course packet ends the game",
+      "boost pad marked used before its request is accepted",
+      "request ID consumed on every loop pass"
+    ]
+  },
+  "not_verified": [
+    "the kart 3 Core2 over-the-air install beyond the uploader acknowledgement and the owner's look at the screen: no console check was possible",
+    "every Heltec image in this folder: none has been flashed",
+    "a pit race on an M5 kart with this build: hold, countdown, GO and position have only run in the host-side harness and renderer",
+    "how closely the Core2 countdown tracks the real GO over the paired link (it can only be late, by the link delay)",
+    "the M5 pair link with the upstream channel rule (fixed channel 1 with no WiFi; remembered AP channel only while WiFi is in play)",
+    "WiFi and OTA behaviour with the upstream reconnect changes on an M5 kart",
+    "everything listed as not verified for 2026-11-13-site-map and 2026-11-13-game-rules"
+  ],
+  "deployment_guide": "docs/host-update-plan.md",
+  "handoff": "docs/CLAUDE_HANDOFF.md"
+}

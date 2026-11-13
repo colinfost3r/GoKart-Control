@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1750" height="1080" viewBox="0 0 1750 1080">
+<rect width="1750" height="1080" fill="#f7f9fc"/>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#182b43} .wire{fill:none;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}</style>
+<text x="45" y="58" font-size="37" font-weight="700" text-anchor="start" style="fill:#182b43">GoKart Control · reverse input conditioner</text>
+<text x="45" y="96" font-size="22" font-weight="400" text-anchor="start" style="fill:#182b43">Independent hardware prototype · Nilight switch LED unused · Flipsky 75100 Pro V2.0</text>
+<rect x="45" y="122" width="1660" height="49" rx="12" fill="#fff4db" stroke="#e0b856" stroke-width="2" stroke-dasharray=""/>
+<text x="65" y="154" font-size="20" font-weight="700" text-anchor="start" style="fill:#775000">PROPOSED — not installed or road-tested. First build one unit. Supply and output pins must be verified on the actual controller.</text>
+<rect x="330" y="195" width="1380" height="630" rx="12" fill="#fff" stroke="#9eb2c9" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="350" y="228" font-size="20" font-weight="700" text-anchor="start" style="fill:#182b43">LOCAL BOARD — mount beside the VESC; keep the 3.3 V signal lead short</text>
+<rect x="40" y="300" width="250" height="425" rx="12" fill="#fffaf2" stroke="#d6a65e" stroke-width="2" stroke-dasharray=""/>
+<text x="60" y="336" font-size="23" font-weight="700" text-anchor="start" style="fill:#182b43">S1 · existing toggle</text>
+<text x="60" y="370" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">Use only the two</text>
+<text x="60" y="397" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">mechanical contacts.</text>
+<text x="60" y="440" font-size="20" font-weight="700" text-anchor="start" style="fill:#182b43">ON closes A–B</text>
+<text x="355" y="272" font-size="18" font-weight="700" text-anchor="start" style="fill:#b52b36">VESC regulated +5 V</text>
+<polyline class="wire" points="420,280 420,310" stroke="#b52b36" stroke-dasharray=""/>
+<rect x="409" y="310" width="22" height="50" rx="0" fill="#fff" stroke="#182b43" stroke-width="2" stroke-dasharray=""/>
+<text x="445" y="333" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">R1 390 Ω · ¼ W</text>
+<polyline class="wire" points="420,360 420,410 540,410" stroke="#b52b36" stroke-dasharray=""/>
+<polyline class="wire" points="540,540 230,540" stroke="#b96705" stroke-dasharray=""/>
+<polyline class="wire" points="230,640 400,640 400,760" stroke="#65778d" stroke-dasharray=""/>
+<circle cx="230" cy="540" r="5" fill="#b96705"/>
+<circle cx="230" cy="640" r="5" fill="#65778d"/>
+<polyline class="wire" points="230,640 193,554" stroke="#b96705" stroke-dasharray=""/>
+<text x="247" y="533" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">A</text>
+<text x="246" y="665" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">B</text>
+<text x="304" y="485" font-size="17" font-weight="700" text-anchor="start" style="fill:#b96705">LONG CABLE</text>
+<text x="304" y="510" font-size="17" font-weight="400" text-anchor="start" style="fill:#b96705">Twist A + GND together</text>
+<polyline class="wire" points="120,686 152,686" stroke="#65778d" stroke-dasharray=""/>
+<polyline class="wire" points="146,680 158,692" stroke="#182b43" stroke-dasharray=""/>
+<polyline class="wire" points="146,692 158,680" stroke="#182b43" stroke-dasharray=""/>
+<text x="60" y="712" font-size="15" font-weight="400" text-anchor="start" style="fill:#182b43">LED terminal: insulated / unused</text>
+<rect x="540" y="350" width="240" height="250" rx="12" fill="#eef7ff" stroke="#80a8ce" stroke-width="2" stroke-dasharray=""/>
+<text x="660" y="381" font-size="23" font-weight="700" text-anchor="middle" style="fill:#182b43">U1 · LTV-817</text>
+<polyline class="wire" points="655,399 655,574" stroke="#91abc4" stroke-dasharray="4 5"/>
+<text x="555" y="417" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">1  A</text>
+<text x="555" y="547" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">2  K</text>
+<text x="700" y="417" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">C  4</text>
+<text x="700" y="547" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">E  3</text>
+<text x="580" y="466" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">IR LED</text>
+<text x="681" y="466" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">Photo-</text>
+<text x="681" y="490" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">transistor</text>
+<polyline class="wire" points="636,474 672,449" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="659,451 672,449 670,462" stroke="#0969b4" stroke-dasharray=""/>
+<text x="556" y="577" font-size="16" font-weight="400" text-anchor="start" style="fill:#182b43">DIP-4 · IC pin numbers</text>
+<polyline class="wire" points="490,410 490,448" stroke="#b52b36" stroke-dasharray=""/>
+<polyline class="wire" points="478,448 502,448" stroke="#182b43" stroke-dasharray=""/>
+<path d="M478 480 L502 480 L490 453 Z" fill="white" stroke="#182b43" stroke-width="2"/>
+<polyline class="wire" points="490,480 490,540" stroke="#b96705" stroke-dasharray=""/>
+<circle cx="490" cy="410" r="5" fill="#b52b36"/>
+<circle cx="490" cy="540" r="5" fill="#b96705"/>
+<text x="394" y="446" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">D1</text>
+<text x="358" y="465" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">1N4148</text>
+<text x="349" y="585" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">D1 band → U1 pin 1</text>
+<polyline class="wire" points="780,410 900,410" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="780,540 820,540 820,760" stroke="#65778d" stroke-dasharray=""/>
+<rect x="900" y="350" width="260" height="300" rx="12" fill="#eefaf3" stroke="#80b59b" stroke-width="2" stroke-dasharray=""/>
+<text x="1030" y="456" font-size="24" font-weight="700" text-anchor="middle" style="fill:#182b43">U2 · MAX6817</text>
+<text x="1030" y="487" font-size="18" font-weight="400" text-anchor="middle" style="fill:#182b43">Stable-state debounce</text>
+<text x="1030" y="516" font-size="18" font-weight="400" text-anchor="middle" style="fill:#182b43">20–80 ms specification</text>
+<text x="914" y="417" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">1  IN1</text>
+<text x="1079" y="417" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">OUT1  6</text>
+<text x="914" y="597" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">2  GND</text>
+<text x="1074" y="597" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">OUT2  4</text>
+<text x="979" y="378" font-size="17" font-weight="400" text-anchor="middle" style="fill:#182b43">5 VCC</text>
+<text x="1085" y="378" font-size="17" font-weight="400" text-anchor="middle" style="fill:#182b43">3 IN2</text>
+<text x="1030" y="630" font-size="15" font-weight="400" text-anchor="middle" style="fill:#182b43">SOT-23-6 on PA0085 adapter</text>
+<polyline class="wire" points="900,590 860,590 860,760" stroke="#65778d" stroke-dasharray=""/>
+<polyline class="wire" points="1160,590 1200,590" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="1194,584 1206,596" stroke="#182b43" stroke-dasharray=""/>
+<polyline class="wire" points="1194,596 1206,584" stroke="#182b43" stroke-dasharray=""/>
+<text x="1193" y="617" font-size="16" font-weight="400" text-anchor="start" style="fill:#182b43">unused</text>
+<text x="900" y="272" font-size="18" font-weight="700" text-anchor="start" style="fill:#0969b4">VESC +3.3 V (COMM connector)</text>
+<polyline class="wire" points="900,287 1420,287" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="980,287 980,350" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="1080,287 1080,350" stroke="#0969b4" stroke-dasharray=""/>
+<circle cx="980" cy="287" r="5" fill="#0969b4"/>
+<circle cx="1080" cy="287" r="5" fill="#0969b4"/>
+<polyline class="wire" points="1160,410 1225,410" stroke="#0969b4" stroke-dasharray=""/>
+<rect x="1225" y="399" width="65" height="22" rx="0" fill="#fff" stroke="#182b43" stroke-width="2" stroke-dasharray=""/>
+<text x="1220" y="385" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">R2 100 Ω</text>
+<polyline class="wire" points="1290,410 1475,410" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="1350,287 1350,315" stroke="#0969b4" stroke-dasharray=""/>
+<rect x="1339" y="315" width="22" height="49" rx="0" fill="#fff" stroke="#182b43" stroke-width="2" stroke-dasharray=""/>
+<text x="1380" y="344" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">R3 10 kΩ</text>
+<polyline class="wire" points="1350,364 1350,410" stroke="#0969b4" stroke-dasharray=""/>
+<circle cx="1350" cy="287" r="5" fill="#0969b4"/>
+<circle cx="1350" cy="410" r="5" fill="#0969b4"/>
+<rect x="1475" y="320" width="225" height="330" rx="12" fill="#f2f4f8" stroke="#8396ae" stroke-width="2" stroke-dasharray=""/>
+<text x="1588" y="355" font-size="26" font-weight="700" text-anchor="middle" style="fill:#182b43">VESC</text>
+<text x="1489" y="403" font-size="20" font-weight="700" text-anchor="start" style="fill:#182b43">SERVO / PPM</text>
+<text x="1491" y="438" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">3.3 V logic signal</text>
+<text x="1491" y="487" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">PPM connector #3</text>
+<text x="1491" y="516" font-size="17" font-weight="400" text-anchor="start" style="fill:#182b43">also carries 5 V.</text>
+<text x="1491" y="548" font-size="17" font-weight="700" text-anchor="start" style="fill:#b52b36">Do not swap pins.</text>
+<text x="1491" y="607" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">Signal GND</text>
+<polyline class="wire" points="1475,600 1440,600 1440,760" stroke="#65778d" stroke-dasharray=""/>
+<text x="1250" y="552" font-size="18" font-weight="400" text-anchor="start" style="fill:#0969b4">+3.3 V</text>
+<polyline class="wire" points="1250,560 1370,560" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="1250,560 1250,663" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="1370,560 1370,663" stroke="#0969b4" stroke-dasharray=""/>
+<polyline class="wire" points="1233,663 1267,663" stroke="#182b43" stroke-dasharray=""/>
+<polyline class="wire" points="1233,674 1267,674" stroke="#182b43" stroke-dasharray=""/>
+<polyline class="wire" points="1250,674 1250,760" stroke="#65778d" stroke-dasharray=""/>
+<polyline class="wire" points="1353,663 1387,663" stroke="#182b43" stroke-dasharray=""/>
+<polyline class="wire" points="1353,674 1387,674" stroke="#182b43" stroke-dasharray=""/>
+<polyline class="wire" points="1370,674 1370,760" stroke="#65778d" stroke-dasharray=""/>
+<text x="1190" y="702" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">C1</text>
+<text x="1170" y="728" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">100 nF</text>
+<text x="1310" y="702" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">C2</text>
+<text x="1295" y="728" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">1 µF</text>
+<polyline class="wire" points="400,760 1440,760" stroke="#65778d" stroke-dasharray=""/>
+<circle cx="400" cy="760" r="5" fill="#65778d"/>
+<circle cx="820" cy="760" r="5" fill="#65778d"/>
+<circle cx="860" cy="760" r="5" fill="#65778d"/>
+<circle cx="1250" cy="760" r="5" fill="#65778d"/>
+<circle cx="1370" cy="760" r="5" fill="#65778d"/>
+<circle cx="1440" cy="760" r="5" fill="#65778d"/>
+<text x="400" y="795" font-size="19" font-weight="700" text-anchor="start" style="fill:#65778d">VESC SIGNAL GND — all GND connections shown here are common</text>
+<rect x="45" y="851" width="810" height="177" rx="12" fill="#eaf5ef" stroke="#afcbb9" stroke-width="2" stroke-dasharray=""/>
+<text x="66" y="888" font-size="23" font-weight="700" text-anchor="start" style="fill:#182b43">What it does</text>
+<text x="66" y="923" font-size="20" font-weight="400" text-anchor="start" style="fill:#182b43">Switch ON → about 9–10 mA loop → PPM LOW → REVERSE</text>
+<text x="66" y="955" font-size="20" font-weight="400" text-anchor="start" style="fill:#182b43">Switch OFF / broken loop → PPM HIGH → FORWARD</text>
+<text x="66" y="990" font-size="18" font-weight="400" text-anchor="start" style="fill:#182b43">A grounded loop wire can also request reverse. No fault diagnosis.</text>
+<rect x="878" y="851" width="827" height="177" rx="12" fill="#edf2fa" stroke="#b0bfd4" stroke-width="2" stroke-dasharray=""/>
+<text x="900" y="888" font-size="23" font-weight="700" text-anchor="start" style="fill:#182b43">Before connecting the VESC signal</text>
+<text x="900" y="922" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">Test levels, both switch positions and power cycling on the bench.</text>
+<text x="900" y="954" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">PPM reverse needs ADC and UART + Current Reverse Button.</text>
+<text x="900" y="986" font-size="19" font-weight="400" text-anchor="start" style="fill:#182b43">Servo output OFF. Preserve Hall / pedal calibration. See README.</text>
+<text x="45" y="1060" font-size="18" font-weight="400" text-anchor="start" style="fill:#53677d">Not an emergency-stop or direction interlock. Shared grounds mean this is not a galvanically isolated system. No Heltec / Core2 connection.</text>
+</svg>

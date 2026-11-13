@@ -1,5 +1,53 @@
 # GoKart Control
 
+**M5 v1.5 branch:** `v1.5/m5-core2` adds a Core2 display option alongside the Pi v2.
+Telemetry, driver mode requests and a simple fleet map share Eamon's Heltec/base protocol.
+Start with the [M5 guide](firmware/m5-core2/README.md) and [handoff](HANDOFF.md).
+**November 12 native player candidate (not installed):** real host-course publication/download,
+internal cache, JOIN/LEAVE, native pickups/inventory and typed FIRE now accompany the compact
+Hunter-style DASH/MAP. The player needs only Core2 + Heltec; the host needs this branch's
+publisher/server and Heltec update. [Implementation and first test](docs/m5-player-mode.md) ·
+[actual renderer fixtures](docs/previews/core2-native-player/index.html) ·
+[clean Claude handoff](docs/CLAUDE_HANDOFF.md).
+
+Existing telemetry/command packets remain compatible. An optional short LoRa course identity
+replaces one host telemetry slot every2s; it keeps player actions bound to the current course.
+No hardware was flashed or VESC settings changed. Eamon's `c21baf8` source changes are integrated;
+later Pi fastboot/separate item-screen commits remain outside this candidate.
+
+Kart 3 has live VESC telemetry, authenticated Core2 Wi-Fi OTA and working ECO/NORMAL/SPORT
+selection over paired ESP-NOW. Matching control-capable images are installed; the operator
+confirmed all three modes and VESC readbacks matched. The existing pit command implementation
+is enabled, with separate physical pit-control acceptance still pending.
+All 376 kart-3 VESC settings were captured; the calibration-preserving 12-setting motor trial
+was applied and read back exactly. See the [tune review](docs/kart3-tune-comparison.md) and
+[mode commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
+Karts **4 and 5** will copy the kart-3 M5/Heltec setup; **1 and 2 remain Eamon’s test karts**. Follow the
+[per-kart bring-up guide](firmware/m5-core2/BRINGUP.md) and
+[calibration-preserving tune/filter preparation](docs/kart4-kart5-replication.md).
+Kart 3 now has a [persistently saved VESC-local reverse filter](hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).
+The earlier wheels-up trial passed forward and smooth reverse despite 152 raw RX transitions
+during forward. The owner then requested installation: exact stored-code readback passed,
+normal cold boots selected both forward and reverse correctly, and the live worker was verified.
+Tune and Hall/pedal settings are unchanged. Native current/voltage measurement offsets recomputed
+on boot under the existing calibration setting; those are documented separately from the tune.
+The final verified state is active/forward/fault0. This is a kart-3 bench commissioning result,
+not fleet or endurance acceptance. Raw input precedes script startup, and watchdog boot can
+skip scripts; keep the pedal released until readiness is verified.
+[Procedure and limitations](firmware/vesc-lisp/reverse-input/README.md).
+
+**November 11 missed-start fix:** the native pedal app requested 45.776 A while
+FOC was limited to 0.05 A with the motor-braking minimum set to zero. A supervised
+three-minute temporary −5 A trial had no recorded stall trigger and the owner
+reported consistent starts. At the owner's request, **−5 A is now active following
+an acknowledged persistent save**, with all other 375 settings preserved. Normal cold-boot
+persistence is verified. Heltec/Core2 bench coexistence now passed: all three modes
+read back correctly, and the owner confirmed smooth forward/reverse in ECO. The −5 A
+limit remained intact. [Coexistence evidence](hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/README.md).
+Fleet, road/load and endurance acceptance remain open. [Diagnosis](hardware/vesc/kart3/2026-11-11/pedal-response-03/README.md),
+[trial](hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/README.md),
+[save and current status](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/README.md).
+
 Fleet system for eight electric karts at Manresa Island, Connecticut: a supervisor
 board on every kart, a shared LoRa radio network, a pit station with touch kiosk and
 shared web control, a driver display on every kart, and an optional "Mario Kart" game
@@ -8,14 +56,17 @@ layer (boost pads, mud, item boxes, laps, race start and finish).
 **Reliability first.** The VESC runs the motor; throttle and reverse stay wired to it and
 braking is mechanical. Losing the display, Heltec, BLE, GPS or pit link never changes the
 kart's active settings. Nothing is written to a VESC on boot, reconnect or retransmit;
-only an explicit pit or console command writes, and only a temporary (`store=0`) setting.
+supervisory pit/console commands write only temporary (`store=0`) settings. Explicit maintenance
+tuning is separate: the November 10 motor trial used a documented persistent configuration write
+after a backup and fresh identity/stationary checks.
 See [docs/requirements.md](docs/requirements.md#reliability-and-link-loss-behavior).
 
 **The connected development kart is the hardware baseline**
 ([measured capture](hardware/vesc/baseline-kart/2026-11-05/README.md)). The older M5Stack
 dashboard repository is historical reference only.
 
-Status in this file is as of **2026-11-06**, branch `eamon/firmware-lora-starter`.
+M5/reverse status above is current as of **2026-11-12** on `v1.5/m5-core2`.
+The dated fleet feature table below retains Eamon’s earlier acceptance checkpoints.
 Details, evidence and open decisions: [HANDOFF.md](HANDOFF.md).
 
 ## Architecture
@@ -42,7 +93,8 @@ Details, evidence and open decisions: [HANDOFF.md](HANDOFF.md).
 | Repeater | second T-Beam S3 Core | [firmware/repeater-tbeam-s3](firmware/repeater-tbeam-s3) | Re-sends every packet once, 25 ms later inside the same slot, relay bit 0x80 set; heartbeat every 5 s shown as a pit chip |
 | Pit station | Raspberry Pi 4 + HDMI touch panel | [pit/](pit/README.md) | Fleet state, command delivery with per-kart outcomes, race/laps, zones editor, session logs; touch kiosk, password-protected operator page, phone page at `/m` |
 | Kart display | Raspberry Pi 3 B + LESOWN L7 7" 1024x600 | [kart/](kart/README.md) | Display only (never talks to the VESC): speed, mode, banners, map from the pit, own geofence engine for the game, sounds |
-| On-VESC script (optional) | VESC LispBM | [firmware/vesc-lisp](firmware/vesc-lisp/README.md) | Regen on STOP; not loaded on any kart (owner decision pending) |
+| M5 v1.5 display (alternative) | M5Stack Core2 320x240 | [firmware/m5-core2](firmware/m5-core2/README.md) | Telemetry, guarded mode requests and fleet/course outline over paired ESP-NOW or UART; kart 3 live telemetry, Core2 OTA and local mode readbacks verified; full pit-control hardware checks remain open |
+| On-VESC scripts | VESC LispBM | [firmware/vesc-lisp](firmware/vesc-lisp/README.md) | Kart 3 reverse filter: saved and normal cold-boot checked in both switch positions. Separate regen-on-STOP experiment remains uninstalled |
 
 **Game layer** (off by default; contract [pit/server/map/ZONES.md](pit/server/map/ZONES.md)).
 The pit draws zones and a track on the operator page and serves them with the map package.

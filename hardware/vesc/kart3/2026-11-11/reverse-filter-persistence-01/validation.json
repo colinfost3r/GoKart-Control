@@ -1,0 +1,60 @@
+{
+  "result": "ALL PASSED",
+  "project_tests": 457,
+  "project_suites": 7,
+  "skipped": 0,
+  "suites": [
+    {
+      "name": "vesc-tools",
+      "tests": 157,
+      "result": "PASS",
+      "log_sha256": "28031e56cda5c72ec224a5e2db65ddfcf9f0f3049baf2d11f0d1643f850bb1e0"
+    },
+    {
+      "name": "pit-core",
+      "tests": 74,
+      "result": "PASS",
+      "log_sha256": "909331827f00dbf51568471f32ee1f7538eb5c2e3cc4d74d7216162ed74e699e"
+    },
+    {
+      "name": "pit-e2e",
+      "tests": 7,
+      "result": "PASS",
+      "log_sha256": "15ce6c95811b8f5d24234fd4ea734054ac7220be2f4a269e2f1579f77a2ac481"
+    },
+    {
+      "name": "kart-core",
+      "tests": 133,
+      "result": "PASS",
+      "log_sha256": "42e830ffb4d915ac9cb783b8ed1726ee4271ca9a6bcc34f3a9d491997aa54a47"
+    },
+    {
+      "name": "kart-mapsync",
+      "tests": 9,
+      "result": "PASS",
+      "log_sha256": "107b1d56530f8a31982210dfd19e6a3d4086cc901770d7f41c11b28171d64d9f"
+    },
+    {
+      "name": "kart-e2e",
+      "tests": 18,
+      "result": "PASS",
+      "log_sha256": "50faee2d3b00c110b32e7bf0e1ac63489b1b8880b899d9a361dbd8ea9da874b7"
+    },
+    {
+      "name": "firmware",
+      "tests": 59,
+      "result": "PASS",
+      "log_sha256": "270fe1daf6a61313d7129dc94e83c182fafceb049a2fc077875ab3a0e034d5af"
+    }
+  ],
+  "lisp_core_cases": 33,
+  "lisp_autostart_cases": 14,
+  "baseline_decoder": {
+    "motor_fields": 189,
+    "app_fields": 187,
+    "both_signatures_verified": true
+  },
+  "live_installer_sha256": "81e449b70d9b1cbd1e9d7617125850dc0b2e789bf7fc7e4ddee5f06127001b72",
+  "portable_installer_sha256": "55a6216e4a59a47e0a4bd70278f079ef7400490dfeb1391bae23b66195607dbc",
+  "hardware_not_accessed_by_tests": true
+}

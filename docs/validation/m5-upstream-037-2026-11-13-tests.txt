@@ -1,0 +1,21 @@
+vesc-tools     running... PASS (21s)
+pit-core       running... PASS (0s)
+pit-e2e        running... PASS (87s)
+kart-core      running... PASS (1s)
+kart-mapsync   running... PASS (5s)
+kart-e2e       running... PASS (130s)
+firmware       running... PASS (10s)
+firmware-map   running... PASS (7s)
+
+SUITE          RESULT    TESTS  SKIPPED    TIME  COMMAND
+vesc-tools     PASS        234        0     21s  /Users/cofo/.platformio/penv/bin/python -I -m unittest discover -s tests -p test_*.py
+pit-core       PASS         78        0      0s  /Users/cofo/.platformio/penv/bin/python -I pit/tests/test_core.py
+pit-e2e        PASS          7        0     87s  /Users/cofo/.platformio/penv/bin/python -I pit/tests/test_e2e.py
+kart-core      PASS        163        0      1s  /Users/cofo/.platformio/penv/bin/python -I kart/tests/test_core.py
+kart-mapsync   PASS          9        0      5s  /Users/cofo/.platformio/penv/bin/python -I kart/tests/test_mapsync.py
+kart-e2e       PASS         22        0    130s  /Users/cofo/.platformio/penv/bin/python -I kart/tests/test_e2e.py
+firmware       PASS         98        0     10s  /Users/cofo/.platformio/penv/bin/python -I -m unittest discover -s firmware/tests -p test_*.py
+firmware-map   PASS         24        0      7s  /Users/cofo/.platformio/penv/bin/python -I firmware/m5-core2/tests/test_map_course.py
+
+logs: /var/folders/6z/rm70x7xx12zcy5pxlsqf82l80000gn/T/gokart-tests.KNs46X
+ALL PASSED

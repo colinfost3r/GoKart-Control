@@ -1,0 +1,235 @@
+{
+  "started_utc": "2026-11-11T17:09:21.180170+00:00",
+  "mode": "load-definitions-only",
+  "uuid_pin": "37004e000951343037353739",
+  "plan_sha256": "c35588937d67f86bd90e67b40f59c2a60a1ed9bddc7edf168c564909ba264805",
+  "source_sha256": "d530aeb20c81c185e25ba9b4954473a8bd7069fe5b59b1babeca3ca2b89e94dc",
+  "complete": true,
+  "activation_sent": false,
+  "stream_sent": false,
+  "flash_written": false,
+  "namespace_absence_machine_verified": false,
+  "steps_completed": 24,
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "contexts_before": {
+    "all_context_headings_seen_in_order": true,
+    "quiet_tail_at_least_250ms": true,
+    "no_partial_frame": true,
+    "context_id_lines": [],
+    "snapshot": "no_contexts_reported",
+    "atomic_or_future_ownership_proof": false
+  },
+  "memory_before": "--(LISP HEAP)--\nHeap size: 19712 Bytes\nUsed cons cells: 0\nFree cons cells: 2464\nGC counter: 0\nRecovered: 0\nRecovered arrays: 0\nMarked: 0\n--(Symbol and Array memory)--\nMemory size: 4096 Words\nMemory free: 3308 Words\nAllocated arrays: 0\nSymbol table size: 2832 Bytes\nExtensions: 222, max 250",
+  "manual_ownership_reviewed": true,
+  "manual_no_previous_copy_reviewed": true,
+  "attempting_step": 23,
+  "step_results": [
+    {
+      "index": 0,
+      "lines": [
+        "(gk-rx-load-allocated 3733)",
+        "> t"
+      ]
+    },
+    {
+      "index": 1,
+      "lines": [
+        "(gk-rx-load-chunk 192 3799)",
+        "> t"
+      ]
+    },
+    {
+      "index": 2,
+      "lines": [
+        "(gk-rx-load-chunk 384 55084)",
+        "> t"
+      ]
+    },
+    {
+      "index": 3,
+      "lines": [
+        "(gk-rx-load-chunk 576 38393)",
+        "> t"
+      ]
+    },
+    {
+      "index": 4,
+      "lines": [
+        "(gk-rx-load-chunk 768 61109)",
+        "> t"
+      ]
+    },
+    {
+      "index": 5,
+      "lines": [
+        "(gk-rx-load-chunk 960 38860)",
+        "> t"
+      ]
+    },
+    {
+      "index": 6,
+      "lines": [
+        "(gk-rx-load-chunk 1152 56843)",
+        "> t"
+      ]
+    },
+    {
+      "index": 7,
+      "lines": [
+        "(gk-rx-load-chunk 1344 12654)",
+        "> t"
+      ]
+    },
+    {
+      "index": 8,
+      "lines": [
+        "(gk-rx-load-chunk 1536 52520)",
+        "> t"
+      ]
+    },
+    {
+      "index": 9,
+      "lines": [
+        "(gk-rx-load-chunk 1728 7944)",
+        "> t"
+      ]
+    },
+    {
+      "index": 10,
+      "lines": [
+        "(gk-rx-load-chunk 1920 65044)",
+        "> t"
+      ]
+    },
+    {
+      "index": 11,
+      "lines": [
+        "(gk-rx-load-chunk 2112 37605)",
+        "> t"
+      ]
+    },
+    {
+      "index": 12,
+      "lines": [
+        "(gk-rx-load-chunk 2304 41114)",
+        "> t"
+      ]
+    },
+    {
+      "index": 13,
+      "lines": [
+        "(gk-rx-load-chunk 2496 58350)",
+        "> t"
+      ]
+    },
+    {
+      "index": 14,
+      "lines": [
+        "(gk-rx-load-chunk 2688 2945)",
+        "> t"
+      ]
+    },
+    {
+      "index": 15,
+      "lines": [
+        "(gk-rx-load-chunk 2880 13327)",
+        "> t"
+      ]
+    },
+    {
+      "index": 16,
+      "lines": [
+        "(gk-rx-load-chunk 3072 43334)",
+        "> t"
+      ]
+    },
+    {
+      "index": 17,
+      "lines": [
+        "(gk-rx-load-chunk 3264 46056)",
+        "> t"
+      ]
+    },
+    {
+      "index": 18,
+      "lines": [
+        "(gk-rx-load-chunk 3456 13580)",
+        "> t"
+      ]
+    },
+    {
+      "index": 19,
+      "lines": [
+        "(gk-rx-load-chunk 3648 12346)",
+        "> t"
+      ]
+    },
+    {
+      "index": 20,
+      "lines": [
+        "(gk-rx-load-chunk 3732 883)",
+        "> t"
+      ]
+    },
+    {
+      "index": 21,
+      "lines": [
+        "(gk-rx-load-verified 3732 3733 883 0)",
+        "> t"
+      ]
+    },
+    {
+      "index": 22,
+      "lines": [
+        "(gk-rx-load-ready nil nil -1 -1)",
+        "> t"
+      ]
+    },
+    {
+      "index": 23,
+      "lines": [
+        "gk-rx-load-clean",
+        "> t"
+      ]
+    }
+  ],
+  "memory_after": "--(LISP HEAP)--\nHeap size: 19712 Bytes\nUsed cons cells: 709\nFree cons cells: 1755\nGC counter: 26\nRecovered: 1755\nRecovered arrays: 21\nMarked: 709\n--(Symbol and Array memory)--\nMemory size: 4096 Words\nMemory free: 2968 Words\nAllocated arrays: 21\nSymbol table size: 4192 Bytes\nExtensions: 222, max 250",
+  "contexts_after": {
+    "all_context_headings_seen_in_order": true,
+    "quiet_tail_at_least_250ms": true,
+    "no_partial_frame": true,
+    "context_id_lines": [],
+    "snapshot": "no_contexts_reported",
+    "atomic_or_future_ownership_proof": false
+  },
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "finished_utc": "2026-11-11T17:09:25.050370+00:00"
+}

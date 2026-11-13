@@ -94,12 +94,17 @@ public:
   const VescActiveLimits& limits() const { return _limits; }
   uint32_t lastAckMs() const { return _lastAckMs; }
   bool linkUp(uint32_t maxAgeMs = 1000) const { return _values.receivedMs && (millis() - _values.receivedMs) < maxAgeMs; }
-  void markLinkLost() { _values.receivedMs = 0; _limits.receivedMs = 0; _rxLen = 0; }
+  void markLinkLost() {
+    _values.receivedMs = 0; _limits.receivedMs = 0; _rxLen = 0;
+    // Keep descriptive firmware fields for diagnostics, but never carry controller
+    // identity proof into the next BLE/UART session.
+    uuidHex[0] = 0; fwSeenMs = 0;
+  }
 
   uint8_t fwMajor = 0, fwMinor = 0;
   char hwName[24] = {0};
   char uuidHex[25] = {0};      // 12-byte controller UUID from FW_VERSION, lower-case hex
-  uint32_t fwSeenMs = 0;
+  uint32_t fwSeenMs = 0;       // last complete FW_VERSION reply with all 12 UUID bytes
   uint32_t crcErrors = 0, packets = 0, badSignature = 0;
 
   static uint16_t crc16(const uint8_t* data, size_t len);

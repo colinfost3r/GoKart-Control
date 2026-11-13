@@ -1,0 +1,49 @@
+{
+  "started_utc": "2026-11-11T18:23:17.104628+00:00",
+  "complete": false,
+  "motor_or_settings_or_lifecycle_commands": false,
+  "fixed_diagnostics": [
+    "events",
+    "foc_state",
+    "faults",
+    "output-disabled"
+  ],
+  "trigger": "decodedADC1>.20, absERPM<=50, absIq<1 A for >=.20s; samples gaps>.35s reset",
+  "snapshot_limit": 3,
+  "maximum_trace_seconds": 180,
+  "post_first_trigger_seconds": 10,
+  "script_sha256": "c72cbfd4f34a3a9b2a95ee019328e0aab614478c64f8294badd25a10f7a3f198",
+  "dependency_sha256": {
+    "pedal_trace_180s.py": "51f0bfd945fdd51b7470d2b8e820d767a4f919533fc4eb5241ce7d83de41aa65",
+    "extra_diagnostics.py": "373a33d72cd03afd4320286232887cb7fc1eb4f6501d938846f4147a9b7b44f0"
+  },
+  "snapshots_are_nonatomic": true,
+  "snapshots": [],
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "status_before": {
+    "run": true,
+    "active": true,
+    "pid": 1507,
+    "applied": 0,
+    "rx": 1,
+    "adc": 0.96043,
+    "erpm": -7e-06,
+    "fault": 0
+  },
+  "error": "ValueError('Start requires active filter, forward and rest; no test started')",
+  "finished_utc": "2026-11-11T18:23:17.253466+00:00"
+}

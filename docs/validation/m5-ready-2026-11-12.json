@@ -1,0 +1,157 @@
+{
+  "date": "2026-11-12",
+  "scope": "Full-screen compact Core2 display; supervised bench candidates and Claude handoff",
+  "branch": "v1.5/m5-core2",
+  "base_commit": "460f2f0798f00fda7861ba9b53ed7529095156b3",
+  "hardware_accessed": false,
+  "uploaded": false,
+  "vesc_settings_changed": false,
+  "host_course_transfer_implemented": false,
+  "live_game_commands_implemented": false,
+  "tests": {
+    "tests": 499,
+    "suites": 8,
+    "skipped": 0,
+    "result": "ALL PASSED",
+    "command": "PYTHON=<python-with-pyserial> ARDUINOJSON_DIR=<ArduinoJson/src> tools/run_tests.sh",
+    "log": "docs/validation/m5-ready-2026-11-12-tests.txt"
+  },
+  "toolchain": {
+    "esp32_arduino": "3.3.8",
+    "recipe": "firmware/build.sh",
+    "core2_fqbn": "esp32:esp32:m5stack_core2",
+    "heltec_fqbn": "esp32:esp32:heltec_wifi_lora_32_V4:CDCOnBoot=cdc,PSRAM=disabled,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB"
+  },
+  "builds": {
+    "m5-demo": {
+      "local_image": "firmware/build/bench-candidates/2026-11-12/m5-demo.app.bin",
+      "bytes": 578368,
+      "sha256": "2646e59cb2f594c0301d7b4b45a3d00043394f57b87c2c8e2fd8302452aa037b",
+      "compiled": true,
+      "uploaded": false,
+      "kind": "application only; not merged flash",
+      "compiler_summary": [
+        "Sketch uses 578227 bytes (8%) of program storage space. Maximum is 6553600 bytes.",
+        "Global variables use 40864 bytes (0%) of dynamic memory, leaving 4481120 bytes for local variables. Maximum is 4521984 bytes."
+      ]
+    },
+    "m5": {
+      "local_image": "firmware/build/bench-candidates/2026-11-12/m5.app.bin",
+      "bytes": 613360,
+      "sha256": "b0cb6f23f7c5a8b67e40125424ad0944c086837c4d7739c4a4c39149177f6a2a",
+      "compiled": true,
+      "uploaded": false,
+      "kind": "application only; not merged flash",
+      "compiler_summary": [
+        "Sketch uses 613211 bytes (9%) of program storage space. Maximum is 6553600 bytes.",
+        "Global variables use 42024 bytes (0%) of dynamic memory, leaving 4479960 bytes for local variables. Maximum is 4521984 bytes."
+      ]
+    },
+    "m5-espnow": {
+      "local_image": "firmware/build/bench-candidates/2026-11-12/m5-espnow.app.bin",
+      "bytes": 1323792,
+      "sha256": "1daf15997d2e73769c4f18c5bc9b326d7ee0f0ea9ebd192fed222e5296318259",
+      "compiled": true,
+      "uploaded": false,
+      "kind": "application only; not merged flash",
+      "compiler_summary": [
+        "Sketch uses 1323639 bytes (20%) of program storage space. Maximum is 6553600 bytes.",
+        "Global variables use 92800 bytes (2%) of dynamic memory, leaving 4429184 bytes for local variables. Maximum is 4521984 bytes."
+      ]
+    },
+    "kart-m5-espnow-readonly": {
+      "local_image": "firmware/build/bench-candidates/2026-11-12/kart-m5-espnow-readonly.app.bin",
+      "bytes": 1325744,
+      "sha256": "fa7eea483be8c786c6da9893f6ba2285c47af2fdf46f7553d42c2499785538bb",
+      "compiled": true,
+      "uploaded": false,
+      "kind": "application only; not merged flash",
+      "compiler_summary": [
+        "Sketch uses 1325603 bytes (42%) of program storage space. Maximum is 3145728 bytes.",
+        "Global variables use 87372 bytes (26%) of dynamic memory, leaving 240308 bytes for local variables. Maximum is 327680 bytes."
+      ]
+    },
+    "kart-m5-espnow": {
+      "local_image": "firmware/build/bench-candidates/2026-11-12/kart-m5-espnow.app.bin",
+      "bytes": 1330688,
+      "sha256": "e3129f6943b4bb80f087a38e95d529a82283cc38d2da8a13a4292b64e3ee5fd8",
+      "compiled": true,
+      "uploaded": false,
+      "kind": "application only; not merged flash",
+      "compiler_summary": [
+        "Sketch uses 1330543 bytes (42%) of program storage space. Maximum is 3145728 bytes.",
+        "Global variables use 87396 bytes (26%) of dynamic memory, leaving 240284 bytes for local variables. Maximum is 327680 bytes."
+      ]
+    }
+  },
+  "sources": {
+    "firmware/base-tbeam-s3/base-tbeam-s3.ino": "099d369ba5e5886ec15ad86451026239edb71f9de679672f6e666463a9a999f8",
+    "firmware/base-tbeam-s3/config.h": "4cf6aa9630ce8cd37f4da7b09df46fba3619ef0e9218eb63e81a361bfb594b0e",
+    "firmware/build.sh": "95626ab2fc682bff3a3a2ba970e55b6cf541ac7ccfe7d55245380e3b3da44698",
+    "firmware/core2-items/core2-items.ino": "cfc9653a4bef7a10731934327a80523551ff6f18be3951a79541d15476e1092d",
+    "firmware/kart-heltec-v4/cmd_types.h": "9940caecbe7fca635a8f7ea974944ee030b954b645c487117b249f7845c395a0",
+    "firmware/kart-heltec-v4/config.h": "0979ee2be99dd5a4c806d362c83bb469f1e296c83d1889e4c77baebd733514f4",
+    "firmware/kart-heltec-v4/kart-heltec-v4.ino": "65d95b6855b68820d4a034ee5227494a265b82984b4ab1c55d2702529e3fd175",
+    "firmware/libraries/GoKartProtocol/GoKartProtocol.h": "978ffabaf69c42d78d1bd37c53b287dbf6b6712829b2ee49822f0ff3cd4b3772",
+    "firmware/libraries/M5DisplayLink/M5DisplayLink.h": "2041f7a9475b6e644e53a8d0de6c6e5c2eee1ba752ae6cec637a2c0e1eedd629",
+    "firmware/libraries/M5DisplayLink/VerifiedBaseline.h": "26917e55ebc014a719b95969ced0c77424211891ef94e8ce0eb591eaa3244853",
+    "firmware/libraries/M5EspNowLink/src/M5ChannelAlignment.h": "9c1511393ddfbb12c356eb1fa17f7c0d85d88f4ecbce7c39aadccc0665f87e35",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowFrame.h": "eea7f52035ff037ba16eff91443a1f3353a8e5685eb41f81dc8de88bbe8e9b33",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.cpp": "66f69b0b370d6e57f230659c2be49f55bfd09191d80887d3bbb25cb4bb5d25ac",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowLink.h": "625b00bfc619b086031c51a02d0b0b55a5d8d127fa9638e5cfd66a89ea15a424",
+    "firmware/libraries/M5EspNowLink/src/M5EspNowSettings.h": "068fa762554ed2584be1c133a87ef493d20767cd92260cf979b5e9898b68d46b",
+    "firmware/libraries/M5EspNowLink/src/PairingRecord.h": "7c774b586c417c1f9a6cae48b93c4cb48a800207adc09f9c5ba9d229a1848eac",
+    "firmware/libraries/VescLink/VescLink.cpp": "82c7affcfb463445e25a2f75a76a5e866f64ebe6646ae6826b4b32e66821f9e9",
+    "firmware/libraries/VescLink/VescLink.h": "a671408d80c5988bc9d9573c50ec3aa7b9f67c1471c0ca6cd318f10652ffbe55",
+    "firmware/m5-core2/CourseStorage.h": "fc6daac98151d2e9ecb50dddb52d306e05dda79e50968cf0547caf479d87fe3c",
+    "firmware/m5-core2/DisplayMaintenance.h": "9ceadc77b097eae68519d09f0e7a32c058f12d27f3d8765e8bc82ef10f30a22e",
+    "firmware/m5-core2/DisplayMetrics.h": "5f2506b4c9d920fbe24ff155f4a296e62c8e97040eefd8ddbd04f74cc7fe1a2c",
+    "firmware/m5-core2/DisplayState.h": "54bacc8da999724f3b56b6f82831dd0b787787bf19734b040db90c7364ba9ab0",
+    "firmware/m5-core2/DriverView.h": "65e4b501971d9d5e4fc92b2b4a84075ee1c646adeb78a9ec19d06e1cf51f8674",
+    "firmware/m5-core2/MapView.h": "e58ce8cf90588c87d0d2aa8721a730cf67c393ba69cc67eb739ef894a1e59f06",
+    "firmware/m5-core2/PlayerPreview.h": "f165e71848e74fabf780d803f05ac5b0924c577ac6ef05bf9d127e7dd75d8231",
+    "firmware/m5-core2/PreviewMap.h": "fbe2ddc3add9edaa40949ef400537c06b61cadb8b31db6d11e10de05f725086b",
+    "firmware/m5-core2/ScreenLifecycle.h": "365d47db17c43f08828aac6cd38faa6a3c1d059a8b46f19ff65ceaaac272df87",
+    "firmware/m5-core2/config.h": "c2c2581e94f470424025b3fb0df9591b4403cffd183805b647259d3f139d6335",
+    "firmware/m5-core2/m5-core2.ino": "99621641052965d02abfdb40c4ef9d52a9abc1227d7037d5ad50d1ffe8ef8345",
+    "firmware/m5-core2/preview_shop_lines.inc": "8aa0133f4aa94f40056ff6f256e9ffd9505168d28de080a1656e1bfacbee85d9",
+    "firmware/repeater-tbeam-s3/config.h": "ef8c361a3cdebd1088ad15b39dbd5397360484e4bc76f361d473273e358df6c0",
+    "firmware/repeater-tbeam-s3/repeater-tbeam-s3.ino": "2b81b769d3a123d363c6cbf959b97315f7fe399b2b492cb65357a98c57807f29"
+  },
+  "review": {
+    "independent_subagent": true,
+    "result": "No unresolved actionable display-code findings",
+    "fixed": [
+      "maintenance BACK hold could leak mode request",
+      "startup duration measured after initialization",
+      "DEMO indicator retained in map error scenes"
+    ],
+    "focused_tests": 15,
+    "sanitizers": "ASan/UBSan native checks"
+  },
+  "visual_checks": {
+    "scenes": 32,
+    "browser_checks": [
+      "startup credits",
+      "automatic startup exit",
+      "compact ready map",
+      "DASH",
+      "one-shot simulated FIRE",
+      "link-lost unknown MPH/volts and DEMO"
+    ],
+    "browser_capture": "docs/previews/core2-player-rehearsal/compact-map-browser.png",
+    "not_verified": "Physical LCD font/readability, touch, OTA and live GPS/radio/course storage"
+  },
+  "hud": {
+    "battery": "fresh measured VESC pack voltage relayed by Heltec, not accessory battery or local SOC estimate",
+    "speed": "fresh GPS MPH",
+    "viewport": "320x240",
+    "vertical_span_m": 70,
+    "attribution": "five-second nonblocking startup only"
+  },
+  "upstream": {
+    "reviewed": "59976df",
+    "integrated": "a5a4c22",
+    "new_remote_changes_at_final_fetch": false
+  }
+}

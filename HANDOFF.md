@@ -1,5 +1,1035 @@
 # Collaborator handoff
 
+**Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
+Earlier dated entries below are history; the latest entry supersedes their UI details.
+
+## Throttle cuts out on karts 4 and 5 — November 13, 2026
+
+Reported by the owner after the first driving on the tune applied that morning. Not
+diagnosed. The leading suspect is that tune: 140 A motor current with the absolute-current
+trip lowered to 220 A and a 500 ms stop after each trip. `tools/vesc/restore_fleet_tune.py`
+can put each kart's motor settings back to its own morning capture; it is tested offline and
+**has not been used**. Karts 4 and 5 should not carry other drivers until this and the
+direction switch are sorted. Details in the [Claude handoff](docs/CLAUDE_HANDOFF.md).
+
+## Reverse filter sticks on the ground on karts 4 and 5 — November 13, 2026
+
+The owner reports the direction switch sticking in forward and in reverse when karts 4 and 5
+are driven. The filter only accepts a change with the pedal released and the wheel essentially
+stopped for a quarter of a second, and it was only ever tested wheels-up. A removal step,
+`tools/vesc/fleet_rx_filter.py remove`, now exists and is tested offline; **it has not been
+used, and the filter is still on karts 3, 4 and 5.** Details and the servo-pin question are in
+the [Claude handoff](docs/CLAUDE_HANDOFF.md).
+
+## Upstream kart 0.3.7 merged; the set to flash is `2026-11-13-upstream-037` — November 13, 2026
+
+Eamon's branch is merged through `008b458`: the pit can start a freeplay game for the whole
+fleet (kart 0.3.7, base 0.2.3). An M5 kart has no Pi to act on that command, so its Heltec
+build refuses it. 635 tests pass. New Heltec and base images, with the race-screen Core2
+images unchanged ([manifest](docs/validation/m5-upstream-037-2026-11-13.json)). **No Heltec has
+it yet**; kart 3's Core2 already runs the matching Core2 image.
+
+## Pit-race screen for the Core2 — November 13, 2026
+
+The owner tried a pit race and a kart-hosted game with karts 3 to 5; neither worked. For the
+pit race the paired Core2 now shows the grid hold with a countdown, GO, and the race position,
+from what its Heltec reports (display only; no laps). 632 tests pass. Images frozen as
+`2026-11-13-race-screen` ([manifest](docs/validation/m5-race-screen-2026-11-13.json)): Heltec
+and Core2 images both changed, so both boards of a kart are flashed together. It supersedes
+`2026-11-13-upstream-036`. **Installed on kart 3's Core2 only**, over the air and without any
+console check ([record](hardware/m5/2026-11-13-kart3-core2-ota-race-screen/README.md)); that
+Core2 now boots from its second slot, so do not write `0x10000` over USB without reading
+`otadata` first. No Heltec has this build, so no kart shows the countdown yet. The kart-hosted
+game still needs [the host update](docs/host-update-plan.md).
+
+## Upstream kart 0.3.6 merged; one image set for hosts and players — November 13, 2026
+
+Eamon's branch is merged through `6e4c788` (kart 0.3.6 shield, ROAM freeplay, pit `fleet_rate`).
+628 tests pass. Images frozen as `2026-11-13-upstream-036`
+([manifest](docs/validation/m5-upstream-036-2026-11-13.json)): new Heltec kart images reporting
+`kart-0.3.6`, plus the street-line Core2 images below. **Not flashed anywhere.** The owner
+reported that a race did not work on karts 3 to 5; the radio link checks out, and the likely
+gaps are listed in [the host update plan](docs/host-update-plan.md#what-an-m5-kart-can-and-cannot-join)
+(no race screen on the Core2, ROAM cannot be joined, track freeplay needs the host update).
+
+## Core2 map: built-in street lines, not installed — November 13, 2026
+
+The Core2 map was black without a GPS fix or a host course. The Core2 source now carries
+OpenStreetMap street, building and shoreline outlines for the shop and for Manresa Island
+(a new extract, `pit/server/map/manresa-map.geojson`) and shows a site overview while it
+waits for GPS. Core2 images only, frozen as `2026-11-13-site-map`
+([manifest](docs/validation/m5-site-map-2026-11-13.json)); Heltec images are unchanged.
+**Not flashed anywhere yet**, and nothing about it is verified on hardware. 619 tests pass.
+[Details](firmware/m5-core2/COURSE_MAP.md#built-in-street-lines).
+
+## Karts 4 and 5 brought to kart 3's level — November 13, 2026
+
+Both new karts now have kart 3's tune, the reverse-input filter, a paired Heltec and Core2 on
+the same application images as kart 3, their own VESC bound by UUID, and ECO/NORMAL/SPORT read
+back at 15163 / 25272 / 150000 ERPM with the wheels up. Each VESC write had the owner's own
+go-ahead. Speed factors differ by design: kart 3 1.736, kart 4 0.507, kart 5 the default 2.48,
+all three giving the same ERPM caps and all three unverified on the road. Not done on 4 and 5:
+Wi-Fi/OTA, GPS checks, pit commands. Two things to read before relying on this: kart 5's tune
+write was logged as uncertain by the tool (one controller-measured offset; confirmed
+independently), and kart 5's bus read **86.4 V** briefly in an uncapped run on a near-full pack,
+an open tune question for all three karts. 613 tests pass.
+[Kart 5 VESC](hardware/vesc/kart5/2026-11-13/README.md),
+[kart 5 filter and the voltage reading](hardware/vesc/kart5/2026-11-13/filter/README.md),
+[kart 5 boards](hardware/m5/2026-11-13-kart5-first-install/README.md).
+
+## Upstream kart 0.3.5 merged, not installed — November 13, 2026
+
+Eamon's branch is merged through `139c810`, including his Heltec firmware changes (0.3.4 Wi-Fi
+handling and `wifi clear`, 0.3.5 fixed ESP-NOW channel 1 with Wi-Fi off). 586 tests pass, eight
+targets compile, images frozen as `2026-11-13-upstream-035`
+([manifest](docs/validation/m5-upstream-035-2026-11-13.json)). **Not flashed anywhere:** karts 3
+and 4 still run `2026-11-13-game-rules`. Only the Heltec kart images changed.
+
+## Kart 4 VESC tuned to match kart 3 — November 13, 2026
+
+Kart 4's controller (UUID `55004d000951343037353739`) was captured read-only, compared with
+kart 3 and, with the owner's go-ahead, given kart 3's tune by one persistent write: the twelve
+reviewed fields plus five protection limits the owner chose after seeing kart 4's values. Read
+back exactly, confirmed after a power cycle, and pedal-checked wheels-up with fault 0. The new
+writer is `tools/vesc/apply_fleet_tune.py`; `prepare_fleet_kart.py --match-protection-limits`
+is the per-kart option for the limits. Kart 5 is untouched.
+
+The reverse-input filter went onto kart 4 later the same day with the new
+`tools/vesc/fleet_rx_filter.py`: observed in both switch positions, installed once with the
+owner's go-ahead, read back, and verified armed after a power cycle.
+[Filter record](hardware/vesc/kart4/2026-11-13/filter/README.md).
+
+The same day kart 4's never-flashed Heltec and Core2 were installed, paired and bound to that
+VESC by UUID. The read-only checkpoint and soak passed, then the Heltec got the write-capable
+build and speed factor 0.507 (its VESC stores a 0.083 m wheel). Its kart ID was stored before
+the kart firmware first ran (`firmware/provision-kart-id`), because a blank Heltec transmits as
+kart 1. ECO/NORMAL/SPORT were then written from its Core2 and read back at 15163 / 25272 /
+150000 ERPM, wheels up. [Board install record](hardware/m5/2026-11-13-kart4-first-install/README.md).
+[Record](hardware/vesc/kart4/2026-11-13/README.md),
+[replication guide](docs/kart4-kart5-replication.md).
+
+## Game rules installed on kart 3 — November 13, 2026 (host not updated)
+
+**545 tests across eight suites passed, zero skipped; eight firmware targets compiled.**
+
+Owner decisions of November 12 after a review of the FIRE path are now in source and on both of
+kart 3's boards: the host chooses the game speed (ECO or NORMAL, Pi setting `freeplay_speed`),
+a joined kart is locked to it, BOOST is one mode up and ROCKET/STAR the top mode, and a boost
+whose end could not be written is finished once, lower-only (the one recorded exception to
+"reconnect is read-only", see `AGENTS.md`). The course package is rules version 2, so **old and
+new firmware cannot play together**: a host must run this source's `kart` Heltec build and
+`kart/server` before kart 3 can download a course or join.
+
+Kart 3 was updated over USB with the VESC off, then checked with the VESC on: identity, the three
+mode readbacks at the November 10 values, wheels-up forward/reverse with fault 0, and a
+ten-minute soak. None of the new game behaviour has run on hardware, because no host is updated.
+Eamon's branch is merged through `cb7011c`. Kart 3's speed caps were about 43% high (kart 2's 2.48
+factor against 20 stored poles instead of 14); the owner had `speedcal 1.736` stored on its Heltec.
+ECO 15163 and NORMAL 25272 ERPM were then written from the Core2 and read back. Provisional until
+a GPS check on the road.
+[Install record](hardware/m5/2026-11-13-kart3-game-rules-update/README.md),
+[manifest](docs/validation/m5-game-rules-2026-11-13.json),
+[Claude handoff](docs/CLAUDE_HANDOFF.md).
+
+## Native host course and Core2 game candidate — November 12, 2026 (not installed)
+
+**Final offline validation: 511 tests across eight suites passed, zero skipped; eight firmware targets compiled.**
+
+The owner correctly rejected stopping at a display-only rehearsal. Source now implements the
+host publisher, authenticated course-only ESP-NOW transfer, complete bounded package/cache,
+JOIN/LEAVE, native pickup/inventory and typed FIRE through own Heltec. Fresh host boot/package
+is bound through a short optional LoRa COURSE packet; current telemetry/command layouts stay
+compatible. Updated host Pi + host Heltec and separate course pairing are required for the test.
+
+Eamon `c21baf8` source changes (laps/inventory/Wi-Fi/box count) were integrated without the merged
+binary, retaining local M5 safeguards. See [clean handoff](docs/CLAUDE_HANDOFF.md),
+[implementation/limits](docs/m5-player-mode.md), [native screens](docs/previews/core2-native-player/index.html)
+and [final manifest](docs/validation/m5-player-2026-11-12.json). Review caught/fixed stale publication,
+boot binding and speculative boost stacking. Native effects use fixed durations; starting boxes
+remain a per-player snapshot. Physical RF, NVS, LCD/touch and effects still require acceptance.
+No hardware was touched. Installed accessories remain `4a582f0`; VESC −5 A/filter unchanged.
+
+Later the same day Eamon's branch was merged through `c39df6a` (Pi fastboot, `core2-items`
+0.2.2–0.3.2, release images) so PR5 no longer conflicts. No M5/player/host source changed;
+details and two cautions are in the [Claude handoff](docs/CLAUDE_HANDOFF.md).
+
+That afternoon the candidate Core2 and Heltec applications were installed on kart 3 over USB
+with the VESC off; identity, pins, pairing and Wi-Fi/OTA settings were retained. With the
+VESC then powered, identity, ECO/NORMAL/SPORT readbacks and wheels-up forward/reverse were
+observed with fault 0. Host-dependent game features remain untested.
+[Install record](hardware/m5/2026-11-12-kart3-player-update/README.md).
+
+## Overnight Core2 display candidate — November 12, 2026 (not installed)
+
+The map now fills 320×240 with compact GPS MPH and measured VESC pack volts relayed by
+Heltec, compact corner FIRE/page controls, no kart header/scale/footer, and five-second
+startup-only map credits. No percentage estimate is made. Mode controls remain on DASH.
+Hold the page button 1.8 s for maintenance in this candidate; the installed older image
+still uses its top status bar. Overlay/back/startup/navigation presses are consumed through
+release and cannot leak into mode selection. The independent review found and verified
+fixes for the maintenance BACK hold, startup timer placement and DEMO-on-error labels.
+
+**499 tests across eight suites passed, zero skipped; five firmware candidates compiled.**
+[The final validation manifest](docs/validation/m5-ready-2026-11-12.json) records tests,
+source/application hashes and review scope. All preview/source/documentation changes are
+prepared for kart-3 acceptance; nothing was flashed and no VESC settings changed overnight.
+Installed accessories remain `4a582f0`, with the November 11 −5 A/filter/coexistence result
+unchanged. New application images are frozen locally under ignored
+`firmware/build/bench-candidates/2026-11-12/`, with hashes in Git.
+
+The clean handoff separates demo-only background/game symbols from live telemetry/course
+outline support, lists missing host transfer/native game logic, and orders kart3 then4/5
+commissioning. VESC tune/Lisp application still requires USB; Heltec OTA is not a VESC
+updater. Fleet preparation remains offline and its kart4/5 writer remains unimplemented.
+No blind clone or Hall/pedal recalibration is authorized.
+
+## Core2 map context and HUD — November 11, 2026 (source/rehearsal, not installed)
+
+The owner requested geographic context, a visible start/finish line and boost/pickup
+markers, then replaced the orientation/scale labels with speed and battery percentage.
+The updated [preview](docs/previews/core2-player-rehearsal/index.html) opens directly on MAP.
+
+- `PreviewMap.h` draws 212 clipped OSM street/building/water/rail segments from the exact
+  `sono-map.geojson` extract used by the Pi. The shop crop is real geography; the loop,
+  checkered gate, boost arrows, item box and all kart positions are simulated. These
+  layers only render in the no-output demo, never against an arbitrary live course.
+- `DisplayMetrics.h` supplies fresh GPS MPH and the Pi’s existing clamped 60–84 V battery
+  estimate to the MAP header. Missing/stale telemetry shows dashes, not zero. Percentage
+  is an estimate and can dip under load; it is not measured BMS charge. DASH retains volts.
+- Removed the distance scale and `N UP / 70 M` label. North-up following still spans 70 m
+  vertically. Map attribution moved to the game menu and preview credits, off the driving
+  map. ODbL source/attribution is retained with the generated geometry.
+- The Pi’s aerial path is a pit Wi-Fi download into its local cache, not Google Maps.
+  Manresa’s preset references local-only SkyFi imagery with CT ECO imagery available as
+  a fallback asset. The repository shop preset uses CT ECO. No active Pi was queried.
+- Generic background/game-package storage, host transfer, live item rendering and lap
+  authority remain unimplemented. Do not infer finish timing or motor effects from symbols.
+
+Validation: 496 offline tests across eight suites passed, zero skipped; all three Core2
+images compile. [Manifest](docs/validation/m5-map-context-2026-11-11.json). Browser map and
+game-menu credit placement were checked. No hardware, VESC settings, Heltec transport or
+LoRa protocol changed. Eamon upstream remains `59976df` reviewed / `a5a4c22` integrated.
+
+## Core2 UI rehearsal — November 11, 2026 (source/bench candidate, not installed)
+
+Hunter-style native DASH and following MAP views now share `DriverView.h`: segmented speed,
+cyan/amber palette, verified mode cards and explicit unavailable/stale fields. The edge page
+button consumes its full touch through release, preventing navigation drags from requesting
+a mode or entering maintenance. PIT STOP/SLOW and non-beginner fault banners appear on both
+pages. Live FIRE remains unavailable. No Heltec, VESC, LoRa or pairing code changed.
+
+**Validation:** all 495 tests passed across eight suites, zero skipped. All three Core2
+targets compile. Browser invitation/download/page/FIRE/menu checks passed; these are
+simulations, not radio or hardware evidence. [Manifest](docs/validation/m5-ui-rehearsal-2026-11-11.json).
+
+`m5-demo` adds a simulated invitation, pulsing dot, download/ready/FIRE flow and failure
+scenarios. It has no UART/ESP-NOW control transport, no mode output and a RAM-only course.
+The [browser rehearsal](docs/previews/core2-player-rehearsal/index.html) uses the production
+renderer for 30 visual states; browser text approximates LCD glyphs. Native tests cover modal
+isolation, navigation drags, one-shot simulated FIRE, clock wrap and critical alerts.
+
+[Preparation and next-session runbook](docs/m5-offline-rehearsal.md). Nothing is flashed.
+Host course publishing, wireless game-package transfer and live player/item authority are
+still separate implementation work. Eamon upstream remains reviewed through `59976df`,
+integrated through `a5a4c22`; this UI milestone does not silently change his Pi/item firmware.
+
+## Core2 player/course-sharing decisions — November 11, 2026 (planned)
+
+Owner clarified the no-Pi game split: **Core2 owns map/course storage, player inventory and
+local game logic; Heltec retains GPS, LoRa and exclusive VESC supervision**. Core2 joins
+existing games only. The desired course flow is host publication followed by a nearby
+ESP-NOW download and a verified local cache, not a manual per-player preload.
+Both pages must follow Hunter's original retro graphics (`315710e` through `5629924`).
+A page button returns to DASH/modes; a pulsing invite dot calls attention to fresh hosted
+games. First-version proposal is an on-screen edge control; the physical side button is
+power control, not an assumed independent game button/LED.
+
+[Implementation brief and host-side work](docs/m5-player-mode.md) records the proposed
+publishing bridge, channel/peer constraints, atomic course validation, join notification,
+no-replay rules and acceptance order. No hosting/course editor is added to Core2.
+These are requirements, not installed features: FIRE remains unavailable, the current
+course uploader is USB-only and the newer follow map has not been flashed. Upstream through
+`59976df` was inspected; integration remains at `a5a4c22`. No hardware or runtime code changed.
+
+## M5 follow map and Eamon integration — November 11, 2026 (source ready, not deployed)
+
+The no-Pi Core2 implementation now boots into a simple north-up line map following
+its own fresh GPS position at a fixed 70 m vertical span. Distant peers do not zoom
+it out. DASH still provides mode selection, and the header maintenance gesture is
+preserved. Missing GPS and missing course data have separate status/diagnostics.
+
+**No SD required for an outline:** provision a validated course into Core2 NVS with
+`tools/m5/provision_course.py`; without `--port`, it only validates a file offline.
+The bounded USB transaction checks size/order/CRC/schema, stores one complete record,
+and verifies readback before changing the active course. Malformed/incomplete uploads
+preserve the old course. A storage/readback error leaves active RAM unchanged and
+reports uncertain persistent state; physical interruption testing remains open.
+Optional SD `/gokart/course.json` is still a fallback. The committed shop demo is
+not a surveyed Manresa route. [Course procedure](firmware/m5-core2/COURSE_MAP.md).
+
+**FIRE is visibly unavailable.** Eamon's new `core2-items` firmware depends on a kart
+Pi for inventory and game decisions; its `invuse` relay cannot provide firing on a
+no-Pi kart. Native item/session/target authority and an authenticated fresh request
+contract remain separate work. Do not replace this dashboard with the `core2` build.
+
+Merged Eamon's six commits through **a5a4c22**. His Pi items and closer map are retained.
+The independent raw item-screen ESP-NOW service is excluded from paired M5 builds so
+it cannot replace their encrypted receive callback. Last-AP-channel recovery is shared,
+with existing authenticated alignment and no command replay. Python integration retains
+prize freshness/epoch guards, clears carried items on real course/session changes,
+and does not retract an already-queued effect merely because later HUD/log processing
+sees changed state. Every command is still checked immediately before enqueue.
+
+**Validation:** all **492 tests passed across eight suites, zero skipped**. Three
+Core2 targets, six Heltec targets and the separate `core2` item target compile.
+Native map/storage/touch checks include ASan/UBSan; compiled stack-frame inspection
+caught and removed nested course-copy pressure. [Build/check manifest](docs/validation/m5-map-2026-11-11.json).
+
+**Hardware unchanged:** nothing was flashed or provisioned in this update; the earlier
+kart3 −5 A/filter/mode acceptance below remains the installed checkpoint. Next bench
+step is Core2-only update/course provisioning and verification of the new view/touch/
+flash persistence. Heltec channel-recovery deployment is a separate acceptance step.
+No VESC setting, calibration, motor command or LoRa packet format changed here.
+
+## Kart 3 Heltec/Core2 coexistence — November 11, 2026 (latest)
+
+**Bench checks passed with the saved −5 A limit and persistent reverse filter.**
+Owner confirmed all three Core2 modes verified, smooth forward and smooth reverse.
+Final capture at 19:31 UTC: correct kart3 UUID, zero ERPM/Iq, fault/timeout/kill clear,
+−5 A motor minimum, min scale 1, battery minimum −12 A. Both accessories are live and
+mode-ready on aligned channel 6. Owner confirmed physical switch forward, pedal
+released and wheels stopped. **Current temporary profile is ECO**, deliberately
+selected on the Core2; no profile was restored automatically. Monitoring has ended
+and no further pedal test, reset, flash or configuration write is queued.
+[Complete evidence](hardware/vesc/kart3/2026-11-11/heltec-coexistence-01/README.md).
+
+- Reconnect preserved all motor/app bytes before mode selection. ECO/NORMAL/SPORT
+  readbacks changed only max-current scale 0.50/0.75/1.00 and ERPM pair ±21661.4 /
+  ±36102.3 /±150000; brake remained −5/min scale 1. Owner confirmed all verified.
+- Forward ECO: 1,158 sample pairs over 120 s, 13 demand intervals all with rotation,
+  zero sustained missed-start candidates and faults; owner reported smooth motion.
+- Reverse ECO: 579 pairs over 60 s, negative rotation only, zero sustained candidates
+  and faults; owner reported smooth motion. 25 demand intervals included rapid
+  reapplications and brief crossings, not 25 independent fully stopped starts.
+- All 376 settings were identical across each pedal capture. Core2 stayed live and
+  ready; during those captures both ESP-NOW peers remained aligned on channel 6 with
+  no new failure/drop/invalid/hop counters, no BLE CRC errors, and ongoing LoRa traffic.
+
+Preserve scope: the first stationary mode recorder aborted when the owner deliberately
+tried the pedal; its incomplete manifest remains. The first 120 s pedal capture was idle;
+owner confirmed presses occurred before it. The second capture is the actual forward
+check. Internal Lisp/raw RX was not polled during BLE operation, so final direction is
+an owner confirmation plus recorded signed rotation, not a fresh worker/GPIO snapshot.
+This is one kart's wheels-up ECO coexistence acceptance, not road/load/endurance,
+eight-kart/range, physical pit-command or abnormal-reset acceptance. The switch harness
+issue and charged-pack/BMS validation remain separate. No host motor/settings/reset
+command or accessory firmware update was sent during this session.
+
+**Replication:** the offline kart4/5 package and runbook are ready. Keep using the
+[verified full-scale cold-boot source](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/coldboot-forward/raw),
+not this final temporary ECO capture as a full-scale baseline. Each new unit still
+needs its own capture, preserved Hall/pedal/electrical calibration, unique BLE/UUID/
+ESP-NOW identities and supervised per-target application. No kart4/5 write has occurred;
+karts1/2 remain Eamon's units. Existing kart3-only installers must not be repurposed by
+bypassing their pins. [Preparation guide](docs/kart4-kart5-replication.md).
+
+**Validation:** 469 tests passed across seven suites, zero skipped. Independent audits
+redecoded the captured payloads, verified fixed read-only command scope and configuration
+preservation. Eamon’s six commits through a5a4c22 remain separate integration work; none
+were silently merged or flashed by this motor/filter acceptance session.
+
+## Kart 3 −5 A save and fleet replication — November 11, 2026 (earlier save)
+
+**−5 A is active and verified after a normal cold boot.**
+The earlier temporary trial was restored to zero, then the owner explicitly requested
+making the change permanent. One guarded command 13 save completed at 18:51:50 UTC:
+only `l_current_min` changed, all other 375 fields identical. Filter remains active,
+forward / raw RX 1, released pedal, stationary / fault 0; Heltec off. **Normal cold-boot persistence passed at 19:01 UTC** after owner confirmation.
+Only five automatic current/voltage offsets refreshed; all app, Hall/pedal and tune
+settings remained intact, and the active filter worker was listed. Heltec coexistence
+is pending; no automatic retry, restore or motor test is queued.
+[Save evidence and exact helper](hardware/vesc/kart3/2026-11-11/brake-limit-persistent-01/README.md).
+
+The temporary −5 A trial recorded 1,658 ADC/telemetry pairs over ~180 seconds with
+no stall trigger and no sampled fault/timeout/kill. Owner reported consistent starts
+and confirmed intentional reverse near the end. After forward/released/rest was
+confirmed, the zero-limit restore was verified before the later permanent save.
+[Temporary trial](hardware/vesc/kart3/2026-11-11/brake-limit-trial-01/README.md).
+Independent replay found 78 pedal windows with rotation (including coasting reapplications),
+17 instantaneous <8 A trigger samples but zero sustained triggers. One bus reading was
+84.4 V after release, without fault; charged-pack/BMS validation remains open.
+
+Diagnosis: native APP_ADC accepted 45.776 A while FOC iq_target was +0.05 A and
+Mod q flt −0.01. Paired ADC/telemetry 53.7 ms apart bracketed the stationary high-pedal
+condition. The zero motor-braking limit is floored to −cc_min_current (−0.05 A);
+negative modulation selects the opposite +0.05 A current clamp. Sequential rounded
+snapshots are not cycle-atomic. Raw RX harness chatter remains a separate issue;
+the filter held forward during the captured miss.
+[Current target evidence](hardware/vesc/kart3/2026-11-11/pedal-response-03/README.md),
+[earlier pedal recordings](hardware/vesc/kart3/2026-11-11/pedal-response-02/README.md).
+
+Owner assigns **karts 4 and 5** as copies of kart3; **1 and2 remain Eamon's test karts**.
+Replication must preserve each unit's Hall/pedal calibration and unique controller,
+BLE and ESP-NOW identities. Do not clone NVS or flash a kart3-UUID-pinned filter onto
+another controller. The [offline preparation tool and runbook](docs/kart4-kart5-replication.md) are ready; no kart 4/5 writes
+have occurred. The saved-filter + nonzero-limit combination is not yet fleet or
+endurance accepted. Next: reconnect Heltec/Core2 and verify
+telemetry, modes and supervised pedal operation while preserving the −5 A limit.
+
+Validation: the full project suite now passes **469 tests across seven suites,
+zero skipped**, including 12 fleet-preparation cases. Independent replay of all 1,658
+trial samples matches the archived audit; persistent-writer framing/freshness/no-retry
+checks and 26 pinned-interpreter guard cases also pass. This branch checkpoint includes
+the diagnosis, authorized save and offline fleet package; pending hardware acceptance
+is explicitly retained above. Eamon’s six commits through a5a4c22 remain separate
+integration work and were not deployed by this motor-limit change.
+
+## Kart 3 persistent reverse filter — November 11, 2026 (earlier installation)
+
+**Installed at the owner's explicit request; normal cold-boot checks passed.** The owner
+confirmed wheels lifted, pedal released, Heltec off and cutoff accessible. Joined stop and
+matching-RX rollback of the temporary filter both passed on hardware before installation.
+Existing code read exposed no valid blob. The fixed installer sent one Lisp-sector erase and
+17 writes (16 body chunks then the eight-byte header), with exact ACKs and full stored-payload
+readback. It sent no SET_RUNNING133, motor-output, motor/app configuration or firmware-image
+command. [Persistent commissioning evidence](hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/README.md).
+
+Saved source is the exact tested compact core plus one UUID/fw/app-guarded start call: source
+3981B SHA30981ff45663d254153009ec0f6258b400126afd74a66a6caa2a70c56ac96700; canonical code blob
+3984B SHAa2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801. Readback matched again
+after two owner-confirmed power cycles. This source is pinned to kart3 UUID37004e000951343037353739,
+6.02/test0 and ADC application 2 / control type 3. It is not an eight-kart installer.
+
+Forward cold boot: active/run=true, applied0/raw1, PID 1507 positively listed, rest/fault0.
+Reverse cold boot: applied1/raw0; initial context snapshots omitted the running task. Returning
+the switch to forward changed applied1→0, and a final fixed context inspection positively
+listed sleeping PID 1507 (max stack44). **Final verified state: persistent filter running,
+forward selected, pedal released/rest/fault0; Heltec off.** The user was invited to continue
+gentle wheels-up checks, releasing the pedal/stopping completely before changing direction.
+Post-install manual motion outcomes have not been independently recorded in this checkpoint.
+
+All 376 settings were identical across the script save itself. Across cold boots,
+all187 app fields and all motor fields except native current/phase-voltage measurement offsets
+remained equal. The existing `foc_offsets_cal_on_boot=1` recomputes those runtime offsets at
+startup. No tune/Hall/pedal configuration was written and no offset was restored or disabled.
+Do not claim every motor byte stays identical across power cycles. See exact field comparisons.
+
+Normal VESC6.02 boot runs valid stored Lisp; its header flags do not select autostart. Native ADC
+starts before Lisp can qualify input, and watchdog-reset boot skips Lisp. There is no new
+startup throttle interlock. Keep the pedal released until active/correct-direction readiness
+is verified. A long wrong RX level can still qualify at rest; worker failure can hold direction.
+These are material limits of this supervised persistent trial, not a repaired harness or a
+production failover guarantee. The earlier 152-edge forward trace still warrants wiring work.
+
+Removal: stationary/wheels-up, first use the reviewed joined stop and matching-direction raw
+rollback. To prevent future autostart, separately erase only the known filter's Lisp storage
+after exact stored-payload/identity verification; merely stopping the worker does not remove
+saved code. Persistent erase has not been commissioned as a general removal tool. No automatic
+cleanup, retry, fallback or interpreter reset is authorized after an ambiguous response.
+
+The explicit installer refuses nonempty valid stored code and pins the exact pre-install app
+and motor payloads. It is session-specific: native boot offset changes will make its motor
+hash check refuse a later run. Do not weaken pins or rerun it over the installed filter. Portable
+installer/tests and the 14-case autostart interpreter runner are included for review/reproduction.
+All **457 project tests passed across seven suites, zero skipped**, plus 33 core and 14 startup
+interpreter cases. The later owner report of retained direction with slight throttle/coasting
+matches the guard; no settings changed. Latest read-only snapshot again showed active forward,
+raw RX=1, livePID 1507/rest/fault0. Operator instructions: release, stop fully, select direction,
+pause about half a second, then gently apply throttle. No event trace proves that specific
+reported behavior; preserve it as an owner report consistent with the implementation.
+
+## Kart 3 reverse filter — November 11, 2026 (earlier volatile trial 01)
+
+**First bench pass in both directions; not a permanent repair or fleet deployment.**
+After the owner chose the filter trial, they restored the original switch/pull-up, removed
+local jumpers, kept Heltec off and confirmed wheels lifted/pedal released/cutoff accessible.
+The pinned 6.02 controller received 24 acknowledged RAM-only REPL load steps, disarmed on load,
+then one explicit start. No STREAM139, flash/autostart, reset, tune/calibration write, throttle
+override or host motor command was sent. [Exact source, captures and limits](hardware/vesc/kart3/2026-11-11/reverse-filter-trial-01/README.md).
+
+Initial start verification was inconclusive because `:ctxs` omitted PID 1244. That failed
+manifest is retained. No retry/reload occurred. Subsequent at-rest F/R/F observations showed
+applied 0/1/0 and positively listed PID 1244, resolving the uncertainty before motor tests.
+The owner then confirmed **forward worked** and **smooth reverse** using the wired pedal.
+Forward: 304 telemetry replies, 152 raw RX transitions/12,453 samples, ERPM 0..29,491.
+Reverse: 303 replies, zero RX transitions/12,458 samples, ERPM -22,217..+45 (small near-stop
+reading). Every captured fault was zero. Both ended at rest. These are sampled observations,
+not continuous electrical validation; requested <=1s pedal pulses are not proven exact durations.
+
+All 189 motor + 187 app fields match preflight byte-for-byte. Final observation at 17:19:22 UTC:
+**filter running/active, PID 1244 present, forward applied=0, raw RX=1, released-region ADC,
+near-zero ERPM, fault 0**. The owner confirmed forward/pedal released. No further motor test is
+queued. **Filter remains active in RAM, not installed in flash.** Power cycling removes it and
+restores the original raw-input behavior. Do not reload/redefine an active copy. Heltec is off;
+reconnect coexistence has not been validated.
+
+The filter accepts stable RX after 50ms and requires pedal in the <=0.12 zero-demand region,
+|ERPM|<=50 and fault0 for 250ms before changing direction. It retains the last applied direction
+while moving. A stable wrong electrical level can still qualify at rest. A failed/paused worker
+can hold the previous direction while the wired pedal still works: this is a prototype boundary,
+not a production failover design. `stop` joins the filter and **holds direction**, not motor stop;
+explicit matching-RX/stationary rollback is separate and has not yet been exercised on hardware.
+
+Next: review wiring repair and controlled repeat acceptance, then separately validate joined
+stop/rollback, startup/power-cycle behavior and Heltec coexistence before any persistent/fleet
+install. Preserve the existing firmware build, tune and Hall/pedal calibration. The successful
+trial supports filtering as useful mitigation; it does not identify or fix the external fault.
+
+Portable tools: `prepare_rx_filter.py` (offline), `rx_filter_repl_load.py` (fixed disarmed RAM
+load), `rx_filter_control.py` (explicit lifecycle/status), all in `tools/vesc/`. Original capture
+allowlist remains unchanged. The 33 candidate cases pass in the pinned interpreter; loader,
+plan and controller add 40 offline transport/lifecycle tests. See current trial evidence for
+exact source hashes. All **435 project tests passed across seven suites, zero skipped**;
+the baseline decoder verified both signatures and all 376 fields. Offline evidence replay
+matched the independent review exactly. No radio/UI firmware was changed or flashed.
+
+Remote coordination: the final fetch found no changes on origin/v1.5/m5-core2. Eamon’s
+branch has six additional commits through a5a4c22 (items/map and ESP-NOW channel work); those
+are not merged or deployed by this reverse-filter milestone and remain separate integration work.
+
+## Kart 3 local-contact isolation — November 11, 2026 (earlier session 03)
+
+**Original reverse-switch branch is the leading suspect; kart is not yet repaired.**
+With the requested short local setup, closed RX stayed low for 13,428 samples with zero edges;
+open RX stayed high for 13,364 samples with zero edges. With the long branch still disconnected,
+the owner then confirmed **smooth forward** during a supervised wired-throttle check: 13,281
+RX samples, zero edges, 303 telemetry replies, no sampled fault and no negative ERPM. Motor
+returned to rest during the trace. Requested <=1s throttle differed from measured positive-Iq
+sample span (~5.33s); preserve that limit rather than claiming a controlled one-second pulse.
+[Session 03 evidence](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-03-local-contact/README.md).
+
+All 376 motor/app fields were byte-identical from the open precheck through final readback:
+81.7 V, zero ERPM/current, fault zero. No host motor, configuration, input-override, flash, reset
+or calibration command was sent. **Filter remains uninstalled.** Power off was requested before
+further wiring; not yet independently or explicitly confirmed. Heltec was off; last requested
+wiring leaves RX open and long switch branch disconnected. Do not treat this as a drive-ready
+vehicle or infer power isolation from USB presence/absence.
+
+Next inspect/repair or separately substitute the removed branch: switch contacts, crimps,
+paired RX/signal-ground return, pull-up placement and noise pickup. Preserve throttle ground,
+Hall/pedal calibration and tune. The successful isolation does not identify one failed part
+or establish fleet reliability. Recheck input stability and guarded operation after repair.
+
+All **395 project tests passed in seven suites, zero skipped**; 29 pinned Lisp interpreter
+mock cases passed separately. Baseline decoder verified both signatures and all 376 fields.
+This validates host tooling/offline candidate, not a commissioned reverse filter.
+
+## Kart 3 reverse instability — November 11, 2026 (earlier session 02)
+
+**Stop motor testing. Owner confirmed VESC OFF; Heltec is also off.** After reconnecting the
+switch harness, direct snapshots showed RX=0 in reverse and RX=1 in forward. A supervised wired-
+throttle reverse attempt worked without changing the tune. The subsequent forward recording
+captured **861 RX transitions / 13,208 samples / 30 seconds**, with the owner reporting backward
+stuttering, forward motion or no motion. A 384-transition burst occurred while all 28 captured
+speed readings were zero. Every sampled fault was zero. This establishes observed GPIO
+instability, not its electrical cause or a repaired kart.
+[Evidence, timing and measurement corrections](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-02-held-state/README.md).
+
+**Next:** with all power removed, isolate only the long reverse-switch branch and use a short
+known-good local contact from confirmed RX to VESC signal GND. Preserve the throttle and its
+signal ground; no isolated ground is required. Verify the pull-up remains between RX and the
+VESC's 3.3 V on the controller side. Do not guess connector orientation: the owner requested
+help identifying contacts. Then reconnect USB/power for a fresh supervised, pedal-released input
+capture: held open should remain high; held closed should remain low. No throttle test is queued.
+USB enumeration is observable by the host, but does not prove battery isolation; the owner
+must confirm power removal before wiring. Do not move bare jumpers while powered.
+
+**Filter remains uninstalled and deferred until that isolation check.** A 50 ms software filter
+can still accept an erroneous level held long enough. The offline candidate now uses a 0.12
+release guard below the unchanged native 0.15 deadband; all 29 pinned-interpreter mock cases pass
+at 2,464 cons cells. This does not establish electrical reliability, MCU timing or permanent
+installation readiness. The reviewed stock stream path has partial-evaluation/lifecycle and
+buffer-timeout concerns; no live loader has been commissioned.
+
+No host motor, tune, calibration, input override, flash or reset command was sent in session 02.
+Owner power cycling restored saved scale 1.0 / ERPM +/-150000 from prior runtime NORMAL limits;
+all application fields matched. A fixed terminal `faults` read reported no faults since startup.
+The portable pin snapshot initially rejected valid LispBM `{float}` text: its failure manifest
+is retained, and the host parser now accepts balanced braces with a real-packet regression case.
+Current fixed snapshot tests: 24 passing. Do not mislabel that parser failure as a bad VESC reply.
+
+## Kart 3 live reverse-input observation — November 11, 2026 (earlier session 01)
+
+**Observed:** with Heltec off, the fixed read-only 30-second monitor completed with **13,415
+samples, zero RX transitions, RX high throughout**. The owner confirms selecting reverse during
+that recording. No voltage measurement is available yet. This is not evidence that debounce
+will solve the fault; first verify the actual RX contact/connector/signal-ground path.
+[Complete evidence](hardware/vesc/kart3/2026-11-11/reverse-diagnostic-01/README.md).
+
+The owner freshly confirmed wheels lifted, pedal released and access to the cutoff. UUID and
+6.02 `no_hw_limits` match kart 3; initial 82.0 V, zero ERPM/current, fault 0. Active limits match
+NORMAL. All 376 settings were captured before and after and **match exactly within this
+session**. Throttle, reverse configuration, tune and calibration were not written. Final capture:
+81.9 V, zero ERPM/current, fault 0; tachometer counts unchanged. No motor command was sent.
+
+Stored Lisp read exposed no valid blob. Fixed `:ctxs` reported no running/blocked/sleeping
+contexts; this initialized Lisp as needed without starting stored code. The first monitor pass
+returned no USB text/completion. Source review found asynchronous prints use the most recent
+command interface, so concurrent Heltec BLE polling can divert them. We inspected contexts
+(empty), then the owner powered off Heltec before a deliberate second observation. That second
+pass completed normally. Preserve the first pass as **unknown**, not a successful sample.
+
+The native ADC reverse path and Lisp `pin-rx` both map to PB11 in the pinned source; permanent
+NRF/BLE UART RX is PC11. This is firmware mapping, not verification of the physical connector.
+The released pedal reports about 9% **before** its unchanged 15% native deadband, so native
+throttle demand remains zero. The candidate's provisional 1% release guard would refuse to arm.
+Do not alter pedal calibration/tune to accommodate the candidate; it remains unloaded/disabled
+until electrical diagnosis and an appropriate measured release guard are resolved.
+
+New portable host helper: `tools/vesc/rx_probe.py`, fixed `--inspect` or the SHA-pinned read-only
+monitor with explicit ownership review; identity/firmware pin, bounded capture, no generic eval,
+no uncertain-send retry. Eighteen new offline cases cover framing, gates, capture limits and
+completion/context evidence. The actual sender used is archived with the live evidence.
+Validation passed **389 tests across all seven project suites, zero skipped**, including all
+18 new sender cases; baseline decode also verified both signatures and all 376 fields.
+
+**Next:** owner was asked for DC voltage RX→VESC signal GND with reverse held. Expected closed
+contact is near 0 V. No measurement has arrived yet. Heltec remains off at the last confirmation;
+VESC is powered for that check. No firmware, reverse wiring, input override or tune change was
+made. Do not activate the staged filter or assume the kart is repaired.
+
+## Reverse input: offline preparation for November 11 — 2026-11-10 (earlier)
+
+The owner is at home and cannot test hardware until tomorrow. No controller/ATOM was connected
+for this preparation, and nothing was flashed, reset, configured or driven. Existing Core2,
+Heltec, VESC tune and commissioned modes below are unchanged. The immediate next step supersedes
+buying/building a conditioner: [use the existing VESC to observe RX](firmware/vesc-lisp/reverse-input/README.md)
+before choosing a filter. No ATOM identity, CAN interface or wiring change is needed for that check.
+
+Kart 3 already reports **6.02 / 75_300_R2 / no_hw_limits**, UUID
+`37004e000951343037353739`; the November 10 capture recorded **82.1 V, fault 0**.
+Flipsky's documented default-build 72 V limit does not mean that this installed build needs
+replacement. The confirmed 75100 Pro V2.0 is rated to 84 V; its 90 V software setting does not
+raise that hardware rating. Preserve the current firmware and all calibration/tune settings.
+
+New offline artifacts:
+
+- `tools/vesc/read_lisp.py`: separate UUID-pinned 6.02 stored-code reader, commands **0 and 130
+  only**, 256-byte chunks, CRC-checked responses and retained partial evidence. It leaves
+  `capture.py`'s allowlist unchanged. The code blob excludes the flash size/CRC/flags header;
+  runtime/autostart remain unknown and an empty result does not prove blank flash or no active
+  overrides. Capture current identity/configuration and inspect existing script ownership first.
+- `rx-monitor-compact.repl`: bounded 30-second read-only GPIO/ADC/ERPM/fault observation;
+  **405-byte framed payload** fits the stock 512-byte limit. It neither changes GPIO mode nor
+  detaches/overrides inputs. Reports about once per second; nominal 2 ms sampling cannot rule
+  out faster glitches. REPL evaluation may initialize Lisp if it was not running.
+- `rx-filter-candidate.lisp`: **definitions only, disarmed and not installed**. Native throttle
+  remains active. Stable RX plus released pedal/rest/fault-free conditions qualify a direction
+  change; long sample gaps invalidate qualification. Stop joins the worker but holds its last
+  C-side direction; explicit at-rest rollback reattaches physical RX only when it agrees.
+  A full controller reset returns to raw input. Unknown live scripts/overrides must be resolved
+  before a trial. This is not a permanent solution or proof of the fault's cause.
+- The detailed monitor and candidate exceed a single REPL packet. A reviewed volatile stream
+  loader using `restart=0` is still needed before those larger files can be tested; none is
+  supplied in this milestone. Do not use flash upload or interpreter reset as a shortcut.
+
+Validation: **371 project tests, seven suites, zero skipped**, including 15 new stored-code
+reader cases; offline baseline decode verified both schemas/all 376 fields. The three staged
+Lisp files passed **22/22 mocked cases** in the interpreter vendored in pinned 6.02 source,
+with 2,464 cons cells. Tests were independently reviewed/rerun and reproduced from the saved
+project files. [Reproduction and limitations](firmware/vesc-lisp/reverse-input/tests/README.md).
+The host's remaining memory pools, timing and hardware extensions differ from the MCU. No
+physical filter, API availability, voltage margin or reverse operation has been accepted yet.
+
+Tomorrow: fresh operator readiness, VESC USB data connection, existing **ADC1 throttle / RX
+switch to signal GND / approximately 10 kΩ RX→3.3 V pull-up** unchanged. Back up fresh state,
+then hold forward/reverse/forward for roughly ten seconds each with pedal released during the
+monitor. Measure high/low voltage as well. Stable RX during failed reverse redirects diagnosis
+away from debounce; the original fault predates the tune. The separate hardware conditioner
+and zero-braking-limit hypothesis below remain proposals, not findings.
+
+This milestone does not integrate or deploy unrelated Eamon updates; last integrated remains
+`a9c8459`. Continue to reconcile newer upstream work separately without overwriting collaborators.
+
+## Kart 3 M5 modes commissioned; two additional M5 karts planned — 2026-11-10 (installed state)
+
+**Working hardware:** matching Core2 `m5-espnow` and Heltec `kart-m5-espnow` from source
+`4a582f0` are installed. Each segmented USB upload verified four segments and preserved NVS.
+Heltec application SHA-256: `11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2`.
+Core2 application SHA-256: `996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a`.
+Heltec reports `writes:true`, correct UUID and validated limits; Core2 reports `mode_ready:true`.
+Both ESP-NOW peers have driver/received/advertised channel 6 and authenticated alignment.
+The ceiling record was learned from a clean configuration read, without writing on boot.
+Speed calibration remains **2.48**. Initial telemetry/OTA evidence remains in the historical sections.
+
+**Operator acceptance:** hold a mode button for at least 650 ms, then release. ECO, NORMAL and
+SPORT each produced confirmed VESC readbacks: current scales **0.50 / 0.75 / 1.00** and positive
+ERPM caps **21661 / 36102 / 150000**. The operator exercised the wired throttle with wheels lifted;
+rotation was recorded and sampled fault codes were all zero. Final captured state was confirmed
+SPORT, zero ERPM. These are bench observations, not measured road speeds or braking acceptance.
+No motor-actuation command, app write or additional persistent tune write was sent in this session.
+[Sanitized commissioning evidence](hardware/m5/2026-11-10-kart3/mode-commissioning/README.md).
+
+The full existing pit command implementation is enabled. Periodic LoRa `rate 1` broadcasts were
+seen, but separate pit-mode/STOP/SLOW/BOOST/race checks remain open. RF range, eight-kart load,
+vehicle-level link-loss acceptance, VESC power-cycle persistence and road testing remain open.
+Do not equate compile/host-test success with those hardware checks.
+
+**Source ahead of installed Core2:** a small busy-radio notice tells the driver to release and
+hold again if a request cannot be sent. It never queues or replays the held gesture. All three
+Core2 variants compile; candidate wireless SHA-256
+`35162e477bf917464b88840378913ced7ecab43bed83b333810b4cfba6901df1` is built but **not installed**.
+The working installed `996c4387…` image was left in place after the owner confirmed all modes work.
+Full offline checks passed **356 tests / seven suites / zero skipped** including the new touch
+regression. Test-only mock naming is portable across Clang/GCC; production code was independently reviewed.
+
+**Newest upstream integrated:** `a9c8459` supersedes the `705bd91` full browser restyle:
+Eamon restored the original Pi/pit layout while retaining Hunter’s SoNo artwork behind the kart
+MAP/SAT toggle. FOLLOW driving-camera behavior and this branch’s roulette cancellation/suppression
+fixes remain intact. This changes browser presentation and illustrative assets, not Heltec firmware,
+LoRa/ESP-NOW contracts or the native Core2 UI. No shared Pi/pit deployment or additional board
+flash was performed here. The SoNo demo is not a surveyed Manresa course.
+
+**Next two karts:** subsequently assigned IDs **4 and 5** on November 11; **1 and 2
+remain Eamon’s test karts**. See the latest section and [replication guide](docs/kart4-kart5-replication.md). Use the same firmware architecture, with unique fleet IDs, physical BLE MAC/VESC UUID
+pins, ESP-NOW peers/private pair keys and OTA credentials. Capture each VESC before tuning and
+preserve that unit’s Hall, pedal and electrical calibration. Never clone another unit’s NVS or
+whole VESC configuration. [Bring-up procedure](firmware/m5-core2/BRINGUP.md).
+
+**Reverse investigation:** latest owner correction is **throttle ADC1; reverse RX**, using a
+maintained mechanical switch to VESC signal GND and a believed **10 kΩ pull-up RX→3.3 V**.
+It remains intermittent even from a complete stop with the pedal released. The owner confirms
+this predates the November 10 tune, so that tune did not introduce the original fault. RX is the expected
+pin for the unchanged ADC / Current Reverse Button configuration; the former TX diagnosis is
+superseded. Measure RX high/low stability and inspect switch/harness/ground before choosing a
+filter or changing ADC settings. Resistor placement and measured levels remain unknown.
+[Current reverse notes](docs/reverse-input.md). No reverse-related setting or wiring change was made.
+Stock-source review also found a testable interaction between the zero braking limit and FOC
+direction-dependent limiting: about 0.05 A may be available during part of a reverse transition.
+This is a secondary hypothesis for present behavior, not the origin of the pre-existing symptom
+or a measured cause. Prioritize electrical/input checks; no additional tune or motor test was performed.
+
+## Reverse conditioner design and sourcing — 2026-11-10 (proposed only)
+
+Owner confirms kart 3 is **Flipsky 75100 Pro V2.0**, the reverse fault spans eight karts/two
+switch types, and the supplied Nilight SPST switch's **LED is unused**. The shared firmware
+name `75_300_R2` is documented by Flipsky; it is not sufficient evidence of a firmware mismatch.
+[Updated investigation](docs/reverse-input.md).
+
+The [prototype guide](docs/reverse-input/prototype-v1/README.md) supplies a per-kart BOM,
+exact IC wiring and an SVG/PNG diagram for a regulated 5 V optocoupler switch loop, MAX6817
+hardware debounce and 3.3 V PPM output. Build/test one before considering the fleet. ADC+UART
+would select PPM reverse; kart 3 is still ADC/RX and no app/calibration/hardware change was made.
+The design is not an interlock or a verified reliability fix. A generic Amazon optocoupler
+module is only a candidate substitute for the input stage, not an established debounce board.
+
+The owner asked whether the Heltec could replace the debounce chip. It could, but its reset
+can release reverse; existing BLE/GPS operations also block the main loop. A separate task and
+resolved reset/maintenance behavior would be needed. Core2/ESP-NOW is not proposed in the
+direction-control path. The standing no-driving-state-change-on-accessory-loss policy remains.
+
+Fetched Eamon's branch through `a5a4c22` while preparing these docs. The newer carried-item and
+ESP-NOW reconnect changes are **not integrated in this documentation milestone**; the last
+integrated upstream remains `a9c8459`. Review them as the next M5 software task. No board was
+flashed or controller commanded for this design/sourcing work.
+
+Diagram polarity/pins were independently reviewed and the PNG visually checked. Offline checks
+passed **356 tests / seven suites / zero skipped**; JSON parsing and whitespace checks passed.
+These checks do not validate the physical conditioner.
+
+## Earlier checkpoint: complete capture, tune preparation and upstream integration — 2026-11-10
+
+**Accessory checkpoint is unchanged:** Core2 live telemetry + authenticated OTA and Heltec
+`kart-m5-espnow-readonly`. **VESC tune trial applied** at 19:58:55 UTC to UUID
+**37004e000951343037353739** / 6.02 / 75_300_R2, with one persistent SET_MCCONF (13), exact ACK
+and all 376 fields read back. Exactly 12 motor settings/23 bytes changed; every other motor byte
+and all application bytes were preserved. No motor actuation command, reset/detection, firmware
+write or new accessory deployment occurred. Runtime readback is verified; power-cycle persistence
+and driving behavior are not. [Applied evidence](hardware/vesc/kart3/2026-11-10/tune-applied-v1/README.md).
+
+**Owner scope:** M5 modes plus full existing Eamon pit controls (STOP/START, SLOW/BOOST/RACE/game).
+The owner subsequently requested a Desktop backup and a trial tune preserving Hall/pedal and all
+calibration while matching the shared driving tune. They confirmed wheels lifted, pedals released
+and access to the cutoff. The VESC disappeared from macOS USB after the first capture; two subsequent attempts failed
+before opening a device. It then reconnected on the same port. A fresh full snapshot in
+`usb-prewrite-connected/` matches all 376 original settings, 82.1 V, 0 ERPM/current, fault 0.
+Do not describe failed attempts as backups.
+At this earlier checkpoint the owner reported the reverse switch on TX. They subsequently corrected
+it to **RX**, with a maintained mechanical switch to VESC signal GND and an approximately 10 kΩ
+pull-up to 3.3 V. Intermittent reverse remains unresolved; [current investigation](docs/reverse-input.md).
+All input configuration/calibration remains unchanged.
+
+**Actual complete USB capture:** November 10, 19:28:31 UTC, `/dev/cu.usbmodem3041`, four CRC-valid
+replies, all **189 motor + 187 app settings**. Compared with the dated November 5 kart-2 reference:
+**326 equal, 50 different (40 motor / 10 app)**. All fields have a review disposition. Snapshot:
+82.1 V, 0 ERPM/current, fault 0, ESC 19.1 C. Kart 3 is still configured as NTC despite the unwired
+motor-temperature sensor; raw -95.4 C is unusable. Motor braking is -50 A versus baseline 0 A;
+battery regen -12 A versus -100 A; field weakening 15 A versus 95 A. Those are **pre-tune** values.
+The later trial sets motor/braking/battery currents 140/0/100 A, ERPM ±150000, duty 0.95, field
+weakening 95 A/start 0.87, open-loop 700/sensorless 4000 ERPM, DC/BLDC ramp 0.04, sensor Disabled.
+Battery-charge limit -12 A, absolute current 220 A, minimum VIN 60 V, Hall/pedal/motor electrical
+calibration, identity, phase filters, drivetrain metadata and every app setting remain unchanged.
+[Evidence](hardware/vesc/kart3/2026-11-10/usb-before-tune/README.md),
+[complete comparison and review](docs/kart3-tune-comparison.md).
+
+**Desktop backup:** `/Users/cofo/Desktop/GoKart Control - Kart 3 Backup - 2026-11-10/`, explicitly
+requested by the owner. Raw/decoded settings, manifests, review and verified schema were copied and
+all 17 bundled files hash-verified. This is a complete runtime settings reference, not a firmware
+image or verified saved-flash snapshot. Do not silently import another controller's calibration.
+
+**Latest upstream integrated:** Eamon's `3178a10`, including delayed freeplay item prizes and the
+one-second NEW LAP hold. Integration review found that collected-box removal discarded the delayed
+prize, and a delayed boost could override mud entered during the spin. The fixes retain earned prizes
+across same-course box removal/respawn, cancel them on operator/game/course/session/link boundaries,
+recheck freshness/mud at send, and prevent staged commands from crossing an interrupted generation.
+The roulette now shows CANCELED and cancels its sound when suppressed. This is Pi game source;
+M5 game/roulette parity remains outside the initial v1.5 display scope. Shared pit/Pi deployments
+were not performed. Eamon's prior notes on speedcal 2.48, 54-byte game telemetry requiring
+base/repeater 0.2.2 and STOP-during-BLE-loss remain applicable; neither shared radio was flashed here.
+
+**Prepared control target:** `kart-m5-espnow` keeps temporary `store=0` supervisory writes, fresh
+complete UUID/config proof, atomic per-controller ceiling records, a 500 ms configuration poll and
+1000 ms maximum config age. It preserves current untouched duty/watt/braking-scale fields, rejects
+invalid/above-ceiling commands before state changes, makes STOP ramps monotonic, clears pending
+verification/ramp/duration state on link changes, and never replays commands on reconnect.
+A fresh clean baseline read is required; the legacy split-key cache is not imported. Intentional
+retuning requires deliberate ceiling reconciliation. No refreshed target has been installed or
+physically accepted. Existing STOP/coast and the unloaded optional brake script remain distinct.
+
+**ESP-NOW channel fix prepared:** authenticated private v1 line records carry the Heltec's actual
+channel, a rotating challenge and a grant bound to the current Core2 boot. Core2 must retune and
+receive fresh proof on that same channel; Heltec independently checks proof before releasing a
+request. Maintenance/association/scanning/in-flight TX block retuning, and channel/session changes
+invalidate queued grants/commands. Status exposes driver, received and advertised channels separately.
+Old firmware retains telemetry but controls require both updated peers. This addresses the observed
+Heltec channel 6/Core2 channel 5 acquisition issue in source; actual paired-channel recovery, range
+and command delivery still require the supervised hardware test.
+
+**Validation:** all nine affected firmware targets compile. Full-control image SHA-256 is
+`11e556e8d525632916f9ef05ac12e8f3f4346ed70f0adfbd6a3ecc3aa08821f2`; prepared wireless read-only
+Heltec is `65b28cb9595f4e645afb3aabf5811e7f26136ff4defa4a593795ce6aa1568052`; prepared Core2
+is `996c4387cb51a16286e89760ac035aa421bfbede608a8f56092f2a319cec9b0a`. These are not installed
+image hashes. Logs are ignored under `firmware/build/review-channel-20261110/`. Game core passes
+133 tests; three native RF suites pass with ASan/UBSan; prepare/apply guards have focused fake-serial
+tests and independent review. Final `tools/run_tests.sh` completed **355 tests across all seven
+suites, zero skipped, ALL PASSED** (56 VESC / 74 pit core / 7 pit e2e / 133 kart core / 9 mapsync /
+18 kart e2e / 58 firmware). All changed documentation links resolve and `git diff --check` is clean.
+Software tests do not establish physical braking, direction, speed calibration, RF range or driving acceptance.
+
+**Rollback retained:** exact installed Heltec `heltec-working-readonly-f55e3e53.bin` and Core2
+`core2-working-ota-c090ce15.bin`, read back and hash-matched, plus original full-flash backups and
+private pairing/OTA credentials under ignored `firmware/build/bench-private/20261110-120545/`.
+No key/password is in Git. The next section records that earlier installed checkpoint in detail.
+
+## Earlier checkpoint: kart 3 live telemetry and Core2 OTA — 2026-11-10
+
+**Working on hardware:** encrypted ESP-NOW carries real kart 3 VESC telemetry to the Core2.
+The owner confirms both DASH/MAP tabs work and live battery/connection readings are visible.
+No jumper wires or SD card are required. Core2 accepted an authenticated Wi-Fi application update,
+restarted with credentials retained and its update window off, and recovered live ESP-NOW data.
+Hold the top status bar for 1.8 seconds, then ENABLE UPDATES, for a ten-minute maintenance window;
+USB `ota on/off/status` is also available. See the [OTA guide](firmware/m5-core2/README.md#core2-maintenance-and-ota).
+The hardware upload used USB to open that window; the touch maintenance flow still needs an owner check.
+
+**Corrected controller assignment:** the copied historical VESC pin belonged to kart 2.
+Eamon's latest `fc7e610` identifies that ownership; the owner confirmed this kart has a different VESC.
+Removed the copied pins and commissioned kart 3 read-only with MAC **f7:bd:23:cc:62:0e**,
+UUID **37004e000951343037353739**, hardware **75_300_R2**, firmware **6.02**.
+Saved pins survived accessory restart and freshly matched the connected controller. Do not reuse the
+original 6.00 / 75_100_V2 baseline configuration/schema for this controller without verifying compatibility.
+Runtime observations: 82.3–82.4 V, zero ERPM/current, ESC about 17.4 C, fault 0; reported motor current
+limit 120 A and battery current limit 90 A. These are reads, not changed settings or complete backups.
+Motor-temperature sensors remain unwired; ESC temperature is not motor temperature.
+
+**Installed images:** Core2 `m5-espnow` application SHA-256
+`c090ce154e457343b4ab7b99ef39fd4b996fb826c23dc242543ea47d21c4cb63`;
+Heltec `kart-m5-espnow-readonly` / kart 0.2.7 application SHA-256
+`f55e3e53fe7c36cb0aa64371de528d9d1ac6d1f416b0b9bf3cdce68d7054453e`.
+Both segmented USB uploads hash-verified four segments and preserved NVS. Core2 also received the same
+application through the official pinned uploader with password authentication and an explicit success ACK.
+Private rollback images, captures and Core2 update credentials are under ignored
+`firmware/build/bench-private/20261110-120545/`; ESP-NOW recovery keys are under ignored
+`firmware/build/bench-private/espnow-pair-20261110T174439Z/`. Never commit these private files.
+Heltec `gokart-3.local:3232` advertised `auth_upload=yes`; its OTA transfer is not yet hardware-tested here.
+
+**Mode selection remains disabled:** `ENABLE_VESC_WRITES=0` is installed, so the M5 correctly reports
+`mode_ready:false`. The owner has now reported wanting to select modes; the next task is guarded M5 mode
+enablement, including fresh UUID/baseline association, rather than silently enabling all pit/game writes.
+No motor command, VESC settings/firmware change, automated profile restore or motor test occurred.
+
+**Shared source:** merged Eamon's `fc7e610` (kart 0.2.7 wrong-UUID disconnect). Fixed its UART-only
+compile regression by guarding the BLE rejection reset. The wrong-UUID fix does not protect two boards
+configured with the same MAC *and* UUID: unique physical assignments are still required.
+All seven offline suites pass: **276 tests, zero skipped**. Eight affected targets compile: `m5`,
+`m5-demo`, `m5-espnow`, `kart`, `kart-uart`, `kart-m5`, `kart-m5-readonly`, `kart-m5-espnow-readonly`.
+No LoRa packet format or radio rate changed. Base/repeater sources are unchanged from the earlier passing builds.
+
+[Sanitized evidence](hardware/m5/2026-11-10-kart3/README.md) includes application hashes and readbacks.
+Observed ESP-NOW drops/expiry mean no lossless claim. Eight-kart RF load, physical wrong-key/tamper tests,
+prolonged soak and driving acceptance remain open. Native framing/config checks use ASan/UBSan.
+Opening USB diagnostics can reset these accessories; those resets were tooling-induced, not a VESC reset.
+
+The sections below are historical checkpoints, superseded by the current status above.
+
+## Kart 3 M5 wireless commissioning — 2026-11-10
+
+**Owner changes:** the newly connected Heltec is **kart 3**, superseding the earlier kart-1
+assignment for this board. Use paired ESP-NOW between Heltec and Core2; retain UART as an
+option. Eamon stays kart 2. No SD card or jumper wiring is installed. Neither is required for
+wireless dashboard telemetry/direct peer GPS positions. A base is optional for those functions;
+central pit/race control still uses the base.
+
+**Accessory programming observed:** both boards have complete private 16 MiB rollback images
+under ignored `firmware/build/bench-private/20261110-120545/`. Do not publish raw flash, keys,
+credentials or private serial captures. The connected Heltec initially emitted factory I/O-test
+text and had no GoKart namespace; it was not assumed to contain the older development firmware.
+Segmented uploads preserved NVS. Core2 `m5-demo` and `m5`, and Heltec `kart-m5-readonly`, were
+uploaded from source `2fd0359` with all four written segments hash-verified per upload. Kart 3,
+known VESC MAC/UUID pins and private Wi-Fi/OTA settings were saved and read back after reboot.
+
+**Observed Heltec:** `kart-0.2.6`, BLE transport, `writes:false`, LoRa radio OK, GPS serial data
+at 9600 baud with no position fix. A 30-second USB capture contained 60 self reports with median
+0.500-second spacing. Wi-Fi joined and `gokart-3.local` resolved to its reported address; an
+actual OTA firmware transfer has not been tested. One cumulative malformed LoRa receive was
+reported, so this is not evidence of zero RF loss. The owner reports seeing kart 3 in the pit.
+Pit/control rejection is expected: all VESC writes are disabled and the VESC remains off.
+
+**Touch:** owner reported the original small tabs did not switch. A temporary standalone
+four-box diagnostic captured all four presses with matching raw/display coordinates and
+working IRQ39; the owner confirmed its boxes responded. Production tabs are now 40 pixels
+high and outlined, sharing drawing/hit bounds. Final dashboard touch confirmation remains
+pending. The temporary diagnostic is ignored build output, not production functionality.
+
+**Wireless implementation:** `m5-espnow` + `kart-m5-espnow-readonly` retain the same M5 JSON and
+LoRa contracts. Pairing uses private independently generated LMK/PMK, pinned MACs, encrypted
+unicast plus fragment authentication, bounded buffers/age, and channel recovery. No wireless
+text reaches the USB console, no reconnect commands are replayed, and write-enabled wireless
+compilation is refused for this first milestone. See [M5 guide](firmware/m5-core2/README.md),
+[bring-up](firmware/m5-core2/BRINGUP.md) and [transport](firmware/libraries/M5EspNowLink/README.md).
+The USB pairing tool stores its recovery keys privately before either board's NVS is changed.
+Pairing is atomic per board, not across the two boards.
+
+**Validation:** all seven offline suites pass: 269 tests, zero skipped. All ten targets
+compile: `m5`, `m5-demo`, `m5-espnow`, `kart-m5`, `kart-m5-readonly`,
+`kart-m5-espnow-readonly`, `kart`, `kart-uart`, `base`, `repeater`. The final receive-time/queue
+fix was followed by both wireless builds and all 30 firmware tests again. Native framing,
+malformed-packet and pairing-corruption checks use ASan/UBSan. HMAC wrong-key/tamper injection
+and physical radio behavior remain separate acceptance work.
+
+**Current acceptance boundary:** wireless source/build checks are complete;
+new wireless images and pairing have not yet been recorded as installed in this checkpoint.
+The larger final tabs, actual Heltec/Core2 wireless reception, VESC BLE telemetry, outdoor GPS,
+RF coexistence, channel/loss recovery, eight-kart load and actual OTA upload need hardware
+results. No motor test, VESC configuration change or write-capable deployment was performed.
+
+The following integration section records the state before these accessory programming steps.
+
+## M5 first telemetry integration — 2026-11-10
+
+**Latest upstream:** merged Eamon's `b48c5ad` into `v1.5/m5-core2` without changing his
+branch. Today's changes are kart **0.2.6** remembered controller baselines / readback retry
+(`83e7dc2`) and the local map development kit (`b48c5ad`). The merge also includes his
+post-sync work from last night: timed SLOW, multiplayer FREEPLAY, pit map editing and Pi Wi-Fi
+recovery. The existing M5 display scope remains telemetry, mode requests and the simple map;
+it ignores game-only fields and does not host, join or attack a multiplayer session.
+
+**First hardware target:** `m5-demo`, then `m5` + **`kart-m5-readonly`**, kart **1**.
+The read-only flag still gates temporary VESC limits and custom-app braking, including game
+hits and timed effects. The baseline fix reads VESC state and may save baseline metadata in
+**Heltec NVS**; it does not restore settings to the VESC on boot/reconnect. Retain each board's
+full private backup before flashing. Do not use the upstream write-enabled release image for
+this first test. Keep the VESC powered off until the old M5 BLE app has been replaced.
+
+**Compatibility:** upstream telemetry now supports 46/47/54-byte radio frames, with the kart
+still sending 47 bytes while no game fields are active. Active multiplayer needs updated
+base/repeater firmware (0.2.2). M5's existing parser ignores the new fields; merged emitters
+retain the larger 700-byte fleet / 940-byte self buffers and both UART mirror calls. Tests cover all three packet lengths and the larger JSON payloads. Wide-value test reports
+fit at 644/700 bytes for fleet and 781/940 bytes for self plus extras.
+
+**Validation:** all seven offline suites pass: **267 tests, zero skipped**. All eight targets
+compile on ESP32 core 3.3.8: `m5-demo`, `m5`, `kart-m5-readonly`, `kart-m5`, `kart`, `kart-uart`,
+`base`, `repeater`. The 600-second virtual eight-kart run processes 11,170 frames / 6,079,844
+bytes; peak scheduled burst 5,310 bytes/500 ms is 46.1% of ideal UART capacity, not measured
+hardware throughput. Read-only build options explicitly include `-DENABLE_VESC_WRITES=0`.
+Whitespace checks pass. The temporary toolchain had been partially cleaned overnight and was
+restored to the same pinned compiler/library versions before these builds.
+
+**Hardware status:** no USB boards were enumerated at the latest check; the owner is connecting
+them. No hardware upload or VESC command has been issued in this session. The next step is
+identify the explicit Core2/Heltec ports, retain private full-flash backups, then install the
+Core2 demo and the read-only telemetry pair. The boards can be programmed separately by USB;
+the three-wire link is needed for live telemetry. Keep the VESC off until the old Core2 BLE
+app is replaced, then turn it on for telemetry only.
+
+**Before a later write-capable deployment:** harden Eamon's remembered-baseline association.
+The current cache path can use a retained UUID before a fresh identity reply, and the separate
+NVS UUID/float writes are not an atomic record. Require fresh matched controller identity and
+a validated atomic record (or invalidation until all fields are saved). This does not defeat
+the compile-time VESC write gate in today's telemetry-only build. Coordinate the change with
+Eamon before commissioning mode writes; do not label a cached RAM baseline a saved VESC backup.
+
+The 2026-11-09 sections below describe the previous tested milestone and remain historical.
+
+## M5 v1.5 milestone — 2026-11-09
+
+**Branch:** `v1.5/m5-core2`, based on Eamon's `8d9c41c` (including his 0.2.3 speed
+calibration, Pi changes and new Pi-only FREEPLAY feature). Worktree is `.worktrees/m5-v1.5`
+in Colin's canonical project; his integration checkout and untracked CAD work are untouched.
+This milestone adds the display option requested by the owner; it does not merge or deploy either branch.
+
+**Implemented:** `firmware/m5-core2` has a 320x240 Core2 dashboard, GPS MPH, electrical/ESC
+telemetry, mode requests with pending/confirmed/unknown outcomes, and a simple eight-kart
+north-up map. Optional SD course outlines export from the existing pit `zones.json`.
+The normal M5 build has no BLE/VESC client. `m5-demo` generates labeled synthetic data and
+never initializes the control UART. Full details: [M5 README](firmware/m5-core2/README.md).
+
+**Compatibility:** opt-in `kart-m5` / `kart-m5-readonly` builds add a dedicated 230400-baud
+UART2 bridge on Heltec G47 TX / G48 RX. Normal Pi firmware paths are unchanged. No LoRa
+wire format, slots/rates, base firmware, pit API, motor profiles, calibration or field-
+weakening values were changed. Metadata supplies caps/calibration from the Heltec at runtime.
+M5 requests use driver source 0xFE, so they do not release pit SLOW. A pinned UUID is required;
+STOP/GRID/busy/OTA/baseline-suspect requests are rejected, not deferred. CRC, short-lived
+single-use tokens and bounded line processing protect the local request path. These tokens
+expire requests only; they never alter the running VESC on communication loss.
+
+**Bench preparation (2026-11-09):** owner confirmed **Core2 v1.3 / K010-V13** and plans wiring
+on **2026-11-10**. [First-session guide](firmware/m5-core2/BRINGUP.md) covers the exact cable,
+build targets, expected results, identity checks and a troubleshooting/results checklist.
+An eight-point shop outline is exported locally to ignored `firmware/build/m5-bringup/course.json`
+for an SD test; it is not Manresa course data. The exporter reproduces it from the shared pit track.
+
+**Pre-bench fixes:** Heltec publishes new mode-token metadata immediately after rotation or a
+readiness/link-session change, avoiding the old wait until the next periodic report. An expired
+in-flight frame can still become unknown; requests are never replayed. The display preserves
+reported GPS age instead of renewing an old fix on receipt (including own precise millisecond age).
+Periodic telemetry/metadata is **2 Hz**, screen redraw **5 Hz**; no radio or VESC polling rate changed.
+
+**Host simulation:** 600 virtual seconds, eight karts, 11,170 frames / 5,224,444 bytes, including
+cable/GPS/peer loss, corrupt lines, late acknowledgements and restart recovery. Peak scheduled
+burst 4,582 bytes per 500 ms is 39.8% of ideal 230400-baud 8N1 capacity. This is encoding/parser
+and state validation, not physical latency/buffering evidence: a fully simultaneous burst exceeds
+the Heltec's 4096-byte TX ring, so hardware burst/drop behavior remains part of commissioning.
+
+**Validation:** all seven offline suites pass (236 tests, zero skipped), including five M5 host
+checks with the original 162 C++ assertions plus stream/recovery/GPS-age scenarios under
+address/undefined-behavior sanitizers. All six affected targets compile with ESP32 core 3.3.8:
+`m5`, `m5-demo`, `kart-m5`,
+`kart-m5-readonly`, `kart`, `kart-uart`. `git diff --check` passes. These are host/build
+results; physical acceptance is still pending.
+**Hardware:** no M5, Heltec, VESC, pit or repeater has been flashed, commanded or rewired in
+this milestone. Wiring/power, actual UART throughput, screen/touch/SD behavior, real radio
+interoperability and mode readback remain pending. The first hardware path is M5 demo,
+then `m5` + `kart-m5-readonly`; see the ordered checklist in the M5 guide.
+
+**Collaboration:** changes concentrate in `firmware/m5-core2`, `M5DisplayLink`, an optional
+adapter in the shared kart sketch, build targets and tests. Integrate this focused diff into
+Eamon's active branch through its draft PR; no changes are pushed directly onto his branch.
+Older handoff sections below include historical/reported state and unresolved document drift.
+In particular, they do not prove Colin's installed read-only telemetry image was upgraded.
+Colin's PR #4 integration safeguards and Eamon's current write/OTA policy still need separate
+reconciliation; M5 source compatibility is not field validation of those policies.
+
+**Future tuning direction (owner, 2026-11-09):** the karts felt slow before field weakening
+was introduced (owner observation, not a new measurement). Prefer calibrated RPM limits for
+ECO/NORMAL while retaining strong acceleration; retain field weakening for a possible boost
+mode. This is a tuning direction, not approved new values or permission to change settings.
+Captured maximum field-weakening current remains 95 A. Eamon's present BOOST is a temporary
+current-scale/speed-cap override, not a newly implemented field-weakening boost. No such
+change is included in v1.5. Validate drivetrain calibration and per-kart caps before tuning.
+
+---
+
+
 Updated 2026-11-06 (night), branch `eamon/firmware-lora-starter`. Read this, then
 [README.md](README.md) for the architecture and quick starts. Each component has its own
 README with full detail: [firmware](firmware/README.md), [pit](pit/README.md),

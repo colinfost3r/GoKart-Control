@@ -58,9 +58,22 @@
 #include <VescLink.h>
 #include "config.h"
 #include "cmd_types.h"
+#include <M5DisplayLink.h>
+#include <VerifiedBaseline.h>
+#include <GameRequest.h>
+#include <CourseGeneration.h>
+#include <CourseRadio.h>
+m5game::share::Radio courseRadio(true);
+#if GK_M5_ESPNOW
+#include <M5EspNowSettings.h>
+m5now::Link m5Wireless;
+m5now::Settings m5WirelessSettings;
+#endif
 #if !VESC_TRANSPORT_UART
 #include <NimBLEDevice.h>
 #endif
+
+static bool courseReceive(const esp_now_recv_info_t* i,const uint8_t* d,int n){return courseRadio.receive(i,d,n);}
 
 // ---------------------------------------------------------------- settings
 Preferences prefs;
@@ -170,6 +183,7 @@ static const char* NUS_RX      = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
 uint8_t  modeReq = GK_MODE_UNKNOWN;
 bool     stopActive = false;
 float    preStopScale = -1.0f;
+float    stopRampCeiling = 1.0f;
 bool     slowActive = false; float slowErpm = 0; uint8_t slowMph = 0;
 // Timed SLOW (USB `slow MPH SECS`, e.g. the game's mud): reverts by itself to what was in force before it
 // (a pit SLOW that was active comes back). A pit SLOW (no SECS) stays until START or a pit mode command.
@@ -181,6 +195,7 @@ bool     ovActive = false; float ovScale = 1.0f; uint32_t ovUntilMs = 0;
 // Race start: grid hold at zero power until GO. GO is issued_utc + arg when the kart has GPS/beacon time (all
 // karts release together), else arg seconds after receipt. STOP keeps the kart stopped; START releases early.
 bool     raceHold = false; uint32_t raceGoMs = 0; uint32_t raceGoUnix = 0;
+uint32_t raceWentMs = 0;                          // when a grid hold last ended in a GO that released this kart (0 = none): shown by the paired display
 // Limits as first read from this controller after link-up: everything we write echoes these
 // (not the capture constants), so each kart keeps its own configuration.
 VescActiveLimits origLimits; bool origValid = false;
@@ -214,6 +229,21 @@ const char* baselineSource = "none";  // "read" (clean link-up read) | "remember
 static uint8_t wVerifyTries = 0;      // a verify reply from a superseded write can land late: one re-read before judging MISMATCH
 VescActiveLimits firstLimits; bool haveFirst = false; char firstUuid[25] = "";   // first read of the pinned controller this boot
 uint8_t  usbSeq = 0;
+// Native-player game speed (owner 2026-11-12). The host's course fixes the mode a joined native player
+// runs at: JOIN writes that mode, and while the session lasts the display may only re-apply it (pit
+// commands still win). Set only by a native JOIN; gameLeave() clears it, so hosts and Pi players are unaffected.
+uint8_t  gameMode = GK_MODE_UNKNOWN;
+bool     gameJoinPending = false;      // the JOIN's mode write is not verified yet
+CmdRef   gameJoinOwner = NO_OWNER;
+// Finishing a missed boost end (owner 2026-11-12): a narrow exception to "reconnect is read-only".
+// When a timed boost ends the kart owes the controller a return to the mode in force. If that write
+// could not be made or confirmed (VESC link down, stale read, no ack) it is attempted once more per
+// link session, and only when it LOWERS the controller. boostMark lets a Heltec that restarted
+// mid-boost recognise its own leftover boost: RTC memory survives a software reset, not a power
+// cycle, and costs no flash write.
+bool     boostEndOwed = false;
+bool     revertTried = false; uint32_t revertTriedSession = 0;
+RTC_NOINIT_ATTR BoostMark boostMark;
 
 // ---------------------------------------------------------------- fleet
 GkTelemetry fleet[GK_MAX_KARTS + 1];
@@ -240,6 +270,9 @@ uint8_t  ackFrom = 0, ackSeq = 0; uint32_t ackMs = 0;
 uint8_t  hitSeq[GK_MAX_KARTS + 1]; uint32_t hitMs[GK_MAX_KARTS + 1];   // last hit accepted per attacker
 uint8_t  gameScore = 0;
 uint32_t gameLineMs = 0; bool gameLineDirty = false, gameLineQuiet = true;
+m5game::Generation courseGeneration[9];
+uint32_t m5JoinedBoot=0,m5JoinedCourse=0, lastCourseTx=0;
+uint8_t m5Shield = 0; uint32_t m5StarUntil = 0;
 const char* gameEnded = nullptr;                  // "host lost" / "host left": carried by the next game line
 
 // ---------------------------------------------------------------- display / misc
@@ -249,6 +282,29 @@ uint32_t oledMs = 0, usbReportMs = 0, wifiRetryMs = 0;
 bool     wifiStarted = false, otaStarted = false, otaInProgress = false;
 char     usbLine[200];
 uint8_t  usbLen = 0; bool usbOverflow = false;
+
+// Optional display transport, isolated from USB provisioning and the radio protocol.
+#if GK_M5_LINK
+m5link::Gate m5Gate;
+m5link::Lines<80> m5Lines;
+uint32_t m5Boot = 0, m5Drops = 0, m5Request = 0;
+CmdRef m5Owner = NO_OWNER;
+uint8_t m5Result = GK_RES_NONE;
+uint32_t m5GameRequest = 0; uint8_t m5GameResult = GK_RES_NONE; CmdRef m5GameOwner = NO_OWNER;
+bool m5WasReady = false; uint32_t m5LinkSession = 0;
+#endif
+static void m5Emit(const char* line) {
+#if GK_M5_ESPNOW
+  if (!m5Wireless.sendLine(line, millis())) ++m5Drops;
+#elif GK_M5_UART
+  size_t n = strlen(line);
+  // Whole-line drop under backpressure. Never wait for a missing/slow display or block LoRa slots.
+  if (n + 1 > (size_t)Serial2.availableForWrite()) { ++m5Drops; return; }
+  Serial2.write((const uint8_t*)line, n); Serial2.write('\n');
+#else
+  (void)line;
+#endif
+}
 
 // ---------------------------------------------------------------- helpers
 static void logf(const char* fmt, ...) {
@@ -273,7 +329,28 @@ static bool vescIdentityOk() {
   if (vescUuid.length() != 24) return true;                        // no pin: the BLE address pin is the identity
   return vesc.fwSeenMs && (int32_t)(vesc.fwSeenMs - vescLinkUpMs) >= 0 && vescUuid.equalsIgnoreCase(vesc.uuidHex);
 }
-static bool writeAllowed() { return writesEnabled() && vescUp() && origValid && vescIdentityOk(); }
+static bool freshWriteConfig() {
+  if (!GK_M5_CONTROL) return true;
+  const VescActiveLimits& L = vesc.limits();
+  if (!L.receivedMs || millis()-L.receivedMs > VESC_WRITE_CONFIG_AGE_MS ||
+      (int32_t)(L.receivedMs-vescLinkUpMs)<0 || vescUuid.length()!=24 || baselineSuspect) return false;
+  const float fields[]={L.currentMax,L.currentMinScale,L.currentMaxScale,L.minErpm,L.maxErpm,
+                        L.minDuty,L.maxDuty,L.wattMin,L.wattMax,L.gearRatio,L.wheelDiameter,
+                        origLimits.gearRatio,origLimits.wheelDiameter};
+  for(float value:fields) if(!isfinite(value)) return false;
+  // Speed-cap calculations use the reconciled drivetrain. A later external edit
+  // requires fresh reconciliation, not silent calculation from the older values.
+  if (origLimits.motorPoles<2 || origLimits.motorPoles%2 || origLimits.gearRatio<=0 ||
+      origLimits.wheelDiameter<=0 || origLimits.motorPoles!=L.motorPoles ||
+      origLimits.gearRatio!=L.gearRatio || origLimits.wheelDiameter!=L.wheelDiameter) return false;
+  return L.currentMax>0 && L.currentMinScale>=0 && L.currentMinScale<=1 &&
+    L.currentMaxScale>=0 && L.currentMaxScale<=1 && L.minErpm<=0 && L.maxErpm>0 &&
+    L.minDuty>=0 && L.maxDuty<=1 && L.minDuty<=L.maxDuty && L.wattMin<=0 && L.wattMax>=0 &&
+    L.motorPoles>=2 && !(L.motorPoles%2) && L.gearRatio>0 && L.gearRatio<=1000 &&
+    L.wheelDiameter>0 && L.wheelDiameter<=5;
+}
+static bool writeAllowed() { return writesEnabled() && vescUp() && origValid && vescIdentityOk() && freshWriteConfig(); }
+static uint32_t writeLinkSession = 0;
 
 static bool ppsFresh() {
   if (!ppsCount) return false;
@@ -438,7 +515,7 @@ static void requestBrake() {
 
 // owner: the command whose cmd_result this write decides; NO_OWNER for the automatic writes of W2(b).
 static bool startWrite(float scale, const CmdRef& owner) {
-  if (!writesEnabled() || !vescUp()) return false;
+  if (!writesEnabled() || !vescUp() || !freshWriteConfig()) return false;
   if (!vescIdentityOk()) { logf("refusing write: VESC identity %s", vescIdentityBad ? "MISMATCH" : "not confirmed yet"); return false; }
   // Per-vehicle: every field except the motor-current scale is echoed back from the live
   // configuration just read out of THIS controller (GET_MCCONF). Never write before that read.
@@ -456,16 +533,20 @@ static bool startWrite(float scale, const CmdRef& owner) {
          cm != GK_MODE_UNKNOWN ? MODES[cm].name : "?", cm != GK_MODE_UNKNOWN ? MODES[cm].topMph : 0, L.motorPoles, L.gearRatio, L.wheelDiameter);
     return false;
   }
+  const VescActiveLimits& live = GK_M5_CONTROL ? vesc.limits() : L;
+  if (GK_M5_CONTROL && (!isfinite(scale) || scale<0 || scale>L.currentMaxScale ||
+      !isfinite(capE) || capE<=0 || capE>L.maxErpm)) return false;
   VescTempLimits l;
-  l.currentMinScale = L.currentMinScale;
+  l.currentMinScale = live.currentMinScale;
   l.currentMaxScale = scale;
   l.minErpm = L.minErpm; l.maxErpm = capE;
   if (l.minErpm < -capE) l.minErpm = -capE;    // reverse capped at the same speed
-  l.minDuty = L.minDuty; l.maxDuty = L.maxDuty;
-  l.wattMin = L.wattMin; l.wattMax = L.wattMax;
+  l.minDuty = live.minDuty; l.maxDuty = live.maxDuty;
+  l.wattMin = live.wattMin; l.wattMax = live.wattMax;
   l.sendInCurrent = false;                     // battery limits: always the controller's own
   wAckSeen = vesc.lastAckMs();
   vesc.sendTempLimits(l);
+  writeLinkSession = vescLinkUpMs;
   wState = W_SENT; wTarget = scale; wErpm = capE; wSentMs = millis(); wOwner = owner; wroteThisBoot = true; wVerifyTries = 0;
   uint8_t capM = capMphNow();
   if (capM) logf("vesc write scale %.3f, cap %u mph = %.0f ERPM", scale, capM, capE);
@@ -477,19 +558,67 @@ static bool startWrite(float scale, const CmdRef& owner) {
 static void autoWrite(const char* why) {
   if (stopActive) return;
   if (!writeAllowed()) { revertMissed = true; logf("%s: VESC not reachable, nothing written (re-read will show the live scale)", why); return; }
-  startWrite(scaleTarget(), NO_OWNER);
+  if (!startWrite(scaleTarget(), NO_OWNER)) { revertMissed = true; logf("%s: temporary write refused, no retry queued", why); }
+}
+
+static uint32_t boostMarkSum() {
+  const uint8_t* p = (const uint8_t*)&boostMark; uint32_t h = 2166136261UL;
+  for (size_t i = 0; i < offsetof(BoostMark, check); i++) { h ^= p[i]; h *= 16777619UL; }
+  return h;
+}
+static bool boostMarkValid() {
+  return boostMark.magic == 0x424D4B31UL && boostMark.check == boostMarkSum() && boostMark.uuid[24] == 0 &&
+         boostMark.baseMode < GK_MODE_COUNT - 1 && isfinite(boostMark.scale) && isfinite(boostMark.capErpm);
+}
+static void boostMarkClear() { boostMark.magic = 0; boostMark.check = 0; }
+static void boostMarkSet(uint8_t baseMode, float scale, float capErpm) {
+  memset(&boostMark, 0, sizeof boostMark);
+  boostMark.magic = 0x424D4B31UL; strlcpy(boostMark.uuid, vesc.uuidHex, sizeof boostMark.uuid);
+  boostMark.baseMode = baseMode; boostMark.scale = scale; boostMark.capErpm = capErpm;
+  boostMark.check = boostMarkSum();
+}
+// Finish a boost end that could not be written or confirmed. One attempt per link session, never under
+// STOP/GRID or while another boost runs, never before this controller is freshly verified, and never
+// if it would raise either limit. It replays no command: the target is the mode in force now.
+static void serviceMissedRevert() {
+  if (!GK_M5_CONTROL || !boostEndOwed || ovActive || stopActive || raceHold || wState != W_IDLE || rampIdx >= 0) return;
+  if (revertTried && revertTriedSession == vescLinkUpMs) return;
+  if (modeReq >= GK_MODE_COUNT || !writeAllowed()) return;
+  const VescActiveLimits& live = vesc.limits();
+  const float scale = scaleTarget(), cap = erpmTarget();
+  if (cap < 0) return;
+  const bool above = live.currentMaxScale > scale + MODE_MATCH_TOL || live.maxErpm > cap + MODE_ERPM_TOL;
+  const bool raises = scale > live.currentMaxScale + MODE_MATCH_TOL || cap > live.maxErpm + MODE_ERPM_TOL;
+  if (!above && !raises) { boostEndOwed = false; revertMissed = false; boostMarkClear(); return; }   // already back at the mode
+  revertTried = true; revertTriedSession = vescLinkUpMs;
+  if (raises) {
+    logf("missed boost end left alone: finishing it would raise a limit (live %.2f / %.0f ERPM, mode %.2f / %.0f)",
+         live.currentMaxScale, live.maxErpm, scale, cap);
+    return;
+  }
+  logf("finishing a missed boost end: %.2f / %.0f ERPM -> %.2f / %.0f", live.currentMaxScale, live.maxErpm, scale, cap);
+  if (!startWrite(scale, NO_OWNER)) logf("missed boost end: write refused, not retried on this link");
 }
 
 static void serviceWrites() {
   uint32_t now = millis();
+  if (GK_M5_CONTROL && (wState != W_IDLE || rampIdx >= 0) &&
+      (!vescUp() || !vescIdentityOk() || writeLinkSession != vescLinkUpMs)) {
+    setResult(wOwner, GK_RES_UNKNOWN);
+    if (rampIdx >= 0) setResult(rampOwner, GK_RES_UNKNOWN);
+    wState=W_IDLE; rampIdx=-1; revertMissed=true;
+    logf("pending write verification cancelled after controller link/identity change");
+  }
   if (raceHold && (int32_t)(now - raceGoMs) >= 0) {
     raceHold = false;
+    if (!stopActive) raceWentMs = now ? now : 1;     // a stopped kart is not released by GO: nothing to announce
     Serial.printf("{\"t\":\"race\",\"kart\":%u,\"event\":\"go\"}\n", kartId);
     logf("race: GO");
     autoWrite("race GO");
   }
   if (ovActive && (int32_t)(now - ovUntilMs) >= 0) {
     ovActive = false; logf("boost over, back to %.2f", scaleTarget());
+    boostEndOwed = true; revertTried = false;          // owed until a write is verified (serviceMissedRevert)
     autoWrite("boost end");
   }
   if (slowActive && slowTimed && (int32_t)(now - slowUntilMs) >= 0) {   // timed slow over: back to the pit cap or none
@@ -501,8 +630,11 @@ static void serviceWrites() {
   }
   if (rampIdx >= 0 && wState == W_IDLE && (int32_t)(now - rampNextMs) >= 0) {
     const int n = sizeof(STOP_RAMP) / sizeof(STOP_RAMP[0]);
-    if (!startWrite(STOP_RAMP[rampIdx], rampOwner)) { setResult(rampOwner, GK_RES_NO_VESC); rampIdx = -1; }
-    else { rampIdx++; rampNextMs = now + STOP_RAMP_STEP_MS; if (rampIdx >= n) rampIdx = -1; }
+    // STOP may only reduce the allowance, even when a timed slow/boost overlay was
+    // already below the first nominal ramp step.
+    const float step = fminf(STOP_RAMP[rampIdx], fminf(stopRampCeiling, vesc.limits().currentMaxScale));
+    if (!startWrite(step, rampOwner)) { setResult(rampOwner, GK_RES_NO_VESC); rampIdx = -1; }
+    else { stopRampCeiling = step; rampIdx++; rampNextMs = now + STOP_RAMP_STEP_MS; if (rampIdx >= n) rampIdx = -1; }
   }
   switch (wState) {
     case W_IDLE: break;
@@ -522,12 +654,14 @@ static void serviceWrites() {
         wState = W_IDLE;
         if (rampIdx < 0) setResult(wOwner, ok ? GK_RES_APPLIED : GK_RES_UNKNOWN);
         if (ok) revertMissed = false;
+        if (ok && !ovActive) { boostEndOwed = false; boostMarkClear(); }   // the controller no longer holds a boost
         modeConfirmed = ok && !stopActive && ((modeReq != GK_MODE_UNKNOWN && fabsf(wTarget - MODES[modeReq].currentMaxScale) < MODE_MATCH_TOL)
                                               || (ovActive && fabsf(wTarget - ovScale) < MODE_MATCH_TOL));
         logf("vesc write verify %s (scale %.3f, ERPM %.0f)", ok ? "ok" : "MISMATCH", vesc.limits().currentMaxScale, vesc.limits().maxErpm);
       } else if (now - wSentMs > VESC_ACK_TIMEOUT_MS) { wState = W_IDLE; if (rampIdx < 0) setResult(wOwner, GK_RES_UNKNOWN); }
       break;
   }
+  serviceMissedRevert();
 }
 
 // ---------------------------------------------------------------- commands
@@ -538,6 +672,10 @@ static void emitCmd(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, uint8_t 
 static uint8_t boostSecs = 0;   // set by the USB `boost` command just before handleCommand
 static uint8_t slowSecs = 0;    // set by the USB `slow MPH SECS` command just before handleCommand (0 = untimed)
 static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, uint16_t ttl, uint32_t issued) {
+  // These arguments belong only to this call, including rejected/duplicate commands.
+  // Never let a rejected USB duration change a subsequent pit command's duration.
+  const uint8_t requestedBoostSecs = boostSecs, requestedSlowSecs = slowSecs;
+  boostSecs = 0; slowSecs = 0;
   const int8_t si = (src == GK_ADDR_BASE) ? 0 : 1;
   const uint32_t nowMs = millis();
   // W6: a retransmit (repeater copy or pit retry) is reported again, never re-applied.
@@ -558,7 +696,34 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
     uint32_t now = gpsUnix();
     if (now && now > issued + ttl) expired = true;
   }
-  if (expired) { cmdResult = GK_RES_REJECTED; logf("command %u expired", seq); }
+  const bool motorCommand = cmd==GK_CMD_SET_MODE || cmd==GK_CMD_STOP || cmd==GK_CMD_START ||
+                            cmd==GK_CMD_SLOW || cmd==GK_CMD_BOOST || cmd==GK_CMD_RACE;
+  // Validate a new selection before it can replace modeReq, arm BOOST, or release
+  // STOP/GRID. A refused target must not leave state for a later timer to apply.
+  bool targetRejected = false;
+  if (GK_M5_CONTROL && origValid) {
+    bool checkTarget = false;
+    float targetScale = 0, targetCap = origLimits.maxErpm;
+    if (cmd == GK_CMD_SET_MODE && arg < GK_MODE_COUNT) {
+      checkTarget = true; targetScale = MODES[arg].currentMaxScale; targetCap = modeCapErpm(arg);
+    } else if (cmd == GK_CMD_BOOST && arg >= 10 && arg <= 100) {
+      checkTarget = true; targetScale = arg / 100.0f;
+    } else if (cmd == GK_CMD_START) {
+      checkTarget = true;
+      targetScale = modeReq < GK_MODE_COUNT ? MODES[modeReq].currentMaxScale : origLimits.currentMaxScale;
+      targetCap = modeCapErpm(modeReq);
+    }
+    if (checkTarget) targetRejected = !isfinite(targetScale) || targetScale < 0.05f ||
+      targetScale > origLimits.currentMaxScale || !isfinite(targetCap) ||
+      targetCap <= 0 || targetCap > origLimits.maxErpm;
+  }
+  if (GK_M5_CONTROL && motorCommand && !writeAllowed()) {
+    cmdResult=GK_RES_NO_VESC; logf("command refused: fresh verified controller configuration required");
+  }
+  else if (expired) { cmdResult = GK_RES_REJECTED; logf("command %u expired", seq); }
+  else if (targetRejected) {
+    cmdResult=GK_RES_REJECTED; logf("command refused: target exceeds or lacks verified controller limits");
+  }
   else {
     cmdResult = GK_RES_ACCEPTED;
     switch (cmd) {
@@ -586,18 +751,21 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
       case GK_CMD_STOP:
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
         if (!vescUp()) { cmdResult = GK_RES_NO_VESC; break; }
-        if (!stopActive) preStopScale = origValid ? origLimits.currentMaxScale : -1.0f;
+        if (!stopActive) preStopScale = vesc.limits().currentMaxScale;
+        stopRampCeiling = fminf(vesc.limits().currentMaxScale, origLimits.currentMaxScale);
         stopActive = true; modeConfirmed = false; ovActive = false; raceHold = false;
+        boostEndOwed = false; boostMarkClear();           // the operator took over: nothing is owed after a STOP
         if (wState != W_IDLE) {                           // W4: STOP does not wait behind another write
           CmdEnt* e = cmdEnt(wOwner); if (e && e->result == GK_RES_ACCEPTED) e->result = GK_RES_UNKNOWN;
           wState = W_IDLE;
         }
         requestBrake();                                   // regen via the VESC script, if present
-        rampIdx = 0; rampNextMs = nowMs; rampOwner = cmdCur;
+        rampIdx = 0; rampNextMs = nowMs; rampOwner = cmdCur; writeLinkSession = vescLinkUpMs;
         break;
       case GK_CMD_START: {
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
         stopActive = false; slowActive = false; slowTimed = false; slowPrevActive = false; ovActive = false; raceHold = false; rampIdx = -1;
+        boostEndOwed = false; boostMarkClear();
         if (!origValid || !vescUp()) { cmdResult = GK_RES_NO_VESC; break; }
         float s = scaleTarget();
         if (s < 0.05f) {                                  // no mode known and the controller read back ~0
@@ -614,9 +782,16 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         cmdResult = GK_RES_APPLIED; break;
       }
       case GK_CMD_GAME: {                                  // 0.3.7: the pit's freeplay game -> the Pi (freeplay on, host / join); arg 0 = end
+#if !GK_M5_ESPNOW
         Serial.printf("{\"t\":\"fpgame\",\"kart\":%u,\"arg\":%u,\"seq\":%u}\n", kartId, arg, seq);
         if (arg) logf("pit game: %s, host kart %u", (arg & 0x10) ? "ROAM" : "TRACK", arg & 0x0F); else logf("pit game: end");
         cmdResult = GK_RES_APPLIED; break;
+#else
+        // A paired M5 kart has no Pi to act on this: it joins a game from its Core2, by downloading the
+        // host's course. Refuse, so the pit does not show a game this kart neither started nor joined.
+        logf("pit game: refused, a paired M5 kart joins from its Core2 (arg %u)", arg);
+        cmdResult = GK_RES_REJECTED; break;
+#endif
       }
       case GK_CMD_RACE: {                                  // arg = seconds until GO; 0 or 100+position = race finished
         if (arg == 0 || (arg >= 100 && arg <= 100 + GK_MAX_KARTS)) {
@@ -635,7 +810,8 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         if (issued && nowU) goInMs = goAt > nowU ? (uint32_t)(goAt - nowU) : 0;   // 0 = arrived after GO: release now
         else goInMs = (uint32_t)arg * 1000UL;
         if (goInMs > 31000UL) goInMs = (uint32_t)arg * 1000UL;                   // clocks disagree wildly: fall back
-        raceHold = true; raceGoMs = nowMs + goInMs; raceGoUnix = issued ? issued + arg : 0; ovActive = false;
+        raceHold = true; raceGoMs = nowMs + goInMs; raceGoUnix = issued ? issued + arg : 0; ovActive = false; raceWentMs = 0;
+        boostEndOwed = false; boostMarkClear();
         Serial.printf("{\"t\":\"race\",\"kart\":%u,\"event\":\"countdown\",\"go_in_ms\":%lu,\"secs\":%u,\"go_utc\":%lu}\n", kartId, (unsigned long)goInMs, arg, (unsigned long)raceGoUnix);
         logf("race: grid hold, GO in %lu ms", (unsigned long)goInMs);
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
@@ -645,13 +821,14 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         break;
       }
       case GK_CMD_BOOST: {                                 // arg = scale percent; duration from boostSecs (USB) or 5 s
-        uint8_t secs = boostSecs ? boostSecs : 5; boostSecs = 0;
+        uint8_t secs = requestedBoostSecs ? requestedBoostSecs : 5;
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
         if (arg < 10 || arg > 100 || stopActive) { cmdResult = GK_RES_REJECTED; break; }
         if (!vescUp() || !origValid) { cmdResult = GK_RES_NO_VESC; break; }
         ovScale = arg / 100.0f; ovActive = true; ovUntilMs = nowMs + secs * 1000UL;
         logf("boost: scale %.2f for %u s", ovScale, secs);
         if (!startWrite(scaleTarget(), cmdCur)) cmdResult = GK_RES_NO_VESC;
+        else if (GK_M5_CONTROL && modeReq < GK_MODE_COUNT - 1) boostMarkSet(modeReq, wTarget, wErpm);
         break;
       }
       case GK_CMD_SLOW: {
@@ -661,7 +838,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         float e = mphToErpm(mph);
         if (e < 100) { cmdResult = GK_RES_REJECTED; logf("slow: drivetrain numbers unavailable"); break; }
         {
-          uint8_t secs = slowSecs; slowSecs = 0;
+          uint8_t secs = requestedSlowSecs;
           if (secs) {                                       // timed: never above an untimed (pit) cap already in force
             if (slowActive && !slowTimed && slowErpm <= e) { logf("slow %u s: pit cap %u mph already lower, kept", secs, slowMph); cmdResult = GK_RES_APPLIED; break; }
             if (!slowTimed) { slowPrevActive = slowActive; slowPrevErpm = slowErpm; slowPrevMph = slowMph; }
@@ -682,6 +859,102 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
   if (me && !(cmdResult == GK_RES_ACCEPTED && me->result != GK_RES_ACCEPTED)) me->result = cmdResult;
   emitCmd(src, seq, cmd, arg, cmdResult);
   cmdCur = NO_OWNER;
+}
+
+// ---------------------------------------------------------------- M5 display UART
+static bool m5ModeReady() {
+  // No deferred driver selections under STOP/GRID, no overlapping writes. Require a UUID pin
+  // even where the legacy USB path permits address-only binding. Driver MODE never releases SLOW.
+  return writeAllowed() && vescUuid.length() == 24 && !stopActive && !raceHold &&
+         wState == W_IDLE && rampIdx < 0 && !otaInProgress && !baselineSuspect;
+}
+static void m5Report();
+static bool m5HandleGame(const char* line);
+static bool kartHosting(uint8_t k);
+static bool courseFresh(uint8_t k){return k>=1&&k<=8&&courseGeneration[k].fresh(millis());}
+
+static void m5HandleLine(const char* line) {
+#if GK_M5_LINK
+  if (m5HandleGame(line)) return;
+  m5link::Request r;
+  // Execute against current time, never a delayed callback's timestamp.
+  if (!m5link::decode(line, r) || !m5Gate.accept(r, millis())) return;
+  m5Request = r.id; m5Owner = NO_OWNER; m5Result = GK_RES_REJECTED;
+  if (!m5ModeReady()) return;
+  // Joined to a native game: locked to the host's game speed. Re-applying that mode stays possible.
+  if (gameMode != GK_MODE_UNKNOWN && r.mode != gameMode) return;
+  handleCommand(0xFE, ++usbSeq, GK_CMD_SET_MODE, r.mode, 0, 0);
+  int8_t idx = cmdLastIdx[1];
+  if (idx >= 0) { CmdEnt& e = cmdHist[1][idx]; m5Owner = {1, idx, e.seq, e.ms}; m5Result = e.result; }
+#else
+  (void)line;
+#endif
+}
+static void serviceM5() {
+#if GK_M5_LINK
+  uint32_t now = millis();
+#if GK_M5_ESPNOW
+  m5Wireless.poll(now);
+  if (m5Wireless.ready()) courseRadio.begin();
+  courseRadio.poll(kartId, gameSession == kartId, !otaInProgress && m5Wireless.canSend(millis()), millis());
+#endif
+  bool ready = m5ModeReady();
+  bool rotated = m5Gate.expired(now) || ready != m5WasReady || m5LinkSession != vescLinkUpMs;
+  if (rotated) m5Gate.rotate(esp_random(), now);
+  m5WasReady = ready; m5LinkSession = vescLinkUpMs;
+  if (rotated) m5Report();
+#if GK_M5_ESPNOW
+  // Only typed CRC/token-checked display requests. Never usbCommand().
+  for (unsigned budget=0; budget<4; ++budget) {
+    const char* line=m5Wireless.readLine(millis());
+    if (!line) break;
+    m5HandleLine(line);
+  }
+#else
+  unsigned budget = 128;
+  while (budget-- && Serial2.available()) {
+    const char* line = m5Lines.feed((char)Serial2.read(), millis());
+    if (line) m5HandleLine(line);
+  }
+#endif
+#endif
+}
+// What the paired display is told about a pit race start. Display only; nothing here changes control.
+// hold: the grid hold is in force. goMs: ms until GO while held. wentMs: ms since a GO that released
+// this kart, for three seconds (never 0 while it is being announced).
+static inline void m5RaceStart(uint32_t now, bool& hold, uint32_t& goMs, uint32_t& wentMs) {
+  hold = raceHold;
+  goMs = raceHold && (int32_t)(raceGoMs - now) > 0 ? raceGoMs - now : 0;
+  wentMs = !raceHold && raceWentMs && now - raceWentMs < 3000 ? now - raceWentMs + 1 : 0;
+}
+static void m5Report() {
+#if GK_M5_LINK
+  bool raceHeld; uint32_t raceGoIn, raceWent; m5RaceStart(millis(), raceHeld, raceGoIn, raceWent);
+  CmdEnt* e = cmdEnt(m5Owner);
+  uint8_t result = e ? e->result : (m5Owner.src >= 0 ? GK_RES_UNKNOWN : m5Result);
+  uint8_t hosts = 0; for (uint8_t k = 1; k <= GK_MAX_KARTS; ++k) if (kartHosting(k)) hosts |= 1u << (k-1);
+  CmdEnt* gameEntry = cmdEnt(m5GameOwner);
+  uint8_t gameResult = gameEntry ? gameEntry->result : (m5GameOwner.src >= 0 ? GK_RES_UNKNOWN : m5GameResult);
+  uint8_t courseHosts=0;for(uint8_t k=1;k<=8;++k)if(courseFresh(k))courseHosts|=1u<<(k-1);
+  char b[1100];
+  int n = snprintf(b, sizeof b,
+    "{\"t\":\"display\",\"v\":1,\"kart\":%u,\"boot\":%lu,\"token\":%lu,\"mode_ready\":%s,"
+    "\"request\":%lu,\"result\":%u,\"radio\":%s,\"pit\":%s,\"base_rssi\":%d,\"rate\":%u,"
+    "\"speed_cal\":%.3f,\"drops\":%lu,\"modes\":[{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f}],"
+    "\"game_v\":2,\"game_mode\":%u,\"game_session\":%u,\"hosts\":%u,\"game_request\":%lu,\"game_result\":%u,\"game_ready\":%s,\"shield\":%u,\"star_ms\":%lu,\"course_hosts\":%u,\"courses\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],\"course_boots\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],"
+    "\"race_hold\":%s,\"race_go_ms\":%lu,\"race_went_ms\":%lu}",
+    kartId, (unsigned long)m5Boot, (unsigned long)(m5Gate.consumed ? 0 : m5Gate.token), gkBool(m5ModeReady()),
+    (unsigned long)m5Request, result, gkBool(radioOk), gkBool(baseHeardMs && millis()-baseHeardMs < 30000),
+    (int)baseRssi, reportRate, speedCal, (unsigned long)m5Drops,
+    MODES[0].topMph, MODES[0].currentMaxScale, MODES[1].topMph, MODES[1].currentMaxScale,
+    MODES[2].topMph, MODES[2].currentMaxScale,
+    gameMode, gameSession, hosts, (unsigned long)m5GameRequest, gameResult, gkBool(m5ModeReady() && radioOk), m5Shield,
+    (unsigned long)(int32_t(m5StarUntil-millis())>0 ? m5StarUntil-millis() : 0), courseHosts,
+    (unsigned long)courseGeneration[1].digest,(unsigned long)courseGeneration[2].digest,(unsigned long)courseGeneration[3].digest,(unsigned long)courseGeneration[4].digest,(unsigned long)courseGeneration[5].digest,(unsigned long)courseGeneration[6].digest,(unsigned long)courseGeneration[7].digest,(unsigned long)courseGeneration[8].digest,
+    (unsigned long)courseGeneration[1].boot,(unsigned long)courseGeneration[2].boot,(unsigned long)courseGeneration[3].boot,(unsigned long)courseGeneration[4].boot,(unsigned long)courseGeneration[5].boot,(unsigned long)courseGeneration[6].boot,(unsigned long)courseGeneration[7].boot,(unsigned long)courseGeneration[8].boot,
+    gkBool(raceHeld), (unsigned long)raceGoIn, (unsigned long)raceWent);
+  if (n > 0 && n < (int)sizeof b) m5Emit(b);
+#endif
 }
 
 // ---------------------------------------------------------------- vesc link
@@ -730,6 +1003,9 @@ static bool bleConnectTo(const NimBLEAddress& target) {
   bleStream.clear(); bleStream.setTx(pTxChar);
   { uint16_t mtu = pClient->getMTU(); bleStream.chunk = (mtu > 23) ? (size_t)(mtu - 3) : 20; }
   vesc.setPort(&bleStream);
+  // Every physical BLE connection is a new identity/configuration session, including a
+  // reconnect quicker than the telemetry timeout. Never retain proof from the old peer.
+  vesc.markLinkLost(); vescLinkWas = false; origValid = false; modeConfirmed = false;
   bleConnected = true; bleConnectedMs = millis();
   logf("ble connected %s mtu %u (write chunk %u)", target.toString().c_str(), (unsigned)pClient->getMTU(), (unsigned)bleStream.chunk);
   return true;
@@ -785,7 +1061,8 @@ static void serviceVesc() {
   // dropped is not trusted, W1). If this boot already wrote overrides to the controller and it
   // kept them across the link drop, the live scale/ERPM are OUR overrides, not the baseline:
   // keep the earlier baseline for those fields so START still restores the real limits.
-  if (up && !origValid && vesc.limits().receivedMs && (int32_t)(vesc.limits().receivedMs - vescLinkUpMs) >= 0 && wState == W_IDLE) {
+  if (up && !origValid && vesc.limits().receivedMs && (int32_t)(vesc.limits().receivedMs - vescLinkUpMs) >= 0 && wState == W_IDLE &&
+      (vescUuid.length()!=24 || vescIdentityOk()) && (!GK_M5_CONTROL || vescUuid.length()==24)) {
     origLimits = vesc.limits(); origValid = true;
     const VescActiveLimits raw = origLimits;                 // what the controller reports right now
     const bool sameSession = haveFirst && wroteThisBoot && !strcmp(firstUuid, vesc.uuidHex);   // same controller (uuid, or both unknown)
@@ -814,6 +1091,14 @@ static void serviceVesc() {
       const bool haveUuid = vesc.uuidHex[0] != 0;
       if (capLike || scaleLike) {
         baselineSuspect = true; baselineSource = "suspect";
+#if GK_M5_CONTROL
+        m5link::baseline::Ceiling saved;
+        if (haveUuid && m5link::baseline::load(prefs, vesc.uuidHex, saved)) {
+          origLimits.currentMaxScale = saved.scale;
+          origLimits.minErpm = saved.minErpm; origLimits.maxErpm = saved.maxErpm;
+          baselineSuspect = false; baselineSource = "verified-cache";
+        }
+#else
         if (haveUuid && prefs.getString("bl_uuid", "") == vesc.uuidHex) {
           float bs = prefs.getFloat("bl_scale", -1.0f), blo = prefs.getFloat("bl_emin", 0.0f), bhi = prefs.getFloat("bl_emax", 0.0f);
           if (bs > 0.05f && bhi > 100.0f) {
@@ -823,16 +1108,28 @@ static void serviceVesc() {
                  raw.currentMaxScale, raw.maxErpm, mphF, bs, blo, bhi);
           }
         }
+#endif
         if (baselineSuspect)
           logf("WARNING: limits read at link-up look like this firmware's own (scale %.2f, %.0f ERPM = %.1f mph): a previous Heltec session probably left them; key the kart off and on to restore the controller's own",
                raw.currentMaxScale, raw.maxErpm, mphF);
       } else if (haveUuid) {                                   // a clean read: remember it for the next Heltec reboot
+#if GK_M5_CONTROL
+        const m5link::baseline::Ceiling clean{raw.currentMaxScale, raw.minErpm, raw.maxErpm};
+        m5link::baseline::Ceiling saved;
+        bool same = m5link::baseline::load(prefs, vesc.uuidHex, saved) &&
+          saved.scale == clean.scale && saved.minErpm == clean.minErpm && saved.maxErpm == clean.maxErpm;
+        if (!same && !m5link::baseline::save(prefs, vesc.uuidHex, clean)) {
+          baselineSuspect = true; baselineSource = "cache-save-failed";
+          logf("M5 modes disabled: verified controller ceiling could not be saved/read back atomically");
+        }
+#else
         if (prefs.getString("bl_uuid", "") != vesc.uuidHex || fabsf(prefs.getFloat("bl_scale", -1.0f) - raw.currentMaxScale) > 0.001f
             || fabsf(prefs.getFloat("bl_emax", 0.0f) - raw.maxErpm) > 0.5f || fabsf(prefs.getFloat("bl_emin", 0.0f) - raw.minErpm) > 0.5f) {
           prefs.putString("bl_uuid", vesc.uuidHex); prefs.putFloat("bl_scale", raw.currentMaxScale);
           prefs.putFloat("bl_emin", raw.minErpm); prefs.putFloat("bl_emax", raw.maxErpm);
           logf("controller baseline remembered (uuid %s): scale %.2f, ERPM %.0f..%.0f", vesc.uuidHex, raw.currentMaxScale, raw.minErpm, raw.maxErpm);
         }
+#endif
       }
     }
     if (!sameSession) { firstLimits = origLimits; haveFirst = true; strlcpy(firstUuid, vesc.uuidHex, sizeof firstUuid); }
@@ -842,6 +1139,20 @@ static void serviceVesc() {
     // Reconcile, read-only (owner rule): a Heltec that rebooted mid-session has no mode request, so the end of
     // a boost/mud/SLOW would fall back to the controller's own full limits. If the live limits ARE one of our
     // modes (scale and cap), that mode becomes the request; nothing is written here.
+#if GK_M5_CONTROL
+    // Owner 2026-11-12: a Heltec that restarted mid-boost finds its own boost still on the controller.
+    // The mode it had before the boost becomes the request again (instead of adopting the boosted
+    // limits as a mode) and the missed end is finished once, lower-only (serviceMissedRevert). The
+    // mark is consulted on the first verified read after a restart and never kept past it.
+    if (!wroteThisBoot) {
+      if (modeReq == GK_MODE_UNKNOWN && boostMarkValid() && !strcmp(boostMark.uuid, vesc.uuidHex) &&
+          fabsf(raw.currentMaxScale - boostMark.scale) < MODE_MATCH_TOL && fabsf(raw.maxErpm - boostMark.capErpm) <= MODE_ERPM_TOL) {
+        modeReq = boostMark.baseMode; modeConfirmed = false; boostEndOwed = true; revertTried = false;
+        logf("boost left on the controller by a restart: %s is the request again; its end will be finished once", MODES[modeReq].name);
+      }
+      boostMarkClear();
+    }
+#endif
     if (modeReq == GK_MODE_UNKNOWN) {
       uint8_t ma = modeActual(nullptr);
       if (ma != GK_MODE_UNKNOWN) { modeReq = ma; modeConfirmed = true; logf("mode %s adopted from the controller's live limits (no write)", MODES[ma].name); }
@@ -992,8 +1303,11 @@ static void attackEnd(const char* result, const char* why) {
   atkTo = 0; atkItem = 0; atkAckMask = 0; gameLineDirty = true;
 }
 static void gameLeave(const char* ended) {
+  gameMode = GK_MODE_UNKNOWN; gameJoinPending = false; gameJoinOwner = NO_OWNER;   // the mode stays; only the lock ends
+  if (gameSession == kartId) courseRadio.server.clear();
   if (!gameSession) return;
   if (atkTo) attackEnd("timeout", "session ended");
+  m5JoinedBoot=m5JoinedCourse=0; m5Shield = 0; m5StarUntil = 0;
   gameSession = 0; gameScore = 0; gameEnded = ended; gameLineDirty = true;
 }
 static void gameAttack(uint8_t to, uint8_t item) {
@@ -1017,7 +1331,9 @@ static void gameAttack(uint8_t to, uint8_t item) {
 static void applyHit(uint8_t from, uint8_t item, uint8_t seq) {
   const uint8_t secs = item == GK_ITEM_LIGHTNING ? GAME_LIGHTNING_SECS : GAME_SHELL_SECS;
   const char* why = nullptr;
-  if (stopActive) why = "stopped"; else if (raceHold) why = "grid hold";
+  if (int32_t(m5StarUntil-millis())>0) why = "star";
+  else if (m5Shield) { --m5Shield; why = "shield"; }
+  else if (stopActive) why = "stopped"; else if (raceHold) why = "grid hold";
   else if (!writesEnabled()) why = "writes off"; else if (!vescUp() || !origValid) why = "no vesc";
   else if (invTakeShield()) why = "shield";
   if (!why) { slowSecs = secs; handleCommand(GAME_SRC, ++usbSeq, GK_CMD_SLOW, GAME_SLOW_MPH, 0, 0); }
@@ -1047,6 +1363,7 @@ static void gameOnPeer(uint8_t k) {
   }
 }
 static void serviceGame() {
+  if(m5JoinedCourse&&(!courseFresh(gameSession)||courseGeneration[gameSession].digest!=m5JoinedCourse||courseGeneration[gameSession].boot!=m5JoinedBoot))gameLeave("course changed or lost");
   const uint32_t now = millis();
   if (atkTo && now - atkStartMs >= GAME_ATTACK_MS) attackEnd(atkTo == GK_ADDR_ALL ? "done" : "timeout", nullptr);
   if (ackFrom && now - ackMs >= GAME_ACK_HOLD_MS) { ackFrom = 0; ackSeq = 0; }
@@ -1068,11 +1385,94 @@ static void serviceGame() {
   }
 }
 
+// Typed paired-display game requests use the existing session/attack/effect paths.
+// No replay, host creation, motor-output command or persistent settings write is accepted.
+static bool m5HandleGame(const char* line) {
+#if GK_M5_LINK
+  if (strncmp(line, "m5game ", 7)) return false;
+  m5game::Request r;
+  if (!m5game::decode(line,r) || !m5Gate.accept({r.token,r.id,0},millis())) return true;
+  m5GameRequest=r.id; m5GameResult=GK_RES_REJECTED; m5GameOwner=NO_OWNER;
+  if (r.action==m5game::Action::Leave) {
+    if (r.session==gameSession) {gameLeave(nullptr);m5GameResult=GK_RES_APPLIED;}
+    return true;
+  }
+  if (!m5ModeReady() || !radioOk || !courseFresh(r.session) || courseGeneration[r.session].digest!=r.course||courseGeneration[r.session].boot!=r.boot) return true;
+  if (r.action==m5game::Action::Join) {
+    if(r.session==kartId || !kartHosting(r.session))return true;
+    // The host's course fixes the speed: JOIN writes that mode through the ordinary command path and
+    // counts only once the write is verified (serviceGameJoin). A game never runs at the top mode.
+    const uint8_t speed=uint8_t(r.arg-1);
+    if(speed>=GK_MODE_COUNT-1)return true;
+    if(gameSession!=r.session)gameLeave(nullptr);
+    handleCommand(0xFE,++usbSeq,GK_CMD_SET_MODE,speed,0,0);
+    int8_t at=cmdLastIdx[1];if(at<0)return true;
+    auto&made=cmdHist[1][at];m5GameResult=made.result;
+    if(made.result!=GK_RES_ACCEPTED&&made.result!=GK_RES_APPLIED)return true;       // mode refused: not joined
+    m5GameOwner={1,at,made.seq,made.ms};
+    if(gameSession!=r.session){gameSession=r.session;gameScore=0;gameEnded=nullptr;gameLineDirty=true;}
+    m5JoinedBoot=r.boot;m5JoinedCourse=r.course;
+    gameMode=speed;gameJoinOwner=m5GameOwner;gameJoinPending=made.result!=GK_RES_APPLIED;return true;
+  }
+  if(m5JoinedCourse!=r.course||m5JoinedBoot!=r.boot)return true;
+  if(gameSession!=r.session || gameSession==kartId || !kartHosting(r.session))return true;
+  if(r.action==m5game::Action::Shell || r.action==m5game::Action::Lightning){
+    if(atkTo)return true; // Never replace another attack with a second press.
+    uint8_t target=r.action==m5game::Action::Shell?uint8_t(r.arg):GK_ADDR_ALL;
+    if(target!=GK_ADDR_ALL){
+      if(!peerInMySession(target))return true;
+      GkTelemetry own;fillTelemetry(own,false);
+      const auto& other=fleet[target];
+      if(!(own.flags&GK_FLAG_GPS_FIX) || !(other.flags&GK_FLAG_GPS_FIX) || own.gps_age_s>2 || other.gps_age_s>2 || millis()-fleetMs[target]>3000)return true;
+      if(m5game::distance({own.lat_e7/1e7,own.lon_e7/1e7},{other.lat_e7/1e7,other.lon_e7/1e7})>25.0)return true;
+    }else{bool peer=false;for(uint8_t k=1;k<=GK_MAX_KARTS;++k)peer|=peerInMySession(k);if(!peer)return true;}
+    gameAttack(target,target==GK_ADDR_ALL?GK_ITEM_LIGHTNING:GK_ITEM_SHELL);
+    m5GameResult=atkTo==target?GK_RES_APPLIED:GK_RES_REJECTED;return true;
+  }
+  if(r.action==m5game::Action::Shield){m5Shield=1;m5GameResult=GK_RES_APPLIED;return true;}
+  if((r.action==m5game::Action::Boost||r.action==m5game::Action::Star)&&slowActive)return true;
+  if(r.action==m5game::Action::Mud&&int32_t(m5StarUntil-millis())>0){m5GameResult=GK_RES_APPLIED;return true;}
+  if(r.action==m5game::Action::Mud&&m5Shield){--m5Shield;m5GameResult=GK_RES_APPLIED;return true;}
+  if(r.action==m5game::Action::Mud){slowSecs=uint8_t(r.arg);handleCommand(0xFE,++usbSeq,GK_CMD_SLOW,GAME_SLOW_MPH,0,0);}
+  else {
+    // Proportional boost: one mode up from the mode in force, or the top mode (ROCKET, STAR). With
+    // no mode in force, or already at the top, there is nothing to add and the request is refused.
+    const bool top=r.action==m5game::Action::Star||(r.arg&255)==m5game::BOOST_TOP;
+    uint8_t secs=r.action==m5game::Action::Star?8:uint8_t(r.arg>>8);
+    if(modeReq>=GK_MODE_COUNT-1)return true;
+    const uint8_t target=top?uint8_t(GK_MODE_COUNT-1):uint8_t(modeReq+1);
+    uint8_t scale=uint8_t(lroundf(MODES[target].currentMaxScale*100.0f));
+    const int32_t left=ovActive?int32_t(ovUntilMs-millis()):0;
+    if(left>0){   // a running boost is never cut short or weakened by a later, smaller one
+      const uint8_t running=uint8_t(lroundf(ovScale*100.0f));if(running>scale)scale=running;
+      const uint32_t leftSecs=uint32_t(left+999)/1000;if(leftSecs>secs)secs=uint8_t(leftSecs>30?30:leftSecs);
+    }
+    boostSecs=secs;handleCommand(0xFE,++usbSeq,GK_CMD_BOOST,scale,0,0);
+  }
+  int8_t idx=cmdLastIdx[1];if(idx>=0){auto&e=cmdHist[1][idx];m5GameOwner={1,idx,e.seq,e.ms};m5GameResult=e.result;
+    if(r.action==m5game::Action::Star&&(e.result==GK_RES_ACCEPTED||e.result==GK_RES_APPLIED))m5StarUntil=millis()+8000;
+  }
+  return true;
+#else
+  (void)line;return false;
+#endif
+}
+
+// A native JOIN counts only once its game-speed write is verified; otherwise the session is left again.
+static void serviceGameJoin() {
+  if (!gameJoinPending) return;
+  const CmdEnt* e = cmdEnt(gameJoinOwner);
+  if (e && e->result == GK_RES_ACCEPTED) return;             // write still in flight
+  gameJoinPending = false;
+  if (!e || e->result != GK_RES_APPLIED) { gameLeave("join not confirmed"); logf("freeplay: game speed not confirmed on the controller, not joined"); }
+}
+
 // ---------------------------------------------------------------- lora
 static void emitFleet(uint8_t id, float rssi, float snr) {
   char buf[GK_TELE_JSON_MAX];
   gkTelemetryToJson(buf, sizeof buf, fleet[id], "fleet", rssi, snr, millis());
   Serial.println(buf);
+  m5Emit(buf);
 }
 
 static void serviceLoraRxOne();
@@ -1097,6 +1497,12 @@ static void serviceLoraRxOne() {
   const uint32_t irqUs = loraIrqMicros;
   if (h->src == GK_ADDR_BASE && !relayed) { baseRssi = (int8_t)constrain(rssi, -127.0f, 0.0f); baseHeardMs = millis(); }   // a repeater copy is not how we hear the pit
   switch (type) {
+    case GK_MSG_COURSE: {
+      if(h->src<1||h->src>8||h->src==kartId)break;
+      GkCourseInfo c;memcpy(&c,buf,sizeof c);if(!c.boot)break;
+      courseGeneration[h->src].accept(c.boot,c.digest,c.h.seq,millis());
+      break;
+    }
     case GK_MSG_TELEMETRY:
       if (h->src >= 1 && h->src <= GK_MAX_KARTS && h->src != kartId) {
         // Repeater copy of a packet already heard directly: drop it (the kart Pi would count it twice).
@@ -1175,7 +1581,13 @@ static void serviceLoraTx() {
   // packet so a pit base or repeater still on 0.2.1 keeps decoding this kart; the game bytes it would
   // carry are all 0 anyway (receivers on 0.2.2+ pad a short packet with zeros).
   const bool gameIdle = !t.session && !t.atk_to && !t.ack_from && !t.score;
-  int st = radio.transmit((uint8_t*)&t, gameIdle ? GK_TELEMETRY_LEN_V1 : sizeof t);
+  int st;
+  // One data-only course identity replaces a scheduled telemetry packet every two seconds.
+  // It is shorter than telemetry and never opens a second LoRa slot. Old nodes ignore type 5.
+  if(gameSession==kartId&&courseRadio.ready()&&millis()-lastCourseTx>=2000){
+    GkCourseInfo c{};c.h=t.h;c.h.type=GK_MSG_COURSE;c.digest=courseRadio.server.package().digest();c.boot=courseRadio.boot();
+    st=radio.transmit((uint8_t*)&c,sizeof c);lastCourseTx=millis();
+  }else st = radio.transmit((uint8_t*)&t, gameIdle ? GK_TELEMETRY_LEN_V1 : sizeof t);
   loraIrq = false;                       // the TX-done interrupt also raised DIO1
   radio.startReceive();
   digitalWrite(PIN_LED, LOW);
@@ -1226,7 +1638,32 @@ static void serviceWifi() {
   }
 }
 
+// Recover the last AP channel after a failed Wi-Fi scan. Both display variants use
+// this policy, but only one transport may own ESP-NOW callbacks in any build.
+static uint8_t espnowCh = 1;
+static bool espnowChLoaded = false;
+static void serviceEspnowChannel() {
+  if (!espnowChLoaded) {
+    // 0.3.5 (upstream): no WiFi = no AP to agree on, so use the fleet's fixed channel instead of a
+    // remembered one. The stored AP channel is only honoured when WiFi is actually in play.
+    espnowCh = wifiWanted() ? prefs.getUChar("espch", GK_ESPNOW_CH) : GK_ESPNOW_CH;
+    if (espnowCh < 1 || espnowCh > 13) espnowCh = GK_ESPNOW_CH;
+    espnowChLoaded = true;
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    uint8_t ch = (uint8_t)WiFi.channel();
+    if (ch >= 1 && ch <= 13 && ch != espnowCh) { espnowCh = ch; prefs.putUChar("espch", ch); }
+  } else if (millis() - wifiRetryMs > 2500) {
+    uint8_t cur; wifi_second_chan_t sc;
+    if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur != espnowCh)
+      esp_wifi_set_channel(espnowCh, WIFI_SECOND_CHAN_NONE);
+  }
+}
+
 // ------------------------------------------------- Core2 item screen (ESP-NOW)
+// The Pi-dependent item screen uses its own broadcast protocol. The M5 v1.5 paired
+// display already owns ESP-NOW; never replace its encrypted receive callback.
+#if !GK_M5_ESPNOW
 // The kart Pi pushes the carried items over USB (`inv boost rocket` / `inv -`); we broadcast them
 // once a second (and at once on change) as a tiny frame any Core2 on our WiFi channel can show.
 // The Core2 answers with a "use slot" frame, relayed to the Pi as a {"t":"invuse",...} line.
@@ -1239,8 +1676,6 @@ static const uint8_t ESPNOW_BCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static uint8_t invItems[3]; static uint8_t invN = 0; static uint8_t invSeq = 0;
 static bool invShield = false;          // a SHIELD is carried (any slot, past the three shown too): applyHit spends it
 static uint32_t invTxMs = 0; static bool espnowUp = false;
-static uint8_t espnowCh = 1;            // the AP's channel (stored): re-pinned after each failed WiFi
-                                        // reconnect scan, so broadcasts stay findable away from the pit
 static volatile uint8_t useSlotRx = 0, useSeqRx = 0; static volatile bool usePending = false;
 static uint8_t useSeqDone = 0xFF;
 
@@ -1274,6 +1709,7 @@ static bool invTakeShield() {
 }
 
 static void espnowOnRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+  if(courseReceive(info,data,len))return;
   if (len != (int)sizeof(GkUseFrame)) return;
   const GkUseFrame* f = (const GkUseFrame*)data;
   if (f->m0 != 'G' || f->m1 != 'U' || f->ver != 1 || f->kart != kartId) return;
@@ -1289,23 +1725,15 @@ static void serviceEspnow() {
     peer.channel = 0; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
     esp_now_add_peer(&peer);
     esp_now_register_recv_cb(espnowOnRecv);
-    // 0.3.5: no WiFi = no AP to agree on, so use the fleet's fixed channel instead of a remembered
-    // one. The stored AP channel is only honoured when WiFi is actually in play (OTA at the pit).
-    espnowCh = wifiWanted() ? prefs.getUChar("espch", GK_ESPNOW_CH) : GK_ESPNOW_CH;
+    // 0.3.5 (upstream): pin the channel at init. serviceEspnowChannel() chooses it: the fleet's fixed
+    // channel with no WiFi, the remembered AP channel only while WiFi is actually in play.
+    serviceEspnowChannel();
     esp_wifi_set_channel(espnowCh, WIFI_SECOND_CHAN_NONE);
     espnowUp = true;
     logf("espnow up (Core2 item screen, ch %u%s)", espnowCh, wifiWanted() ? "" : " fixed");
   }
-  if (WiFi.status() == WL_CONNECTED) {
-    uint8_t ch = (uint8_t)WiFi.channel();                        // remember the AP's channel
-    if (ch >= 1 && ch <= 13 && ch != espnowCh) { espnowCh = ch; prefs.putUChar("espch", ch); }
-  } else if (millis() - wifiRetryMs > 2500) {
-    // a reconnect scan hops the radio and parks it anywhere; once it is over, go back to our
-    // channel so the Core2 (locked there) keeps hearing the broadcasts
-    uint8_t cur; wifi_second_chan_t sc;
-    if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur != espnowCh)
-      esp_wifi_set_channel(espnowCh, WIFI_SECOND_CHAN_NONE);
-  }
+  courseRadio.begin();
+  courseRadio.poll(kartId, gameSession==kartId, !otaInProgress, millis());
   if (usePending) {
     usePending = false;
     if (useSeqRx != useSeqDone) {
@@ -1321,6 +1749,11 @@ static void serviceEspnow() {
   }
 }
 
+#else
+// A paired M5 kart has no Pi inventory. Its own shield is m5Shield, armed with FIRE and checked first in applyHit.
+static bool invTakeShield() { return false; }
+#endif // !GK_M5_ESPNOW
+
 // ---------------------------------------------------------------- usb
 static void usbReport() {
   GkTelemetry t; fillTelemetry(t, false);
@@ -1335,9 +1768,12 @@ static void usbReport() {
              gps.hdop.isValid() ? gps.hdop.hdop() : 99.0, lastFixMs ? (unsigned long)(now - lastFixMs) : 999999UL, gpsConfigured ? 5 : 1, bl, bo, ba, rp ? racePos : 0, rp ? raceState : 0);
   }
   Serial.println(buf);
+  m5Emit(buf);
+  Serial.printf("{\"t\":\"course_host\",\"kart\":%u,\"ready\":%s}\n",kartId,courseRadio.ready()?"true":"false");
 }
 
 static void usbStatus() {
+  Serial.printf("{\"t\":\"course_host\",\"kart\":%u,\"ready\":%s}\n",kartId,courseRadio.ready()?"true":"false");
   const VescActiveLimits& L = vesc.limits();
   char ssid[72], mac[40], upin[40], hw[32];                 // console-typed / VESC-supplied text: escape for JSON
   gkJsonStr(ssid, sizeof ssid, wifiSsid.c_str()); gkJsonStr(mac, sizeof mac, vescMac.c_str());
@@ -1363,7 +1799,19 @@ static void usbStatus() {
                 (int)txPowerDbm, radiatedDbm(), (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMinFreeHeap());
 }
 
+// The UUID console is shared by BLE and wired VESC builds. Only BLE has a rejected-peer
+// quarantine, so clearing it after a valid re-pin is intentionally a no-op for UART.
+static void clearBleRejection() {
+#if !VESC_TRANSPORT_UART
+  bleRejectMac = "";
+#endif
+}
+
 static void usbCommand(char* line) {
+  if(courseRadio.command(line,Serial,kartId,millis()))return;
+#if GK_M5_ESPNOW
+  if (m5WirelessSettings.command(line, m5Wireless, Serial)) return;
+#endif
   while (*line == ' ') line++;
   char* arg = strchr(line, ' ');
   if (arg) { *arg++ = 0; while (*arg == ' ') arg++; }
@@ -1386,7 +1834,10 @@ static void usbCommand(char* line) {
     if (secs < 1 || secs > 30 || sc < 0.1f || sc > 1.0f) logf("usage: boost SECS(1-30) SCALE(0.10-1.00)");
     else { boostSecs = (uint8_t)secs; handleCommand(0xFE, ++usbSeq, GK_CMD_BOOST, (uint8_t)lroundf(sc * 100), 0, 0); }
   }
-  else if (!strcmp(line, "inv")) {                        // inv a b c | inv -   carried items for the Core2 screen
+  else if (!strcmp(line, "inv")) {                        // Pi-owned inventory; not the paired M5 dashboard
+#if GK_M5_ESPNOW
+    logf("inv unavailable: paired M5 has no native item authority");
+#else
     invN = 0; invShield = false;
     for (char* t = arg ? strtok(arg, " ") : NULL; t; t = strtok(NULL, " ")) {   // every item: a 4th still shields
       if (!strcmp(t, "-")) break;
@@ -1400,6 +1851,7 @@ static void usbCommand(char* line) {
     invSeq++; invTxMs = 0;                                // broadcast at once
     logf("inv: %u item(s) [%s %s %s]", invN, invN > 0 ? invName(invItems[0]) : "-",
          invN > 1 ? invName(invItems[1]) : "-", invN > 2 ? invName(invItems[2]) : "-");
+#endif
   }
   else if (!strcmp(line, "wifi") && arg) {
     if (!strcmp(arg, "clear")) { prefs.putString("ssid", ""); prefs.putString("pass", ""); logf("wifi credentials cleared; reboot to apply (radio stays on the Core2 channel)"); }
@@ -1412,15 +1864,15 @@ static void usbCommand(char* line) {
   else if (!strcmp(line, "otapw") && arg) { prefs.putString("otapw", arg); logf("ota password stored; reboot to apply"); }
   else if (!strcmp(line, "rate") && arg) { int r = atoi(arg); if (r == 1 || r == 2) { reportRate = r; prefs.putUChar("rate", r); logf("report rate %d Hz", r); } else logf("rate must be 1 or 2"); }
   else if (!strcmp(line, "vescuuid") && arg) {
-    if (!strcmp(arg, "clear")) { prefs.remove("vescuuid"); vescUuid = ""; vescIdentityBad = false; bleRejectMac = ""; logf("vesc uuid pin cleared"); }
-    else if (!strcmp(arg, "now") && vesc.uuidHex[0]) { vescUuid = vesc.uuidHex; prefs.putString("vescuuid", vescUuid); vescIdentityBad = false; bleRejectMac = ""; logf("vesc uuid pinned to %s", vescUuid.c_str()); }
-    else if (strlen(arg) == 24) { vescUuid = arg; prefs.putString("vescuuid", vescUuid); vescIdCheckedMs = 0; bleRejectMac = ""; logf("vesc uuid pinned to %s", arg); }
+    if (!strcmp(arg, "clear")) { prefs.remove("vescuuid"); vescUuid = ""; vescIdentityBad = false; clearBleRejection(); logf("vesc uuid pin cleared"); }
+    else if (!strcmp(arg, "now") && vesc.uuidHex[0]) { vescUuid = vesc.uuidHex; prefs.putString("vescuuid", vescUuid); vescIdentityBad = false; clearBleRejection(); logf("vesc uuid pinned to %s", vescUuid.c_str()); }
+    else if (strlen(arg) == 24) { vescUuid = arg; prefs.putString("vescuuid", vescUuid); vescIdCheckedMs = 0; clearBleRejection(); logf("vesc uuid pinned to %s", arg); }
     else logf("usage: vescuuid <24 hex> | now | clear");
   }
   else if (!strcmp(line, "vescmac") && arg) {
     if (!strcmp(arg, "clear")) { prefs.remove("vescmac"); vescMac = ""; logf("vesc address cleared"); }
     else { prefs.putString("vescmac", arg); vescMac = arg; logf("vesc address pinned to %s", arg); }
-    haveFirst = false; wroteThisBoot = false; bleRejectMac = "";   // a different controller gets its own baseline
+    haveFirst = false; wroteThisBoot = false; clearBleRejection();   // a different controller gets its own baseline
 #if !VESC_TRANSPORT_UART
     if (bleConnected && pClient) pClient->disconnect();
 #endif
@@ -1479,14 +1931,14 @@ static void usbCommand(char* line) {
   }
   else if (!strcmp(line, "session") && arg) {              // session host | join N | leave   (freeplay multiplayer, kart Pi)
     if (!strcmp(arg, "host")) {
-      if (gameSession != kartId) { if (atkTo) attackEnd("timeout", "session ended"); gameSession = kartId; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; }
+      if (gameSession != kartId) { if (atkTo) attackEnd("timeout", "session ended"); gameLeave(nullptr); gameSession = kartId; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; }
       logf("freeplay: hosting game %u", kartId);
     } else if (!strncmp(arg, "join", 4)) {
       int n = atoi(arg + 4);
       if (n < 1 || n > GK_MAX_KARTS) logf("usage: session join 1..8");
       else if (n == kartId) logf("session join %d: that is me (use session host)", n);
       else if (!kartHosting((uint8_t)n)) { logf("session join %d: kart %d is not hosting a game (or not heard for 10 s)", n, n); gameLineDirty = true; }
-      else { if (gameSession != n) { if (atkTo) attackEnd("timeout", "session ended"); gameSession = (uint8_t)n; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; } logf("freeplay: joined kart %d's game", n); }
+      else { if (gameSession != n) { if (atkTo) attackEnd("timeout", "session ended"); gameLeave(nullptr); gameSession = (uint8_t)n; gameScore = 0; gameEnded = nullptr; gameLineDirty = true; } logf("freeplay: joined kart %d's game", n); }
     } else if (!strcmp(arg, "leave")) { bool was = gameSession; gameLeave(nullptr); logf(was ? "freeplay: left the game" : "freeplay: not in a game"); gameLineDirty = true; }
     else logf("usage: session host | join N | leave");
   }
@@ -1514,7 +1966,7 @@ static void serviceUsb() {
     }
     if (usbLen < sizeof(usbLine) - 1) usbLine[usbLen++] = c; else usbOverflow = true;
   }
-  if (millis() - usbReportMs >= USB_SELF_REPORT_MS) { usbReportMs = millis(); usbReport(); }
+  if (millis() - usbReportMs >= USB_SELF_REPORT_MS) { usbReportMs = millis(); usbReport(); m5Report(); }
 }
 
 // ---------------------------------------------------------------- oled
@@ -1622,7 +2074,23 @@ void setup() {
   NimBLEDevice::setPower(9);
 #endif
 
+#if GK_M5_UART
+  Serial2.setRxBufferSize(256); Serial2.setTxBufferSize(4096);
+  Serial2.begin(M5_UART_BAUD, SERIAL_8N1, M5_UART_RX_PIN, M5_UART_TX_PIN);
+#endif
+#if GK_M5_LINK
+  m5Boot = esp_random(); if (!m5Boot) m5Boot = 1;
+  m5Gate.rotate(esp_random(), millis());
+#endif
   wifiStart();
+#if GK_M5_ESPNOW
+  m5now::Link::setExtraReceiver(courseReceive);
+  if (m5WirelessSettings.load()) {
+    const auto& p=m5WirelessSettings.pair;
+    m5Wireless.begin(m5now::Role::Heltec,p.peer,p.lmk,p.pmk);
+  }
+  m5WirelessSettings.status(m5Wireless,Serial);
+#endif
 
   esp_task_wdt_config_t wdt = { .timeout_ms = WDT_TIMEOUT_S * 1000, .idle_core_mask = 0, .trigger_panic = true };
   if (esp_task_wdt_reconfigure(&wdt) != ESP_OK) esp_task_wdt_init(&wdt);
@@ -1635,15 +2103,20 @@ void setup() {
 
 void loop() {
   if (!otaInProgress) esp_task_wdt_reset();
+  serviceM5();
   serviceUsb();
   serviceVesc();
   serviceWrites();
   serviceGame();
+  serviceGameJoin();
   serviceGps();
   serviceLoraRx();
   serviceLoraTx();
   serviceWifi();
+  serviceEspnowChannel();
+#if !GK_M5_ESPNOW
   serviceEspnow();
+#endif
   serviceOled();
   serviceLoraRx();                       // again after the slow OLED/WiFi work
   delay(1);

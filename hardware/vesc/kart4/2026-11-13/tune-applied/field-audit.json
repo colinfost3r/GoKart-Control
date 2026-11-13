@@ -1,0 +1,2466 @@
+{
+  "motor_configuration": {
+    "signature_hex": "2e43a161",
+    "field_count": 189,
+    "equal_count": 174,
+    "different_count": 15,
+    "fields": [
+      {
+        "field": "pwm_mode",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Synchronous",
+          "candidate": "Synchronous"
+        }
+      },
+      {
+        "field": "comm_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Integrate",
+          "candidate": "Integrate"
+        }
+      },
+      {
+        "field": "motor_type",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "FOC",
+          "candidate": "FOC"
+        }
+      },
+      {
+        "field": "sensor_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Sensorless",
+          "candidate": "Sensorless"
+        }
+      },
+      {
+        "field": "l_current_max",
+        "reference": 120.0,
+        "candidate": 140.0,
+        "status": "different"
+      },
+      {
+        "field": "l_current_min",
+        "reference": -10.0,
+        "candidate": -5.0,
+        "status": "different"
+      },
+      {
+        "field": "l_in_current_max",
+        "reference": 250.0,
+        "candidate": 100.0,
+        "status": "different"
+      },
+      {
+        "field": "l_in_current_min",
+        "reference": -200.0,
+        "candidate": -12.0,
+        "status": "different"
+      },
+      {
+        "field": "l_abs_current_max",
+        "reference": 420.0,
+        "candidate": 220.0,
+        "status": "different"
+      },
+      {
+        "field": "l_min_erpm",
+        "reference": -100000.0,
+        "candidate": -150000.0,
+        "status": "different"
+      },
+      {
+        "field": "l_max_erpm",
+        "reference": 100000.0,
+        "candidate": 150000.0,
+        "status": "different"
+      },
+      {
+        "field": "l_erpm_start",
+        "reference": 0.8,
+        "candidate": 0.8,
+        "status": "equal"
+      },
+      {
+        "field": "l_max_erpm_fbrake",
+        "reference": 300.0,
+        "candidate": 300.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_max_erpm_fbrake_cc",
+        "reference": 1500.0,
+        "candidate": 1500.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_min_vin",
+        "reference": 12.0,
+        "candidate": 60.0,
+        "status": "different"
+      },
+      {
+        "field": "l_max_vin",
+        "reference": 84.0,
+        "candidate": 90.0,
+        "status": "different"
+      },
+      {
+        "field": "l_battery_cut_start",
+        "reference": 68.0,
+        "candidate": 68.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_battery_cut_end",
+        "reference": 62.0,
+        "candidate": 62.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_slow_abs_current",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "l_temp_fet_start",
+        "reference": 85.0,
+        "candidate": 85.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_temp_fet_end",
+        "reference": 100.0,
+        "candidate": 100.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_temp_motor_start",
+        "reference": 85.0,
+        "candidate": 85.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_temp_motor_end",
+        "reference": 100.0,
+        "candidate": 100.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_temp_accel_dec",
+        "reference": 0.15,
+        "candidate": 0.15,
+        "status": "equal"
+      },
+      {
+        "field": "l_min_duty",
+        "reference": 0.005,
+        "candidate": 0.005,
+        "status": "equal"
+      },
+      {
+        "field": "l_max_duty",
+        "reference": 0.95,
+        "candidate": 0.95,
+        "status": "equal"
+      },
+      {
+        "field": "l_watt_max",
+        "reference": 1500000.0,
+        "candidate": 1500000.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_watt_min",
+        "reference": -1500000.0,
+        "candidate": -1500000.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_current_max_scale",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_current_min_scale",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "l_duty_start",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "sl_min_erpm",
+        "reference": 150.0,
+        "candidate": 150.0,
+        "status": "equal"
+      },
+      {
+        "field": "sl_min_erpm_cycle_int_limit",
+        "reference": 1100.0,
+        "candidate": 1100.0,
+        "status": "equal"
+      },
+      {
+        "field": "sl_max_fullbreak_current_dir_change",
+        "reference": 10.0,
+        "candidate": 10.0,
+        "status": "equal"
+      },
+      {
+        "field": "sl_cycle_int_limit",
+        "reference": 62.0,
+        "candidate": 62.0,
+        "status": "equal"
+      },
+      {
+        "field": "sl_phase_advance_at_br",
+        "reference": 0.8,
+        "candidate": 0.8,
+        "status": "equal"
+      },
+      {
+        "field": "sl_cycle_int_rpm_br",
+        "reference": 80000.0,
+        "candidate": 80000.0,
+        "status": "equal"
+      },
+      {
+        "field": "sl_bemf_coupling_k",
+        "reference": 600.0,
+        "candidate": 600.0,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__0",
+        "reference": -1,
+        "candidate": -1,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__1",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__2",
+        "reference": 3,
+        "candidate": 3,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__3",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__4",
+        "reference": 5,
+        "candidate": 5,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__5",
+        "reference": 6,
+        "candidate": 6,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__6",
+        "reference": 4,
+        "candidate": 4,
+        "status": "equal"
+      },
+      {
+        "field": "hall_table__7",
+        "reference": -1,
+        "candidate": -1,
+        "status": "equal"
+      },
+      {
+        "field": "hall_sl_erpm",
+        "reference": 2000.0,
+        "candidate": 2000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_current_kp",
+        "reference": 0.08049999922513962,
+        "candidate": 0.08049999922513962,
+        "status": "equal"
+      },
+      {
+        "field": "foc_current_ki",
+        "reference": 12.710000038146973,
+        "candidate": 12.710000038146973,
+        "status": "equal"
+      },
+      {
+        "field": "foc_f_zv",
+        "reference": 30000.0,
+        "candidate": 30000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_dt_us",
+        "reference": 0.11999999731779099,
+        "candidate": 0.11999999731779099,
+        "status": "equal"
+      },
+      {
+        "field": "foc_encoder_inverted",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_encoder_offset",
+        "reference": 180.0,
+        "candidate": 180.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_encoder_ratio",
+        "reference": 7.0,
+        "candidate": 7.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sensor_mode",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Hall Sensors",
+          "candidate": "Hall Sensors"
+        }
+      },
+      {
+        "field": "foc_pll_kp",
+        "reference": 2000.0,
+        "candidate": 2000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_pll_ki",
+        "reference": 30000.0,
+        "candidate": 30000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_motor_l",
+        "reference": 8.053000055951998e-05,
+        "candidate": 8.053000055951998e-05,
+        "status": "equal"
+      },
+      {
+        "field": "foc_motor_ld_lq_diff",
+        "reference": 2.5839999580057338e-05,
+        "candidate": 2.5839999580057338e-05,
+        "status": "equal"
+      },
+      {
+        "field": "foc_motor_r",
+        "reference": 0.01269999984651804,
+        "candidate": 0.01269999984651804,
+        "status": "equal"
+      },
+      {
+        "field": "foc_motor_flux_linkage",
+        "reference": 0.017424000427126884,
+        "candidate": 0.017424000427126884,
+        "status": "equal"
+      },
+      {
+        "field": "foc_observer_gain",
+        "reference": 3290000.0,
+        "candidate": 3290000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_observer_gain_slow",
+        "reference": 0.05000000074505806,
+        "candidate": 0.05000000074505806,
+        "status": "equal"
+      },
+      {
+        "field": "foc_observer_offset",
+        "reference": -1.0,
+        "candidate": -1.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_duty_dowmramp_kp",
+        "reference": 50.0,
+        "candidate": 50.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_duty_dowmramp_ki",
+        "reference": 1000.0,
+        "candidate": 1000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_start_curr_dec",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_start_curr_dec_rpm",
+        "reference": 2500.0,
+        "candidate": 2500.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_openloop_rpm",
+        "reference": 1500.0,
+        "candidate": 700.0,
+        "status": "different"
+      },
+      {
+        "field": "foc_openloop_rpm_low",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_d_gain_scale_start",
+        "reference": 0.9,
+        "candidate": 0.9,
+        "status": "equal"
+      },
+      {
+        "field": "foc_d_gain_scale_max_mod",
+        "reference": 0.2,
+        "candidate": 0.2,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_openloop_hyst",
+        "reference": 0.1,
+        "candidate": 0.1,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_openloop_time_lock",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_openloop_time_ramp",
+        "reference": 0.1,
+        "candidate": 0.1,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_openloop_time",
+        "reference": 0.05,
+        "candidate": 0.05,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_openloop_boost_q",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_openloop_max_q",
+        "reference": -1.0,
+        "candidate": -1.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__0",
+        "reference": 255,
+        "candidate": 255,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__1",
+        "reference": 48,
+        "candidate": 48,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__2",
+        "reference": 179,
+        "candidate": 179,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__3",
+        "reference": 16,
+        "candidate": 16,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__4",
+        "reference": 118,
+        "candidate": 118,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__5",
+        "reference": 85,
+        "candidate": 85,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__6",
+        "reference": 147,
+        "candidate": 147,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_table__7",
+        "reference": 255,
+        "candidate": 255,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hall_interp_erpm",
+        "reference": 500.0,
+        "candidate": 500.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_erpm",
+        "reference": 2500.0,
+        "candidate": 4000.0,
+        "status": "different"
+      },
+      {
+        "field": "foc_sample_v0_v7",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sample_high_current",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sat_comp_mode",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Lambda",
+          "candidate": "Lambda"
+        }
+      },
+      {
+        "field": "foc_sat_comp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_temp_comp",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_temp_comp_base_temp",
+        "reference": 25.0,
+        "candidate": 25.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_current_filter_const",
+        "reference": 0.1,
+        "candidate": 0.1,
+        "status": "equal"
+      },
+      {
+        "field": "foc_cc_decoupling",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "FOC_CC_DECOUPLING_DISABLED",
+          "candidate": "FOC_CC_DECOUPLING_DISABLED"
+        }
+      },
+      {
+        "field": "foc_observer_type",
+        "reference": 3,
+        "candidate": 3,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "FOC_OBSERVER_MXLEMMING_LAMBDA_COMP",
+          "candidate": "FOC_OBSERVER_MXLEMMING_LAMBDA_COMP"
+        }
+      },
+      {
+        "field": "foc_hfi_voltage_start",
+        "reference": 20.0,
+        "candidate": 20.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hfi_voltage_run",
+        "reference": 4.0,
+        "candidate": 4.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hfi_voltage_max",
+        "reference": 6.0,
+        "candidate": 6.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hfi_gain",
+        "reference": 0.3,
+        "candidate": 0.3,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hfi_hyst",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_sl_erpm_hfi",
+        "reference": 3000.0,
+        "candidate": 3000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hfi_start_samples",
+        "reference": 5,
+        "candidate": 5,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hfi_obs_ovr_sec",
+        "reference": 0.0010000000474974513,
+        "candidate": 0.0010000000474974513,
+        "status": "equal"
+      },
+      {
+        "field": "foc_hfi_samples",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "16",
+          "candidate": "16"
+        }
+      },
+      {
+        "field": "foc_offsets_cal_on_boot",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_current__0",
+        "reference": 2052.300048828125,
+        "candidate": 2052.300048828125,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_current__1",
+        "reference": 2048.0390625,
+        "candidate": 2048.0390625,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_current__2",
+        "reference": 2052.0791015625,
+        "candidate": 2052.0791015625,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_voltage__0",
+        "reference": 0.0029,
+        "candidate": 0.0029,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_voltage__1",
+        "reference": 0.0072,
+        "candidate": 0.0072,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_voltage__2",
+        "reference": -0.0102,
+        "candidate": -0.0102,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_voltage_undriven__0",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_voltage_undriven__1",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_offsets_voltage_undriven__2",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_phase_filter_enable",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "foc_phase_filter_disable_fault",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "foc_phase_filter_max_erpm",
+        "reference": 4000.0,
+        "candidate": 4000.0,
+        "status": "equal"
+      },
+      {
+        "field": "foc_mtpa_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Disabled",
+          "candidate": "Disabled"
+        }
+      },
+      {
+        "field": "foc_fw_current_max",
+        "reference": 100.0,
+        "candidate": 95.0,
+        "status": "different"
+      },
+      {
+        "field": "foc_fw_duty_start",
+        "reference": 0.9,
+        "candidate": 0.87,
+        "status": "different"
+      },
+      {
+        "field": "foc_fw_ramp_time",
+        "reference": 0.2,
+        "candidate": 0.2,
+        "status": "equal"
+      },
+      {
+        "field": "foc_fw_q_current_factor",
+        "reference": 0.02,
+        "candidate": 0.02,
+        "status": "equal"
+      },
+      {
+        "field": "foc_speed_soure",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Observer",
+          "candidate": "Observer"
+        }
+      },
+      {
+        "field": "gpd_buffer_notify_left",
+        "reference": 200,
+        "candidate": 200,
+        "status": "equal"
+      },
+      {
+        "field": "gpd_buffer_interpol",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "gpd_current_filter_const",
+        "reference": 0.1,
+        "candidate": 0.1,
+        "status": "equal"
+      },
+      {
+        "field": "gpd_current_kp",
+        "reference": 0.029999999329447746,
+        "candidate": 0.029999999329447746,
+        "status": "equal"
+      },
+      {
+        "field": "gpd_current_ki",
+        "reference": 50.0,
+        "candidate": 50.0,
+        "status": "equal"
+      },
+      {
+        "field": "sp_pid_loop_rate",
+        "reference": 5,
+        "candidate": 5,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "1000 Hz",
+          "candidate": "1000 Hz"
+        }
+      },
+      {
+        "field": "s_pid_kp",
+        "reference": 0.004000000189989805,
+        "candidate": 0.004000000189989805,
+        "status": "equal"
+      },
+      {
+        "field": "s_pid_ki",
+        "reference": 0.004000000189989805,
+        "candidate": 0.004000000189989805,
+        "status": "equal"
+      },
+      {
+        "field": "s_pid_kd",
+        "reference": 9.999999747378752e-05,
+        "candidate": 9.999999747378752e-05,
+        "status": "equal"
+      },
+      {
+        "field": "s_pid_kd_filter",
+        "reference": 0.2,
+        "candidate": 0.2,
+        "status": "equal"
+      },
+      {
+        "field": "s_pid_min_erpm",
+        "reference": 900.0,
+        "candidate": 900.0,
+        "status": "equal"
+      },
+      {
+        "field": "s_pid_allow_braking",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "s_pid_ramp_erpms_s",
+        "reference": 25000.0,
+        "candidate": 25000.0,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_kp",
+        "reference": 0.02500000037252903,
+        "candidate": 0.02500000037252903,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_ki",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_kd",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_kd_proc",
+        "reference": 0.0003499999875202775,
+        "candidate": 0.0003499999875202775,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_kd_filter",
+        "reference": 0.2,
+        "candidate": 0.2,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_ang_div",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_gain_dec_angle",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "p_pid_offset",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "cc_startup_boost_duty",
+        "reference": 0.01,
+        "candidate": 0.01,
+        "status": "equal"
+      },
+      {
+        "field": "cc_min_current",
+        "reference": 0.05000000074505806,
+        "candidate": 0.05000000074505806,
+        "status": "equal"
+      },
+      {
+        "field": "cc_gain",
+        "reference": 0.004600000102072954,
+        "candidate": 0.004600000102072954,
+        "status": "equal"
+      },
+      {
+        "field": "cc_ramp_step_max",
+        "reference": 0.04,
+        "candidate": 0.04,
+        "status": "equal"
+      },
+      {
+        "field": "m_fault_stop_time_ms",
+        "reference": 50,
+        "candidate": 500,
+        "status": "different"
+      },
+      {
+        "field": "m_duty_ramp_step",
+        "reference": 0.02,
+        "candidate": 0.02,
+        "status": "equal"
+      },
+      {
+        "field": "m_current_backoff_gain",
+        "reference": 0.5,
+        "candidate": 0.5,
+        "status": "equal"
+      },
+      {
+        "field": "m_encoder_counts",
+        "reference": 8192,
+        "candidate": 8192,
+        "status": "equal"
+      },
+      {
+        "field": "m_encoder_sin_amp",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_encoder_cos_amp",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_encoder_sin_offset",
+        "reference": 1.65,
+        "candidate": 1.65,
+        "status": "equal"
+      },
+      {
+        "field": "m_encoder_cos_offset",
+        "reference": 1.65,
+        "candidate": 1.65,
+        "status": "equal"
+      },
+      {
+        "field": "m_encoder_sincos_filter_constant",
+        "reference": 0.5,
+        "candidate": 0.5,
+        "status": "equal"
+      },
+      {
+        "field": "m_encoder_sincos_phase_correction",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_sensor_port_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Hall Sensors",
+          "candidate": "Hall Sensors"
+        }
+      },
+      {
+        "field": "m_invert_direction",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "m_drv8301_oc_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Current Limit",
+          "candidate": "Current Limit"
+        }
+      },
+      {
+        "field": "m_drv8301_oc_adj",
+        "reference": 16,
+        "candidate": 16,
+        "status": "equal"
+      },
+      {
+        "field": "m_bldc_f_sw_min",
+        "reference": 3000.0,
+        "candidate": 3000.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_bldc_f_sw_max",
+        "reference": 35000.0,
+        "candidate": 35000.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_dc_f_sw",
+        "reference": 25000.0,
+        "candidate": 25000.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_ntc_motor_beta",
+        "reference": 3380.0,
+        "candidate": 3380.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_out_aux_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Off",
+          "candidate": "Off"
+        }
+      },
+      {
+        "field": "m_motor_temp_sens_type",
+        "reference": 0,
+        "candidate": 8,
+        "status": "different",
+        "enum_labels": {
+          "reference": "NTC 10K at 25\u00b0C",
+          "candidate": "Disabled"
+        }
+      },
+      {
+        "field": "m_ptc_motor_coeff",
+        "reference": 0.6100000143051147,
+        "candidate": 0.6100000143051147,
+        "status": "equal"
+      },
+      {
+        "field": "m_ntcx_ptcx_res",
+        "reference": 10000.0,
+        "candidate": 10000.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_ntcx_ptcx_temp_base",
+        "reference": 25.0,
+        "candidate": 25.0,
+        "status": "equal"
+      },
+      {
+        "field": "m_hall_extra_samples",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "m_batt_filter_const",
+        "reference": 45,
+        "candidate": 45,
+        "status": "equal"
+      },
+      {
+        "field": "si_motor_poles",
+        "reference": 14,
+        "candidate": 14,
+        "status": "equal"
+      },
+      {
+        "field": "si_gear_ratio",
+        "reference": 2.7690000534057617,
+        "candidate": 2.7690000534057617,
+        "status": "equal"
+      },
+      {
+        "field": "si_wheel_diameter",
+        "reference": 0.08299999684095383,
+        "candidate": 0.08299999684095383,
+        "status": "equal"
+      },
+      {
+        "field": "si_battery_type",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "BATTERY_TYPE_LIION_3_0__4_2",
+          "candidate": "BATTERY_TYPE_LIION_3_0__4_2"
+        }
+      },
+      {
+        "field": "si_battery_cells",
+        "reference": 20,
+        "candidate": 20,
+        "status": "equal"
+      },
+      {
+        "field": "si_battery_ah",
+        "reference": 6.0,
+        "candidate": 6.0,
+        "status": "equal"
+      },
+      {
+        "field": "si_motor_nl_current",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "bms.type",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "VESC BMS",
+          "candidate": "VESC BMS"
+        }
+      },
+      {
+        "field": "bms.limit_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "bitfield_labels": {
+          "reference": [],
+          "candidate": []
+        }
+      },
+      {
+        "field": "bms.t_limit_start",
+        "reference": 45.0,
+        "candidate": 45.0,
+        "status": "equal"
+      },
+      {
+        "field": "bms.t_limit_end",
+        "reference": 65.0,
+        "candidate": 65.0,
+        "status": "equal"
+      },
+      {
+        "field": "bms.soc_limit_start",
+        "reference": 0.05,
+        "candidate": 0.05,
+        "status": "equal"
+      },
+      {
+        "field": "bms.soc_limit_end",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "bms.fwd_can_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Disabled",
+          "candidate": "Disabled"
+        }
+      }
+    ]
+  },
+  "app_configuration": {
+    "signature_hex": "1d003a2c",
+    "field_count": 187,
+    "equal_count": 187,
+    "different_count": 0,
+    "fields": [
+      {
+        "field": "controller_id",
+        "reference": 88,
+        "candidate": 88,
+        "status": "equal"
+      },
+      {
+        "field": "timeout_msec",
+        "reference": 1000,
+        "candidate": 1000,
+        "status": "equal"
+      },
+      {
+        "field": "timeout_brake_current",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "can_status_rate_1",
+        "reference": 50,
+        "candidate": 50,
+        "status": "equal"
+      },
+      {
+        "field": "can_status_rate_2",
+        "reference": 5,
+        "candidate": 5,
+        "status": "equal"
+      },
+      {
+        "field": "can_status_msgs_r1",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "bitfield_labels": {
+          "reference": [],
+          "candidate": []
+        }
+      },
+      {
+        "field": "can_status_msgs_r2",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "bitfield_labels": {
+          "reference": [],
+          "candidate": []
+        }
+      },
+      {
+        "field": "can_baud_rate",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "CAN_BAUD_500K",
+          "candidate": "CAN_BAUD_500K"
+        }
+      },
+      {
+        "field": "pairing_done",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "permanent_uart_enabled",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "shutdown_mode",
+        "reference": 7,
+        "candidate": 7,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "OFF_AFTER_30M",
+          "candidate": "OFF_AFTER_30M"
+        }
+      },
+      {
+        "field": "can_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "VESC",
+          "candidate": "VESC"
+        }
+      },
+      {
+        "field": "uavcan_esc_index",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "uavcan_raw_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Current Control",
+          "candidate": "Current Control"
+        }
+      },
+      {
+        "field": "uavcan_raw_rpm_max",
+        "reference": 50000.0,
+        "candidate": 50000.0,
+        "status": "equal"
+      },
+      {
+        "field": "uavcan_status_current_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Motor Current",
+          "candidate": "Motor Current"
+        }
+      },
+      {
+        "field": "servo_out_enable",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "kill_sw_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Disabled",
+          "candidate": "Disabled"
+        }
+      },
+      {
+        "field": "app_to_use",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "ADC",
+          "candidate": "ADC"
+        }
+      },
+      {
+        "field": "app_ppm_conf.ctrl_type",
+        "reference": 3,
+        "candidate": 3,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Current No Reverse With Brake",
+          "candidate": "Current No Reverse With Brake"
+        }
+      },
+      {
+        "field": "app_ppm_conf.pid_max_erpm",
+        "reference": 15000.0,
+        "candidate": 15000.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.hyst",
+        "reference": 0.15000000596046448,
+        "candidate": 0.15000000596046448,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.pulse_start",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.pulse_end",
+        "reference": 2.0,
+        "candidate": 2.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.pulse_center",
+        "reference": 1.5,
+        "candidate": 1.5,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.median_filter",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.safe_start",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Regular",
+          "candidate": "Regular"
+        }
+      },
+      {
+        "field": "app_ppm_conf.throttle_exp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.throttle_exp_brake",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.throttle_exp_mode",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Polynomial",
+          "candidate": "Polynomial"
+        }
+      },
+      {
+        "field": "app_ppm_conf.ramp_time_pos",
+        "reference": 0.4000000059604645,
+        "candidate": 0.4000000059604645,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.ramp_time_neg",
+        "reference": 0.20000000298023224,
+        "candidate": 0.20000000298023224,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.multi_esc",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.tc",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.tc_max_diff",
+        "reference": 3000.0,
+        "candidate": 3000.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.max_erpm_for_dir",
+        "reference": 4000.0,
+        "candidate": 4000.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.smart_rev_max_duty",
+        "reference": 0.07000000029802322,
+        "candidate": 0.07000000029802322,
+        "status": "equal"
+      },
+      {
+        "field": "app_ppm_conf.smart_rev_ramp_time",
+        "reference": 3.0,
+        "candidate": 3.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.ctrl_type",
+        "reference": 3,
+        "candidate": 3,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Current Reverse Button",
+          "candidate": "Current Reverse Button"
+        }
+      },
+      {
+        "field": "app_adc_conf.hyst",
+        "reference": 0.15000000596046448,
+        "candidate": 0.15000000596046448,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage_start",
+        "reference": 0.826,
+        "candidate": 0.826,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage_end",
+        "reference": 2.431,
+        "candidate": 2.431,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage_min",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage_max",
+        "reference": 3.5,
+        "candidate": 3.5,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage_center",
+        "reference": 1.628,
+        "candidate": 1.628,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage2_start",
+        "reference": 0.367,
+        "candidate": 0.367,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage2_end",
+        "reference": 0.371,
+        "candidate": 0.371,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.use_filter",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.safe_start",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Regular",
+          "candidate": "Regular"
+        }
+      },
+      {
+        "field": "app_adc_conf.buttons",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "bitfield_labels": {
+          "reference": [],
+          "candidate": []
+        }
+      },
+      {
+        "field": "app_adc_conf.voltage_inverted",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.voltage2_inverted",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.throttle_exp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.throttle_exp_brake",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.throttle_exp_mode",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Polynomial",
+          "candidate": "Polynomial"
+        }
+      },
+      {
+        "field": "app_adc_conf.ramp_time_pos",
+        "reference": 0.30000001192092896,
+        "candidate": 0.30000001192092896,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.ramp_time_neg",
+        "reference": 0.10000000149011612,
+        "candidate": 0.10000000149011612,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.multi_esc",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.tc",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.tc_max_diff",
+        "reference": 3000.0,
+        "candidate": 3000.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_adc_conf.update_rate_hz",
+        "reference": 500,
+        "candidate": 500,
+        "status": "equal"
+      },
+      {
+        "field": "app_uart_baudrate",
+        "reference": 115200,
+        "candidate": 115200,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.ctrl_type",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Off",
+          "candidate": "Off"
+        }
+      },
+      {
+        "field": "app_chuk_conf.hyst",
+        "reference": 0.15000000596046448,
+        "candidate": 0.15000000596046448,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.ramp_time_pos",
+        "reference": 0.4000000059604645,
+        "candidate": 0.4000000059604645,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.ramp_time_neg",
+        "reference": 0.20000000298023224,
+        "candidate": 0.20000000298023224,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.stick_erpm_per_s_in_cc",
+        "reference": 3000.0,
+        "candidate": 3000.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.throttle_exp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.throttle_exp_brake",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.throttle_exp_mode",
+        "reference": 2,
+        "candidate": 2,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Polynomial",
+          "candidate": "Polynomial"
+        }
+      },
+      {
+        "field": "app_chuk_conf.multi_esc",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.tc",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.tc_max_diff",
+        "reference": 3000.0,
+        "candidate": 3000.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.use_smart_rev",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.smart_rev_max_duty",
+        "reference": 0.07000000029802322,
+        "candidate": 0.07000000029802322,
+        "status": "equal"
+      },
+      {
+        "field": "app_chuk_conf.smart_rev_ramp_time",
+        "reference": 3.0,
+        "candidate": 3.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_nrf_conf.speed",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "1 MBit/s",
+          "candidate": "1 MBit/s"
+        }
+      },
+      {
+        "field": "app_nrf_conf.power",
+        "reference": 3,
+        "candidate": 3,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "0 dBm",
+          "candidate": "0 dBm"
+        }
+      },
+      {
+        "field": "app_nrf_conf.crc_type",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "1 Byte",
+          "candidate": "1 Byte"
+        }
+      },
+      {
+        "field": "app_nrf_conf.retry_delay",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "250 \u00b5S",
+          "candidate": "250 \u00b5S"
+        }
+      },
+      {
+        "field": "app_nrf_conf.retries",
+        "reference": 3,
+        "candidate": 3,
+        "status": "equal"
+      },
+      {
+        "field": "app_nrf_conf.channel",
+        "reference": 76,
+        "candidate": 76,
+        "status": "equal"
+      },
+      {
+        "field": "app_nrf_conf.address__0",
+        "reference": 198,
+        "candidate": 198,
+        "status": "equal"
+      },
+      {
+        "field": "app_nrf_conf.address__1",
+        "reference": 199,
+        "candidate": 199,
+        "status": "equal"
+      },
+      {
+        "field": "app_nrf_conf.address__2",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_nrf_conf.send_crc_ack",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.pid_mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "BALANCE_PID_MODE_ANGLE",
+          "candidate": "BALANCE_PID_MODE_ANGLE"
+        }
+      },
+      {
+        "field": "app_balance_conf.kp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.ki",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.kd",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.kp2",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.ki2",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.kd2",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.hertz",
+        "reference": 1000,
+        "candidate": 1000,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.loop_time_filter",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_pitch",
+        "reference": 20.0,
+        "candidate": 20.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_roll",
+        "reference": 45.0,
+        "candidate": 45.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_duty",
+        "reference": 0.8999999761581421,
+        "candidate": 0.8999999761581421,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_adc1",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_adc2",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_delay_pitch",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_delay_roll",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_delay_duty",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_delay_switch_half",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_delay_switch_full",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_adc_half_erpm",
+        "reference": 1000,
+        "candidate": 1000,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.fault_is_dual_switch",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_duty_angle",
+        "reference": 10.0,
+        "candidate": 10.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_duty_speed",
+        "reference": 3.0,
+        "candidate": 3.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_duty",
+        "reference": 0.75,
+        "candidate": 0.75,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_hv_angle",
+        "reference": 10.0,
+        "candidate": 10.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_hv_speed",
+        "reference": 3.0,
+        "candidate": 3.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_hv",
+        "reference": 200.0,
+        "candidate": 200.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_lv_angle",
+        "reference": 10.0,
+        "candidate": 10.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_lv_speed",
+        "reference": 3.0,
+        "candidate": 3.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_lv",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_return_speed",
+        "reference": 2.0,
+        "candidate": 2.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_constant",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_constant_erpm",
+        "reference": 500,
+        "candidate": 500,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_variable",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.tiltback_variable_max",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.noseangling_speed",
+        "reference": 3.0,
+        "candidate": 3.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.startup_pitch_tolerance",
+        "reference": 20.0,
+        "candidate": 20.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.startup_roll_tolerance",
+        "reference": 8.0,
+        "candidate": 8.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.startup_speed",
+        "reference": 30.0,
+        "candidate": 30.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.deadzone",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.multi_esc",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.yaw_kp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.yaw_ki",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.yaw_kd",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.roll_steer_kp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.roll_steer_erpm_kp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.brake_current",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.brake_timeout",
+        "reference": 10,
+        "candidate": 10,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.yaw_current_clamp",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.ki_limit",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.kd_pt1_lowpass_frequency",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.kd_pt1_highpass_frequency",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.booster_angle",
+        "reference": 8.0,
+        "candidate": 8.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.booster_ramp",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.booster_current",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.torquetilt_start_current",
+        "reference": 10.0,
+        "candidate": 10.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.torquetilt_angle_limit",
+        "reference": 5.0,
+        "candidate": 5.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.torquetilt_on_speed",
+        "reference": 5.0,
+        "candidate": 5.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.torquetilt_off_speed",
+        "reference": 3.0,
+        "candidate": 3.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.torquetilt_strength",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.torquetilt_filter",
+        "reference": 2.0,
+        "candidate": 2.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.turntilt_strength",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.turntilt_angle_limit",
+        "reference": 5.0,
+        "candidate": 5.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.turntilt_start_angle",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.turntilt_start_erpm",
+        "reference": 100,
+        "candidate": 100,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.turntilt_speed",
+        "reference": 5.0,
+        "candidate": 5.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.turntilt_erpm_boost",
+        "reference": 20,
+        "candidate": 20,
+        "status": "equal"
+      },
+      {
+        "field": "app_balance_conf.turntilt_erpm_boost_end",
+        "reference": 20000,
+        "candidate": 20000,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.ctrl_type",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Off",
+          "candidate": "Off"
+        }
+      },
+      {
+        "field": "app_pas_conf.sensor_type",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "Quadrature",
+          "candidate": "Quadrature"
+        }
+      },
+      {
+        "field": "app_pas_conf.current_scaling",
+        "reference": 0.1,
+        "candidate": 0.1,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.pedal_rpm_start",
+        "reference": 10.0,
+        "candidate": 10.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.pedal_rpm_end",
+        "reference": 180.0,
+        "candidate": 180.0,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.invert_pedal_direction",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.magnets",
+        "reference": 24,
+        "candidate": 24,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.use_filter",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.ramp_time_pos",
+        "reference": 0.6,
+        "candidate": 0.6,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.ramp_time_neg",
+        "reference": 0.3,
+        "candidate": 0.3,
+        "status": "equal"
+      },
+      {
+        "field": "app_pas_conf.update_rate_hz",
+        "reference": 500,
+        "candidate": 500,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.type",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "IMU_TYPE_INTERNAL",
+          "candidate": "IMU_TYPE_INTERNAL"
+        }
+      },
+      {
+        "field": "imu_conf.mode",
+        "reference": 0,
+        "candidate": 0,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "AHRS_MODE_MADGWICK",
+          "candidate": "AHRS_MODE_MADGWICK"
+        }
+      },
+      {
+        "field": "imu_conf.filter",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal",
+        "enum_labels": {
+          "reference": "IMU_FILTER_MEDIUM",
+          "candidate": "IMU_FILTER_MEDIUM"
+        }
+      },
+      {
+        "field": "imu_conf.accel_lowpass_filter_x",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.accel_lowpass_filter_y",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.accel_lowpass_filter_z",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.gyro_lowpass_filter",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.sample_rate_hz",
+        "reference": 200,
+        "candidate": 200,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.use_magnetometer",
+        "reference": 1,
+        "candidate": 1,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.accel_confidence_decay",
+        "reference": 1.0,
+        "candidate": 1.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.mahony_kp",
+        "reference": 0.30000001192092896,
+        "candidate": 0.30000001192092896,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.mahony_ki",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.madgwick_beta",
+        "reference": 0.10000000149011612,
+        "candidate": 0.10000000149011612,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.rot_roll",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.rot_pitch",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.rot_yaw",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.accel_offsets__0",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.accel_offsets__1",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.accel_offsets__2",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.gyro_offsets__0",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.gyro_offsets__1",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      },
+      {
+        "field": "imu_conf.gyro_offsets__2",
+        "reference": 0.0,
+        "candidate": 0.0,
+        "status": "equal"
+      }
+    ]
+  }
+}

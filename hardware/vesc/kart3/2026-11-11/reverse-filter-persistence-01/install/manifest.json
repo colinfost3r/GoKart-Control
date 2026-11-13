@@ -1,0 +1,415 @@
+{
+  "target_uuid": "37004e000951343037353739",
+  "firmware": "6.02",
+  "blob_sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801",
+  "image_sha256": "428657a58bc6d4a2a0e85df858e36fc7d34972007d7df436ed236632a9a19495",
+  "blob_bytes": 3984,
+  "image_bytes": 3992,
+  "flags": 0,
+  "write_offsets": [
+    8,
+    264,
+    520,
+    776,
+    1032,
+    1288,
+    1544,
+    1800,
+    2056,
+    2312,
+    2568,
+    2824,
+    3080,
+    3336,
+    3592,
+    3848,
+    0
+  ],
+  "activation_command_available": false,
+  "normal_future_boot_runs_valid_code": true,
+  "power_fail_atomic": false,
+  "rollback_evidence": {
+    "path": "hardware/vesc/kart3/2026-11-11/reverse-filter-persistence-01/rollback-volatile/manifest.json",
+    "sha256": "f86db15c85c1a9192eaac7b64121a5e1377aca09e733e8f1a92dfb155d7aa96f",
+    "finished_utc": "2026-11-11T17:34:07.667605+00:00"
+  },
+  "apply": true,
+  "supervised": true,
+  "phase": "stored_verified_not_activated",
+  "complete": true,
+  "flash_attempts": [
+    {
+      "action": "erase",
+      "offset": 0,
+      "request_frame_hex": "02058400000f98b95903",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 8,
+      "request_frame_hex": "03010583000000082870726f676e2028646566696e6520676b2d72782d66696c7465722d72756e206e696c292028646566696e6520676b2d72782d66696c7465722d616374697665206e696c292028646566696e6520676b2d72782d66696c7465722d706964202d31292028646566696e6520676b2d72782d66696c7465722d6170706c696564202d31292028646566696e6520676b2d72782d66696c7465722d7361666520286c616d62646120282920286c657420282872706d20286765742d72706d2929292028616e6420283c3d20286765742d6164632d6465636f64656420302920302e31322920283e3d2072706d202d35302e302920283c3d2072706d2035302e302920f0c203",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 264,
+      "request_frame_hex": "0301058300000108283d20286765742d6661756c7429203029292929292028646566696e6520676b2d72782d66696c7465722d636f6e6669672d6f6b20286c616d6264612028292028616e6420283d2028636f6e662d67657420276170702d746f2d7573652920322920283d2028636f6e662d67657420276164632d6374726c2d74797065292033292929292028646566696e6520676b2d72782d66696c7465722d776f726b657220286c616d626461202829202870726f676e20286c657420282863616e64696461746520286770696f2d72656164202770696e2d72782929202863616e6469646174652d6174202873797374696d6529292028736166652d617420287379737425fa03",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 520,
+      "request_frame_hex": "0301058300000208696d6529292028736166652d70726576696f7573206e696c29202873616d706c652d6174202873797374696d6529292920286c6f6f707768696c6520676b2d72782d66696c7465722d72756e20286c657420282872617720286770696f2d72656164202770696e2d727829292028736166652028676b2d72782d66696c7465722d73616665292920286761702028736563732d73696e63652073616d706c652d6174292929202870726f676e2028736574766172202773616d706c652d6174202873797374696d6529292028696620283e2067617020302e30313029202870726f676e2028736574766172202763616e6469646174652d617420287379737469e3c903",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 776,
+      "request_frame_hex": "03010583000003086d65292920287365747661722027736166652d6174202873797374696d65292920287365747661722027736166652d70726576696f7573206e696c2929292028696620286e6f742028676b2d72782d66696c7465722d636f6e6669672d6f6b2929202870726f676e20287365747661722027676b2d72782d66696c7465722d72756e206e696c2920287072696e742027676b2d72782d66696c7465722d636f6e6669672d6368616e676564292929202869662028213d207261772063616e64696461746529202870726f676e2028736574766172202763616e64696461746520726177292028736574766172202763616e6469646174652d61742028737973744c8803",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 1032,
+      "request_frame_hex": "0301058300000408696d6529292929202869662028616e64207361666520286e6f7420736166652d70726576696f7573292920287365747661722027736166652d6174202873797374696d6529292920287365747661722027736166652d70726576696f7573207361666529202869662028616e6420676b2d72782d66696c7465722d72756e207361666520283e3d2028736563732d73696e636520736166652d61742920302e3235302920283e3d2028736563732d73696e63652063616e6469646174652d61742920302e303530292920286c6574202828646573697265642028696620283d2063616e646964617465203029203120302929292028696620286f7220286e6f74b58f03",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 1288,
+      "request_frame_hex": "030105830000050820676b2d72782d66696c7465722d616374697665292028213d206465736972656420676b2d72782d66696c7465722d6170706c6965642929202869662028616e6420283d2028696620283d20286770696f2d72656164202770696e2d7278292030292031203029206465736972656429202865712028676b2d72782d66696c7465722d636f6e6669672d6f6b29207429202865712028676b2d72782d66696c7465722d736166652920742920676b2d72782d66696c7465722d72756e20283c3d2028736563732d73696e63652073616d706c652d61742920302e3031302929202870726f676e20286170702d6164632d6f76657272696465203220646573697286fd03",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 1544,
+      "request_frame_hex": "03010583000006086564292028696620286e6f7420676b2d72782d66696c7465722d61637469766529202870726f676e20286170702d6164632d646574616368203220312920287365747661722027676b2d72782d66696c7465722d616374697665207429292920287365747661722027676b2d72782d66696c7465722d6170706c69656420646573697265642920287072696e7420286c6973742027676b2d72782d66696c7465722d6170706c6965642064657369726564292929202870726f676e2028736574766172202763616e6469646174652d6174202873797374696d65292920287365747661722027736166652d6174202873797374696d6529292028736574766172440503",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 1800,
+      "request_frame_hex": "03010583000007082027736166652d70726576696f7573206e696c2929292929292028736c65657020302e303032292929292920287072696e7420286c6973742027676b2d72782d66696c7465722d73746f707065642d686f6c64696e6720676b2d72782d66696c7465722d6170706c696564292920742929292028646566696e6520676b2d72782d66696c7465722d737461727420286c616d6264612028707265666c696768742d6f6b292028696620286f7220286e6f7420707265666c696768742d6f6b2920676b2d72782d66696c7465722d72756e20676b2d72782d66696c7465722d6163746976652028213d20676b2d72782d66696c7465722d706964202d312920286e3fa103",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 2056,
+      "request_frame_hex": "03010583000008086f742028676b2d72782d66696c7465722d636f6e6669672d6f6b292929202870726f676e20287072696e742027676b2d72782d66696c7465722d7265667573656429206e696c29202870726f676e20287365747661722027676b2d72782d66696c7465722d72756e20742920287365747661722027676b2d72782d66696c7465722d7069642028737061776e2032353620676b2d72782d66696c7465722d776f726b657229292028696620283c20676b2d72782d66696c7465722d706964203029202870726f676e20287365747661722027676b2d72782d66696c7465722d72756e206e696c2920287072696e742027676b2d72782d66696c7465722d737061654b03",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 2312,
+      "request_frame_hex": "0301058300000908776e2d6661696c656429206e696c2920676b2d72782d66696c7465722d70696429292929292028646566696e6520676b2d72782d66696c7465722d73746f7020286c616d626461202829202870726f676e20287365747661722027676b2d72782d66696c7465722d72756e206e696c29202869662028616e6420283e3d20676b2d72782d66696c7465722d7069642030292028213d20676b2d72782d66696c7465722d706964202873656c6629292920287761697420676b2d72782d66696c7465722d706964292920287365747661722027676b2d72782d66696c7465722d706964202d312920287072696e7420286c6973742027676b2d72782d66696c7465f3e603",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 2568,
+      "request_frame_hex": "0301058300000a08722d6a6f696e65642d686f6c64696e6720676b2d72782d66696c7465722d6170706c696564292920742929292028646566696e6520676b2d72782d66696c7465722d726f6c6c6261636b20286c616d6264612028737570657276697365642d6f6b292028696620286f7220286e6f7420737570657276697365642d6f6b2920676b2d72782d66696c7465722d72756e2028213d20676b2d72782d66696c7465722d706964202d312920286e6f7420676b2d72782d66696c7465722d6163746976652920286e6f742028676b2d72782d66696c7465722d636f6e6669672d6f6b292929202870726f676e20287072696e742027676b2d72782d66696c7465722d724d3503",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 2824,
+      "request_frame_hex": "0301058300000b086f6c6c6261636b2d7265667573656429206e696c2920286c657420282873746172746564202873797374696d652929202873616d706c652d6174202873797374696d65292920286f6b20742929202870726f676e20286c6f6f707768696c652028616e64206f6b20283c2028736563732d73696e636520737461727465642920302e3235302929202870726f676e2028696620283e2028736563732d73696e63652073616d706c652d61742920302e30313029202873657476617220276f6b206e696c29292028736574766172202773616d706c652d6174202873797374696d6529292028696620286f7220676b2d72782d66696c7465722d72756e2028213d04e203",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 3080,
+      "request_frame_hex": "0301058300000c0820676b2d72782d66696c7465722d706964202d312920286e6f742028676b2d72782d66696c7465722d636f6e6669672d6f6b292920286e6f742028676b2d72782d66696c7465722d7361666529292028213d2028696620283d20286770696f2d72656164202770696e2d727829203029203120302920676b2d72782d66696c7465722d6170706c6965642929202873657476617220276f6b206e696c29292028696620283e2028736563732d73696e63652073616d706c652d61742920302e30313029202873657476617220276f6b206e696c29292028736c65657020302e303032292929202869662028616e64206f6b202865712028676b2d72782d66696c99df03",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 3336,
+      "request_frame_hex": "0301058300000d087465722d7361666529207429202865712028676b2d72782d66696c7465722d636f6e6669672d6f6b2920742920286e6f7420676b2d72782d66696c7465722d72756e2920283d20676b2d72782d66696c7465722d706964202d312920283d2028696620283d20286770696f2d72656164202770696e2d727829203029203120302920676b2d72782d66696c7465722d6170706c6965642920283c3d2028736563732d73696e63652073616d706c652d61742920302e3031302929202870726f676e20286170702d6164632d646574616368203220302920287365747661722027676b2d72782d66696c7465722d616374697665206e696c292028736574766172dcfc03",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 3592,
+      "request_frame_hex": "0301058300000e082027676b2d72782d66696c7465722d6170706c696564202d312920287072696e742027676b2d72782d66696c7465722d7261772d72782d726573746f72656429207429202870726f676e20287072696e742027676b2d72782d66696c7465722d726f6c6c6261636b2d6e6f742d61742d726573742d6f722d72782d64697361677265657329206e696c292929292929292074290a2869662028616e64202865712028737973696e666f20277575696429202728353520302037382030203920383120353220343820353520353320353520353729290a2020202020202020202865712028737973696e666f202766772d76657229202728362032203029290a20c9e503",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 3848,
+      "request_frame_hex": "02958300000f0820202020202020202865712028676b2d72782d66696c7465722d636f6e6669672d6f6b29207429290a2020287072696e7420286c6973742027676b2d72782d6175746f73746172742d726573756c742028676b2d72782d66696c7465722d737461727420742929290a2020287072696e742027676b2d72782d6175746f73746172742d7265667573656429290a000000e3da03",
+      "ack_verified": true
+    },
+    {
+      "action": "write",
+      "offset": 0,
+      "request_frame_hex": "020d830000000000000f90af4100008d8903",
+      "ack_verified": true
+    }
+  ],
+  "settings_written": false,
+  "activation_sent": false,
+  "started_utc": "2026-11-11T17:42:48.012168+00:00",
+  "native_detach_independently_readable": false,
+  "header_flags_read_back_independently": false,
+  "identity_before": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "preflight_samples": [
+    {
+      "telemetry": {
+        "mosfet_temp_c": 18.8,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.13,
+        "battery_current_a": 0.04,
+        "id_a": -0.04,
+        "iq_a": 0.0,
+        "duty": 0.0,
+        "erpm": 0,
+        "input_voltage_v": 81.6,
+        "amp_hours": 0.0235,
+        "amp_hours_charged": 0.0012,
+        "watt_hours": 1.8589,
+        "watt_hours_charged": 0.1071,
+        "tachometer": -2033,
+        "tachometer_absolute": 26619,
+        "fault_code": 0,
+        "pid_position": 243.0,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 18.7,
+        "mosfet_temp_2_c": -101.1,
+        "mosfet_temp_3_c": -273.1,
+        "vd_v": -0.008,
+        "vq_v": -0.045,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      },
+      "status": {
+        "run": false,
+        "active": false,
+        "pid": -1,
+        "applied": -1,
+        "rx": 1,
+        "adc": 0.087258,
+        "erpm": -7e-06,
+        "fault": 0
+      }
+    },
+    {
+      "telemetry": {
+        "mosfet_temp_c": 18.7,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": 0.0,
+        "erpm": 0,
+        "input_voltage_v": 81.5,
+        "amp_hours": 0.0235,
+        "amp_hours_charged": 0.0012,
+        "watt_hours": 1.8589,
+        "watt_hours_charged": 0.1071,
+        "tachometer": -2033,
+        "tachometer_absolute": 26619,
+        "fault_code": 0,
+        "pid_position": 243.0,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 18.7,
+        "mosfet_temp_2_c": -94.8,
+        "mosfet_temp_3_c": -101.1,
+        "vd_v": 0.045,
+        "vq_v": -0.017,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      },
+      "status": {
+        "run": false,
+        "active": false,
+        "pid": -1,
+        "applied": -1,
+        "rx": 1,
+        "adc": 0.087962,
+        "erpm": -7e-06,
+        "fault": 0
+      }
+    },
+    {
+      "telemetry": {
+        "mosfet_temp_c": 18.7,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": 0.0,
+        "erpm": 0,
+        "input_voltage_v": 81.6,
+        "amp_hours": 0.0235,
+        "amp_hours_charged": 0.0012,
+        "watt_hours": 1.8589,
+        "watt_hours_charged": 0.1071,
+        "tachometer": -2033,
+        "tachometer_absolute": 26619,
+        "fault_code": 0,
+        "pid_position": 243.0,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 18.8,
+        "mosfet_temp_2_c": -94.8,
+        "mosfet_temp_3_c": -273.1,
+        "vd_v": 0.045,
+        "vq_v": -0.017,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      },
+      "status": {
+        "run": false,
+        "active": false,
+        "pid": -1,
+        "applied": -1,
+        "rx": 1,
+        "adc": 0.087428,
+        "erpm": -7e-06,
+        "fault": 0
+      }
+    },
+    {
+      "telemetry": {
+        "mosfet_temp_c": 18.8,
+        "motor_temp_c": 0.0,
+        "motor_current_a": 0.0,
+        "battery_current_a": 0.0,
+        "id_a": 0.0,
+        "iq_a": 0.0,
+        "duty": 0.0,
+        "erpm": 0,
+        "input_voltage_v": 81.6,
+        "amp_hours": 0.0235,
+        "amp_hours_charged": 0.0012,
+        "watt_hours": 1.8589,
+        "watt_hours_charged": 0.1071,
+        "tachometer": -2033,
+        "tachometer_absolute": 26619,
+        "fault_code": 0,
+        "pid_position": 243.0,
+        "controller_id": 19,
+        "mosfet_temp_1_c": 18.7,
+        "mosfet_temp_2_c": -94.8,
+        "mosfet_temp_3_c": -88.1,
+        "vd_v": 0.046,
+        "vq_v": -0.018,
+        "status_raw": 0,
+        "timeout_active": false,
+        "kill_switch_active": false,
+        "bytes_consumed": 74
+      },
+      "status": {
+        "run": false,
+        "active": false,
+        "pid": -1,
+        "applied": -1,
+        "rx": 1,
+        "adc": 0.087789,
+        "erpm": -7e-06,
+        "fault": 0
+      }
+    }
+  ],
+  "contexts_before": {
+    "all_context_headings_seen_in_order": true,
+    "quiet_tail_at_least_250ms": true,
+    "no_partial_frame": true,
+    "context_id_lines": [],
+    "snapshot": "no_contexts_reported",
+    "atomic_or_future_ownership_proof": false
+  },
+  "final_preerase_sample": {
+    "telemetry": {
+      "mosfet_temp_c": 18.7,
+      "motor_temp_c": 0.0,
+      "motor_current_a": 0.0,
+      "battery_current_a": 0.0,
+      "id_a": 0.0,
+      "iq_a": 0.0,
+      "duty": 0.0,
+      "erpm": 0,
+      "input_voltage_v": 81.6,
+      "amp_hours": 0.0235,
+      "amp_hours_charged": 0.0012,
+      "watt_hours": 1.8589,
+      "watt_hours_charged": 0.1071,
+      "tachometer": -2033,
+      "tachometer_absolute": 26619,
+      "fault_code": 0,
+      "pid_position": 243.0,
+      "controller_id": 19,
+      "mosfet_temp_1_c": 18.8,
+      "mosfet_temp_2_c": -94.8,
+      "mosfet_temp_3_c": -101.1,
+      "vd_v": 0.045,
+      "vq_v": -0.017,
+      "status_raw": 0,
+      "timeout_active": false,
+      "kill_switch_active": false,
+      "bytes_consumed": 74
+    },
+    "status": {
+      "run": false,
+      "active": false,
+      "pid": -1,
+      "applied": -1,
+      "rx": 1,
+      "adc": 0.088544,
+      "erpm": -7e-06,
+      "fault": 0
+    }
+  },
+  "stored_before": {
+    "status": "no_valid_blob",
+    "reported_bytes": 0,
+    "not_a_raw_blank_flash_backup": true
+  },
+  "final_preerase_window_seconds": 0.30610783399999963,
+  "stored_after_erase": {
+    "status": "no_valid_blob",
+    "reported_bytes": 0,
+    "not_a_raw_blank_flash_backup": true
+  },
+  "identity_after": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "37004e000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "readback_sha256": "a2461adda272a014506cc76f0bdbf2240c85dff39842c6dac8655b4e0be34801",
+  "all_376_settings_preserved": true,
+  "boot_acceptance": "pending owner-controlled physical power cycle",
+  "finished_utc": "2026-11-11T17:42:54.559367+00:00"
+}
