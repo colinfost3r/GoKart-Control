@@ -161,6 +161,10 @@ Wi-Fi off for play (`wifi clear` exists from 0.3.4 on); kart 4 has no Wi-Fi and 
 
 ## Next session: coordinated kart3 and host acceptance
 
+**The current plan for the host update is [host-update-plan.md](host-update-plan.md)** (written
+November 13, after karts 4 and 5 were brought up). It supersedes the ordering below where they
+differ; the detail below is still the reference for each step.
+
 1. Identify physical USB/OTA endpoints and current app hashes; preserve NVS/rollback evidence.
    Karts1/2 remain Eamon's. Coordinate the host update with him; do not overwrite an active test.
    Kart3 first, then4/5. Establish operator, stationary kart, wheels lifted, pedal released and
