@@ -124,10 +124,27 @@ limits from kart 3 (`l_in_current_min` −12 A, `l_abs_current_max` 220 A, `l_mi
 its values (−200 A, 420 A, 12 V, 84 V, 50 ms). It is an explicit per-kart choice, off by
 default; decide it for kart 5 from kart 5's own capture.
 
-**Filter:** there is still no kart 4/5 installer. A separately reviewed per-target procedure
-must bind the fresh identity, complete current configuration and Lisp ownership, require exact
-ACK/readback, retain failure evidence and never blindly retry or roll back after an uncertain
-send.
+**Filter (since 2026-11-13):** `tools/vesc/fleet_rx_filter.py` works from the same package and
+is bound to the kart the same way. Keep every other VESC client off the controller, the kart's
+own Heltec included (hold it in its bootloader with `esptool --after no_reset chip_id`, restart
+it with `--after hard_reset chip_id`), because 6.02 sends Lisp prints to the interface that
+spoke last.
+
+1. `plan` offline, then `observe` with the switch in forward and again in reverse: RX must read
+   1 in forward and 0 in reverse, the released pedal at most 0.12, no stored code, no contexts.
+2. With the owner's go-ahead for that kart, switch in forward, wheels up, pedal released:
+   `install --apply --supervised --expect-blob-sha256 <hash>`. It requires the prepared tune on
+   the controller (runtime ERPM limits may be tighter than the tune, never looser), rechecks
+   forward/rest/pedal within 750 ms of the erase, writes body then header, and reads every byte
+   back. It never starts the script.
+3. The owner power-cycles the VESC. `status --expected-rx 1` must report the stored bytes
+   intact and the worker armed in forward; after a switch change at rest, `--expected-rx 0`
+   must report reverse. Then a supervised pedal check both ways.
+
+It refuses to install over existing code, and **there is no tested removal tool**: removal is
+by VESC Tool, at rest. Kart 3's in-memory trial stage is not repeated, because the filter core
+is byte-identical; the observation covers what is specific to each kart.
+[Kart 4's record](../hardware/vesc/kart4/2026-11-13/filter/README.md) is the worked example.
 
 The filter requires native ADC application 2, Current Reverse Button type 3,
 buttons 0, servo output off, safe-start on and deadband 0.15; unsupported application

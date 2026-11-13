@@ -272,8 +272,13 @@ Neither new unit's UUID/BLE/pairing/capture is known yet. Never guess or clone k
   read back, wheels up, fault 0; it was left in SPORT. See
   [the install record](../hardware/m5/2026-11-13-kart4-first-install/README.md) for what is
   still open (reverse under the caps, GPS check of the factor, Wi-Fi/OTA, pit commands).
-- **Still missing for karts 4/5:** a reverse-filter installer (none exists; kart 4 has no
-  filter), and everything for kart 5, which has not been captured.
+- **Kart 4 has the reverse filter (November 13):** installed with the new
+  `tools/vesc/fleet_rx_filter.py` after its switch was observed in both positions, read back,
+  and verified armed after a power cycle in forward and reverse, with a pedal check both ways.
+  See [the record](../hardware/vesc/kart4/2026-11-13/filter/README.md). No tested removal tool
+  exists for it.
+- **Still missing:** everything for kart 5, which has not been captured; a filter removal
+  tool; road and load checks on kart 4.
 - Supervise each unit's normal cold boots, correct filtered direction, repeated starts from
   full rest, then accessory coexistence and intentional mode controls. Do not rerun Hall or
   pedal calibration. Resolve native ADC prerequisite differences before filter installation.

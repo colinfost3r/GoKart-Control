@@ -235,6 +235,13 @@ the controller no longer matches the package's `before/` and it will refuse.
 `telemetry_trace.py --port PORT --expected-uuid UUID --out FILE.jsonl` records `GET_VALUES` at
 10 Hz for a supervised pedal check. It sends read commands 0 and 4 only.
 
+`fleet_rx_filter.py {plan|observe|install|status} PACKAGE --kart-id N --expected-uuid UUID` is
+the reverse-input filter tool for those packages; the
+[replication guide](../../docs/kart4-kart5-replication.md) has the procedure. `observe` and
+`status` change nothing. `install` is one supervised erase and exact write with read-back, needs
+`--apply --supervised --expect-blob-sha256` and the owner's go-ahead for that kart, and never
+activates, retries or cleans up. It cannot remove or replace an installed copy.
+
 ## Guarded kart 3 tune trial
 
 The fixed trial copies only the 12 fields in `tune.TRIAL_FIELDS` from the pinned dated reference

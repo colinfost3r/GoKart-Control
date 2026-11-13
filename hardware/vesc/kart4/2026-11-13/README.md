@@ -2,8 +2,9 @@
 
 Kart 4's controller was captured read-only, compared with kart 3, and then given kart 3's
 operating tune by one persistent motor-configuration write that the owner approved after
-reviewing the differences. **The reverse filter is not installed and no Heltec or Core2 was
-involved.** Kart 4 is not commissioned by this record.
+reviewing the differences. No Heltec or Core2 was involved in the tune write. Later the same
+day the reverse-input filter was installed too; that has
+[its own record](filter/README.md). The first nine steps below predate it.
 
 | Item | Value |
 | --- | --- |
@@ -76,9 +77,10 @@ involved.** Kart 4 is not commissioned by this record.
 
 ## Not done, not verified
 
-- Reverse filter: prepared as files in the packages, **not installed**. There is no kart 4/5
-  installer; `install_rx_filter.py` is pinned to kart 3.
-- Heltec and Core2: nothing flashed or paired when this record was written.
+- Reverse filter: not installed when the tune was written; installed later that day, see
+  [filter/](filter/README.md).
+- Heltec and Core2: nothing flashed or paired when the tune was written; see
+  [the board install record](../../../m5/2026-11-13-kart4-first-install/README.md).
 - Load, road, thermal or endurance behaviour; charged-pack over-voltage behaviour; any speed cap.
 - A saved-flash image: the cold-boot capture shows the values survive a restart, not a raw
   flash dump.
@@ -101,3 +103,4 @@ tested path for writing them back; it would need the same kind of reviewed singl
 | `after/` | independent capture and comparisons with `before/` and kart 3 |
 | `coldboot/` | capture after the power cycle, comparison with `after/`, Lisp read |
 | `pedal-check/` | telemetry trace and its summary (traced with what is now `tools/vesc/telemetry_trace.py`) |
+| `filter/` | reverse-filter observations, install journal, status checks and pedal check |

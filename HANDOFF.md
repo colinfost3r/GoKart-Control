@@ -18,8 +18,12 @@ kart 3 and, with the owner's go-ahead, given kart 3's tune by one persistent wri
 reviewed fields plus five protection limits the owner chose after seeing kart 4's values. Read
 back exactly, confirmed after a power cycle, and pedal-checked wheels-up with fault 0. The new
 writer is `tools/vesc/apply_fleet_tune.py`; `prepare_fleet_kart.py --match-protection-limits`
-is the per-kart option for the limits. Kart 4 has **no reverse filter**; kart 5 is untouched.
-584 tests pass.
+is the per-kart option for the limits. Kart 5 is untouched.
+
+The reverse-input filter went onto kart 4 later the same day with the new
+`tools/vesc/fleet_rx_filter.py`: observed in both switch positions, installed once with the
+owner's go-ahead, read back, and verified armed after a power cycle.
+[Filter record](hardware/vesc/kart4/2026-11-13/filter/README.md).
 
 The same day kart 4's never-flashed Heltec and Core2 were installed, paired and bound to that
 VESC by UUID. The read-only checkpoint and soak passed, then the Heltec got the write-capable

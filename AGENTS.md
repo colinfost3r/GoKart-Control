@@ -40,9 +40,14 @@
   plus five protection limits set to kart 3's values (`l_in_current_min`, `l_abs_current_max`,
   `l_min_vin`, `l_max_vin`, `m_fault_stop_time_ms`). Applied once with
   `tools/vesc/apply_fleet_tune.py`, exact 376-field readback, cold-boot check; see
-  hardware/vesc/kart4/2026-11-13/. Kart 5 needs its own capture, review and approval. The
-  reverse filter is not installed on kart 4. Do not infer permission for other fields,
-  controllers or a repeat of this write.
+  hardware/vesc/kart4/2026-11-13/. Kart 5 needs its own capture, review and approval. Do not
+  infer permission for other fields, controllers or a repeat of this write.
+- Explicit maintenance exception 2026-11-13 (kart 4 only): the owner decided to install the
+  reverse-input filter on kart 4 and approved the write after its switch was observed in both
+  positions. Stored once with `tools/vesc/fleet_rx_filter.py` (kart 3's tested core, kart 4's
+  UUID in the startup guard), read back exactly, and verified armed after a power cycle; see
+  hardware/vesc/kart4/2026-11-13/filter/. There is no tested removal tool. Kart 5 needs its own
+  observation and approval.
 - Owner decision 2026-11-12 (native game rules): the host ("game maker") chooses the speed its
   course is played at, ECO or NORMAL. Joining writes that mode and locks the joined kart's mode
   buttons to it; pit commands still win. A boost is a step up from the mode in force (BOOST one
