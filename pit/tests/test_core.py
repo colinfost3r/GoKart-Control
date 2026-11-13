@@ -1168,6 +1168,29 @@ class FleetRatePolicy(unittest.TestCase):
     def rates(self):
         return [(m["kart"], m["arg"]) for m in self.link.lines if m.get("cmd") == "rate"]
 
+    def test_fleet_rate_pinned_by_config(self):
+        # 2026-11-13: a repeater at the edge of range flipped the fleet 1 <-> 2 Hz five times in 25 min
+        # (a command to every kart + a flash write on every Heltec each time). "fleet_rate": 2 in
+        # config.json pins it: the repeater rule is ignored, the pin is re-sent every 300 s.
+        import pit_server as ps
+        app = self.app
+        app.cfg["fleet_rate"] = 2
+        t0 = app._started_mono
+        with app.lock:
+            app._rate_policy(t0 + 1)
+            self.assertEqual(self.rates(), [(255, 2)])                     # at once, no 120 s wait
+            app.fleet.ingest({"t": "repeater", "id": 1, "rssi": -3}, t0 + 20, "w")
+            app._rate_policy(t0 + 20)
+            app._rate_policy(t0 + 60)
+            self.assertEqual(self.rates(), [(255, 2)])                     # repeater heard: still pinned
+            app._rate_policy(t0 + 1 + ps.RATE_PINNED_REPEAT_S + 1)
+            self.assertEqual(self.rates(), [(255, 2), (255, 2)])           # periodic re-send
+        self.assertIn("pinned to 2 Hz", app.state()["fleet"]["rate"]["policy"])
+        app.cfg["fleet_rate"] = "auto"
+        self.assertIsNone(app.rate_pinned())
+        app.cfg["fleet_rate"] = "1"
+        self.assertEqual(app.rate_pinned(), 1)
+
     def test_one_hz_with_repeater_two_hz_after_it_is_gone(self):
         app = self.app
         t0 = app._started_mono

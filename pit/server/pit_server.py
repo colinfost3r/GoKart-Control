@@ -38,6 +38,8 @@ PIT_ROOT = os.path.dirname(HERE)
 STATIC_DIR = os.path.join(HERE, "static")
 DEFAULTS = {
     "password": "",              # shared operator password; empty = only localhost allowed
+    "fleet_rate": "auto",        # kart report rate: "auto" = 1 Hz while a repeater is heard, else 2 Hz; 1 or 2 pins it
+                                 # (2026-11-13: a repeater at the edge of range flipped the fleet 1<->2 Hz five times in 25 min)
     "gps_correction": False,     # apply the pit radio's measured GPS error (vs map.json "pit") to kart positions
     "bind": "0.0.0.0",
     "http_port": 8080,
@@ -72,7 +74,8 @@ RACE_IDLE_REPEATS = (0.0, 2.0)
 # repeater copy, so while a repeater is on the air every kart reports at 1 Hz.
 RATE_REPEAT_S = 30.0         # "rate 1" to all karts this often while a repeater is heard
 REPEATER_FRESH_S = 60.0      # repeater heartbeat heard within this -> repeater in use
-REPEATER_GONE_S = 120.0      # no repeater for this long -> "rate 2" once          # NEW RACE / abort: state 0 twice (one lost line must not leave "3")
+REPEATER_GONE_S = 120.0      # no repeater for this long -> "rate 2" once
+RATE_PINNED_REPEAT_S = 300.0 # config "fleet_rate" 1|2: re-sent this often (a kart that rebooted in between gets it)          # NEW RACE / abort: state 0 twice (one lost line must not leave "3")
 
 
 def wall_iso(ts=None):
@@ -686,9 +689,13 @@ class App:
         operator's last command on the cards (pitcore Command.auto)."""
         if not self.link.connected:
             return
+        pinned = self.rate_pinned()
         rm = self.fleet.repeater_mono
         want = None
-        if rm is not None and now - rm <= REPEATER_FRESH_S:
+        if pinned:
+            if self._rate != pinned or now - self._rate_tx_mono >= RATE_PINNED_REPEAT_S:
+                want = pinned
+        elif rm is not None and now - rm <= REPEATER_FRESH_S:
             if self._rate != 1 or now - self._rate_tx_mono >= RATE_REPEAT_S:
                 want = 1
         elif now - (rm if rm is not None else self._started_mono) >= REPEATER_GONE_S and self._rate != 2:
@@ -699,9 +706,14 @@ class App:
         c = self.cmds.submit("rate", pitcore.ALL_KARTS, want, source="pit (fleet rate)", now=now, wall=wall, auto=True)
         if want != self._rate:
             self.log.write("event", what="fleet_rate", hz=want, id=c.id,
-                           reason="repeater in use" if want == 1 else "no repeater for 120 s")
+                           reason="pinned in config.json" if pinned else ("repeater in use" if want == 1 else "no repeater for 120 s"))
             self._rate_wall = wall
         self._rate, self._rate_tx_mono = want, now
+
+    def rate_pinned(self):
+        """config.json "fleet_rate": 1 or 2 pins the fleet report rate; anything else = auto (repeater rule)."""
+        v = self.cfg.get("fleet_rate")
+        return int(v) if str(v).strip() in ("1", "2") else None
 
     def _scale_watch(self, now):
         """Lock held. SCALE != MODE transitions (pitcore Fleet.watch_scales)."""
@@ -756,7 +768,8 @@ class App:
         with self.lock:
             fleet = self.fleet.snapshot(now)
             fleet["rate"] = {"hz": self._rate, "since": self._rate_wall,
-                             "policy": "1 Hz while a repeater is heard, 2 Hz after 120 s without one"}
+                             "policy": (f"pinned to {self.rate_pinned()} Hz by config.json fleet_rate" if self.rate_pinned()
+                                        else "auto: 1 Hz while a repeater is heard, 2 Hz after 120 s without one")}
             ge = fleet["race"].get("go_epoch")
             # seconds until GO (negative after) from the server clock, so every page counts down together
             fleet["race"]["go_in_s"] = None if ge is None else round(ge - time.time(), 2)
