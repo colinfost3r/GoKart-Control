@@ -3,7 +3,15 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
-## Pit-race screen for the Core2, not installed — November 13, 2026
+## Upstream kart 0.3.7 merged; the set to flash is `2026-11-13-upstream-037` — November 13, 2026
+
+Eamon's branch is merged through `008b458`: the pit can start a freeplay game for the whole
+fleet (kart 0.3.7, base 0.2.3). An M5 kart has no Pi to act on that command, so its Heltec
+build refuses it. 635 tests pass. New Heltec and base images, with the race-screen Core2
+images unchanged ([manifest](docs/validation/m5-upstream-037-2026-11-13.json)). **No Heltec has
+it yet**; kart 3's Core2 already runs the matching Core2 image.
+
+## Pit-race screen for the Core2 — November 13, 2026
 
 The owner tried a pit race and a kart-hosted game with karts 3 to 5; neither worked. For the
 pit race the paired Core2 now shows the grid hold with a countdown, GO, and the race position,

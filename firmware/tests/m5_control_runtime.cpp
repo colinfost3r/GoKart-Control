@@ -233,6 +233,15 @@ static void testRaceDisplay(){
   advance(2000);refresh();serviceWrites();assert(!raceHold&&stopActive);
   m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&!went);
 }
+static void testPitGame(){
+  // The pit's fleet game command needs a kart Pi. A paired M5 kart refuses it and changes nothing.
+  modeReq=1;vesc.live.currentMaxScale=.75f;
+  const auto before=drivingState();const size_t writes=vesc.writes.size();
+  for(uint8_t arg:{uint8_t(2),uint8_t(0x12),uint8_t(0)}){
+    command(GK_CMD_GAME,arg,uint8_t(20+arg));
+    assert(result()==GK_RES_REJECTED&&drivingState()==before&&vesc.writes.size()==writes&&!gameSession);
+  }
+}
 static void testLinkChange(){
   command(GK_CMD_SET_MODE,1,1);const size_t count=vesc.writes.size();
   vesc.sample.receivedMs=0;serviceWrites();assert(wState==W_IDLE&&result()==GK_RES_UNKNOWN);
@@ -498,7 +507,7 @@ int main(int argc,char** argv){
   else if(scenario=="guard"){assert(argc==3);testGuard(argv[2]);}
   else if(scenario=="passthrough")testPassthrough();else if(scenario=="ack")testAck();
   else if(scenario=="stop-start")testStopStart();else if(scenario=="timers")testTimers();
-  else if(scenario=="race-display")testRaceDisplay();
+  else if(scenario=="race-display")testRaceDisplay();else if(scenario=="pit-game")testPitGame();
   else if(scenario=="link-change")testLinkChange();else if(scenario=="ceiling")testCeiling();
   else if(scenario=="baseline")testBaseline();
   else if(scenario=="baseline-wrong-identity")testWrongBaselineIdentity();

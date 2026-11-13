@@ -352,6 +352,7 @@ class Fleet:
         self.stat_mono = None
         self.simulation = False
         self.race = {"active": False, "mode": 1, "entered": [], "changed_wall": None, "by": None}
+        self.pit_game = None            # last `game` command from this pit: {"on", "mode", "host", "wall", "by", "cmd_id"}
         self.origin = None                      # {"lat","lon","source"}; locked per session
         self.fallback_origin = fallback_origin  # from map.json / config
         self.rx_lines = 0
@@ -503,6 +504,7 @@ class Fleet:
             "repeater": dict(self.repeater, age_s=_age(self.repeater_mono, now)) if self.repeater else None,
             "simulation": self.simulation,
             "race": dict(self.race, session=None if self.game.session is None else self.game.session.snapshot()),
+            "pit_game": self.pit_game,
             "game": self.game.status(),
             "laps": laps,
             "origin": self.current_origin(),
@@ -532,8 +534,28 @@ HISTORY = 40
 ECHOED = {"received", "accepted", "applied", "no_vesc", "rejected", "unknown"}
 FINAL = {"applied", "no_vesc", "rejected", "unknown", "no_ack", "offline",
          "superseded", "cancelled", "link_lost"}
-VALID_CMDS = {"mode", "stop", "start", "ping", "slow", "boost", "race", "rate"}
+VALID_CMDS = {"mode", "stop", "start", "ping", "slow", "boost", "race", "rate", "game"}
 BOOST_MIN_PCT, BOOST_MAX_PCT = 10, 100   # firmware GK_CMD_BOOST: scale percent, lasts 5 s
+GAME_ROAM_BIT = 0x10                     # firmware GK_CMD_GAME: arg 0 = end; else host kart 1-8 in bits 0-3, ROAM in bit 4
+GAME_MODES = ("track", "roam")
+
+
+def game_arg(on, mode="track", host=None):
+    """The `game` command's arg (GoKartProtocol.h GK_CMD_GAME, kart 0.3.7): 0 ends the game, otherwise the host
+    kart id with GAME_ROAM_BIT set for ROAM. CommandError for a bad mode / host."""
+    if not on:
+        return 0
+    if mode not in GAME_MODES:
+        raise CommandError('game: mode must be "track" or "roam"')
+    if isinstance(host, bool) or not isinstance(host, int) or host not in KART_IDS:
+        raise CommandError("game: host must be a kart id 1-8")
+    return host | (GAME_ROAM_BIT if mode == "roam" else 0)
+
+
+def game_arg_name(arg):
+    if not arg:
+        return "end"
+    return f"{'ROAM' if arg & GAME_ROAM_BIT else 'TRACK'}, host K{arg & 0x0F}"
 
 
 class CommandError(ValueError):
@@ -1056,6 +1078,8 @@ class Command:
             return race_arg_name(self.arg)
         if self.cmd == "rate":
             return f"{self.arg} Hz"
+        if self.cmd == "game":
+            return game_arg_name(self.arg)
         return None
 
     def to_dict(self):
@@ -1135,6 +1159,13 @@ class CommandManager:
                 raise CommandError("rate: arg must be 1 or 2 (Hz)")
             if arg not in (1, 2):
                 raise CommandError("rate: arg must be 1 or 2 (Hz)")
+        elif cmd == "game":
+            try:
+                arg = int(arg)
+            except (TypeError, ValueError):
+                raise CommandError("game: arg must be 0 (end) or a host kart 1-8, +16 for ROAM")
+            if arg != 0 and (arg & ~(GAME_ROAM_BIT | 0x0F) or (arg & 0x0F) not in KART_IDS):
+                raise CommandError("game: arg must be 0 (end) or a host kart 1-8, +16 for ROAM")
         elif cmd == "race":
             # 1-30 = grid hold, GO in arg s; 0 = finish (no position); 101-108 = finish in position arg-100
             try:

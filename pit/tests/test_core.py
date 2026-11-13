@@ -1235,6 +1235,17 @@ class FleetRatePolicy(unittest.TestCase):
     def test_rate_args(self):
         h = Harness()
         self.assertEqual(h.cm.submit("rate", 255, 1, now=0.0).to_dict()["arg_name"], "1 Hz")
+        # pit-started freeplay game (kart 0.3.7): arg = host kart, +16 ROAM, 0 = end
+        self.assertEqual((pc.game_arg(True, "roam", 2), pc.game_arg(True, "track", 5), pc.game_arg(False)), (18, 5, 0))
+        self.assertEqual((pc.game_arg_name(18), pc.game_arg_name(5), pc.game_arg_name(0)), ("ROAM, host K2", "TRACK, host K5", "end"))
+        for bad in (("x", 2), ("roam", 9), ("roam", None), ("roam", True)):
+            with self.assertRaises(pc.CommandError):
+                pc.game_arg(True, *bad)
+        self.assertEqual(h.cm.submit("game", 255, 18, now=0.0).to_dict()["arg_name"], "ROAM, host K2")
+        self.assertEqual(h.cm.submit("game", 255, 0, now=0.0).to_dict()["arg_name"], "end")
+        for bad in (9, 16, 32, 25, "x"):
+            with self.assertRaises(pc.CommandError):
+                h.cm.submit("game", 255, bad, now=0.0)
         for bad in (0, 3, None, "x"):
             with self.assertRaises(pc.CommandError):
                 h.cm.submit("rate", 255, bad, now=0.0)

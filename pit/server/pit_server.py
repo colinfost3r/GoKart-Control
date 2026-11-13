@@ -896,6 +896,37 @@ class App:
         self.log.write("op", who=who, action="race", request=body, issued=issued)
         return result
 
+    GAME_HEARD_S = 60.0          # /api/game host null: the lowest-numbered kart heard this recently hosts
+
+    def game(self, body, who):
+        """POST /api/game {"on": true, "mode": "track"|"roam", "host": 1-8 | null} | {"on": false}: one broadcast
+        `game` command (kart firmware 0.3.7, base 0.2.3) puts every kart in one freeplay session with no dash
+        taps: each turns freeplay on in that mode, the host kart hosts, the rest join it. host null = the lowest
+        kart heard in the last minute. {"on": false} ends it (leave + freeplay off). Per-kart outcomes come back
+        like any command (CMDS); the fleet cards show HOST / G<host>. docs/freeplay-multiplayer.md "From the pit"."""
+        on = body.get("on")
+        if not isinstance(on, bool):
+            raise pitcore.CommandError('expected {"on": true|false}')
+        if not self.link.connected:
+            raise pitcore.CommandError("T-Beam link is down; game command not sent")
+        now, wall = time.monotonic(), wall_iso()
+        mode, host = body.get("mode", "roam"), body.get("host")
+        with self.lock:
+            if on and host is None:
+                heard = [k for k in pitcore.KART_IDS if self.fleet.karts[k].last_tele_mono is not None
+                         and now - self.fleet.karts[k].last_tele_mono <= self.GAME_HEARD_S]
+                if not heard:
+                    raise pitcore.CommandError("no kart heard in the last minute: pick a host kart")
+                host = heard[0]
+            arg = pitcore.game_arg(on, mode, host)
+            c = self.cmds.submit("game", pitcore.ALL_KARTS, arg, source=f"{who} (game)", now=now, wall=wall)
+            self.fleet.pit_game = {"on": on, "mode": mode if on else None, "host": host if on else None,
+                                   "wall": wall, "by": who, "cmd_id": c.id}
+            d = c.to_dict()
+            game = dict(self.fleet.pit_game)
+        self.log.write("op", who=who, action="game", request=body, arg=arg, id=d["id"], seq=d["seq"])
+        return {"game": game, "command": d}
+
 
 # ---------------------------------------------------------------------------
 class Handler(BaseHTTPRequestHandler):
@@ -1096,6 +1127,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(200, {"ok": True, "command": app.command(body, who)})
             if p == "/api/race":
                 return self._json(200, {"ok": True, "race": app.race(body, who)})
+            if p == "/api/game":
+                return self._json(200, {"ok": True, **app.game(body, who)})
             if p == "/zones":
                 return self._json(200, {"ok": True, "zones": app.save_zones(body, who)})
             if p == "/zones/auto_boxes":

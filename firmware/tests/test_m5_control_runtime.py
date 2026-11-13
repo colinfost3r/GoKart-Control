@@ -102,6 +102,9 @@ class M5ControlRuntimeTests(unittest.TestCase):
     def test_paired_display_is_told_the_grid_hold_and_only_a_real_go(self):
         self.run_case('race-display')
 
+    def test_pit_fleet_game_command_is_refused_without_side_effects(self):
+        self.run_case('pit-game')
+
     def test_link_change_cancels_pending_result_without_replay(self):
         self.run_case('link-change')
 

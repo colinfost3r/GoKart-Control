@@ -637,6 +637,32 @@ class ServerPieces(unittest.TestCase):
         self.assertIsNone(app._inv_line)                                   # _push_inv resends the carried items
         self.assertEqual(app.log.recs[0][1]["what"], "shield_desync")
 
+    def test_the_pits_game_command_turns_freeplay_on_and_hosts_or_joins(self):
+        # kart-0.3.7: {"t":"fpgame","arg":A} from the Heltec = the pit's GK_CMD_GAME; no dash taps
+        class Log:
+            def __init__(self): self.recs = []
+            def write(self, kind, **kw): self.recs.append((kind, kw))
+        calls = []
+        app = self.ks.App.__new__(self.ks.App)
+        app.log, app.configured_id = Log(), 1
+        app.freeplay_cmd = lambda body, who: calls.append(("cmd", body, who))
+        app.freeplay_multi = lambda body, who: calls.append(("multi", body, who))
+        app._pit_game({"t": "fpgame", "arg": 0x12})                       # ROAM, host kart 2: I join
+        self.assertEqual(calls, [("cmd", {"on": True, "mode": "roam"}, "pit@lora"), ("multi", {"join": 2}, "pit@lora")])
+        calls.clear(); app.configured_id = 2
+        app._pit_game({"t": "fpgame", "arg": 2})                          # TRACK, host kart 2: I host
+        self.assertEqual(calls, [("cmd", {"on": True, "mode": "track"}, "pit@lora"), ("multi", {"host": True}, "pit@lora")])
+        calls.clear()
+        app._pit_game({"t": "fpgame", "arg": 0})                          # end: leave, then freeplay off
+        self.assertEqual(calls, [("multi", {"leave": True}, "pit@lora"), ("cmd", {"on": False}, "pit@lora")])
+        calls.clear()
+        app._pit_game({"t": "fpgame", "arg": 9})                          # host 9: refused, nothing sent
+        self.assertEqual((calls, app.log.recs[-1][1]["refused"]), ([], "bad host id"))
+        def refuse(body, who): raise self.ks.kartcore.CommandError("already hosting")
+        app.freeplay_multi = refuse
+        app._pit_game({"t": "fpgame", "arg": 2})                          # a LoRa repeat: logged, not fatal
+        self.assertEqual(app.log.recs[-1][1]["refused"], "already hosting")
+
     def test_carried_items_survive_a_pit_takeover(self):
         # full sweep 2026-11-13: a 5 s pit race paused freeplay ("off at the pit"), set_zones dropped the
         # carried boosts with the game, and the empty inventory got saved. _stash_carried keeps them in

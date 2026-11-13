@@ -457,7 +457,7 @@ class App:
 
     def _ingest(self, text, demo=False, source=None):
         now, wall = time.monotonic(), wall_iso()
-        invuse = None
+        invuse = fpgame = None
         try:
             msg = json.loads(text) if text[:1] == "{" else None
         except ValueError:
@@ -528,6 +528,8 @@ class App:
                 game += more + self.game.set_zones(zones, now)          # session changes invalidate pending prizes now
             elif t == "invuse" and not demo:
                 invuse = msg                                               # Core2 item screen (kart-0.3.0); after the lock
+            elif t == "fpgame" and not demo:
+                fpgame = msg                                               # the pit's game command (kart-0.3.7); after the lock
             if not demo and t in ("self", "gps"):
                 # freeplay: the engine's filtered position (course recording, the 10 m rule) and its
                 # item rolls (a roll on a freeplay box = collected)
@@ -538,6 +540,8 @@ class App:
         self._game_out(game, demo=demo)
         if invuse is not None:
             self._handle_invuse(invuse)
+        if fpgame is not None:
+            self._pit_game(fpgame)
         self._push_inv()
         if demo_finish:                    # demo: after 3 laps the simulated pit flags the kart home in P1
             d.write_text("finish 1")
@@ -964,6 +968,30 @@ class App:
         self._save_freeplay()
         with self.lock:
             return self.freeplay.snapshot(now)
+
+    def _pit_game(self, msg):
+        """{"t":"fpgame","arg":A} from the Heltec = the pit's `game` command (kart-0.3.7, GK_CMD_GAME): one pit tap
+        puts every kart in one session with no dash taps. A = 0 ends it (leave the session, freeplay off); else
+        bits 0-3 = the host kart and bit 4 = ROAM (clear = TRACK): freeplay on in that mode, then host (I am the
+        host) or join. Each step is what the dash would do, logged as pit@lora; a refusal ("already hosting"
+        on a LoRa repeat, freeplay not allowed) is logged and the rest still runs."""
+        who = "pit@lora"
+        arg = kartcore._int0(msg.get("arg"))
+        if arg == 0:
+            steps = [(self.freeplay_multi, {"leave": True}), (self.freeplay_cmd, {"on": False})]
+        else:
+            host = arg & 0x0F
+            if not 1 <= host <= 8:
+                self.log.write("op", who=who, action="freeplay", request={"game": arg}, refused="bad host id")
+                return
+            me = self.configured_id or self.disp.heltec_id
+            steps = [(self.freeplay_cmd, {"on": True, "mode": "roam" if arg & 0x10 else "track"}),
+                     (self.freeplay_multi, {"host": True} if host == me else {"join": host})]
+        for fn, body in steps:
+            try:
+                fn(body, who)
+            except (kartcore.CommandError, ValueError) as e:
+                self.log.write("op", who=who, action="freeplay", request=body, refused=str(e))
 
     def _freeplay_eco(self, eco):
         """Freeplay switched on: `mode 0` through the same path as POST /cmd mode (CommandTracker, op log;

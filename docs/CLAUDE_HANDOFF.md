@@ -222,6 +222,19 @@ all (nothing provisioned), and kart 3's Heltec asks for an update password that 
 in any private file. See
 [the record](../hardware/m5/2026-11-13-kart3-core2-ota-race-screen/README.md).
 
+**A fifth merge late that evening, through `008b458`: upstream kart 0.3.7 and base 0.2.3.** The
+pit can now start or end a freeplay game for the whole fleet with one command (`GK_CMD_GAME`,
+id 9), which each kart's Heltec passes to its Pi. A paired M5 kart has no Pi, so on this
+branch its Heltec build **refuses** that command and changes nothing, rather than
+acknowledging a game it did not join (harness scenario `pit-game`). One conflict, in the
+releases note. 635 tests pass. Images are frozen as
+`firmware/build/bench-candidates/2026-11-13-upstream-037/`
+([manifest](validation/m5-upstream-037-2026-11-13.json)): the three Heltec kart images and the
+base image are new (`kart-0.3.7`, `base-0.2.3`); the Core2 and repeater images are the
+`2026-11-13-race-screen` files, byte for byte, so kart 3's Core2 already matches. **This is the
+set to flash; no Heltec has it yet.** M5 karts still cannot take part in a pit-started game:
+the driver would join from the Core2 once the host runs this branch, track games only.
+
 For the host test, mind the channel: Eamon's karts now sit on channel 1 with Wi-Fi off, and
 the course download needs the host Heltec and the player's Core2 on one channel. Kart 3's pair
 follows its Wi-Fi access point (channel 2 on November 12 and 13), so it will probably need
