@@ -506,6 +506,8 @@ class App:
                 game = self.game.on_race(msg, now, wall)
             elif t in ("game", "hit", "attack") and not demo:
                 game = game + self.freeplay.on_multi_line(t, msg, now)     # multiplayer freeplay (kart-0.2.5)
+                if t == "hit" and msg.get("why") == "shield":
+                    self._spend_shield(msg, game, now)                     # kart-0.3.6: the Heltec blocked it
             elif t == "invuse" and not demo:
                 invuse = msg                                               # Core2 item screen (kart-0.3.0); after the lock
             if not demo and t in ("self", "gps"):
@@ -720,6 +722,15 @@ class App:
         if not held:
             return slot
         return n if slot == 0 else slot - 1
+
+    def _spend_shield(self, msg, game, now):
+        """A hit line with why "shield" (kart-0.3.6): the Heltec blocked the hit with the carried SHIELD and
+        dropped it from its inv copy; spend ours too (dash chips, game-state.json). Without one its copy was
+        stale: resync the inv line."""
+        if self.game.shield_hit(game, now, hit_from=msg.get("from"), item=msg.get("item")):
+            return
+        self.log.write("event", what="shield_desync", hit_from=msg.get("from"), item=msg.get("item"))
+        self._inv_line = None                  # _push_inv (right after the line) resends the carried items
 
     _inv_line = "inv -"                    # assumed start state; the status poll clears it to resync
 

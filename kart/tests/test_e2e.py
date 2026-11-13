@@ -612,6 +612,31 @@ class ServerPieces(unittest.TestCase):
         self.assertIsNone(self.ks.App._inv_restorable(None))
         self.assertIsNone(self.ks.App._inv_restorable({"v": 2, "saved_wall": time.time()}))
 
+    def test_a_heltec_blocked_hit_spends_the_shield_or_resyncs_the_inventory(self):
+        # kart-0.3.6: the Heltec eats a shell with the carried shield and says why "shield" on the hit line;
+        # the Pi spends its copy, or (none carried: the Heltec's inv copy was stale) resends the inv line
+        sys.path.insert(0, os.path.join(KART, "tests"))
+        import test_core as tc
+        kc = self.ks.kartcore
+
+        class Log:
+            def __init__(self): self.recs = []
+            def write(self, kind, **kw): self.recs.append((kind, kw))
+        app = self.ks.App.__new__(self.ks.App)
+        app.game, app.log = kc.GameEngine(rng=tc.FixedRng(0.1), item_hold=True), Log()
+        doc = tc.zones_doc(tc.item_zone()); doc["source"] = "freeplay"
+        app.game.set_zones(doc, 0.0)
+        app.game.inventory.append({"item": "shield", "zone": "fp", "mono": 0.0})
+        app._inv_line = "inv shield"
+        game = []
+        app._spend_shield({"t": "hit", "from": 2, "item": "shell", "why": "shield"}, game, 1.0)
+        self.assertEqual([(r["ev"], r["hit_from"], r["item"]) for r in game], [("shield_broke", 2, "shell")])
+        self.assertEqual((app.game.inventory, app._inv_line, app.log.recs), ([], "inv shield", []))
+        app._spend_shield({"t": "hit", "from": 2, "item": "shell", "why": "shield"}, game, 2.0)
+        self.assertEqual(len(game), 1)
+        self.assertIsNone(app._inv_line)                                   # _push_inv resends the carried items
+        self.assertEqual(app.log.recs[0][1]["what"], "shield_desync")
+
     def test_carried_items_survive_a_pit_takeover(self):
         # full sweep 2026-11-13: a 5 s pit race paused freeplay ("off at the pit"), set_zones dropped the
         # carried boosts with the game, and the empty inventory got saved. _stash_carried keeps them in

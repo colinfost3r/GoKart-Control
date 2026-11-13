@@ -421,7 +421,11 @@ function mpEvents(f) {
 function mpEvent(e, m) {
   const item = MP_ITEMS[e.item] ? e.item : "shell";
   if (e.ev === "hit") {
-    if (e.applied === false) flash(`HIT BY ${kName(e.from)} (no effect)`, "hit", "fsmall");
+    if (e.why === "shield") {                                                 // kart-0.3.6: the carried shield ate it
+      flash("BLOCKED!", "star", "fword"); mpSound("block");
+      mpNote(`your shield took ${kName(e.from)}'s ${item}`, 2.5);
+    }
+    else if (e.applied === false) flash(`HIT BY ${kName(e.from)} (no effect)`, "hit", "fsmall");
     else { flash(`HIT BY ${kName(e.from)}!`, "hit"); mpSound("hit"); }
   } else if (e.ev === "attack") {
     const r = e.result, acked = Array.isArray(e.acked) ? e.acked.length : 0;
@@ -446,6 +450,7 @@ const MP_TONES = {
   lightning: { type: "sawtooth", tones: [[0, 0.32, 260, 2600, 0.14], [0.02, 0.3, 520, 3400, 0.06]] },    // rising zap
   hit: { type: "sawtooth", tones: [[0, 0.55, 760, 70, 0.2], [0, 0.55, 380, 45, 0.14]] },                // descending buzz
   join: { type: "triangle", tones: [[0, 0.09, 784, 784, 0.22], [0.09, 0.16, 1175, 1175, 0.22]] },       // short up-chime
+  block: { type: "square", tones: [[0, 0.07, 1046, 1046, 0.2], [0.08, 0.07, 1318, 1318, 0.2], [0.16, 0.22, 1568, 2093, 0.18]] },  // shield ping
 };
 function mpSound(kind) {
   const k = MP_TONES[kind];

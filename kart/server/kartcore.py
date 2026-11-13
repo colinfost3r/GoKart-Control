@@ -1169,17 +1169,25 @@ class GameEngine:
         ov = self.override
         return ov is not None and now < ov["until"] and (kind is None or ov["kind"] == kind)
 
+    def shield_hit(self, recs, now, **kw):
+        """Spend one carried SHIELD on a hit: the pit game's mud (_cmd) or, from kart-0.3.6, a multiplayer
+        shell / lightning the Heltec already blocked (hit line why "shield"; kw = hit_from, item). False =
+        none carried (for a Heltec hit that means its inv copy was stale: the caller resyncs the line)."""
+        sh = next((n for n, i in enumerate(self.inventory) if i["item"] == "shield"), None)
+        if sh is None and self.shields <= 0:
+            return False
+        if sh is not None:
+            self.inventory.pop(sh)
+        else:
+            self.shields -= 1
+        self._rec(recs, "shield_broke", now, **kw)
+        return True
+
     def _cmd(self, recs, now, zone, kind, secs, scale):
         if kind == "mud" and now < self.star_until:
             self._rec(recs, "star_blocked", now, zone=zone.id)       # invincible: the mud fizzles
             return
-        if kind == "mud" and (self.shields > 0 or any(i["item"] == "shield" for i in self.inventory)):
-            sh = next((n for n, i in enumerate(self.inventory) if i["item"] == "shield"), None)
-            if sh is not None:
-                self.inventory.pop(sh)
-            else:
-                self.shields -= 1
-            self._rec(recs, "shield_broke", now, zone=zone.id)       # one mud eaten, shield gone
+        if kind == "mud" and self.shield_hit(recs, now, zone=zone.id):   # one mud eaten, shield gone
             return
         if kind == "mud":
             secs = self.mud_secs

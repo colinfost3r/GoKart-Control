@@ -75,7 +75,10 @@ and `atk_seq` different from the last one accepted from K (or the same one older
 hit: remember (K, seq), set `ack_from = K, ack_seq = seq` for 5 s, apply the effect and print a `hit`
 line. The effect is a timed SLOW through the same code as the USB `slow 5 SECS` (firmware 0.2.4): shell
 4 s, lightning 3 s. It is skipped (hit still acknowledged, `applied:false`) while STOPPED, in a grid hold,
-with writes disabled or without a verified VESC. Repeater copies are the same frames (deduped by K+seq).
+with writes disabled or without a verified VESC, and (kart-0.3.6) when a SHIELD is carried: the kart's copy
+of the Pi's `inv` line spends it, the hit line says `why:"shield"`, the Core2 drops it at once and the Pi
+spends its own (`shield_broke`, no SLOW). The attacker is still acked and scores; the game bytes have no
+room for "blocked". Repeater copies are the same frames (deduped by K+seq).
 Two hits inside 5 s: the later one takes the ack slot; the earlier attacker times out (its hit still
 landed). Frames from karts outside my session are ignored for hits.
 

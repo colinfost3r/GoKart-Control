@@ -985,6 +985,21 @@ class Items(unittest.TestCase):
         self.assertEqual(evs(r, "shield_broke")[0]["zone"], "i1")
         self.assertEqual(g.inventory, [])
 
+    def test_shield_hit_spends_the_carried_shield_on_a_multiplayer_hit(self):
+        # kart-0.3.6: the Heltec blocks a shell / lightning with the carried shield (hit line why "shield");
+        # the Pi spends its copy the way the pit game's mud does, or says it carried none
+        g = self._fp_engine(0.88)                                        # 0.88 = SHIELD
+        g.on_self(fix(-4, 0), 1.5)
+        self.assertEqual([i["item"] for i in g.inventory], ["shield"])
+        r = []
+        self.assertTrue(g.shield_hit(r, 2.0, hit_from=2, item="shell"))
+        self.assertEqual((r[0]["ev"], r[0]["hit_from"], r[0]["item"], g.inventory), ("shield_broke", 2, "shell", []))
+        self.assertFalse(g.shield_hit(r, 3.0, hit_from=2, item="shell"))   # nothing carried
+        self.assertEqual(len(r), 1)
+        g.shields = 1                                                    # a spare charge (prize landed while full)
+        self.assertTrue(g.shield_hit(r, 4.0, hit_from=3, item="lightning"))
+        self.assertEqual((g.shields, r[-1]["hit_from"]), (0, 3))
+
     def test_star_gives_sport_power_and_mud_immunity(self):
         g = self._fp_engine(0.65)                                        # 0.65 = STAR
         g.on_self(fix(-4, 0), 1.5)
@@ -2275,6 +2290,10 @@ class Multiplayer(unittest.TestCase):
         self.assertEqual(m["last_hit"], {"from": 5, "item": "lightning", "secs": 3, "applied": False,
                                          "seq": 2, "why": "stopped", "age_s": 1.0})
         self.assertEqual([(e["ev"], e["from"]) for e in m["events"] if e["ev"] == "hit"], [("hit", 3), ("hit", 5)])
+        r = fp.on_multi_line("hit", {"from": 2, "item": "shell", "seq": 3, "secs": 4, "applied": False,
+                                     "why": "shield"}, 6.0)                 # kart-0.3.6: the shield ate it
+        self.assertEqual((evs(r, "freeplay_hit")[0]["why"], fp.snapshot(6.0)["multi"]["last_hit"]["why"]),
+                         ("shield", "shield"))
         self.assertEqual(fp.on_multi_line("bogus", {}, 5.0), [])
 
     def test_shell_only_reaches_karts_ahead(self):

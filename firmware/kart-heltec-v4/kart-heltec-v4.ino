@@ -232,6 +232,7 @@ uint32_t    fleetMs[GK_MAX_KARTS + 1];
 #define GAME_SHELL_SECS      4
 #define GAME_LIGHTNING_SECS  3
 #define GAME_SLOW_MPH        5
+static bool invTakeShield();                      // with the Core2 inventory below: spend a carried SHIELD on a hit
 uint8_t  gameSession = 0;                         // 0 or the host's id (mine while hosting)
 uint8_t  atkTo = 0, atkItem = 0, atkSeq = 0;      // the attack in flight (atkTo 0 = none); atkSeq = last seq used
 uint32_t atkStartMs = 0; uint8_t atkAckMask = 0;  // bit k-1: kart k acknowledged the attack in flight
@@ -1004,16 +1005,22 @@ static void gameAttack(uint8_t to, uint8_t item) {
   logf("attack: %s at %s (seq %u)", gkItemName(item), to == GK_ADDR_ALL ? "everyone in the game" : "one kart", atkSeq);
 }
 // A hit on us: the item's timed SLOW through the command path (W-rules apply), acknowledged either way.
+// 0.3.6: a carried SHIELD (the Pi's `inv` line; "AUTO BLOCK" on the dash) eats one hit that would have
+// applied: no SLOW, `why:"shield"` on the hit line, the shield leaves the Core2 screen at once and the Pi
+// spends its own copy. Before, a shield only blocked the pit game's mud: kart 1 took kart 2's shell while
+// holding one (2026-11-13). The attacker is still acked (and scores): the game bytes have no room for "blocked".
 static void applyHit(uint8_t from, uint8_t item, uint8_t seq) {
   const uint8_t secs = item == GK_ITEM_LIGHTNING ? GAME_LIGHTNING_SECS : GAME_SHELL_SECS;
   const char* why = nullptr;
   if (stopActive) why = "stopped"; else if (raceHold) why = "grid hold";
   else if (!writesEnabled()) why = "writes off"; else if (!vescUp() || !origValid) why = "no vesc";
+  else if (invTakeShield()) why = "shield";
   if (!why) { slowSecs = secs; handleCommand(GAME_SRC, ++usbSeq, GK_CMD_SLOW, GAME_SLOW_MPH, 0, 0); }
   Serial.printf("{\"t\":\"hit\",\"kart\":%u,\"from\":%u,\"item\":\"%s\",\"seq\":%u,\"secs\":%u,\"applied\":%s,\"why\":",
                 kartId, from, gkItemName(item), seq, secs, gkBool(why == nullptr));
   if (why) Serial.printf("\"%s\"}\n", why); else Serial.print("null}\n");
-  if (why) logf("hit by kart %u (%s): no effect, %s", from, gkItemName(item), why);
+  if (why && !strcmp(why, "shield")) logf("hit by kart %u (%s): the shield took it", from, gkItemName(item));
+  else if (why) logf("hit by kart %u (%s): no effect, %s", from, gkItemName(item), why);
   else logf("hit by kart %u (%s): slow %u mph for %u s", from, gkItemName(item), GAME_SLOW_MPH, secs);
 }
 // A fresh telemetry copy from kart k: did it acknowledge our attack, is it attacking us?
@@ -1223,7 +1230,9 @@ static void serviceWifi() {
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
 static const uint8_t ESPNOW_BCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+#define INV_SHIELD 10
 static uint8_t invItems[3]; static uint8_t invN = 0; static uint8_t invSeq = 0;
+static bool invShield = false;          // a SHIELD is carried (any slot, past the three shown too): applyHit spends it
 static uint32_t invTxMs = 0; static bool espnowUp = false;
 static uint8_t espnowCh = 1;            // the AP's channel (stored): re-pinned after each failed WiFi
                                         // reconnect scan, so broadcasts stay findable away from the pit
@@ -1241,8 +1250,22 @@ static uint8_t invCode(const char* n) {
   if (!strcmp(n, "shell")) return 3; if (!strcmp(n, "lightning")) return 4;
   if (!strcmp(n, "mud")) return 5; if (!strcmp(n, "boost3")) return 6;
   if (!strcmp(n, "star")) return 7; if (!strcmp(n, "magnet")) return 8;
-  if (!strcmp(n, "hotlap")) return 9; if (!strcmp(n, "shield")) return 10;
+  if (!strcmp(n, "hotlap")) return 9; if (!strcmp(n, "shield")) return INV_SHIELD;
   return 0;
+}
+// The carried SHIELD, spent on a hit (applyHit): off the Core2 screen at once; the Pi hears `why:"shield"`
+// on the hit line and spends its own copy. false = none carried.
+static bool invTakeShield() {
+  if (!invShield) return false;
+  invShield = false;
+  for (uint8_t i = 0; i < invN; i++) {
+    if ((invItems[i] & 0x0F) == INV_SHIELD) {
+      for (uint8_t j = i + 1; j < invN; j++) invItems[j - 1] = invItems[j];
+      invN--; break;
+    }
+  }
+  invSeq++; invTxMs = 0;                                  // broadcast at once
+  return true;
 }
 
 static void espnowOnRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
@@ -1359,14 +1382,15 @@ static void usbCommand(char* line) {
     else { boostSecs = (uint8_t)secs; handleCommand(0xFE, ++usbSeq, GK_CMD_BOOST, (uint8_t)lroundf(sc * 100), 0, 0); }
   }
   else if (!strcmp(line, "inv")) {                        // inv a b c | inv -   carried items for the Core2 screen
-    invN = 0;
-    for (char* t = arg ? strtok(arg, " ") : NULL; t && invN < 3; t = strtok(NULL, " ")) {
+    invN = 0; invShield = false;
+    for (char* t = arg ? strtok(arg, " ") : NULL; t; t = strtok(NULL, " ")) {   // every item: a 4th still shields
       if (!strcmp(t, "-")) break;
       uint8_t charges = 1;
       char* star = strchr(t, '*');
       if (star) { *star = 0; int c = atoi(star + 1); if (c >= 1 && c <= 4) charges = (uint8_t)c; }
       uint8_t c = invCode(t);
-      if (c) invItems[invN++] = c | (uint8_t)((charges - 1) << 4);
+      if (c == INV_SHIELD) invShield = true;
+      if (c && invN < 3) invItems[invN++] = c | (uint8_t)((charges - 1) << 4);
     }
     invSeq++; invTxMs = 0;                                // broadcast at once
     logf("inv: %u item(s) [%s %s %s]", invN, invN > 0 ? invName(invItems[0]) : "-",

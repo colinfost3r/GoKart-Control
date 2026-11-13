@@ -429,5 +429,28 @@ class EspnowChannel(unittest.TestCase):
         self.assertTrue(1 <= kart <= 13, f"channel {kart} is not a legal 2.4 GHz channel")
 
 
+class ShieldBlocksAHit(unittest.TestCase):
+    """kart-0.3.6: the Heltec applies a hit's SLOW itself, before the Pi hears of it, so the carried SHIELD
+    ("AUTO BLOCK" on the dash) has to be spent there. Kart 1 took kart 2's shell while holding one
+    (2026-11-13): the Pi only ever blocked the pit game's mud, and no test spanned the radio hop. Text-level
+    guards: applyHit consults the shield before the SLOW, the inv parser sees a shield past the three Core2
+    slots, and the Pi handles the `why` the firmware prints."""
+
+    def test_apply_hit_spends_the_shield_before_the_slow(self):
+        src = read(os.path.join(FW, "kart-heltec-v4", "kart-heltec-v4.ino"))
+        body = re.search(r"static void applyHit\(.*?\n}\n", src, re.S)
+        self.assertIsNotNone(body, "applyHit not found")
+        body = body.group(0)
+        self.assertIn("invTakeShield()", body)
+        self.assertLess(body.index("invTakeShield()"), body.index("GK_CMD_SLOW"))
+        self.assertIn('why = "shield"', body)
+        inv = re.search(r'!strcmp\(line, "inv"\)\)(.*?)\n  }\n', src, re.S)
+        self.assertIsNotNone(inv, "inv console branch not found")
+        self.assertIn("invShield = true", inv.group(1))
+        self.assertNotIn("invN < 3; t = strtok", inv.group(1))      # every token is read: a 4th item still shields
+        pi = read(os.path.join(FW, "..", "kart", "server", "kart_server.py"))
+        self.assertIn('msg.get("why") == "shield"', pi)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
