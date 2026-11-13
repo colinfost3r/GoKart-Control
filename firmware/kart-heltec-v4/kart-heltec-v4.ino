@@ -1564,10 +1564,18 @@ static void serviceLoraTx() {
 }
 
 // ---------------------------------------------------------------- wifi / ota
+static bool wifiWanted() {           // "" / none / clear / off = no network: the radio stays parked on espnowCh
+  return wifiSsid.length() > 0 && !wifiSsid.equalsIgnoreCase("none") && !wifiSsid.equalsIgnoreCase("clear")
+      && !wifiSsid.equalsIgnoreCase("off");
+}
 static void wifiStart() {
-  if (wifiSsid.length() == 0) return;
+  if (!wifiWanted()) { if (wifiSsid.length()) logf("wifi off ('%s' stored = no network)", wifiSsid.c_str()); return; }
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
+  // 0.3.4: no driver-side reconnect loop. With the network absent the core re-scans on every NO_AP_FOUND,
+  // which parks the radio off espnowCh most of the time (kart 1, 2026-11-13: one Core2 tap in three got
+  // through). Reconnects stay ours: serviceWifi, every 30 s, only while the kart is stationary.
+  WiFi.setAutoReconnect(false);
   WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
   wifiStarted = true;
 }
@@ -1604,8 +1612,10 @@ static uint8_t espnowCh = 1;
 static bool espnowChLoaded = false;
 static void serviceEspnowChannel() {
   if (!espnowChLoaded) {
-    espnowCh = prefs.getUChar("espch", 1);
-    if (espnowCh < 1 || espnowCh > 13) espnowCh = 1;
+    // 0.3.5 (upstream): no WiFi = no AP to agree on, so use the fleet's fixed channel instead of a
+    // remembered one. The stored AP channel is only honoured when WiFi is actually in play.
+    espnowCh = wifiWanted() ? prefs.getUChar("espch", GK_ESPNOW_CH) : GK_ESPNOW_CH;
+    if (espnowCh < 1 || espnowCh > 13) espnowCh = GK_ESPNOW_CH;
     espnowChLoaded = true;
   }
   if (WiFi.status() == WL_CONNECTED) {
@@ -1667,8 +1677,12 @@ static void serviceEspnow() {
     peer.channel = 0; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
     esp_now_add_peer(&peer);
     esp_now_register_recv_cb(espnowOnRecv);
+    // 0.3.5 (upstream): pin the channel at init. serviceEspnowChannel() chooses it: the fleet's fixed
+    // channel with no WiFi, the remembered AP channel only while WiFi is actually in play.
+    serviceEspnowChannel();
+    esp_wifi_set_channel(espnowCh, WIFI_SECOND_CHAN_NONE);
     espnowUp = true;
-    logf("espnow up (Core2 item screen, ch %u)", espnowCh);
+    logf("espnow up (Core2 item screen, ch %u%s)", espnowCh, wifiWanted() ? "" : " fixed");
   }
   courseRadio.begin();
   courseRadio.poll(kartId, gameSession==kartId, !otaInProgress, millis());
@@ -1788,9 +1802,12 @@ static void usbCommand(char* line) {
 #endif
   }
   else if (!strcmp(line, "wifi") && arg) {
-    char* pw = strchr(arg, ' '); if (pw) { *pw++ = 0; }
-    prefs.putString("ssid", arg); prefs.putString("pass", pw ? pw : "");
-    logf("wifi credentials stored for '%s'; reboot to apply", arg);
+    if (!strcmp(arg, "clear")) { prefs.putString("ssid", ""); prefs.putString("pass", ""); logf("wifi credentials cleared; reboot to apply (radio stays on the Core2 channel)"); }
+    else {
+      char* pw = strchr(arg, ' '); if (pw) { *pw++ = 0; }
+      prefs.putString("ssid", arg); prefs.putString("pass", pw ? pw : "");
+      logf("wifi credentials stored for '%s'; reboot to apply", arg);
+    }
   }
   else if (!strcmp(line, "otapw") && arg) { prefs.putString("otapw", arg); logf("ota password stored; reboot to apply"); }
   else if (!strcmp(line, "rate") && arg) { int r = atoi(arg); if (r == 1 || r == 2) { reportRate = r; prefs.putUChar("rate", r); logf("report rate %d Hz", r); } else logf("rate must be 1 or 2"); }

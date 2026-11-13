@@ -16,7 +16,7 @@
 #include <ArduinoOTA.h>
 #include <Preferences.h>
 
-#define FW_VERSION "core2-0.3.5"
+#define FW_VERSION "core2-0.3.6"
 
 struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
 struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
@@ -35,7 +35,11 @@ static uint32_t lastRxMs = 0;
 // UI state
 static uint8_t items[3], n = 0, invSeq = 0xFF, kart = 0;
 static int sel = 0;
-static uint32_t scanHopMs = 0; static uint8_t scanCh = 1; static bool locked = false;
+// The kart firmware (kart-0.3.5+) parks its radio on GK_ESPNOW_CH whenever it has no WiFi, which is
+// the normal fleet state. Hunting for a channel is what let this unit settle on ch 4 while its kart
+// sat on ch 6 (2026-11-13), so with no WiFi creds we simply sit on the same fixed channel.
+static const uint8_t FIXED_CH = 1;      // must match GK_ESPNOW_CH in firmware/kart-heltec-v4/config.h
+static uint32_t scanHopMs = 0; static uint8_t scanCh = FIXED_CH; static bool locked = false;
 static uint32_t useSentMs = 0; static uint8_t useSeq = 0, useTries = 0, useSlot = 0;
 static uint32_t lastDrawMs = 0; static bool dirty = true;
 
@@ -466,9 +470,15 @@ void loop() {
   // while joining or joined (OTA) the radio belongs to the AP: no channel hunting
   if (!locked && !wifiTrying && !otaUp && ms - scanHopMs > 400) {   // hunt for the kart
     scanHopMs = ms;
-    scanCh = scanCh >= 13 ? 1 : scanCh + 1;
-    esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
-    dirty = true;
+    if (wifiSsid.length() == 0 && ms - lastRxMs < 30000) {
+      // fixed-channel fleet: stay where the kart is instead of hopping past it. After 30 s of
+      // silence fall back to hopping, so a kart still on an AP channel is found anyway.
+      if (scanCh != FIXED_CH) { scanCh = FIXED_CH; esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE); dirty = true; }
+    } else {
+      scanCh = scanCh >= 13 ? 1 : scanCh + 1;
+      esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
+      dirty = true;
+    }
   }
   if (locked && !wifiTrying && !otaUp && ms - lastRxMs > 20000) {   // really lost: hunt again
     locked = false; scanHopMs = 0; dirty = true;
