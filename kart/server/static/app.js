@@ -303,7 +303,7 @@ function freeChip(f) {                       // -> null (hidden) or {text, cls}
   if (f.phase === "paused_race") return { text: "FREEPLAY PAUSED (race)", cls: "paused" };
   if (f.phase === "no_gps") return { text: "FREEPLAY: waiting for GPS", cls: "rec" };
   if (f.phase === "recording") return { text: `FREEPLAY: drive one lap to set the course \u00b7 ${Math.round((f.record && f.record.distance_m) || 0)} m`, cls: "rec" };
-  if (f.phase === "ready") return { text: `FREEPLAY \u00b7 ${n} box${n === 1 ? "" : "es"} \u00b7 ${f.collected || 0} collected`, cls: "" };
+  if (f.phase === "ready") return { text: `FREEPLAY${f.mode === "roam" ? " ROAM" : ""} \u00b7 ${n} box${n === 1 ? "" : "es"} \u00b7 ${f.collected || 0} collected`, cls: "" };
   return null;
 }
 function renderFree(f) {
@@ -343,12 +343,14 @@ function mpChip(f, m, base) {                // the FREEPLAY chip with the sessi
   const tail = !ids.length ? "waiting for karts" : others.length ? "with " + others.map(kName).join(" ") : "";
   return { text: `FREEPLAY · ${m.hosting ? "my game" : kName(m.session) + "'s game"}${tail ? " · " + tail : ""}`, cls: "tap mp" };
 }
+const fpRoam = () => !!(S && S.freeplay && S.freeplay.mode === "roam");   // ROAM: shells reach any direction
 function mpNearest(m) {                      // nearest in-range peer AHEAD of me (the shell's target) or undefined
   const d = (p) => (nul(p.dist_m) ? 1e9 : p.dist_m);
-  return mpPeers(m).filter((p) => p.in_range === true && p.ahead !== false).sort((a, b) => d(a) - d(b))[0];
+  return mpPeers(m).filter((p) => p.in_range === true && (fpRoam() || p.ahead !== false)).sort((a, b) => d(a) - d(b))[0];
 }
 function mpBehind(m) {                       // nearest in-range peer that is behind me (a shell cannot reach it)
   const d = (p) => (nul(p.dist_m) ? 1e9 : p.dist_m);
+  if (fpRoam()) return undefined;
   return mpPeers(m).filter((p) => p.in_range === true && p.ahead === false).sort((a, b) => d(a) - d(b))[0];
 }
 function renderMulti(f, m) {
@@ -363,7 +365,7 @@ function renderMulti(f, m) {
   // I got hit (the SLOW banner shows the rest): a thud for a shell, a crackle for lightning, once per hit
   const lh = m && m.last_hit;
   if (lh && lh.applied && !nul(lh.age_s) && lh.age_s < 2) {
-    const hk = `${lh.from}:${lh.item}:${Math.round((performance.now() - lh.age_s * 1000) / 1500)}`;
+    const hk = `${lh.from}:${lh.item}:${nul(lh.seq) ? Math.round((performance.now() - lh.age_s * 1000) / 1500) : lh.seq}`;
     if (hk !== mpUi.lastHitKey) { mpUi.lastHitKey = hk; Snd.play(lh.item === "lightning" ? "zap" : "hit"); }
   }
   if (inS) txt("mpScore", "★ " + (Number(m.score) || 0));
@@ -419,7 +421,11 @@ function mpEvents(f) {
 function mpEvent(e, m) {
   const item = MP_ITEMS[e.item] ? e.item : "shell";
   if (e.ev === "hit") {
-    if (e.applied === false) flash(`HIT BY ${kName(e.from)} (no effect)`, "hit", "fsmall");
+    if (e.why === "shield") {                                                 // kart-0.3.6: the carried shield ate it
+      flash("BLOCKED!", "star", "fword"); mpSound("block");
+      mpNote(`your shield took ${kName(e.from)}'s ${item}`, 2.5);
+    }
+    else if (e.applied === false) flash(`HIT BY ${kName(e.from)} (no effect)`, "hit", "fsmall");
     else { flash(`HIT BY ${kName(e.from)}!`, "hit"); mpSound("hit"); }
   } else if (e.ev === "attack") {
     const r = e.result, acked = Array.isArray(e.acked) ? e.acked.length : 0;
@@ -444,6 +450,7 @@ const MP_TONES = {
   lightning: { type: "sawtooth", tones: [[0, 0.32, 260, 2600, 0.14], [0.02, 0.3, 520, 3400, 0.06]] },    // rising zap
   hit: { type: "sawtooth", tones: [[0, 0.55, 760, 70, 0.2], [0, 0.55, 380, 45, 0.14]] },                // descending buzz
   join: { type: "triangle", tones: [[0, 0.09, 784, 784, 0.22], [0.09, 0.16, 1175, 1175, 0.22]] },       // short up-chime
+  block: { type: "square", tones: [[0, 0.07, 1046, 1046, 0.2], [0.08, 0.07, 1318, 1318, 0.2], [0.16, 0.22, 1568, 2093, 0.18]] },  // shield ping
 };
 function mpSound(kind) {
   const k = MP_TONES[kind];
@@ -1048,10 +1055,32 @@ document.querySelectorAll(".mbtn").forEach((btn) => {
     };
     raf = requestAnimationFrame(tick);
   });
+  // tap while OFF: pick TRACK or ROAM (the chooser hides by itself after 10 s); tap while ON (or with the
+  // chooser open): off / close
+  const chooser = $("freeChoose");
+  let chooseTimer = null;
+  const closeChooser = () => { show("freeChoose", false); if (chooseTimer) clearTimeout(chooseTimer); chooseTimer = null; };
   b.addEventListener("pointerup", () => {
     if (!raf) return;                          // the hold already fired
     reset();
+    const f = S && S.freeplay;
+    if (f && !f.on && chooser.classList.contains("hidden")) {
+      show("freeChoose", true);
+      chooseTimer = setTimeout(closeChooser, 10000);
+      return;
+    }
+    closeChooser();
+    if (f && !f.on) return;
     post("/api/freeplay", { toggle: true }).then((j) => { if (!j.ok) txt("cmdNote", `freeplay: ${j.error}`); });
+  });
+  chooser.addEventListener("click", (e) => {
+    const g = e.target.closest("button[data-fpmode]");
+    if (!g) return;
+    closeChooser();
+    post("/api/freeplay", { on: true, mode: g.dataset.fpmode }).then((j) => {
+      if (!j.ok) txt("cmdNote", `freeplay: ${j.error}`);
+      else { flash(g.dataset.fpmode === "roam" ? "ROAM" : "TRACK", "lap"); Snd.play("lap"); }
+    });
   });
   ["pointercancel", "lostpointercapture"].forEach((ev) => b.addEventListener(ev, () => { if (raf) reset(); }));
 })();

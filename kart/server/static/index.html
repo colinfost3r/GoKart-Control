@@ -47,6 +47,11 @@
     </div>
     <!-- freeplay multiplayer: hosts heard while not in a session, one JOIN row each (app.js renderMulti) -->
     <div id="inviteCard" class="invite hidden"></div>
+    <!-- FREEPLAY tap while off: pick the mode (app.js setupFreeButton) -->
+    <div id="freeChoose" class="invite choose hidden">
+      <div class="invrow"><span>TRACK &middot; drive one lap, boxes on the course, timed laps</span><button class="joinbtn" data-fpmode="track">GO</button></div>
+      <div class="invrow"><span>ROAM &middot; anywhere, boxes follow you, shell any direction</span><button class="joinbtn" data-fpmode="roam">GO</button></div>
+    </div>
     <div id="itemBox" class="itembox hidden"><div id="itemGlyph" class="iglyph">?</div><small id="itemName"></small><small id="itemSub" class="isub"></small></div>
     <div class="mapctl">
       <button id="followBtn" class="sel">FOLLOW</button>

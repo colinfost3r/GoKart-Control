@@ -232,6 +232,7 @@ body.pulse .meter.boost .btrack { border-color: #fff2b8; }
 /* INVITE card: under the .tl cluster (chip <= 44 px, P badge <= 72 px), left side, above the scale bar
    and the speed card (canvas scale bar at H-208); at most 3 rows */
 .invite { position: absolute; top: 214px; left: 8px; z-index: 4; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.invite.choose { top: 120px; z-index: 5; }
 /* 214: below the lap panel (now shown in freeplay too, synthesized lapline) -- JOIN buttons were covering LAST/BEST */
 .invrow { display: flex; align-items: center; gap: 12px; padding: 4px 4px 4px 14px; border-radius: 12px; background: rgba(0,0,0,.86);
   border: 3px solid #3ddc84; color: #fff; font-size: 20px; font-weight: 900; letter-spacing: .03em; white-space: nowrap; }

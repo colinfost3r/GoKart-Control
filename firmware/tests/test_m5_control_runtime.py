@@ -54,6 +54,8 @@ class M5ControlRuntimeTests(unittest.TestCase):
                     '// ---------------------------------------------------------------- telemetry'),
             section(source, '// ---------------------------------------------------------------- vesc writes',
                     '// ---------------------------------------------------------------- M5 display UART'),
+            # The paired-M5 build's own definition (the Pi inventory, and its shield, are compiled out).
+            section(source, '// A paired M5 kart has no Pi inventory.', '#endif // !GK_M5_ESPNOW'),
             function(source, 'm5ModeReady'),
             *[function(source, f) for f in ('peerFresh','peerInMySession','kartHosting','courseFresh','gameLeave','gameAttack','m5HandleGame','serviceGameJoin','applyHit')],
             function(source, 'm5HandleLine'),

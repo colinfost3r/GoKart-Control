@@ -522,6 +522,8 @@ class App:
                 game += self.game.on_race(msg, now, wall)
             elif t in ("game", "hit", "attack") and not demo:
                 game = game + self.freeplay.on_multi_line(t, msg, now)     # multiplayer freeplay (kart-0.2.5)
+                if t == "hit" and msg.get("why") == "shield":
+                    self._spend_shield(msg, game, now)                     # kart-0.3.6: the Heltec blocked it
                 zones, more = self.freeplay.select(self.maps.zones(), now)
                 game += more + self.game.set_zones(zones, now)          # session changes invalidate pending prizes now
             elif t == "invuse" and not demo:
@@ -712,6 +714,8 @@ class App:
             return
         if (zones.get("source") if isinstance(zones, dict) else None) == "freeplay":
             return
+        if zones is not None and kartcore.parse_zones(zones)[0]:
+            return                                  # an enabled pit document keeps the inventory: nothing to stash (review 2026-11-13)
         items = [{"item": i["item"], "secs": i["secs"], "scale": i["scale"],
                   **({"charges": i["charges"]} if "charges" in i else {})} for i in g.inventory]
         self._inv_pending = (items, g.shields)
@@ -804,11 +808,29 @@ class App:
 
     # -- carried items (Core2 item screen / dash chips; kartcore inventory + multiplayer held) ----
     def _inv_names(self):
-        """Carried item names, engine inventory first (oldest first), then the multiplayer held item."""
-        names = [i["item"] + (f"*{i['charges']}" if i.get("charges") else "") for i in self.game.inventory]
-        if self.freeplay.held:
-            names.append(self.freeplay.held["item"])
+        """Carried item names as the Core2 shows them: the multiplayer held item (shell / lightning) FIRST,
+        then the engine's inventory oldest first. The Core2 has three slots; with the held item last, three
+        carried boosts hid the shell, the one thing the driver wants on that screen (2026-11-13)."""
+        names = [self.freeplay.held["item"]] if self.freeplay.held else []
+        names += [i["item"] + (f"*{i['charges']}" if i.get("charges") else "") for i in self.game.inventory]
         return names
+
+    @staticmethod
+    def _core2_slot(slot, held, n):
+        """A Core2 tap's slot (its screen order, _inv_names) -> item_use's slot (engine items 0..n-1, then
+        the held item at n)."""
+        if not held:
+            return slot
+        return n if slot == 0 else slot - 1
+
+    def _spend_shield(self, msg, game, now):
+        """A hit line with why "shield" (kart-0.3.6): the Heltec blocked the hit with the carried SHIELD and
+        dropped it from its inv copy; spend ours too (dash chips, game-state.json). Without one its copy was
+        stale: resync the inv line."""
+        if self.game.shield_hit(game, now, hit_from=msg.get("from"), item=msg.get("item")):
+            return
+        self.log.write("event", what="shield_desync", hit_from=msg.get("from"), item=msg.get("item"))
+        self._inv_line = None                  # _push_inv (right after the line) resends the carried items
 
     _inv_line = "inv -"                    # assumed start state; the status poll clears it to resync
 
@@ -861,8 +883,10 @@ class App:
             return
         self._invuse_seq = seq
         slot = msg.get("slot")
+        with self.lock:
+            slot = self._core2_slot(slot if isinstance(slot, int) else 0, bool(self.freeplay.held), len(self.game.inventory))
         try:
-            self.item_use({"use": slot if isinstance(slot, int) else 0}, "core2@espnow")
+            self.item_use({"use": slot}, "core2@espnow")
         except (ValueError, kartcore.CommandError) as e:
             with self.lock:                             # logged by item_use; tell the driver why (dash flash)
                 self.freeplay.note_use_refusal(str(e), time.monotonic())
@@ -906,8 +930,8 @@ class App:
             return self.freeplay.snapshot(now)
 
     def freeplay_cmd(self, body, who):
-        """POST /api/freeplay: {"on": bool} | {"toggle": true} | {"reset": true} (course reset), or a multiplayer
-        body (freeplay_multi)."""
+        """POST /api/freeplay: {"on": bool} | {"toggle": true} | {"reset": true} (course reset) | {"mode": "track"|"roam"}
+        (may ride with "on"), or a multiplayer body (freeplay_multi)."""
         if any(k in body for k in self.MULTI_KEYS):
             return self.freeplay_multi(body, who)
         now = time.monotonic()
@@ -918,10 +942,16 @@ class App:
                     raise kartcore.CommandError(f"freeplay is {fp.why_not}")
                 recs = fp.reset_course(now)
             else:
-                on = (not fp.on) if body.get("toggle") else body.get("on")
-                if not isinstance(on, bool):
-                    raise ValueError('expected {"on": true|false}, {"toggle": true} or {"reset": true}')
-                recs = fp.set_on(on, now)
+                recs = []
+                if "mode" in body:
+                    recs += fp.set_mode(body["mode"], now)                 # ValueError for anything but track/roam
+                if body.get("toggle") or "on" in body:
+                    on = (not fp.on) if body.get("toggle") else body.get("on")
+                    if not isinstance(on, bool):
+                        raise ValueError('expected {"on": true|false}, {"toggle": true}, {"mode": "track"|"roam"} or {"reset": true}')
+                    recs += fp.set_on(on, now)
+                elif "mode" not in body:
+                    raise ValueError('expected {"on": true|false}, {"toggle": true}, {"mode": "track"|"roam"} or {"reset": true}')
             zones, more = fp.select(self.maps.zones(), now, demo=self.demo is not None)
             recs += more
             if self.demo is None:
@@ -955,6 +985,8 @@ class App:
     def _save_game_state(self):
         with self.lock:
             doc = self.game.export_state(time.monotonic())
+            if self._inv_pending is not None and not doc.get("inventory") and not doc.get("shields"):
+                doc["inventory"], doc["shields"] = self._inv_pending[0], self._inv_pending[1]   # the stash survives a key-off too
         if doc == self._game_saved:
             return
         self._game_saved = doc

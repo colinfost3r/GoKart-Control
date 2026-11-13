@@ -1238,17 +1238,25 @@ class GameEngine:
         ov = self.override
         return ov is not None and now < ov["until"] and (kind is None or ov["kind"] == kind)
 
+    def shield_hit(self, recs, now, **kw):
+        """Spend one carried SHIELD on a hit: the pit game's mud (_cmd) or, from kart-0.3.6, a multiplayer
+        shell / lightning the Heltec already blocked (hit line why "shield"; kw = hit_from, item). False =
+        none carried (for a Heltec hit that means its inv copy was stale: the caller resyncs the line)."""
+        sh = next((n for n, i in enumerate(self.inventory) if i["item"] == "shield"), None)
+        if sh is None and self.shields <= 0:
+            return False
+        if sh is not None:
+            self.inventory.pop(sh)
+        else:
+            self.shields -= 1
+        self._rec(recs, "shield_broke", now, **kw)
+        return True
+
     def _cmd(self, recs, now, zone, kind, secs, scale):
         if kind == "mud" and now < self.star_until:
             self._rec(recs, "star_blocked", now, zone=zone.id)       # invincible: the mud fizzles
             return
-        if kind == "mud" and (self.shields > 0 or any(i["item"] == "shield" for i in self.inventory)):
-            sh = next((n for n, i in enumerate(self.inventory) if i["item"] == "shield"), None)
-            if sh is not None:
-                self.inventory.pop(sh)
-            else:
-                self.shields -= 1
-            self._rec(recs, "shield_broke", now, zone=zone.id)       # one mud eaten, shield gone
+        if kind == "mud" and self.shield_hit(recs, now, zone=zone.id):   # one mud eaten, shield gone
             return
         if kind == "mud":
             secs = self.mud_secs
@@ -2009,6 +2017,17 @@ FP_FIX_FRESH_S = 3.0         # recording needs a usable fix at least this recent
 FP_KART_FRESH_S = 10.0       # the kart position used for the 10 m placement rule
 FP_ADOPT_NEAR_M = 30.0       # the pit's closed track is adopted as the course only if the kart is this close
 FP_PHASES = ("recording", "ready", "paused_pit", "off", "no_gps")
+# ROAM mode (owner 2026-11-13: "drive around not on a track, random boxes on the map, shell anyone"): no course,
+# boxes land in a ring around the kart and follow it; shells reach any direction.
+FP_MODES = ("track", "roam")
+FP_ROAM_MIN_M = 15.0         # a roam box lands at least this far from the kart ...
+FP_ROAM_MAX_M = 60.0         # ... and at most this far
+FP_ROAM_SPACING_M = 15.0     # roam boxes at least this far apart (straight line)
+FP_ROAM_FAR_M = 150.0        # a roam box left this far behind is moved back near the kart (one per tick)
+# ROAM is forgiving (owner 2026-11-13: "if karts lose gps etc, staying in that mode and rejoining the game"):
+MP_ROAM_RANGE_M = 40.0       # a shell reaches a peer this close ...
+MP_ROAM_FIX_FRESH_S = 60.0   # ... judged on fixes (mine and theirs) up to this old, so a GPS dropout does not blind it
+MP_ROAM_RESEND_S = 15.0      # a wish that is not in force is re-sent this often, forever (never dropped)
 # Multiplayer freeplay (docs/freeplay-multiplayer.md; Heltec firmware kart-0.2.5+). The firmware owns the session,
 # the attack repeats/acks and the hit effect; the kart Pi keeps the WISH (host / joined host id, re-sent after a
 # link up or Heltec reboot), the held item, the item roll and the target choice.
@@ -2021,7 +2040,8 @@ MP_DR_MAX_S = 3.0            # a peer's last fix is moved along its heading at i
 MP_HEARD_S = 10.0            # no game line yet: peers = fleet karts heard this recently with my session
 MP_RESEND_S = 5.0            # the wished session is not in force: re-send at most this often ...
 MP_MAX_TRIES = 3             # ... and drop the wish after this many sends that did not take
-MP_REJOIN_GRACE_S = 30.0     # my host's game ended (host Heltec rebooted?): keep the wish + held item this long and
+MP_REJOIN_GRACE_S = 90.0     # my host's game ended (host Pi/Heltec rebooted?): keep the wish + held item this long and
+                             # (a kart Pi reboot to kiosk is ~35-45 s, plus the Heltec relink; 30 s dropped kart 1 on 2026-11-13)
 #                              re-join as soon as the host is heard hosting again (audit 2026-11-13)
 MP_EVENTS_KEEP = 12
 MP_ALL = 255                 # GK_ADDR_ALL: `attack all ...`
@@ -2185,6 +2205,7 @@ class FreeplayGame:
         self.n_boxes = int(max(1, min(FREEPLAY_BOXES_MAX, int(boxes))))
         self.rng = rng or random.Random()
         self.on = False
+        self.mode = "track"          # FP_MODES: "track" = boxes on a recorded loop (laps), "roam" = around the kart
         self.course = None           # parse_track() dict + "source" ("recorded" | "pit")
         self.loop = None
         self.boxes = []              # {"id", "name", "slot", "s", "lat", "lon", "r_m"}
@@ -2252,7 +2273,7 @@ class FreeplayGame:
         self.prize_epoch += 1
         self.eco_due = on            # only the off -> on transition (button or API); never a restore
         self.boxes, self.pending = [], []
-        self.rec = LoopRecorder() if on and self.course is None else None
+        self.rec = LoopRecorder() if on and self.course is None and self.mode == "track" else None
         self._fill_at = 0.0
         self._touch(persist=True)
         self._rec(recs, "freeplay_on" if on else "freeplay_off", course_m=self.course["length_m"] if self.course else None)
@@ -2288,9 +2309,24 @@ class FreeplayGame:
         self.course, self.loop = None, None
         self.boxes, self.pending = [], []
         self.no_adopt = True
-        self.rec = LoopRecorder() if self.on else None
+        self.rec = LoopRecorder() if self.on and self.mode == "track" else None
         self._touch(persist=True)
         self._rec(recs, "freeplay_course_reset")
+        return recs
+
+    def set_mode(self, mode, now):
+        """"track" | "roam". Switching re-places the boxes; a recorded course is kept for the next TRACK."""
+        if mode not in FP_MODES:
+            raise ValueError(f'mode must be one of {", ".join(FP_MODES)}')
+        recs = []
+        if mode == self.mode:
+            return recs
+        self.mode = mode
+        self.boxes, self.pending = [], []
+        self._fill_at = 0.0
+        self.rec = LoopRecorder() if self.on and self.course is None and mode == "track" else None
+        self._touch(persist=True)
+        self._rec(recs, "freeplay_mode", mode=mode)
         return recs
 
     def set_course(self, course, source, now, recs):
@@ -2318,7 +2354,7 @@ class FreeplayGame:
         self.kart = (lat, lon, now)
         if _num(pos.get("heading")):
             self.kart_heading = float(pos["heading"])
-        if not self.on or self.course is not None or self.phase not in ("recording", "no_gps"):
+        if not self.on or self.mode == "roam" or self.course is not None or self.phase not in ("recording", "no_gps"):
             return recs
         if not self.no_adopt and self.pit_track is not None:
             lp = _Loop(self.pit_track["points"])
@@ -2362,11 +2398,13 @@ class FreeplayGame:
         return recs
 
     # -- placement --------------------------------------------------------------------------
-    def _kart_now(self, now):
+    def _kart_now(self, now, max_age=FP_KART_FRESH_S):
         k = self.kart
-        return k if k is not None and now - k[2] <= FP_KART_FRESH_S else None
+        return k if k is not None and now - k[2] <= max_age else None
 
     def _place(self, slot, now, away_from=None):
+        if self.mode == "roam":
+            return self._place_roam(slot, now, away_from)
         L = self.loop.L
         if L <= 0:
             return None
@@ -2388,11 +2426,46 @@ class FreeplayGame:
             return b
         return None
 
+    def _place_roam(self, slot, now, away_from=None):
+        """A box in a ring FP_ROAM_MIN_M..FP_ROAM_MAX_M around the kart's fresh position (none without one)."""
+        kart = self._kart_now(now)
+        if kart is None:
+            return None
+        lat0, lon0 = kart[0], kart[1]
+        m_lat, m_lon = 111320.0, 111320.0 * max(0.1, math.cos(math.radians(lat0)))
+        for _ in range(FP_PLACE_TRIES):
+            d = FP_ROAM_MIN_M + self.rng.random() * (FP_ROAM_MAX_M - FP_ROAM_MIN_M)
+            a = self.rng.random() * 2.0 * math.pi
+            lat, lon = lat0 + d * math.cos(a) / m_lat, lon0 + d * math.sin(a) / m_lon
+            if any(_dist_m((lat, lon), (b["lat"], b["lon"])) < FP_ROAM_SPACING_M for b in self.boxes):
+                continue
+            if away_from is not None and _dist_m(away_from, (lat, lon)) < FP_RESPAWN_AWAY_M:
+                continue
+            self._gen += 1
+            b = {"id": f"fp{self._gen}", "name": f"Box {slot}", "slot": slot, "s": None,
+                 "lat": round(lat, 7), "lon": round(lon, 7), "r_m": FP_BOX_R_M}
+            self.boxes.append(b)
+            self._touch()
+            return b
+        return None
+
     def tick(self, now):
-        """Respawns (3 s after a collection) and the initial fill once a course exists."""
+        """Respawns (3 s after a collection) and the initial fill once a course exists (TRACK) or the kart
+        has a position (ROAM). ROAM also brings one far-behind box back near the kart per tick."""
         recs = []
-        if not self.on or self.loop is None or self.phase != "ready":
+        if not self.on or self.phase != "ready" or (self.mode == "track" and self.loop is None):
             return recs
+        if self.mode == "roam":
+            kart = self._kart_now(now)
+            far = [b for b in self.boxes if kart is not None and _dist_m(kart, (b["lat"], b["lon"])) > FP_ROAM_FAR_M]
+            for b in far[:1]:
+                nb = self._place_roam(b["slot"], now)
+                if nb is None:
+                    break
+                self.boxes.remove(b)
+                self._touch()
+                self._rec(recs, "freeplay_spawn", zone=nb["id"], name=nb["name"], lat=nb["lat"], lon=nb["lon"],
+                          respawn=True, moved_from=b["id"])
         for p in sorted(self.pending, key=lambda x: x["due"]):
             if now < p["due"]:
                 continue
@@ -2435,6 +2508,9 @@ class FreeplayGame:
             phase, reason = "paused_pit", "pit game on"
         elif race:
             phase, reason = "paused_race", "pit race"
+        elif self.mode == "roam":
+            k = self.kart
+            phase = "ready" if k is not None and now - k[2] <= FP_FIX_FRESH_S else "no_gps"
         elif self.course is not None:
             phase = "ready"
         else:
@@ -2456,10 +2532,10 @@ class FreeplayGame:
                  "zones": [{"id": b["id"], "type": "item", "name": b["name"], "shape": "circle",
                             "lat": b["lat"], "lon": b["lon"], "r_m": b["r_m"], "cooldown_s": FP_BOX_COOLDOWN_S}
                            for b in self.boxes]}
-            lap = self._lapline()
+            lap = self._lapline() if self.mode == "track" else None
             if lap is not None:
                 d["zones"].append(lap)      # timed laps + hotlap; also keeps the game on between respawns
-            if self.course is not None:
+            if self.course is not None and self.mode == "track":
                 d["track"] = {"points": [list(p) for p in self.course["points"]], "closed": True,
                               "width_m": self.course["width_m"]}
             self._doc = d
@@ -2489,7 +2565,7 @@ class FreeplayGame:
     def export(self):
         c = self.course
         self.changed = False
-        return {"v": 1, "on": self.on, "collected": self.collected,
+        return {"v": 1, "on": self.on, "mode": self.mode, "collected": self.collected,
                 "course": {"points": c["points"], "length_m": c["length_m"], "width_m": c["width_m"],
                            "source": c.get("source")} if c else None,
                 "multi": {"wish": self.wish, "held": self.held["item"] if self.held else None}}
@@ -2507,9 +2583,11 @@ class FreeplayGame:
                 self.loop = _Loop(t["points"])
         if _num(doc.get("collected")) and doc["collected"] >= 0:
             self.collected = int(doc["collected"])
+        if doc.get("mode") in FP_MODES:
+            self.mode = doc["mode"]
         if doc.get("on") is True and self.allowed:
             self.on = True
-            self.rec = LoopRecorder() if self.course is None else None
+            self.rec = LoopRecorder() if self.course is None and self.mode == "track" else None
         m = doc.get("multi")
         if isinstance(m, dict) and self.on:
             w = m.get("wish")
@@ -2519,13 +2597,13 @@ class FreeplayGame:
                     self.held = {"item": m["held"], "mono": now}
         self._touch()
         self.changed = False
-        self._rec(recs, "freeplay_restored", on=self.on, course_m=self.course["length_m"] if self.course else None,
+        self._rec(recs, "freeplay_restored", on=self.on, mode=self.mode, course_m=self.course["length_m"] if self.course else None,
                   collected=self.collected, wish=self.wish, held=self.held["item"] if self.held else None)
         return recs
 
     def snapshot(self, now):
         c, r = self.course, self.rec
-        return {"allowed": self.allowed, "on": self.on, "phase": self.phase, "pause_reason": self.pause_reason,
+        return {"allowed": self.allowed, "on": self.on, "mode": self.mode, "phase": self.phase, "pause_reason": self.pause_reason,
                 "boxes_target": self.n_boxes,
                 "course": {"points": len(c["points"]), "length_m": c["length_m"], "source": c.get("source")} if c else None,
                 "boxes": [{"id": b["id"], "name": b["name"], "lat": b["lat"], "lon": b["lon"], "r_m": b["r_m"]}
@@ -2535,7 +2613,7 @@ class FreeplayGame:
                        if self.eco else None,
                 "collected": self.collected,
                 "record": {"distance_m": round(r.travel, 1), "points": len(r.points)}
-                          if r is not None and self.course is None and self.on else None,
+                          if r is not None and self.course is None and self.on and self.mode == "track" else None,
                 "multi": self.multi_snapshot(now)}
 
     # -- multiplayer (docs/freeplay-multiplayer.md) ------------------------------------------------
@@ -2684,7 +2762,8 @@ class FreeplayGame:
             near = [p for p in self.peers(now) if p["in_range"]]
             if not near:
                 raise CommandError("no one in range")
-            ahead = [p for p in near if p["ahead"] is not False]        # unknown heading: no direction gate
+            # ROAM: any direction (owner 2026-11-13); TRACK: only karts ahead; unknown heading: no direction gate
+            ahead = near if self.mode == "roam" else [p for p in near if p["ahead"] is not False]
             if not ahead:
                 b = min(near, key=lambda p: p["dist_m"])
                 raise CommandError(f"K{b['id']} is behind you")
@@ -2821,16 +2900,22 @@ class FreeplayGame:
         if self.wish_grace_until is not None and isinstance(self.wish, int):
             if self._wish_met():                                           # back in the host's game
                 self.wish_grace_until, self.wish_note, self.wish_tries = None, None, 0
+                self._resend_due = False                                   # a Heltec bounce during the grace: nothing left to re-send
                 self._touch(persist=True)
                 return
             if now >= self.wish_grace_until:
-                note = f"K{self.wish}'s game ended: K{self.wish} did not come back"
-                self._rec(recs, "freeplay_leave", session=self._session(), wish=self.wish, why=note, auto=True)
-                self._mevent(now, "session", session=self._session(), hosting=self._hosting(), ended="host gone")
-                self.wish, self.wish_tries, self.wish_note, self.wish_grace_until = None, 0, note, None
-                self._drop_held()
-                self._touch(persist=True)
-                return
+                if self.mode == "roam":                                     # forgiving: keep waiting for the host
+                    if self.wish_note != f"waiting for K{self.wish}":
+                        self.wish_note = f"waiting for K{self.wish}"
+                        self._touch(persist=True)
+                else:
+                    note = f"K{self.wish}'s game ended: K{self.wish} did not come back"
+                    self._rec(recs, "freeplay_leave", session=self._session(), wish=self.wish, why=note, auto=True)
+                    self._mevent(now, "session", session=self._session(), hosting=self._hosting(), ended="host gone")
+                    self.wish, self.wish_tries, self.wish_note, self.wish_grace_until = None, 0, note, None
+                    self._drop_held()
+                    self._touch(persist=True)
+                    return
             # the firmware accepts `session join N` only while it hears N hosting: send when it does, 2 s apart
             if self.wish in self.hosts and (self.wish_sent is None or now - self.wish_sent >= 2.0):
                 self._send_wish(recs, now, resend="host is back")
@@ -2843,7 +2928,10 @@ class FreeplayGame:
         if self._wish_met():
             self.wish_tries = 0
             return
-        if self.wish_sent is not None and now - self.wish_sent < MP_RESEND_S:
+        if self.wish_sent is not None and now - self.wish_sent < (MP_ROAM_RESEND_S if self.mode == "roam" else MP_RESEND_S):
+            return
+        if self.wish_tries >= MP_MAX_TRIES and self.mode == "roam":           # forgiving: keep asking, slowly
+            self._send_wish(recs, now, resend="not in force (roam keeps trying)")
             return
         if self.wish_tries >= MP_MAX_TRIES:
             what = "host" if self.wish == "host" else f"join K{self.wish}"
@@ -2868,7 +2956,9 @@ class FreeplayGame:
         else:
             ids = [k for k, ks in fleet.items() if ks.multi.get("session") == sess
                    and ks.last_mono is not None and now - ks.last_mono <= MP_HEARD_S]
-        me = self._kart_now(now)
+        roam = self.mode == "roam"
+        me = self._kart_now(now, MP_ROAM_FIX_FRESH_S if roam else FP_KART_FRESH_S)
+        fresh_s, range_m = (MP_ROAM_FIX_FRESH_S, MP_ROAM_RANGE_M) if roam else (MP_FIX_FRESH_S, MP_RANGE_M)
         out = []
         for pid in sorted(ids):
             if pid == self._my_id():
@@ -2880,11 +2970,11 @@ class FreeplayGame:
                 pos, fix_age = peer_position(ks, now)
                 if pos is not None and me is not None:
                     dist = round(_dist_m(me, pos), 1)
-                fresh = fix_age is not None and fix_age < MP_FIX_FRESH_S
+                fresh = fix_age is not None and fix_age < fresh_s
             rel = None
             if pos is not None and me is not None and self.kart_heading is not None:
                 rel = round((_bearing_deg(me, pos) - self.kart_heading + 180.0) % 360.0 - 180.0, 1)   # -180..180, 0 = dead ahead
-            out.append({"id": pid, "dist_m": dist, "in_range": dist is not None and fresh and dist <= MP_RANGE_M,
+            out.append({"id": pid, "dist_m": dist, "in_range": dist is not None and fresh and dist <= range_m,
                         "ahead": None if rel is None else abs(rel) <= MP_AHEAD_DEG, "rel_deg": rel,
                         "score": score, "age_s": age})
         return out
@@ -2904,7 +2994,7 @@ class FreeplayGame:
             "score": score,
             "attack": {"to": a["to"], "item": a["item"], "seq": a["seq"], "result": a["result"],
                        "age_s": _age(a["mono"], now), "acked": list(a["acked"]), "why": a["why"]} if a else None,
-            "last_hit": {"from": lh["from"], "item": lh["item"], "secs": lh["secs"], "applied": lh["applied"],
+            "last_hit": {"from": lh["from"], "item": lh["item"], "secs": lh["secs"], "applied": lh["applied"], "seq": lh.get("seq"),
                          "why": lh["why"], "age_s": _age(lh["mono"], now)} if lh else None,
             "fw_ok": self.fw_ok,
             "events": [{k: v for k, v in e.items() if k != "mono"} | {"age_s": _age(e["mono"], now)}

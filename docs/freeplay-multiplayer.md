@@ -19,6 +19,10 @@ when present, only observes (and its STOP / SLOW / race rules still win, as for 
   (karts heard in the last 10 s with my session).
 - Courses stay per kart in v1 (each kart keeps its own freeplay loop and boxes); only the items and hits
   are shared. (Sharing the host's course needs the pit or a bulk channel: later.)
+- ROAM (2026-11-13, `POST /api/freeplay {"mode": "roam"}`, the FREEPLAY button's chooser): no course at all.
+  Boxes land in a 15-60 m ring around the kart and are brought back when left 150 m behind; there is no
+  lap line. A shell in ROAM goes to the nearest kart in range in ANY direction (TRACK keeps the ahead rule).
+  `mode` is persisted in freeplay.json and shows in `/api/state freeplay.mode` / the chip (FREEPLAY ROAM).
 
 ## 2. Items (what a mystery box gives you in multiplayer)
 
@@ -71,7 +75,10 @@ and `atk_seq` different from the last one accepted from K (or the same one older
 hit: remember (K, seq), set `ack_from = K, ack_seq = seq` for 5 s, apply the effect and print a `hit`
 line. The effect is a timed SLOW through the same code as the USB `slow 5 SECS` (firmware 0.2.4): shell
 4 s, lightning 3 s. It is skipped (hit still acknowledged, `applied:false`) while STOPPED, in a grid hold,
-with writes disabled or without a verified VESC. Repeater copies are the same frames (deduped by K+seq).
+with writes disabled or without a verified VESC, and (kart-0.3.6) when a SHIELD is carried: the kart's copy
+of the Pi's `inv` line spends it, the hit line says `why:"shield"`, the Core2 drops it at once and the Pi
+spends its own (`shield_broke`, no SLOW). The attacker is still acked and scores; the game bytes have no
+room for "blocked". Repeater copies are the same frames (deduped by K+seq).
 Two hits inside 5 s: the later one takes the ack slot; the earlier attacker times out (its hit still
 landed). Frames from karts outside my session are ignored for hits.
 

@@ -170,6 +170,30 @@ and 4 still run `2026-11-13-game-rules`. Only the three Heltec kart images diffe
 base and repeater images are byte-identical, so a later update touches Heltecs only. They
 report `kart-0.3.5`, which finally distinguishes them from the installed `kart-0.3.3` builds.
 
+A fourth merge that evening, through **`6e4c788`**, brings upstream kart **0.3.6** (a carried
+SHIELD blocks one multiplayer hit), ROAM freeplay, the pit's `fleet_rate` setting and review
+fixes to race placing. Three conflicts. In the Heltec sketch his shield-aware `inv` parsing
+sits inside our paired-M5 guard, and `invTakeShield()` has a stub returning false in paired-M5
+builds, where the Pi inventory does not exist; the M5 player's own shield is unchanged. In
+`kart_server.py` his shield spend and TRACK/ROAM modes are kept together with our immediate
+zone refresh. 628 tests pass. One image set for hosts and players is frozen in
+`firmware/build/bench-candidates/2026-11-13-upstream-036/`
+([manifest](validation/m5-upstream-036-2026-11-13.json)): the three Heltec kart images are new
+and report `kart-0.3.6`; the Core2 images are the street-line files of `2026-11-13-site-map`
+and base and repeater those of `2026-11-13-upstream-035`, byte for byte. **Nothing in it is
+on any kart.** It supersedes `2026-11-13-upstream-035` as the build to install.
+
+**A race "did not work" on karts 3 to 5 (owner, November 13).** What was tried and what was
+seen is not established. The owner suspected the firmware versions could not talk to each
+other; the source and kart 5's own counters say otherwise. The LoRa protocol is unchanged
+between the installed `kart-0.3.3` base and 0.3.6, and kart 5's Heltec was hearing the pit
+beacon and applied a pit START with a verified NORMAL write while it was checked. What an M5
+kart actually lacks is in [the host update plan](host-update-plan.md#what-an-m5-kart-can-and-cannot-join):
+the Core2 has **no race screen** (grid hold, countdown, position, laps), a kart not entered at
+the pit is sent STOP, track freeplay needs the host update, and **ROAM freeplay cannot be
+joined at all** because it has no course to download. Kart 5's Heltec also counted 19% bad
+LoRa packets on the bench (7,452 of 40,107), cause not examined.
+
 For the host test, mind the channel: Eamon's karts now sit on channel 1 with Wi-Fi off, and
 the course download needs the host Heltec and the player's Core2 on one channel. Kart 3's pair
 follows its Wi-Fi access point (channel 2 on November 12 and 13), so it will probably need

@@ -52,7 +52,8 @@ MODE_NAMES = {0: "ECO", 1: "NORMAL", 2: "SPORT"}
 MODE_SCALES = {0: 0.50, 1: 0.75, 2: 1.0}
 MODE_TOP_MPH = {0: 15, 1: 25, 2: 0}
 SCALE_MISMATCH_TOL = 0.05     # live scale this far from the requested mode's scale ...
-SCALE_MISMATCH_S = 10.0       # ... for this long (not stopped, not on the grid, no boost) -> SCALE != MODE
+SCALE_MISMATCH_S = 35.0       # ... for this long (not stopped, not on the grid, no boost) -> SCALE != MODE
+                              # (35: a kart's own freeplay boosts stack up to 30 s and the pit cannot see them)
 CMD_RESULT_NAMES = {0: "received", 1: "accepted", 2: "applied", 3: "no_vesc",
                     4: "rejected", 5: "unknown"}
 

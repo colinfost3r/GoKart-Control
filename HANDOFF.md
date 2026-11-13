@@ -3,6 +3,16 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Upstream kart 0.3.6 merged; one image set for hosts and players — November 13, 2026
+
+Eamon's branch is merged through `6e4c788` (kart 0.3.6 shield, ROAM freeplay, pit `fleet_rate`).
+628 tests pass. Images frozen as `2026-11-13-upstream-036`
+([manifest](docs/validation/m5-upstream-036-2026-11-13.json)): new Heltec kart images reporting
+`kart-0.3.6`, plus the street-line Core2 images below. **Not flashed anywhere.** The owner
+reported that a race did not work on karts 3 to 5; the radio link checks out, and the likely
+gaps are listed in [the host update plan](docs/host-update-plan.md#what-an-m5-kart-can-and-cannot-join)
+(no race screen on the Core2, ROAM cannot be joined, track freeplay needs the host update).
+
 ## Core2 map: built-in street lines, not installed — November 13, 2026
 
 The Core2 map was black without a GPS fix or a host course. The Core2 source now carries
