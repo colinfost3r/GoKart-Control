@@ -193,12 +193,16 @@ static void servicePlayer(uint32_t now){
   // This is the one outstanding explicit JOIN gesture, not a reconnect retry.
   if(liveGame.stage==m5dash::LiveGame::Stage::Joining&&!liveGame.pending){
     if(!liveGame.intentValid(state,now))liveGame.fail("Link changed; join again");
-    else if(!liveGame.request(m5game::Action::Join,0,state,nextRequest(),now,gameSend))liveGame.fail("Join unavailable; tap JOIN again");
+    else if(!liveGame.request(m5game::Action::Join,liveGame.joinArg(),state,nextRequest(),now,gameSend))liveGame.fail("Join unavailable; tap JOIN again");
   }
   liveGame.position(state,nextRequest(),now,gameSend,[](){return esp_random();});
 }
 static void requestWirelessMode(uint8_t mode,uint32_t now) {
   localModeNotice=nullptr;localModeNoticeMs=now;
+  // Joined to a game: the own Heltec is locked to the host's game speed and would refuse this.
+  if(state.gameMode<3&&mode!=state.gameMode){
+    localModeNotice=state.gameMode==1?"Locked: game speed is NORMAL":"Locked: game speed is ECO";return;
+  }
   if(maintenance.active()||!state.canRequest(now)){
     localModeNotice="Mode unavailable: release and hold again";return;
   }
@@ -256,7 +260,7 @@ void touch(uint32_t now) {
         liveGame.overlay=false;
       }else if(m5dash::layout::join.contains(t.x,t.y)&&!liveGame.busy()){
         if(liveGame.active())liveGame.request(m5game::Action::Leave,0,state,nextRequest(),now,gameSend);
-        else if(state.live(now)&&state.metadataFresh(now)&&state.gameVersion==1&&wireless.canSend(now)&&courseRadio.client.begin(esp_random(),esp_random(),now))liveGame.downloadStarted(state);
+        else if(state.live(now)&&state.metadataFresh(now)&&state.gameVersion==m5game::GAME_VERSION&&wireless.canSend(now)&&courseRadio.client.begin(esp_random(),esp_random(),now))liveGame.downloadStarted(state);
         else liveGame.fail("Host unavailable; move closer");
       }
     }

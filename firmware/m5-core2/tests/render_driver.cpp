@@ -66,7 +66,7 @@ int main(int argc,char** argv){
   if(native){
     std::ifstream f(argv[4],std::ios::binary);std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(f)),{});
     if(!game.load(bytes.data(),bytes.size()))return 2;course=game.course;
-    state.gameVersion=1;state.gameReady=true;state.token=123;state.gameSession=game.package.host();state.hosts=state.courseHosts=1u<<(state.gameSession-1);
+    state.gameVersion=m5game::GAME_VERSION;state.gameReady=true;state.token=123;state.gameSession=game.package.host();state.hosts=state.courseHosts=1u<<(state.gameSession-1);
     state.hostCourse[state.gameSession]=game.package.digest();state.hostBoot[state.gameSession]=game.courseBoot=222;
     for(auto&k:state.karts)k.session=state.gameSession;
     game.stage=m5dash::LiveGame::Stage::Playing;game.collect(m5dash::LiveGame::Item::Shell);

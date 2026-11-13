@@ -49,13 +49,32 @@ class GameTests(unittest.TestCase):
   import math
   d=dict(DOC,track={'points':[[41+math.sin(i*2*math.pi/200)*.0005,-73+math.cos(i*2*math.pi/200)*.0005] for i in range(200)],'closed':True})
   p=host.export(d,host=2,instance=1,revision=1);self.assertLessEqual(struct.unpack_from('<H',p,16)[0],128)
+ def test_host_game_speed_is_part_of_the_published_rules(self):
+  eco=self.package();normal=self.package(speed='normal')
+  self.assertEqual((eco[5],eco[23],normal[5],normal[23]),(2,0,2,1))          # rules v2; byte 23 is the game speed
+  self.assertNotEqual(eco[-4:],normal[-4:])                                   # a different speed is a different course identity
+  for bad in ('sport','ECO',2,None):
+   with self.subTest(speed=bad),self.assertRaises(ValueError):self.package(speed=bad)
+ def test_host_setting_selects_speed_and_republishes_on_change(self):
+  import threading
+  from types import SimpleNamespace
+  from kart_server import App,CONFIG_CHOICES,DEFAULTS
+  self.assertEqual(DEFAULTS['freeplay_speed'],'eco');self.assertEqual(set(CONFIG_CHOICES['freeplay_speed']),{'eco','normal'})
+  fp=SimpleNamespace(_hosting=lambda:True,phase='ready',pause_reason=None,_my_id=lambda:2,prize_epoch=1,doc=lambda:DOC)
+  seen=[]
+  class Recorder(host.Publisher):
+   def start(self,payload,now):seen.append(payload);super().start(payload,now)
+  app=SimpleNamespace(cfg={'freeplay_speed':'normal'},lock=threading.RLock(),demo=None,_connected=lambda:True,_m5_share_ready=True,_m5_was_eligible=False,_m5_withdraw=False,_m5_publish_key=None,freeplay=fp,m5_publisher=Recorder(),_load_json=lambda _:None,_send_text=lambda line,wait=False:True,log=SimpleNamespace(write=lambda *a,**kw:None))
+  App._publish_m5_course(app,1);self.assertEqual(len(seen),1);self.assertEqual(seen[0][23],1)
+  App._publish_m5_course(app,2);self.assertEqual(len(seen),1)                 # unchanged: not republished
+  app.cfg['freeplay_speed']='eco';App._publish_m5_course(app,3);self.assertEqual(len(seen),2);self.assertEqual(seen[1][23],0)
  def test_host_pause_withdraws_and_waits_for_ack(self):
   import threading
   from types import SimpleNamespace
   from kart_server import App
   sent=[]
   fp=SimpleNamespace(_hosting=lambda:True,phase='ready',pause_reason=None,_my_id=lambda:2,prize_epoch=1,doc=lambda:DOC)
-  app=SimpleNamespace(lock=threading.RLock(),demo=None,_connected=lambda:True,_m5_share_ready=True,_m5_was_eligible=False,_m5_withdraw=False,_m5_publish_key=None,freeplay=fp,m5_publisher=host.Publisher(),_load_json=lambda _:None,_send_text=lambda line,wait=False:sent.append(line) or True,log=SimpleNamespace(write=lambda *a,**kw:None))
+  app=SimpleNamespace(cfg={},lock=threading.RLock(),demo=None,_connected=lambda:True,_m5_share_ready=True,_m5_was_eligible=False,_m5_withdraw=False,_m5_publish_key=None,freeplay=fp,m5_publisher=host.Publisher(),_load_json=lambda _:None,_send_text=lambda line,wait=False:sent.append(line) or True,log=SimpleNamespace(write=lambda *a,**kw:None))
   App._publish_m5_course(app,1);self.assertTrue(sent[-1].startswith('share begin'))
   fp.pause_reason='pit game';App._publish_m5_course(app,1.1);self.assertEqual(sent[-1],'share clear');self.assertTrue(app._m5_withdraw)
   app.m5_publisher.reply({'t':'share','action':'clear','ok':True},1.2);App._publish_m5_course(app,1.3);self.assertFalse(app._m5_withdraw)

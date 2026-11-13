@@ -55,7 +55,7 @@ class M5ControlRuntimeTests(unittest.TestCase):
             section(source, '// ---------------------------------------------------------------- vesc writes',
                     '// ---------------------------------------------------------------- M5 display UART'),
             function(source, 'm5ModeReady'),
-            *[function(source, f) for f in ('peerFresh','peerInMySession','kartHosting','courseFresh','gameLeave','gameAttack','m5HandleGame','applyHit')],
+            *[function(source, f) for f in ('peerFresh','peerInMySession','kartHosting','courseFresh','gameLeave','gameAttack','m5HandleGame','serviceGameJoin','applyHit')],
             function(source, 'm5HandleLine'),
             function(source, 'serviceVesc'),
         ]
@@ -122,6 +122,21 @@ class M5ControlRuntimeTests(unittest.TestCase):
 
     def test_blocked_m5_request_does_not_replay_after_recovery(self):
         self.run_case('m5-blocked')
+
+    def test_join_applies_host_game_speed_and_locks_mode_buttons(self):
+        self.run_case('game-speed')
+
+    def test_boost_is_a_step_up_from_the_mode_in_force(self):
+        self.run_case('relative-boost')
+
+    def test_missed_boost_end_is_finished_once_after_link_returns(self):
+        self.run_case('missed-revert')
+
+    def test_missed_boost_end_never_raises_a_limit_or_overrides_stop(self):
+        self.run_case('missed-revert-limits')
+
+    def test_restart_mid_boost_recognises_and_finishes_own_boost(self):
+        self.run_case('restart-mark')
 
 
 if __name__ == '__main__':

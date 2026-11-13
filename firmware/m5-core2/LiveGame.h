@@ -32,7 +32,7 @@ class LiveGame {
   }return in?-closest:closest;
  }
  void clearItems(){inventoryCount_=0;attack_=Item::None;magnetUntil_=0;priorFix_=lapStarted_=false;lastFix_=0;}
- void beginPlay(){std::memset(inside_,0,sizeof inside_);std::memset(fired_,0,sizeof fired_);clearItems();laps=0;lastLapMs=bestLapMs=0;stage=Stage::Playing;overlay=false;note="Joined";}
+ void beginPlay(){std::memset(inside_,0,sizeof inside_);std::memset(fired_,0,sizeof fired_);clearItems();laps=0;lastLapMs=bestLapMs=0;stage=Stage::Playing;overlay=false;note=package.speed()?"Joined: game speed NORMAL":"Joined: game speed ECO";}
  static double cross(m5game::Point a,m5game::Point b,m5game::Point c){return (b.lon-a.lon)*(c.lat-a.lat)-(b.lat-a.lat)*(c.lon-a.lon);}
  void lap(m5game::Point p,uint32_t now){
   if(package.hasLap()&&priorFix_){auto a=package.lapA(),b=package.lapB();double c1=cross(a,b,prior_),c2=cross(a,b,p),c3=cross(prior_,p,a),c4=cross(prior_,p,b);
@@ -42,24 +42,27 @@ class LiveGame {
  }
  public:
  bool active()const{return stage==Stage::Playing;}
+ // The host's course fixes the speed every joined kart plays at; JOIN carries it to the own Heltec.
+ const char* speedName()const{return package.speed()?"NORMAL":"ECO";}
+ uint16_t joinArg()const{return uint16_t(package.speed()+1);}
  bool busy()const{return pending||stage==Stage::Downloading||stage==Stage::Joining;}
  static const char* name(Item i){switch(i){case Item::Boost:return "BOOST";case Item::Rocket:return "ROCKET";case Item::Shell:return "SHELL";case Item::Lightning:return "BOLT";case Item::Triple:return "BOOST3";case Item::Star:return "STAR";case Item::Magnet:return "MAGNET";case Item::Shield:return "SHIELD";case Item::Mud:return "MUD";default:return "--";}}
  Item item()const{return attack_!=Item::None?attack_:inventoryCount_?inventory_[0].item:Item::None;}
  unsigned charges()const{return attack_!=Item::None?1:inventoryCount_?inventory_[0].charges:0;}
- bool available(const State&s,const m5game::share::Receiver&r,uint32_t now)const{return active()||busy()||(s.live(now)&&s.metadataFresh(now)&&s.gameVersion==1&&(s.hosts||r.available(now)));}
+ bool available(const State&s,const m5game::share::Receiver&r,uint32_t now)const{return active()||busy()||(s.live(now)&&s.metadataFresh(now)&&s.gameVersion==m5game::GAME_VERSION&&(s.hosts||r.available(now)));}
  bool notify(const State&s,const m5game::share::Receiver&r,uint32_t now)const{return !active()&&!acknowledged&&available(s,r,now)&&((now/500)%2==0);}
  bool generation(const State&s)const{return package.valid()&&(s.courseHosts&(1u<<(package.host()-1)))&&s.hostCourse[package.host()]==package.digest()&&courseBoot&&s.hostBoot[package.host()]==courseBoot;}
- bool controlReady(const State&s,uint32_t now)const{return !pending&&!s.pending&&s.live(now)&&s.metadataFresh(now)&&s.gameVersion==1&&s.gameReady&&s.token&&s.karts[s.self].vesc&&!s.karts[s.self].stopped&&s.gameSession==package.host()&&generation(s);}
+ bool controlReady(const State&s,uint32_t now)const{return !pending&&!s.pending&&s.live(now)&&s.metadataFresh(now)&&s.gameVersion==m5game::GAME_VERSION&&s.gameReady&&s.token&&s.karts[s.self].vesc&&!s.karts[s.self].stopped&&s.gameSession==package.host()&&generation(s);}
  uint8_t target(const State&s,uint32_t now)const{if(!s.live(now)||!s.karts[s.self].positionFresh(now))return 0;auto&k=s.karts[s.self];double best=25.000001;uint8_t id=0;for(unsigned i=1;i<=8;++i){auto&p=s.karts[i];if(i==s.self||p.session!=package.host()||!p.positionFresh(now))continue;double d=m5game::distance({k.lat,k.lon},{p.lat,p.lon});if(d<best){best=d;id=i;}}return id;}
  bool hasPeer(const State&s,uint32_t now)const{for(unsigned i=1;i<=8;++i)if(i!=s.self&&s.karts[i].session==package.host()&&s.karts[i].online(now))return true;return false;}
  bool canFire(const State&s,uint32_t now)const{return active()&&!overlay&&item()!=Item::None&&controlReady(s,now)&&(item()!=Item::Shell||target(s,now))&&(item()!=Item::Lightning||hasPeer(s,now))&&(!(item()==Item::Boost||item()==Item::Rocket||item()==Item::Triple||item()==Item::Star)||!s.karts[s.self].slow);}
  bool load(const uint8_t*data,size_t n){if(!package.load(data,n))return false;course.count=package.tracks();course.closed=package.closed();package.name(course.name,sizeof course.name);for(size_t i=0;i<course.count;++i){auto p=package.track(i);course.lat[i]=p.lat;course.lon[i]=p.lon;}return true;}
  void opening(){overlay=true;acknowledged=true;}
  void downloadStarted(const State&s){stage=Stage::Downloading;ownerBoot_=intentBoot_=s.boot;clearItems();note="Downloading host course";}
- bool intentValid(const State&s,uint32_t now)const{return intentBoot_&&s.boot==intentBoot_&&s.live(now)&&s.metadataFresh(now)&&s.gameVersion==1;}
+ bool intentValid(const State&s,uint32_t now)const{return intentBoot_&&s.boot==intentBoot_&&s.live(now)&&s.metadataFresh(now)&&s.gameVersion==m5game::GAME_VERSION;}
  void fail(const char*why){stage=Stage::Error;pending=0;clearItems();note=why;overlay=true;}
  template<class Send> bool request(m5game::Action action,uint16_t arg,State&s,uint32_t id,uint32_t now,Send send){
-  uint8_t host=package.host();if(pending||s.pending||!s.token||!id||!s.live(now)||!s.metadataFresh(now)||s.gameVersion!=1||!host)return false;
+  uint8_t host=package.host();if(pending||s.pending||!s.token||!id||!s.live(now)||!s.metadataFresh(now)||s.gameVersion!=m5game::GAME_VERSION||!host)return false;
   if(action!=m5game::Action::Leave&&(!s.gameReady||!s.karts[s.self].vesc||s.karts[s.self].stopped))return false;
   if(action==m5game::Action::Join&&(!(s.hosts&(1u<<(host-1)))||host==s.self))return false;
   if(action!=m5game::Action::Join&&s.gameSession!=host)return false;
@@ -89,8 +92,8 @@ class LiveGame {
   else if(i==Item::Lightning)ok=request(m5game::Action::Lightning,0,s,id,now,send);
   else if(i==Item::Shield)ok=request(m5game::Action::Shield,0,s,id,now,send);
   else if(i==Item::Star)ok=request(m5game::Action::Star,0,s,id,now,send);
-  else {unsigned secs=i==Item::Rocket?10:7,scale=i==Item::Rocket?100:75;
-   ok=request(m5game::Action::Boost,uint16_t(secs<<8|scale),s,id,now,send);
+  else {unsigned secs=i==Item::Rocket?10:7,level=i==Item::Rocket?m5game::BOOST_TOP:m5game::BOOST_STEP;   // BOOST/BOOST3: one mode up; ROCKET: the top mode
+   ok=request(m5game::Action::Boost,uint16_t(secs<<8|level),s,id,now,send);
   }
   if(ok){if(attack_!=Item::None)attack_=Item::None;else if(--inventory_[0].charges==0){for(unsigned j=1;j<inventoryCount_;++j)inventory_[j-1]=inventory_[j];--inventoryCount_;}}
   return ok;
@@ -108,7 +111,7 @@ class LiveGame {
    if(z.type==m5game::ZoneType::Item)collect(roll(random()));else if(effect<0)effect=int(j);
   }
   if(effect>=0&&controlReady(s,now)){auto z=package.zone(size_t(effect));if(mud&&z.type!=m5game::ZoneType::Mud)return;
-   bool sent=request(z.type==m5game::ZoneType::Mud?m5game::Action::Mud:m5game::Action::Boost,z.type==m5game::ZoneType::Mud?z.secs:uint16_t(z.secs<<8|z.scale),s,id,now,send);
+   bool sent=request(z.type==m5game::ZoneType::Mud?m5game::Action::Mud:m5game::Action::Boost,z.type==m5game::ZoneType::Mud?z.secs:uint16_t(z.secs<<8|(z.scale>=100?m5game::BOOST_TOP:m5game::BOOST_STEP)),s,id,now,send);
    if(sent){fired_[effect]=true;firedMs_[effect]=now;}
   }
  }

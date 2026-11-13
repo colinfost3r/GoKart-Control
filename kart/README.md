@@ -691,6 +691,7 @@ by the default and reported in the journal (`CONFIG: ...`), the session log and 
 | `sound` / `sound_volume` | true / 0.8 | page sounds |
 | `sun_mode` | true | SUN theme by default (the SUN button overrides it per device) |
 | `freeplay` / `freeplay_boxes` | true / 3 | FREEPLAY allowed (kart-local item boxes, see Freeplay); boxes on the course (1-6) |
+| `freeplay_speed` | "eco" | game speed for native Core2 players who join this host's course: "eco" or "normal". Their kart is set to this mode on JOIN and locked to it; BOOST is one mode up, ROCKET/STAR the top mode |
 | `mud_slow_secs` | 4 | seconds per mud command (1-30): `slow 5 N` on Heltec kart-0.2.4+, else `boost N 0.5` |
 | `rotate` | 0 | install.sh only: 180 = ports-down mount |
 

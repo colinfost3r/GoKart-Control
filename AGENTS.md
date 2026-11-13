@@ -35,6 +35,15 @@
   375 fields were preserved. Consult HANDOFF for cold-boot/Heltec acceptance. Karts 4/5 are
   the next copies of kart 3; karts 1/2 remain Eamon's test units. Preserve each target
   calibration/identity; fleet preparation is offline and does not authorize blind imports.
+- Owner decision 2026-11-12 (native game rules): the host ("game maker") chooses the speed its
+  course is played at, ECO or NORMAL. Joining writes that mode and locks the joined kart's mode
+  buttons to it; pit commands still win. A boost is a step up from the mode in force (BOOST one
+  mode up; ROCKET and STAR the top mode), never an absolute scale. See docs/m5-player-mode.md.
+- Explicit owner exception 2026-11-12 to "reconnect read-only": a timed boost whose END could not
+  be written or confirmed is finished once per VESC link session after the controller is freshly
+  verified, and after a Heltec restart that left its own boost on the controller. Lower-only (it
+  may never raise the current scale or the speed cap), never under STOP/GRID, no command replay.
+  This covers boost ends only. Do not extend it to SLOW endings, modes or any other write.
 - Driver messages and future safety geofence enforcement remain deferred. M5 game-zone UI parity
   is separate from enabling the existing Heltec/base command implementation.
 - The owner now explicitly authorizes ongoing commits/pushes at coherent, checked

@@ -87,7 +87,7 @@ change incoming telemetry rates or any live motor-control contract.
 
 ## Native player additions (November 12 candidate)
 
-`display` adds `game_v:1`, `game_session`, `hosts` (bitmask), `game_request`, `game_result`,
+`display` adds `game_v:2`, `game_mode` (0 to 2 while a joined game locks the mode, otherwise 255), `game_session`, `hosts` (bitmask), `game_request`, `game_result`,
 `game_ready`, `shield`, `star_ms`, `course_hosts` (fresh-generation bitmask), and eight-element
 `courses` / `course_boots` arrays indexed by kart ID minus1. Unknown fields remain optional to
 legacy displays. Existing mode requests/metadata stay intact.
@@ -97,8 +97,9 @@ TOKEN/REQUEST/COURSE/BOOT are8 hex digits, SESSION/ACTION2, ARG4, CRC4 (CRC16 ov
 its separating space). Encoded line is59 bytes including newline. Action:1 JOIN,2 LEAVE,3 SHELL,
 4 LIGHTNING,5 BOOST,6 STAR,7 SHIELD,8 MUD. COURSE is full-package digest (including random
 instance); BOOT is the host identity from authenticated download and fresh LoRa generation.
-Shell ARG is target1..8, Boost is duration seconds high byte + percent low byte, Mud is seconds;
-others require zero. GameResult uses existing result codes; an accepted attack is not proof of
+Join ARG is the host's game speed plus one (1 ECO, 2 NORMAL). Shell ARG is target1..8. Boost is
+duration seconds in the high byte and a level in the low byte (1 = one mode up, 2 = the top mode);
+it is never an absolute scale. Mud is seconds; others require zero. GameResult uses existing result codes; an accepted attack is not proof of
 remote effect. Duplicate/current-token/session/course/controller checks apply. Never forward
 this line into the USB command parser. [Full player contract](../../docs/m5-player-mode.md).
 

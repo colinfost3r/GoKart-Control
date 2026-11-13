@@ -1,14 +1,20 @@
 #pragma once
 #include <M5DisplayLink.h>
 namespace m5game {
+// Game protocol 2 (owner 2026-11-12): the host's course fixes the speed a joined kart plays at, and a
+// boost is a step up from the mode in force, never an absolute scale chosen by the display.
+//   Join  arg = game speed + 1 (1 ECO, 2 NORMAL; a game never runs at the top mode).
+//   Boost arg = seconds<<8 | level (1 = one mode up, 2 = the top mode).
+constexpr uint8_t GAME_VERSION=2,BOOST_STEP=1,BOOST_TOP=2;
 enum class Action:uint8_t{Join=1,Leave=2,Shell=3,Lightning=4,Boost=5,Star=6,Shield=7,Mud=8};
 struct Request{uint32_t token=0,id=0;uint8_t session=0;Action action=Action::Leave;uint16_t arg=0;uint32_t course=0,boot=0;};
 inline bool valid(const Request&r){
  if(!r.boot||!r.course||!r.token||!r.id||!r.session||r.session>8)return false;
  switch(r.action){
- case Action::Join:case Action::Leave:case Action::Lightning:case Action::Star:case Action::Shield:return !r.arg;
+ case Action::Join:return r.arg>=1&&r.arg<=2;
+ case Action::Leave:case Action::Lightning:case Action::Star:case Action::Shield:return !r.arg;
  case Action::Shell:return r.arg>=1&&r.arg<=8;
- case Action::Boost:return (r.arg>>8)>=1&&(r.arg>>8)<=30&&(r.arg&255)>=10&&(r.arg&255)<=100;
+ case Action::Boost:return (r.arg>>8)>=1&&(r.arg>>8)<=30&&((r.arg&255)==BOOST_STEP||(r.arg&255)==BOOST_TOP);
  case Action::Mud:return r.arg>=1&&r.arg<=30;
  }return false;
 }

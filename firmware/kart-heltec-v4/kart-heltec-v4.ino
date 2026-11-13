@@ -228,6 +228,21 @@ const char* baselineSource = "none";  // "read" (clean link-up read) | "remember
 static uint8_t wVerifyTries = 0;      // a verify reply from a superseded write can land late: one re-read before judging MISMATCH
 VescActiveLimits firstLimits; bool haveFirst = false; char firstUuid[25] = "";   // first read of the pinned controller this boot
 uint8_t  usbSeq = 0;
+// Native-player game speed (owner 2026-11-12). The host's course fixes the mode a joined native player
+// runs at: JOIN writes that mode, and while the session lasts the display may only re-apply it (pit
+// commands still win). Set only by a native JOIN; gameLeave() clears it, so hosts and Pi players are unaffected.
+uint8_t  gameMode = GK_MODE_UNKNOWN;
+bool     gameJoinPending = false;      // the JOIN's mode write is not verified yet
+CmdRef   gameJoinOwner = NO_OWNER;
+// Finishing a missed boost end (owner 2026-11-12): a narrow exception to "reconnect is read-only".
+// When a timed boost ends the kart owes the controller a return to the mode in force. If that write
+// could not be made or confirmed (VESC link down, stale read, no ack) it is attempted once more per
+// link session, and only when it LOWERS the controller. boostMark lets a Heltec that restarted
+// mid-boost recognise its own leftover boost: RTC memory survives a software reset, not a power
+// cycle, and costs no flash write.
+bool     boostEndOwed = false;
+bool     revertTried = false; uint32_t revertTriedSession = 0;
+RTC_NOINIT_ATTR BoostMark boostMark;
 
 // ---------------------------------------------------------------- fleet
 GkTelemetry fleet[GK_MAX_KARTS + 1];
@@ -544,6 +559,45 @@ static void autoWrite(const char* why) {
   if (!startWrite(scaleTarget(), NO_OWNER)) { revertMissed = true; logf("%s: temporary write refused, no retry queued", why); }
 }
 
+static uint32_t boostMarkSum() {
+  const uint8_t* p = (const uint8_t*)&boostMark; uint32_t h = 2166136261UL;
+  for (size_t i = 0; i < offsetof(BoostMark, check); i++) { h ^= p[i]; h *= 16777619UL; }
+  return h;
+}
+static bool boostMarkValid() {
+  return boostMark.magic == 0x424D4B31UL && boostMark.check == boostMarkSum() && boostMark.uuid[24] == 0 &&
+         boostMark.baseMode < GK_MODE_COUNT - 1 && isfinite(boostMark.scale) && isfinite(boostMark.capErpm);
+}
+static void boostMarkClear() { boostMark.magic = 0; boostMark.check = 0; }
+static void boostMarkSet(uint8_t baseMode, float scale, float capErpm) {
+  memset(&boostMark, 0, sizeof boostMark);
+  boostMark.magic = 0x424D4B31UL; strlcpy(boostMark.uuid, vesc.uuidHex, sizeof boostMark.uuid);
+  boostMark.baseMode = baseMode; boostMark.scale = scale; boostMark.capErpm = capErpm;
+  boostMark.check = boostMarkSum();
+}
+// Finish a boost end that could not be written or confirmed. One attempt per link session, never under
+// STOP/GRID or while another boost runs, never before this controller is freshly verified, and never
+// if it would raise either limit. It replays no command: the target is the mode in force now.
+static void serviceMissedRevert() {
+  if (!GK_M5_CONTROL || !boostEndOwed || ovActive || stopActive || raceHold || wState != W_IDLE || rampIdx >= 0) return;
+  if (revertTried && revertTriedSession == vescLinkUpMs) return;
+  if (modeReq >= GK_MODE_COUNT || !writeAllowed()) return;
+  const VescActiveLimits& live = vesc.limits();
+  const float scale = scaleTarget(), cap = erpmTarget();
+  if (cap < 0) return;
+  const bool above = live.currentMaxScale > scale + MODE_MATCH_TOL || live.maxErpm > cap + MODE_ERPM_TOL;
+  const bool raises = scale > live.currentMaxScale + MODE_MATCH_TOL || cap > live.maxErpm + MODE_ERPM_TOL;
+  if (!above && !raises) { boostEndOwed = false; revertMissed = false; boostMarkClear(); return; }   // already back at the mode
+  revertTried = true; revertTriedSession = vescLinkUpMs;
+  if (raises) {
+    logf("missed boost end left alone: finishing it would raise a limit (live %.2f / %.0f ERPM, mode %.2f / %.0f)",
+         live.currentMaxScale, live.maxErpm, scale, cap);
+    return;
+  }
+  logf("finishing a missed boost end: %.2f / %.0f ERPM -> %.2f / %.0f", live.currentMaxScale, live.maxErpm, scale, cap);
+  if (!startWrite(scale, NO_OWNER)) logf("missed boost end: write refused, not retried on this link");
+}
+
 static void serviceWrites() {
   uint32_t now = millis();
   if (GK_M5_CONTROL && (wState != W_IDLE || rampIdx >= 0) &&
@@ -561,6 +615,7 @@ static void serviceWrites() {
   }
   if (ovActive && (int32_t)(now - ovUntilMs) >= 0) {
     ovActive = false; logf("boost over, back to %.2f", scaleTarget());
+    boostEndOwed = true; revertTried = false;          // owed until a write is verified (serviceMissedRevert)
     autoWrite("boost end");
   }
   if (slowActive && slowTimed && (int32_t)(now - slowUntilMs) >= 0) {   // timed slow over: back to the pit cap or none
@@ -596,12 +651,14 @@ static void serviceWrites() {
         wState = W_IDLE;
         if (rampIdx < 0) setResult(wOwner, ok ? GK_RES_APPLIED : GK_RES_UNKNOWN);
         if (ok) revertMissed = false;
+        if (ok && !ovActive) { boostEndOwed = false; boostMarkClear(); }   // the controller no longer holds a boost
         modeConfirmed = ok && !stopActive && ((modeReq != GK_MODE_UNKNOWN && fabsf(wTarget - MODES[modeReq].currentMaxScale) < MODE_MATCH_TOL)
                                               || (ovActive && fabsf(wTarget - ovScale) < MODE_MATCH_TOL));
         logf("vesc write verify %s (scale %.3f, ERPM %.0f)", ok ? "ok" : "MISMATCH", vesc.limits().currentMaxScale, vesc.limits().maxErpm);
       } else if (now - wSentMs > VESC_ACK_TIMEOUT_MS) { wState = W_IDLE; if (rampIdx < 0) setResult(wOwner, GK_RES_UNKNOWN); }
       break;
   }
+  serviceMissedRevert();
 }
 
 // ---------------------------------------------------------------- commands
@@ -694,6 +751,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         if (!stopActive) preStopScale = vesc.limits().currentMaxScale;
         stopRampCeiling = fminf(vesc.limits().currentMaxScale, origLimits.currentMaxScale);
         stopActive = true; modeConfirmed = false; ovActive = false; raceHold = false;
+        boostEndOwed = false; boostMarkClear();           // the operator took over: nothing is owed after a STOP
         if (wState != W_IDLE) {                           // W4: STOP does not wait behind another write
           CmdEnt* e = cmdEnt(wOwner); if (e && e->result == GK_RES_ACCEPTED) e->result = GK_RES_UNKNOWN;
           wState = W_IDLE;
@@ -704,6 +762,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
       case GK_CMD_START: {
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
         stopActive = false; slowActive = false; slowTimed = false; slowPrevActive = false; ovActive = false; raceHold = false; rampIdx = -1;
+        boostEndOwed = false; boostMarkClear();
         if (!origValid || !vescUp()) { cmdResult = GK_RES_NO_VESC; break; }
         float s = scaleTarget();
         if (s < 0.05f) {                                  // no mode known and the controller read back ~0
@@ -737,6 +796,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         else goInMs = (uint32_t)arg * 1000UL;
         if (goInMs > 31000UL) goInMs = (uint32_t)arg * 1000UL;                   // clocks disagree wildly: fall back
         raceHold = true; raceGoMs = nowMs + goInMs; raceGoUnix = issued ? issued + arg : 0; ovActive = false;
+        boostEndOwed = false; boostMarkClear();
         Serial.printf("{\"t\":\"race\",\"kart\":%u,\"event\":\"countdown\",\"go_in_ms\":%lu,\"secs\":%u,\"go_utc\":%lu}\n", kartId, (unsigned long)goInMs, arg, (unsigned long)raceGoUnix);
         logf("race: grid hold, GO in %lu ms", (unsigned long)goInMs);
         if (!writesEnabled()) { cmdResult = GK_RES_REJECTED; break; }
@@ -753,6 +813,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         ovScale = arg / 100.0f; ovActive = true; ovUntilMs = nowMs + secs * 1000UL;
         logf("boost: scale %.2f for %u s", ovScale, secs);
         if (!startWrite(scaleTarget(), cmdCur)) cmdResult = GK_RES_NO_VESC;
+        else if (GK_M5_CONTROL && modeReq < GK_MODE_COUNT - 1) boostMarkSet(modeReq, wTarget, wErpm);
         break;
       }
       case GK_CMD_SLOW: {
@@ -805,6 +866,8 @@ static void m5HandleLine(const char* line) {
   if (!m5link::decode(line, r) || !m5Gate.accept(r, millis())) return;
   m5Request = r.id; m5Owner = NO_OWNER; m5Result = GK_RES_REJECTED;
   if (!m5ModeReady()) return;
+  // Joined to a native game: locked to the host's game speed. Re-applying that mode stays possible.
+  if (gameMode != GK_MODE_UNKNOWN && r.mode != gameMode) return;
   handleCommand(0xFE, ++usbSeq, GK_CMD_SET_MODE, r.mode, 0, 0);
   int8_t idx = cmdLastIdx[1];
   if (idx >= 0) { CmdEnt& e = cmdHist[1][idx]; m5Owner = {1, idx, e.seq, e.ms}; m5Result = e.result; }
@@ -854,13 +917,13 @@ static void m5Report() {
     "{\"t\":\"display\",\"v\":1,\"kart\":%u,\"boot\":%lu,\"token\":%lu,\"mode_ready\":%s,"
     "\"request\":%lu,\"result\":%u,\"radio\":%s,\"pit\":%s,\"base_rssi\":%d,\"rate\":%u,"
     "\"speed_cal\":%.3f,\"drops\":%lu,\"modes\":[{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f}],"
-    "\"game_v\":1,\"game_session\":%u,\"hosts\":%u,\"game_request\":%lu,\"game_result\":%u,\"game_ready\":%s,\"shield\":%u,\"star_ms\":%lu,\"course_hosts\":%u,\"courses\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],\"course_boots\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu]}",
+    "\"game_v\":2,\"game_mode\":%u,\"game_session\":%u,\"hosts\":%u,\"game_request\":%lu,\"game_result\":%u,\"game_ready\":%s,\"shield\":%u,\"star_ms\":%lu,\"course_hosts\":%u,\"courses\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],\"course_boots\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu]}",
     kartId, (unsigned long)m5Boot, (unsigned long)(m5Gate.consumed ? 0 : m5Gate.token), gkBool(m5ModeReady()),
     (unsigned long)m5Request, result, gkBool(radioOk), gkBool(baseHeardMs && millis()-baseHeardMs < 30000),
     (int)baseRssi, reportRate, speedCal, (unsigned long)m5Drops,
     MODES[0].topMph, MODES[0].currentMaxScale, MODES[1].topMph, MODES[1].currentMaxScale,
     MODES[2].topMph, MODES[2].currentMaxScale,
-    gameSession, hosts, (unsigned long)m5GameRequest, gameResult, gkBool(m5ModeReady() && radioOk), m5Shield,
+    gameMode, gameSession, hosts, (unsigned long)m5GameRequest, gameResult, gkBool(m5ModeReady() && radioOk), m5Shield,
     (unsigned long)(int32_t(m5StarUntil-millis())>0 ? m5StarUntil-millis() : 0), courseHosts,
     (unsigned long)courseGeneration[1].digest,(unsigned long)courseGeneration[2].digest,(unsigned long)courseGeneration[3].digest,(unsigned long)courseGeneration[4].digest,(unsigned long)courseGeneration[5].digest,(unsigned long)courseGeneration[6].digest,(unsigned long)courseGeneration[7].digest,(unsigned long)courseGeneration[8].digest,
     (unsigned long)courseGeneration[1].boot,(unsigned long)courseGeneration[2].boot,(unsigned long)courseGeneration[3].boot,(unsigned long)courseGeneration[4].boot,(unsigned long)courseGeneration[5].boot,(unsigned long)courseGeneration[6].boot,(unsigned long)courseGeneration[7].boot,(unsigned long)courseGeneration[8].boot);
@@ -1050,6 +1113,20 @@ static void serviceVesc() {
     // Reconcile, read-only (owner rule): a Heltec that rebooted mid-session has no mode request, so the end of
     // a boost/mud/SLOW would fall back to the controller's own full limits. If the live limits ARE one of our
     // modes (scale and cap), that mode becomes the request; nothing is written here.
+#if GK_M5_CONTROL
+    // Owner 2026-11-12: a Heltec that restarted mid-boost finds its own boost still on the controller.
+    // The mode it had before the boost becomes the request again (instead of adopting the boosted
+    // limits as a mode) and the missed end is finished once, lower-only (serviceMissedRevert). The
+    // mark is consulted on the first verified read after a restart and never kept past it.
+    if (!wroteThisBoot) {
+      if (modeReq == GK_MODE_UNKNOWN && boostMarkValid() && !strcmp(boostMark.uuid, vesc.uuidHex) &&
+          fabsf(raw.currentMaxScale - boostMark.scale) < MODE_MATCH_TOL && fabsf(raw.maxErpm - boostMark.capErpm) <= MODE_ERPM_TOL) {
+        modeReq = boostMark.baseMode; modeConfirmed = false; boostEndOwed = true; revertTried = false;
+        logf("boost left on the controller by a restart: %s is the request again; its end will be finished once", MODES[modeReq].name);
+      }
+      boostMarkClear();
+    }
+#endif
     if (modeReq == GK_MODE_UNKNOWN) {
       uint8_t ma = modeActual(nullptr);
       if (ma != GK_MODE_UNKNOWN) { modeReq = ma; modeConfirmed = true; logf("mode %s adopted from the controller's live limits (no write)", MODES[ma].name); }
@@ -1200,6 +1277,7 @@ static void attackEnd(const char* result, const char* why) {
   atkTo = 0; atkItem = 0; atkAckMask = 0; gameLineDirty = true;
 }
 static void gameLeave(const char* ended) {
+  gameMode = GK_MODE_UNKNOWN; gameJoinPending = false; gameJoinOwner = NO_OWNER;   // the mode stays; only the lock ends
   if (gameSession == kartId) courseRadio.server.clear();
   if (!gameSession) return;
   if (atkTo) attackEnd("timeout", "session ended");
@@ -1290,8 +1368,19 @@ static bool m5HandleGame(const char* line) {
   if (!m5ModeReady() || !radioOk || !courseFresh(r.session) || courseGeneration[r.session].digest!=r.course||courseGeneration[r.session].boot!=r.boot) return true;
   if (r.action==m5game::Action::Join) {
     if(r.session==kartId || !kartHosting(r.session))return true;
-    if(gameSession!=r.session){gameLeave(nullptr);gameSession=r.session;gameScore=0;gameEnded=nullptr;gameLineDirty=true;}
-    m5JoinedBoot=r.boot;m5JoinedCourse=r.course;m5GameResult=GK_RES_APPLIED;return true;
+    // The host's course fixes the speed: JOIN writes that mode through the ordinary command path and
+    // counts only once the write is verified (serviceGameJoin). A game never runs at the top mode.
+    const uint8_t speed=uint8_t(r.arg-1);
+    if(speed>=GK_MODE_COUNT-1)return true;
+    if(gameSession!=r.session)gameLeave(nullptr);
+    handleCommand(0xFE,++usbSeq,GK_CMD_SET_MODE,speed,0,0);
+    int8_t at=cmdLastIdx[1];if(at<0)return true;
+    auto&made=cmdHist[1][at];m5GameResult=made.result;
+    if(made.result!=GK_RES_ACCEPTED&&made.result!=GK_RES_APPLIED)return true;       // mode refused: not joined
+    m5GameOwner={1,at,made.seq,made.ms};
+    if(gameSession!=r.session){gameSession=r.session;gameScore=0;gameEnded=nullptr;gameLineDirty=true;}
+    m5JoinedBoot=r.boot;m5JoinedCourse=r.course;
+    gameMode=speed;gameJoinOwner=m5GameOwner;gameJoinPending=made.result!=GK_RES_APPLIED;return true;
   }
   if(m5JoinedCourse!=r.course||m5JoinedBoot!=r.boot)return true;
   if(gameSession!=r.session || gameSession==kartId || !kartHosting(r.session))return true;
@@ -1313,9 +1402,20 @@ static bool m5HandleGame(const char* line) {
   if(r.action==m5game::Action::Mud&&int32_t(m5StarUntil-millis())>0){m5GameResult=GK_RES_APPLIED;return true;}
   if(r.action==m5game::Action::Mud&&m5Shield){--m5Shield;m5GameResult=GK_RES_APPLIED;return true;}
   if(r.action==m5game::Action::Mud){slowSecs=uint8_t(r.arg);handleCommand(0xFE,++usbSeq,GK_CMD_SLOW,GAME_SLOW_MPH,0,0);}
-  else {boostSecs=r.action==m5game::Action::Star?8:uint8_t(r.arg>>8);uint8_t scale=r.action==m5game::Action::Star?100:uint8_t(r.arg&255);
-    handleCommand(0xFE,++usbSeq,GK_CMD_BOOST,scale,0,0);
-
+  else {
+    // Proportional boost: one mode up from the mode in force, or the top mode (ROCKET, STAR). With
+    // no mode in force, or already at the top, there is nothing to add and the request is refused.
+    const bool top=r.action==m5game::Action::Star||(r.arg&255)==m5game::BOOST_TOP;
+    uint8_t secs=r.action==m5game::Action::Star?8:uint8_t(r.arg>>8);
+    if(modeReq>=GK_MODE_COUNT-1)return true;
+    const uint8_t target=top?uint8_t(GK_MODE_COUNT-1):uint8_t(modeReq+1);
+    uint8_t scale=uint8_t(lroundf(MODES[target].currentMaxScale*100.0f));
+    const int32_t left=ovActive?int32_t(ovUntilMs-millis()):0;
+    if(left>0){   // a running boost is never cut short or weakened by a later, smaller one
+      const uint8_t running=uint8_t(lroundf(ovScale*100.0f));if(running>scale)scale=running;
+      const uint32_t leftSecs=uint32_t(left+999)/1000;if(leftSecs>secs)secs=uint8_t(leftSecs>30?30:leftSecs);
+    }
+    boostSecs=secs;handleCommand(0xFE,++usbSeq,GK_CMD_BOOST,scale,0,0);
   }
   int8_t idx=cmdLastIdx[1];if(idx>=0){auto&e=cmdHist[1][idx];m5GameOwner={1,idx,e.seq,e.ms};m5GameResult=e.result;
     if(r.action==m5game::Action::Star&&(e.result==GK_RES_ACCEPTED||e.result==GK_RES_APPLIED))m5StarUntil=millis()+8000;
@@ -1324,6 +1424,15 @@ static bool m5HandleGame(const char* line) {
 #else
   (void)line;return false;
 #endif
+}
+
+// A native JOIN counts only once its game-speed write is verified; otherwise the session is left again.
+static void serviceGameJoin() {
+  if (!gameJoinPending) return;
+  const CmdEnt* e = cmdEnt(gameJoinOwner);
+  if (e && e->result == GK_RES_ACCEPTED) return;             // write still in flight
+  gameJoinPending = false;
+  if (!e || e->result != GK_RES_APPLIED) { gameLeave("join not confirmed"); logf("freeplay: game speed not confirmed on the controller, not joined"); }
 }
 
 // ---------------------------------------------------------------- lora
@@ -1930,6 +2039,7 @@ void loop() {
   serviceVesc();
   serviceWrites();
   serviceGame();
+  serviceGameJoin();
   serviceGps();
   serviceLoraRx();
   serviceLoraTx();

@@ -90,6 +90,15 @@ int main(){
   ready(7000);touch(7000);assert(wireless.calls==2&&heldMode==-1);
   M5.Touch.detail.y=10;touch(7100);touch(10000);assert(!maintenanceMenu);
   release();touch(10001);
+  // Joined to a game the own Heltec reports the locked mode. Another mode is refused on the screen
+  // with a plain reason and nothing is sent; the game speed's own button still sends a request.
+  state.modeReady=true;state.pending=0;state.gameMode=1;const int calls=wireless.calls;
+  M5.Touch.detail.x=40;M5.Touch.detail.y=220;ready(11000);press();touch(11000);held();ready(11700);touch(11700);
+  assert(wireless.calls==calls&&!state.pending&&localModeNotice&&std::strstr(localModeNotice,"Locked: game speed is NORMAL"));
+  release();touch(11800);M5.Touch.detail.x=160;ready(12000);press();touch(12000);held();ready(12700);touch(12700);
+  assert(wireless.calls==calls+1&&state.pending);
+  std::strcpy(line,wireless.sent);line[std::strlen(line)-1]=0;assert(m5link::decode(line,parsed)&&parsed.mode==1);
+  release();touch(12800);
   return 0;
 }
 '''

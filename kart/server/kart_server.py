@@ -101,6 +101,7 @@ DEFAULTS = {
     "sun_mode": True,                   # driver page: opaque high-contrast SUN theme (the SUN button overrides it per device)
     "freeplay": True,                   # allow freeplay (FREEPLAY map button / POST /api/freeplay): kart-local item boxes, no pit
     "freeplay_boxes": 5,                # item boxes kept on the freeplay course (1-8)
+    "freeplay_speed": "eco",            # the game speed this host's course is played at by native Core2 players: "eco" or "normal"
     "mud_slow_secs": 4,                 # each mud command (zone repeat / MUD item): `slow 5 N` on Heltec kart-0.2.4+, else `boost N 0.5`
     "item_reveal_s": 1.4,
     "item_hold": True,                  # freeplay boost/rocket are carried (up to 3) and used later from the Core2 item screen or the dash; false = they fire at the prize-wheel reveal               # hold an item-box prize this long so it lands as the dash prize-wheel finishes (owner 2026-11-10); 0 = instant
@@ -119,7 +120,8 @@ CONFIG_RULES = {
 }
 CONFIG_BOOLS = ("beginner_mode", "remote_cmd", "game", "gps_correction", "demo", "sound", "sun_mode", "freeplay",
                 "item_hold")
-CONFIG_CHOICES = {"map_orientation": ("heading_up", "north_up"), "rotate": (0, 180)}
+CONFIG_CHOICES = {"map_orientation": ("heading_up", "north_up"), "rotate": (0, 180),
+                  "freeplay_speed": tuple(m5_course.GAME_SPEEDS)}
 MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8", ".json": "application/json",
         ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
@@ -743,7 +745,9 @@ class App:
             doc = fp.doc()
             # Freeze the shared starting boxes when a course/session is published. Local
             # box respawns do not silently replace a player's downloaded course mid-game.
-            key = json.dumps([fp._my_id(), fp.prize_epoch, doc.get("track")], sort_keys=True)
+            # The game speed is part of the published rules: changing it republishes a new course identity.
+            speed = self.cfg.get("freeplay_speed", "eco")
+            key = json.dumps([fp._my_id(), fp.prize_epoch, doc.get("track"), speed], sort_keys=True)
             if force:
                 self._m5_publish_key = None
                 self.m5_publisher.cancel("explicit republish")
@@ -755,7 +759,7 @@ class App:
                     background = m5_course.background_lines(geo, doc.get("track", {}).get("points", []))
                     payload = m5_course.export(doc, host=fp._my_id(), instance=self._m5_published_instance,
                                                revision=1, background=background,
-                                               name=f"Kart {fp._my_id()} course")
+                                               name=f"Kart {fp._my_id()} course", speed=speed)
                     self.m5_publisher.start(payload, now)
                 except (ValueError, TypeError, UnicodeError) as e:
                     self.m5_publisher.cancel(str(e))

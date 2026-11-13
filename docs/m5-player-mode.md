@@ -39,7 +39,8 @@ cancel local game intent/inventory, with no control replay or driving-state rest
 
 ## Package, trust and compatibility
 
-- Binary `GKG1`, rules v1, little-endian WGS84 e7 coordinates, bounded counts and CRC32.
+- Binary `GKG1`, rules v2, little-endian WGS84 e7 coordinates, bounded counts and CRC32.
+  Header byte 23 is the host's game speed (0 ECO, 1 NORMAL). Rules v1 packages are refused.
   Maximum 3,684 bytes: 128 track points, 16 zones, 64 background segments. The host's routes
   up to 200 points use Eamon's Douglas–Peucker at a fixed 1 m tolerance; if still over128,
   publication refuses with an error instead of silently increasing distortion.
@@ -72,10 +73,37 @@ cancel local game intent/inventory, with no control replay or driving-state rest
 The roll weights match Eamon's current multiplayer table: boost22, shell24, lightning12,
 rocket8, boost3 6, star6, shield8, magnet6, empty8 percent. Shell and lightning occupy the
 separate attack slot; three other carried slots use oldest-first FIRE. Shell uses nearest fresh
-same-session peer within25m; lightning uses existing all-peer attack semantics. BOOST is7s at
-75%, ROCKET10s at100%, BOOST3 has three7s charges, STAR8s at100% plus immunity, MAGNET20s
+same-session peer within25m; lightning uses existing all-peer attack semantics. MAGNET20s
 doubles circular item pickup range. SHIELD is explicitly armed with FIRE and blocks one
 incoming hit or mud application. Existing controller ceilings and pit restrictions win.
+
+**Game speed and boosts (owner decision 2026-11-12).** The host chooses the speed its course
+is played at with the kart Pi setting `freeplay_speed`: `"eco"` (default) or `"normal"`. SPORT
+is not offered, because a boost would have nothing to add. The speed travels inside the course
+package, so changing it publishes a new course identity.
+
+- **JOIN** writes that mode to the player's VESC through the ordinary verified mode path. The
+  join stands only once the write is read back; otherwise the kart leaves the session again.
+- **Lock.** While joined, the Core2 mode buttons are locked to the game speed: holding the game
+  speed's own button re-applies it, the other two are refused on the Core2 and again on the
+  Heltec. Pit commands still win. Leaving or losing the session unlocks the buttons and writes
+  nothing, so the kart stays at the game speed.
+- **Boosts are steps, not absolute scales.** BOOST and each BOOST3 charge are one mode up from
+  the mode in force for 7 s (ECO to NORMAL, NORMAL to SPORT). ROCKET is the top mode for 10 s
+  and STAR the top mode for 8 s plus immunity. A boost-pad zone is one step up unless its
+  scale is 100, which means the top mode. If the pit has put the kart in SPORT, a boost is
+  refused. A later, smaller boost never weakens or shortens the one already running.
+- **A missed boost end is finished (owner exception to "reconnect is read-only").** If the
+  write that ends a boost cannot be made or confirmed (VESC link down, momentarily stale read,
+  no acknowledgement), the Heltec finishes it once per link session when the controller is
+  freshly verified again, and only if that lowers both the current scale and the speed cap.
+  It never raises a limit, never acts under STOP or grid hold, and replays no command. A
+  Heltec that restarts mid-boost keeps a small mark in RTC memory (no flash write), recognises
+  its own boost on the controller, takes the pre-boost mode as the request again and finishes
+  the boost the same way. A power cycle clears the mark. Timed SLOW endings are not covered:
+  finishing those would raise the cap, so they still wait for a command.
+- This applies to the native-player builds (`kart-m5-espnow`); Eamon's `kart` build and his Pi
+  players keep their existing behaviour.
 
 This is a light native player, not full Pi game parity:
 

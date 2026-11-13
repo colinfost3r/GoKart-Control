@@ -29,9 +29,12 @@ int main(int argc,char**argv){
  // Fresh nonce is required each transfer; old response is never a completed download.
  rx.accepted();assert(rx.begin(444,555,now));assert(!rx.receive(response,now));rx.next(now,request);rx.next(now+500,request);rx.next(now+1000,request);rx.next(now+1500,request);assert(!rx.next(now+2000,request)&&rx.stage==share::Receiver::Stage::Error);
  m5dash::State s;m5dash::LiveGame game;assert(game.load(bytes.data(),bytes.size()));game.courseBoot=222;
- auto ready=[&](uint32_t t){s.self=3;s.boot=10;s.metaSeen=true;s.metaMs=t;s.karts[3].seen=true;s.karts[3].received=t;s.karts[3].vesc=true;s.gameVersion=1;s.gameReady=true;s.token=77;s.hosts=s.courseHosts=2;s.hostCourse[2]=pkg.digest();s.hostBoot[2]=222;};
+ auto ready=[&](uint32_t t){s.self=3;s.boot=10;s.metaSeen=true;s.metaMs=t;s.karts[3].seen=true;s.karts[3].received=t;s.karts[3].vesc=true;s.gameVersion=GAME_VERSION;s.gameReady=true;s.token=77;s.hosts=s.courseHosts=2;s.hostCourse[2]=pkg.digest();s.hostBoot[2]=222;};
  std::vector<Request> sent;auto send=[&](const char*line,uint32_t){std::string text=line;text.pop_back();Request decoded;assert(decode(text.c_str(),decoded));sent.push_back(decoded);return true;};
- ready(5000);game.downloadStarted(s);game.stage=m5dash::LiveGame::Stage::Joining;assert(game.request(Action::Join,0,s,1,5000,send));assert(!game.request(Action::Join,0,s,2,5001,send));
+ // JOIN carries the host's game speed (ECO here) to the own Heltec; a request without one cannot be built.
+ ready(5000);game.downloadStarted(s);game.stage=m5dash::LiveGame::Stage::Joining;assert(pkg.speed()==0&&game.joinArg()==1&&!strcmp(game.speedName(),"ECO"));
+ assert(!game.request(Action::Join,0,s,1,5000,send)&&sent.empty());ready(5000);
+ assert(game.request(Action::Join,game.joinArg(),s,1,5000,send)&&sent.back().action==Action::Join&&sent.back().arg==1);assert(!game.request(Action::Join,game.joinArg(),s,2,5001,send));
  ready(5100);s.gameRequest=1;s.gameResult=2;s.gameSession=2;game.tick(s,5100);assert(game.active());
  // Actual GPS item-box entry rolls a shell; nearest same-session peer is the target.
  auto&own=s.karts[3];own.fix=own.hasPosition=true;own.lat=41;own.lon=-73;own.fixReceived=5100;
@@ -40,8 +43,19 @@ int main(int argc,char**argv){
  assert(game.fire(s,3,5100,send));assert(sent.back().action==Action::Shell&&sent.back().arg==2);assert(!game.fire(s,4,5101,send));
  ready(5200);s.gameRequest=3;s.gameResult=2;game.tick(s,5200);assert(game.item()==m5dash::LiveGame::Item::None);
  // Refused/unknown boost cannot add time to another fresh press.
- game.collect(m5dash::LiveGame::Item::Boost);assert(game.fire(s,4,5200,send));assert(sent.back().arg==(7<<8|75));
- ready(5300);s.gameRequest=4;s.gameResult=4;game.tick(s,5300);game.collect(m5dash::LiveGame::Item::Boost);assert(game.fire(s,5,5300,send));assert(sent.back().arg==(7<<8|75));
+ game.collect(m5dash::LiveGame::Item::Boost);assert(game.fire(s,4,5200,send));assert(sent.back().arg==(7<<8|BOOST_STEP));
+ ready(5300);s.gameRequest=4;s.gameResult=4;game.tick(s,5300);game.collect(m5dash::LiveGame::Item::Boost);assert(game.fire(s,5,5300,send));assert(sent.back().arg==(7<<8|BOOST_STEP));
+ // Boosts are steps, never absolute scales: BOOST and BOOST3 ask for one mode up, ROCKET for the top mode.
+ ready(5400);s.gameRequest=5;s.gameResult=2;game.tick(s,5400);game.collect(m5dash::LiveGame::Item::Rocket);assert(game.fire(s,6,5400,send));assert(sent.back().action==Action::Boost&&sent.back().arg==(10<<8|BOOST_TOP));
+ ready(5500);s.gameRequest=6;s.gameResult=2;game.tick(s,5500);game.collect(m5dash::LiveGame::Item::Triple);assert(game.fire(s,7,5500,send));assert(sent.back().arg==(7<<8|BOOST_STEP)&&game.charges()==2);
+ ready(5600);s.gameRequest=7;s.gameResult=2;game.tick(s,5600);
+ {Request r{1,1,2,Action::Join,0,5,6};assert(!valid(r));r.arg=1;assert(valid(r));r.arg=2;assert(valid(r));r.arg=3;assert(!valid(r));      // ECO or NORMAL only
+  r.action=Action::Boost;r.arg=7<<8|75;assert(!valid(r));r.arg=7<<8|0;assert(!valid(r));r.arg=7<<8|BOOST_STEP;assert(valid(r));r.arg=31<<8|BOOST_TOP;assert(!valid(r));r.arg=30<<8|BOOST_TOP;assert(valid(r));}
+ // Rules v1 packages carry no game speed and are refused; the top mode is never a game speed.
+ {auto old=bytes;old[5]=1;put32(old.data()+old.size()-4,crc32(old.data(),old.size()-4));Package p;assert(!p.load(old.data(),old.size()));
+  auto fast=bytes;fast[23]=2;put32(fast.data()+fast.size()-4,crc32(fast.data(),fast.size()-4));assert(!p.load(fast.data(),fast.size()));
+  auto normal=bytes;normal[23]=1;put32(normal.data()+normal.size()-4,crc32(normal.data(),normal.size()-4));assert(p.load(normal.data(),normal.size())&&p.speed()==1);
+  m5dash::LiveGame other;assert(other.load(normal.data(),normal.size())&&other.joinArg()==2&&!strcmp(other.speedName(),"NORMAL"));}
  // A lost link destroys pending intent/inventory and never sends on recovery.
  auto count=sent.size();game.tick(s,9000);assert(!game.active()&&!game.pending);ready(9100);game.tick(s,9100);assert(sent.size()==count);
  s.boot=11;game.downloadStarted(s);game.tick(s,9100);assert(game.stage==m5dash::LiveGame::Stage::Downloading);

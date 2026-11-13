@@ -198,7 +198,9 @@ template<class Canvas> class DriverView {
   }
   void liveInvitation(const LiveGame&game,const m5game::share::Receiver&receiver,uint32_t now){
     if(!game.overlay)return;box({12,69,296,118},palette::amber);char line[44];
-    snprintf(line,sizeof line,"KART %u / %s",game.active()?game.package.host():receiver.host(),game.active()?"PLAYING":"HOST COURSE");label(line,24,80,1,palette::amber);
+    if(game.active())snprintf(line,sizeof line,"KART %u / PLAYING / SPEED %s",game.package.host(),game.speedName());
+    else snprintf(line,sizeof line,"KART %u / HOST COURSE",receiver.host());
+    label(line,24,80,1,palette::amber);
     label(game.note,24,101,1);
     if(game.stage==LiveGame::Stage::Downloading){c.drawRect(24,121,272,8,palette::line);c.fillRect(25,122,int(receiver.progress()*270/100),6,palette::cyan);}
     else if(!game.active()&&!receiver.available(now))label("Needs host pairing + same channel",24,121,1,palette::muted);

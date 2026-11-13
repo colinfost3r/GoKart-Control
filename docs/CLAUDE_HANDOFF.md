@@ -15,6 +15,42 @@ STOP/SLOW/BOOST, a sustained soak, a VESC cold boot, GPS, and everything that ne
 (course download, JOIN, FIRE). See
 [the install record](../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
+## Evening of November 12: the source is ahead of what kart 3 runs
+
+A review of the FIRE path found three things the owner asked to change. They are implemented
+and tested offline; **nothing has been flashed**, so kart 3 still runs the afternoon candidate
+(`2026-11-12-player`) with the old behaviour until both of its boards are re-flashed.
+
+| Review finding | State in source |
+| --- | --- |
+| A boost stayed on the controller if its end could not be written (VESC link down, stale read, Heltec restart) | Fixed: finished once, lower-only, including after a Heltec restart |
+| BOOST was an absolute 75% scale: no effect in NORMAL, less power in SPORT | Fixed: a boost is a step up from the mode in force |
+| A later BOOST overwrote a running ROCKET | Fixed: a running boost is never weakened or shortened |
+| Kart 3 speed caps use kart 2's 2.48 factor with 20 stored poles (caps about 43% high if the motors match) | **Open; next task.** Needs a GPS-versus-ERPM measurement on kart 3 |
+| One late status line (over 700 ms) ends the Core2 game and clears items | Open |
+| 6.5 s without the host's LoRa course packet ends the game | Open (by design; margin is thin) |
+| FIRE triggers on a single tap | Open |
+| A boost pad entered while a request is pending is spent without effect | Open |
+
+New rules, all owner decisions of November 12 and described in
+[the player guide](m5-player-mode.md#native-rules-and-deliberate-limits):
+
+- The host picks the game speed with the kart Pi setting `freeplay_speed` (`eco` or `normal`).
+  It is carried in the course package (rules v2), so old and new firmware cannot play together.
+- JOIN writes that mode to the player's VESC and locks the Core2 mode buttons to it.
+- BOOST is one mode up; ROCKET and STAR are the top mode.
+- The "reconnect is read-only" rule has one recorded exception for a missed boost end; see
+  `AGENTS.md`.
+
+To put this on hardware: re-flash kart 3's Core2 (`m5-espnow`) and Heltec (`kart-m5-espnow`),
+flash the host Heltec (`kart`) and deploy `kart/server` to the host Pi, all from the same
+commit. The host Pi has no screen control for the game speed yet; it is set in `config.json`.
+
+All eight firmware targets compile from this source. The application images are frozen in
+ignored `firmware/build/bench-candidates/2026-11-13-game-rules/`; their hashes and the test
+result are in [the manifest](validation/m5-game-rules-2026-11-13.json). Flash kart 3 from those
+frozen files, not from a fresh build (a rebuild embeds different paths and hashes differently).
+
 ## Project and Git
 
 - Canonical project: `~/Projects/50 Day/GoKart Control/`.

@@ -27,7 +27,12 @@ def _distance(a, b):
     return math.hypot((a[0]-b[0])*111320, (a[1]-b[1])*111320*math.cos(math.radians((a[0]+b[0])/2)))
 
 
-def export(doc, *, host, instance, revision, name='Hosted course', background=()):
+GAME_SPEEDS = {'eco': 0, 'normal': 1}   # the host's game speed; never the top mode, so a boost always has a step up
+
+
+def export(doc, *, host, instance, revision, name='Hosted course', background=(), speed='eco'):
+    if speed not in GAME_SPEEDS:
+        raise ValueError('game speed must be eco or normal')
     if type(host) is not int or not 1 <= host <= 8 or type(instance) is not int or not 1 <= instance <= 0xffffffff or type(revision) is not int or not 1 <= revision <= 0xffffffff:
         raise ValueError('host, instance and revision must be explicit nonzero identities')
     if not isinstance(doc, dict) or doc.get('enabled') is not True or doc.get('source') != 'freeplay':
@@ -93,9 +98,10 @@ def export(doc, *, host, instance, revision, name='Hosted course', background=()
         lines.append(_point(a)+_point(b))
         if _distance(pts[0],a)>10000 or _distance(pts[0],b)>10000: raise ValueError('background outside supported extent')
     header=bytearray(HEADER)
-    header[:8]=b'GKG1'+bytes([host,1,2|int(track.get('closed',True))|(4 if lap else 0),len(title)])
+    header[:8]=b'GKG1'+bytes([host,2,2|int(track.get('closed',True))|(4 if lap else 0),len(title)])
     struct.pack_into('<IIHHH',header,8,instance,revision,len(pts),len(rows),len(lines))
     header[22]=1  # OSM/ODbL attribution metadata; displayed at startup.
+    header[23]=GAME_SPEEDS[speed]  # rules v2: the mode every joined kart plays at
     header[24:24+len(title)]=title
     if lap: header[64:84]=lap
     payload=bytes(header)+b''.join(encoded)+b''.join(rows)+b''.join(lines)

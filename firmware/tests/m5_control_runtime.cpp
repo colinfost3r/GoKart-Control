@@ -68,6 +68,9 @@ struct Controller {
   bool poll(){return false;}
   void markLinkLost(){live.receivedMs=sample.receivedMs=fwSeenMs=0;uuidHex[0]=0;}
 } vesc;
+#ifndef RTC_NOINIT_ATTR
+#define RTC_NOINIT_ATTR   // host fixture: an ordinary global; "restart" scenarios keep it and reset the rest
+#endif
 #include "production_state.inc"
 static constexpr const char* UUID="00112233445566778899aabb";
 static uint8_t kartId=3,reportRate=2;
@@ -304,28 +307,164 @@ static void testWrongBaselineIdentity(){
   serviceVesc();assert(!origValid&&vescIdentityBad&&!bleConnected);
   assert(prefs.writes==0&&vesc.writes.empty()&&vesc.custom.empty());
 }
-static void testGame(){
+static void hostTwo(){
   courseGeneration[2].accept(222,0x12345,1,nowMs);fleetMs[2]=nowMs;fleet[2].session=2;
   fleet[2].flags=GK_FLAG_GPS_FIX;fleet[2].lat_e7=410000000;fleet[2].lon_e7=-730000000;
-  uint32_t requestId=500;
-  auto send=[&](m5game::Action action,uint16_t arg=0,uint32_t digest=0x12345){
-    m5Gate.rotate(++requestId,nowMs);char line[62];size_t n=m5game::encode(line,sizeof line,{m5Gate.token,requestId,2,action,arg,digest,222});assert(n);line[n-1]=0;
-    assert(m5HandleGame(line));auto count=vesc.writes.size();m5HandleGame(line);assert(vesc.writes.size()==count);
-  };
-  send(m5game::Action::Join);assert(gameSession==2&&m5JoinedCourse==0x12345&&m5GameResult==GK_RES_APPLIED);
-  send(m5game::Action::Shell,2);assert(atkTo==2&&atkItem==GK_ITEM_SHELL&&vesc.writes.empty());atkTo=0;
-  send(m5game::Action::Boost,7<<8|75,0x98765);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.empty());
-  send(m5game::Action::Boost,7<<8|75);assert(vesc.writes.size()==1);completeWrite();assert(cmdEnt(m5GameOwner)->result==GK_RES_APPLIED);
-  stopActive=true;send(m5game::Action::Boost,7<<8|75);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==1);stopActive=false;
-  slowActive=true;send(m5game::Action::Boost,7<<8|75);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==1);slowActive=false;
-  send(m5game::Action::Shield);assert(m5Shield==1);applyHit(2,GK_ITEM_SHELL,8);assert(!m5Shield&&vesc.writes.size()==1);
-  send(m5game::Action::Star);completeWrite();assert(m5StarUntil>nowMs);auto count=vesc.writes.size();send(m5game::Action::Mud,4);assert(vesc.writes.size()==count);
-  courseGeneration[2].seen=nowMs-6501;send(m5game::Action::Shell,2);assert(!atkTo&&m5GameResult==GK_RES_REJECTED);
-  send(m5game::Action::Leave);assert(!gameSession&&!m5JoinedCourse&&!m5Shield&&!m5StarUntil&&vesc.writes.size()==count);
+}
+static uint32_t gameRequestId=500,hostSeq=1;static bool hostSilent=false;
+// The host keeps announcing its course over LoRa (a joined kart leaves after 6.5 s of silence).
+static void hostHeard(){if(!hostSilent){courseGeneration[2].accept(222,0x12345,uint8_t(++hostSeq),nowMs);fleetMs[2]=nowMs;}}
+// Every request is delivered twice: the second copy must never act (single-use token).
+static void gameSend(m5game::Action action,uint16_t arg=0,uint32_t digest=0x12345){
+  hostHeard();m5Gate.rotate(++gameRequestId,nowMs);char line[62];size_t n=m5game::encode(line,sizeof line,{m5Gate.token,gameRequestId,2,action,arg,digest,222});assert(n);line[n-1]=0;
+  assert(m5HandleGame(line));auto count=vesc.writes.size();m5HandleGame(line);assert(vesc.writes.size()==count);
+}
+static void modeHold(uint8_t mode){
+  static uint32_t id=9000;m5Gate.rotate(++id,nowMs);m5link::Request request{m5Gate.token,id,mode};char line[48];
+  size_t n=m5link::encode(line,sizeof line,request);assert(n);line[n-1]=0;m5HandleLine(line);
+}
+static void join(uint8_t speed){
+  hostTwo();gameSend(m5game::Action::Join,uint16_t(speed+1));assert(gameJoinPending);completeWrite();serviceGameJoin();
+  assert(gameSession==2&&gameMode==speed&&modeReq==speed&&!gameJoinPending);
+}
+static float capOf(uint8_t mode){return modeCapErpm(mode);}
+static void testGame(){
+  hostTwo();
+  // JOIN carries the host's game speed: the mode is written, and the join counts once it is verified.
+  gameSend(m5game::Action::Join,1);
+  assert(gameSession==2&&m5JoinedCourse==0x12345&&gameMode==GK_MODE_ECO&&gameJoinPending&&m5GameResult==GK_RES_ACCEPTED);
+  assert(vesc.writes.size()==1&&vesc.writes.back().currentMaxScale==.5f&&vesc.writes.back().maxErpm==capOf(0));
+  serviceGameJoin();assert(gameSession==2&&gameJoinPending);completeWrite();serviceGameJoin();
+  assert(!gameJoinPending&&gameSession==2&&modeReq==GK_MODE_ECO&&cmdEnt(m5GameOwner)->result==GK_RES_APPLIED);
+  const size_t base=vesc.writes.size();
+  gameSend(m5game::Action::Shell,2);assert(atkTo==2&&atkItem==GK_ITEM_SHELL&&vesc.writes.size()==base);atkTo=0;
+  gameSend(m5game::Action::Boost,7<<8|1,0x98765);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==base);
+  gameSend(m5game::Action::Boost,7<<8|1);assert(vesc.writes.size()==base+1&&vesc.writes.back().currentMaxScale==.75f);completeWrite();assert(cmdEnt(m5GameOwner)->result==GK_RES_APPLIED);
+  stopActive=true;gameSend(m5game::Action::Boost,7<<8|1);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==base+1);stopActive=false;
+  slowActive=true;gameSend(m5game::Action::Boost,7<<8|1);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==base+1);slowActive=false;
+  gameSend(m5game::Action::Shield);assert(m5Shield==1);applyHit(2,GK_ITEM_SHELL,8);assert(!m5Shield&&vesc.writes.size()==base+1);
+  gameSend(m5game::Action::Star);completeWrite();assert(m5StarUntil>nowMs&&vesc.writes.back().currentMaxScale==1);auto count=vesc.writes.size();gameSend(m5game::Action::Mud,4);assert(vesc.writes.size()==count);
+  hostSilent=true;courseGeneration[2].seen=nowMs-6501;gameSend(m5game::Action::Shell,2);assert(!atkTo&&m5GameResult==GK_RES_REJECTED);
+  gameSend(m5game::Action::Leave);assert(!gameSession&&!m5JoinedCourse&&!m5Shield&&!m5StarUntil&&gameMode==GK_MODE_UNKNOWN&&vesc.writes.size()==count);
+}
+// Owner 2026-11-12: the host's course fixes the speed; joined karts are locked to it.
+static void testGameSpeed(){
+  command(GK_CMD_SET_MODE,2,1);completeWrite();assert(modeReq==GK_MODE_SPORT);        // driver was in SPORT before joining
+  join(GK_MODE_NORMAL);
+  assert(vesc.live.currentMaxScale==.75f&&vesc.live.maxErpm==capOf(1));
+  size_t count=vesc.writes.size();
+  modeHold(0);assert(m5Result==GK_RES_REJECTED&&vesc.writes.size()==count&&modeReq==GK_MODE_NORMAL);     // locked
+  modeHold(2);assert(m5Result==GK_RES_REJECTED&&vesc.writes.size()==count&&modeReq==GK_MODE_NORMAL);
+  modeHold(1);assert(vesc.writes.size()==count+1&&vesc.writes.back().currentMaxScale==.75f);completeWrite();   // re-applying the game speed is allowed
+  command(GK_CMD_SET_MODE,0,2);completeWrite();assert(modeReq==GK_MODE_ECO&&gameMode==GK_MODE_NORMAL);   // the pit still wins
+  count=vesc.writes.size();
+  gameSend(m5game::Action::Leave);assert(!gameSession&&gameMode==GK_MODE_UNKNOWN&&vesc.writes.size()==count);   // leaving writes nothing
+  modeHold(2);assert(vesc.writes.size()==count+1);completeWrite();assert(modeReq==GK_MODE_SPORT);            // buttons unlocked
+  // A join whose mode write is never confirmed does not stand.
+  hostTwo();gameSend(m5game::Action::Join,1);assert(gameSession==2&&gameJoinPending&&wState==W_SENT);
+  advance(VESC_ACK_TIMEOUT_MS+1);refresh();serviceWrites();serviceGameJoin();
+  assert(!gameSession&&gameMode==GK_MODE_UNKNOWN&&!gameJoinPending);
+  // No host, no join and no write.
+  count=vesc.writes.size();fleet[2].session=0;gameSend(m5game::Action::Join,1);assert(!gameSession&&vesc.writes.size()==count&&m5GameResult==GK_RES_REJECTED);
+}
+// Owner 2026-11-12: a boost is a step up from the mode in force, never an absolute scale.
+static void testRelativeBoost(){
+  join(GK_MODE_ECO);
+  gameSend(m5game::Action::Boost,7<<8|m5game::BOOST_STEP);assert(vesc.writes.back().currentMaxScale==.75f&&vesc.writes.back().maxErpm==capOf(1));completeWrite();
+  assert(ovActive&&ovUntilMs-nowMs>6900&&ovUntilMs-nowMs<=7000);
+  advance(7000);refresh();serviceWrites();assert(!ovActive&&vesc.writes.back().currentMaxScale==.5f&&vesc.writes.back().maxErpm==capOf(0));completeWrite();assert(!boostEndOwed);
+  gameSend(m5game::Action::Boost,10<<8|m5game::BOOST_TOP);assert(vesc.writes.back().currentMaxScale==1&&vesc.writes.back().maxErpm==origLimits.maxErpm);completeWrite();
+  // A later, smaller boost never weakens or shortens the running one.
+  const uint32_t rocketEnds=ovUntilMs;advance(2000);refresh();serviceWrites();
+  gameSend(m5game::Action::Boost,7<<8|m5game::BOOST_STEP);assert(ovScale==1&&vesc.writes.back().currentMaxScale==1&&int32_t(ovUntilMs-rocketEnds)>=0);completeWrite();
+  advance(8100);refresh();serviceWrites();assert(!ovActive&&vesc.writes.back().currentMaxScale==.5f);completeWrite();
+  gameSend(m5game::Action::Leave);
+  join(GK_MODE_NORMAL);
+  gameSend(m5game::Action::Boost,7<<8|m5game::BOOST_STEP);assert(vesc.writes.back().currentMaxScale==1&&vesc.writes.back().maxErpm==origLimits.maxErpm);completeWrite();
+  advance(7000);refresh();serviceWrites();assert(vesc.writes.back().currentMaxScale==.75f&&vesc.writes.back().maxErpm==capOf(1));completeWrite();
+  // The pit moved the kart to the top mode: nothing to add, so the request is refused and nothing is written.
+  command(GK_CMD_SET_MODE,2,7);completeWrite();const size_t count=vesc.writes.size();
+  gameSend(m5game::Action::Boost,7<<8|m5game::BOOST_STEP);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==count&&!ovActive);
+  gameSend(m5game::Action::Star);assert(m5GameResult==GK_RES_REJECTED&&vesc.writes.size()==count&&!m5StarUntil);
+}
+// setup() installs the baseline directly; a real boot records it as this session's first read.
+static void firstReadDone(){firstLimits=origLimits;haveFirst=true;strcpy(firstUuid,UUID);}
+static void linkDown(){vesc.sample.receivedMs=0;serviceVesc();serviceWrites();assert(!vescUp());}
+// The controller answers again: identity and limits must be read afresh in the new link session.
+static void linkBack(int passes=6){
+  for(int i=0;i<passes;++i){advance(100);vesc.fwSeenMs=nowMs;refresh();serviceVesc();serviceWrites();}
+}
+// Owner 2026-11-12: a boost end that could not be written is finished once, and only downwards.
+static void testMissedRevert(){
+  firstReadDone();join(GK_MODE_ECO);
+  gameSend(m5game::Action::Boost,10<<8|m5game::BOOST_TOP);completeWrite();assert(vesc.live.currentMaxScale==1);
+  size_t count=vesc.writes.size();
+  linkDown();nowMs+=10500;serviceVesc();serviceWrites();
+  assert(!ovActive&&boostEndOwed&&revertMissed&&vesc.writes.size()==count);            // nothing can be written while the link is down
+  nowMs+=3000;linkBack();
+  assert(vesc.writes.size()==count+1&&vesc.writes.back().currentMaxScale==.5f&&vesc.writes.back().maxErpm==capOf(0));
+  completeWrite();assert(!boostEndOwed&&!revertMissed&&vesc.live.currentMaxScale==.5f&&!boostMarkValid());
+  linkBack(20);assert(vesc.writes.size()==count+1);                                     // exactly one write
+  // An unconfirmed attempt is not repeated on the same link; a new link session allows one more.
+  gameSend(m5game::Action::Boost,10<<8|m5game::BOOST_TOP);completeWrite();count=vesc.writes.size();
+  linkDown();nowMs+=10500;serviceVesc();serviceWrites();nowMs+=1000;linkBack();assert(vesc.writes.size()==count+1&&wState==W_SENT);
+  advance(VESC_ACK_TIMEOUT_MS+1);vesc.fwSeenMs=nowMs;refresh();serviceVesc();serviceWrites();assert(wState==W_IDLE&&boostEndOwed);
+  linkBack(20);assert(vesc.writes.size()==count+1);
+  linkDown();nowMs+=1000;linkBack();assert(vesc.writes.size()==count+2);completeWrite();assert(!boostEndOwed);
+  // A boost end refused only because the last limits read was momentarily stale is finished when it is fresh.
+  gameSend(m5game::Action::Boost,7<<8|m5game::BOOST_STEP);completeWrite();count=vesc.writes.size();
+  nowMs+=7000;vesc.sample.receivedMs=nowMs;serviceWrites();assert(!ovActive&&boostEndOwed&&vesc.writes.size()==count);
+  refresh();serviceWrites();assert(vesc.writes.size()==count+1&&vesc.writes.back().currentMaxScale==.5f);completeWrite();assert(!boostEndOwed);
+}
+// Never upwards, never under STOP, never for anything but a boost end.
+static void testMissedRevertLimits(){
+  firstReadDone();join(GK_MODE_ECO);
+  gameSend(m5game::Action::Boost,10<<8|m5game::BOOST_TOP);completeWrite();size_t count=vesc.writes.size();
+  linkDown();nowMs+=10500;serviceVesc();serviceWrites();
+  vesc.live.currentMaxScale=.2f;                                                          // the controller came back BELOW the mode
+  nowMs+=1000;linkBack(20);assert(vesc.writes.size()==count&&boostEndOwed&&revertTried);  // finishing would raise it: left alone
+  command(GK_CMD_SET_MODE,0,40);completeWrite();assert(!boostEndOwed);                    // an operator command settles it
+  // A timed SLOW that ended while the link was down is not a boost end: no automatic write (it would raise the cap).
+  slowSecs=2;command(GK_CMD_SLOW,5,41);completeWrite();count=vesc.writes.size();
+  linkDown();nowMs+=2500;serviceVesc();serviceWrites();nowMs+=1000;linkBack(20);
+  assert(!slowActive&&!boostEndOwed&&vesc.writes.size()==count);
+  // STOP during a boost: the ramp owns the controller and nothing is owed afterwards.
+  command(GK_CMD_SET_MODE,0,42);completeWrite();
+  gameSend(m5game::Action::Boost,7<<8|m5game::BOOST_STEP);completeWrite();assert(boostMarkValid());
+  command(GK_CMD_STOP,0,43);assert(!ovActive&&!boostEndOwed&&!boostMarkValid());
+}
+// A Heltec that restarts mid-boost recognises its own boost on the controller and finishes it once.
+static void restartHeltec(){
+  modeReq=GK_MODE_UNKNOWN;stopActive=slowActive=slowTimed=slowPrevActive=ovActive=raceHold=false;
+  origValid=false;wState=W_IDLE;rampIdx=-1;revertMissed=wroteThisBoot=baselineSuspect=haveFirst=modeConfirmed=false;firstUuid[0]=0;
+  boostEndOwed=revertTried=false;revertTriedSession=0;gameSession=0;gameMode=GK_MODE_UNKNOWN;gameJoinPending=false;gameJoinOwner=NO_OWNER;
+  m5JoinedCourse=m5JoinedBoot=0;memset(cmdHist,0,sizeof cmdHist);cmdLastIdx[0]=cmdLastIdx[1]=-1;lastSrcIdx=-1;
+  vescLinkWas=false;vescIdCheckedMs=0;
+}
+static void testRestartMark(){
+  join(GK_MODE_ECO);
+  gameSend(m5game::Action::Boost,10<<8|m5game::BOOST_TOP);completeWrite();assert(boostMarkValid()&&boostMark.baseMode==GK_MODE_ECO);
+  size_t count=vesc.writes.size();
+  restartHeltec();nowMs+=4000;linkBack();
+  assert(modeReq==GK_MODE_ECO&&vesc.writes.size()==count+1&&vesc.writes.back().currentMaxScale==.5f&&vesc.writes.back().maxErpm==capOf(0));
+  completeWrite();assert(!boostEndOwed&&!boostMarkValid()&&vesc.live.currentMaxScale==.5f);
+  linkBack(20);assert(vesc.writes.size()==count+1);
+  // The controller was power-cycled as well: its limits are not this boost's, so nothing is written.
+  join(GK_MODE_ECO);gameSend(m5game::Action::Boost,7<<8|m5game::BOOST_STEP);completeWrite();assert(boostMarkValid());count=vesc.writes.size();
+  restartHeltec();vesc.live.currentMaxScale=1;vesc.live.maxErpm=origLimits.maxErpm;nowMs+=4000;linkBack(20);
+  assert(vesc.writes.size()==count&&!boostEndOwed&&!boostMarkValid()&&modeReq==GK_MODE_SPORT);
+  // A mark whose contents changed after it was written is not trusted.
+  boostMarkSet(GK_MODE_ECO,1,origLimits.maxErpm);assert(boostMarkValid());boostMark.scale=.75f;assert(!boostMarkValid());
+  // Uninitialised RTC memory after a power-on is never a mark.
+  memset(&boostMark,0xA5,sizeof boostMark);assert(!boostMarkValid());
+  restartHeltec();nowMs+=4000;linkBack(20);assert(vesc.writes.size()==count&&!boostEndOwed);
 }
 int main(int argc,char** argv){
   assert(argc>=2);setup();std::string scenario=argv[1];
   if(scenario=="game")testGame();
+  else if(scenario=="game-speed")testGameSpeed();else if(scenario=="relative-boost")testRelativeBoost();
+  else if(scenario=="missed-revert")testMissedRevert();else if(scenario=="missed-revert-limits")testMissedRevertLimits();
+  else if(scenario=="restart-mark")testRestartMark();
   else if(scenario=="guard"){assert(argc==3);testGuard(argv[2]);}
   else if(scenario=="passthrough")testPassthrough();else if(scenario=="ack")testAck();
   else if(scenario=="stop-start")testStopStart();else if(scenario=="timers")testTimers();
