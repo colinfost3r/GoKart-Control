@@ -75,7 +75,10 @@ RACE_IDLE_REPEATS = (0.0, 2.0)
 RATE_REPEAT_S = 30.0         # "rate 1" to all karts this often while a repeater is heard
 REPEATER_FRESH_S = 60.0      # repeater heartbeat heard within this -> repeater in use
 REPEATER_GONE_S = 120.0      # no repeater for this long -> "rate 2" once
-RATE_PINNED_REPEAT_S = 300.0 # config "fleet_rate" 1|2: re-sent this often (a kart that rebooted in between gets it)          # NEW RACE / abort: state 0 twice (one lost line must not leave "3")
+RATE_PINNED_REPEAT_S = 300.0 # config "fleet_rate" 1|2: re-sent this often (a kart that rebooted in between gets it)
+RACE_FIELD_HEARD_S = 60.0    # a kart heard within this still counts for auto-end / placing (review 2026-11-13: the 5 s
+                             # "online" window ended a laps race while a kart was in a radio gap, leaving it unplaced)
+RACE_STATE_FORCE_S = 300.0   # race-state.json is rewritten at least this often even when nothing changed (freshness gate)          # NEW RACE / abort: state 0 twice (one lost line must not leave "3")
 
 
 def wall_iso(ts=None):
@@ -533,11 +536,14 @@ class App:
             doc["race"] = dict(self.fleet.race)
         try:
             text = json.dumps(doc, separators=(",", ":"))
+            key = json.dumps({k: v for k, v in doc.items() if k != "saved_mono"}, separators=(",", ":"))
         except (TypeError, ValueError):
             return
-        if text == self._race_state_saved:
+        forced = now - getattr(self, "_race_state_forced_mono", -1e9) >= RACE_STATE_FORCE_S
+        if key == self._race_state_saved and not forced:          # saved_mono alone changing is not a change
             return
-        self._race_state_saved = text
+        self._race_state_saved = key
+        self._race_state_forced_mono = now
         tmp = self.race_state_path + ".tmp"
         try:
             with open(tmp, "w") as f:
@@ -550,9 +556,10 @@ class App:
         """Karts that count for auto-end and placing: the online ones, limited to the pit's entry list when it
         has one (audit 2026-11-13: a powered kart parked in the pits blocked the auto-finish of a laps race and
         got placed with 0 laps)."""
-        online = self._online(now)
+        heard = [k for k in pitcore.KART_IDS
+                 if self.fleet.karts[k].last_tele_mono is not None and now - self.fleet.karts[k].last_tele_mono <= RACE_FIELD_HEARD_S]
         ent = self.fleet.race.get("entered") or []
-        return [k for k in online if k in ent] if ent else online
+        return [k for k in heard if k in ent] if ent else heard
 
     def race_stop(self, who):
         """STOP RACE: final results, every kart gets its finish command (ZONES.md "Race finish").

@@ -1487,6 +1487,89 @@ class Freeplay(unittest.TestCase):
         fp.select(None, t)
         return fp, recs
 
+    def roam(self, seed=1, boxes=3, kart=(0.0, 0.0), t=1.0):
+        fp = kc.FreeplayGame(boxes=boxes, rng=__import__("random").Random(seed))
+        fp.set_mode("roam", 0.0)
+        fp.set_on(True, 0.0)
+        fp.on_pos(fp_pos(*kart, t - 0.5), t - 0.5)
+        fp.select(None, t)
+        recs = fp.tick(t)
+        fp.select(None, t)
+        return fp, recs
+
+    def test_roam_places_boxes_around_the_kart_without_a_course(self):
+        # owner 2026-11-13: "a free play mode where you can just drive around not on a track, get random boxes"
+        fp, recs = self.roam()
+        self.assertEqual((fp.mode, fp.phase, fp.course), ("roam", "ready", None))
+        self.assertEqual(len(fp.boxes), 3)
+        self.assertEqual(len(evs(recs, "freeplay_spawn")), 3)
+        me = (fp.kart[0], fp.kart[1])
+        for b in fp.boxes:
+            self.assertTrue(kc.FP_ROAM_MIN_M <= kc._dist_m(me, (b["lat"], b["lon"])) <= kc.FP_ROAM_MAX_M + 0.5, b)
+        for a in fp.boxes:
+            for b in fp.boxes:
+                if a is not b:
+                    self.assertGreaterEqual(kc._dist_m((a["lat"], a["lon"]), (b["lat"], b["lon"])), kc.FP_ROAM_SPACING_M - 0.5)
+        d = fp.doc()
+        self.assertEqual([z["type"] for z in d["zones"]], ["item"] * 3)          # no lap line, no track
+        self.assertNotIn("track", d)
+        snap = fp.snapshot(1.0)
+        self.assertEqual((snap["mode"], snap["record"], len(snap["boxes"])), ("roam", None, 3))
+        g = kc.GameEngine(item_hold=True)
+        g.set_zones(d, 1.0)
+        self.assertTrue(g.active())
+        with self.assertRaises(ValueError):
+            fp.set_mode("drift", 2.0)
+
+    def test_roam_boxes_respawn_near_and_follow_the_kart(self):
+        fp, _ = self.roam()
+        b0 = fp.boxes[0]
+        r = fp.on_game([{"ev": "item", "zone": b0["id"], "item": "boost"}], 2.0)   # collected
+        self.assertEqual(evs(r, "freeplay_collected")[0]["zone"], b0["id"])
+        self.assertEqual(len(fp.boxes), 2)
+        self.assertEqual(lines(fp.tick(3.0)), [])
+        self.assertEqual(len(fp.boxes), 2)                                          # not back before 3 s
+        r = fp.tick(5.1)
+        self.assertEqual(len(fp.boxes), 3)
+        nb = evs(r, "freeplay_spawn")[0]
+        self.assertGreaterEqual(kc._dist_m((b0["lat"], b0["lon"]), (nb["lat"], nb["lon"])), kc.FP_RESPAWN_AWAY_M)
+        # the kart drives 400 m east: the boxes are left far behind and come back one per tick
+        fp.on_pos(fp_pos(400.0, 0.0, 10.0), 10.0)
+        fp.select(None, 10.0)
+        moved = []
+        for i in range(3):
+            r = fp.tick(10.0 + i)
+            moved += [e for e in evs(r, "freeplay_spawn") if e.get("moved_from")]
+        self.assertEqual(len(moved), 3)
+        me = (fp.kart[0], fp.kart[1])
+        self.assertTrue(all(kc._dist_m(me, (b["lat"], b["lon"])) <= kc.FP_ROAM_MAX_M + 0.5 for b in fp.boxes))
+        self.assertEqual(len(fp.boxes), 3)
+        self.assertEqual(len(evs(fp.tick(14.0), "freeplay_spawn")), 0)              # settled
+
+    def test_roam_waits_for_gps_and_survives_a_restart(self):
+        fp = kc.FreeplayGame(rng=__import__("random").Random(1))
+        fp.set_mode("roam", 0.0)
+        fp.set_on(True, 0.0)
+        fp.select(None, 1.0)
+        self.assertEqual(fp.phase, "no_gps")                                        # no position: nothing to ring around
+        self.assertEqual(fp.tick(1.0), [])
+        self.assertIsNone(fp.rec)                                                   # roam never records a lap
+        fp.on_pos(fp_pos(0.0, 0.0, 2.0), 2.0)
+        fp.select(None, 2.0); fp.tick(2.0)
+        self.assertEqual((fp.phase, len(fp.boxes)), ("ready", kc.FREEPLAY_BOXES))
+        doc = fp.export()
+        self.assertEqual(doc["mode"], "roam")
+        fp2 = kc.FreeplayGame()
+        fp2.load(doc, 3.0)
+        self.assertEqual((fp2.mode, fp2.on, fp2.rec), ("roam", True, None))
+        # back to TRACK: boxes re-placed, the recorder starts (no course yet)
+        r = fp2.set_mode("track", 4.0)
+        self.assertEqual(evs(r, "freeplay_mode")[0]["mode"], "track")
+        self.assertIsNotNone(fp2.rec)
+        fp2.on_pos(fp_pos(0.0, 0.0, 5.0), 5.0)
+        fp2.select(None, 5.0)
+        self.assertEqual(fp2.phase, "recording")
+
     def test_loop_closure_from_a_driven_path(self):
         fp = kc.FreeplayGame(rng=__import__("random").Random(3))
         fp.set_on(True, 0.0)
@@ -1758,7 +1841,7 @@ class Freeplay(unittest.TestCase):
     def test_state_block_shape(self):
         fp, _ = self.ready(seed=9)
         s = fp.snapshot(2.0)
-        self.assertEqual(set(s), {"allowed", "on", "phase", "pause_reason", "boxes_target", "course", "boxes",
+        self.assertEqual(set(s), {"allowed", "on", "mode", "phase", "pause_reason", "boxes_target", "course", "boxes",
                                   "respawning", "collected", "record", "eco", "multi"})
         self.assertIn(s["phase"], kc.FP_PHASES)
         self.assertEqual(set(s["course"]), {"points", "length_m", "source"})
@@ -2190,7 +2273,7 @@ class Multiplayer(unittest.TestCase):
                                  "why": "stopped"}, 4.0)
         m = fp.snapshot(5.0)["multi"]
         self.assertEqual(m["last_hit"], {"from": 5, "item": "lightning", "secs": 3, "applied": False,
-                                         "why": "stopped", "age_s": 1.0})
+                                         "seq": 2, "why": "stopped", "age_s": 1.0})
         self.assertEqual([(e["ev"], e["from"]) for e in m["events"] if e["ev"] == "hit"], [("hit", 3), ("hit", 5)])
         self.assertEqual(fp.on_multi_line("bogus", {}, 5.0), [])
 
@@ -2223,6 +2306,62 @@ class Multiplayer(unittest.TestCase):
         fp.held = {"item": "shell", "mono": 7.0}
         disp.ingest(mp_fleet_line(3, 0, 60, session=3), 7.0, "w")
         self.assertEqual(lines(fp.use(7.0)), ["attack 5 shell"])
+
+    def test_roam_shell_reaches_any_direction(self):
+        # owner 2026-11-13: "shelling should work in any direction for this mode"
+        fp, disp = self.fp()
+        fp.set_mode("roam", 1.0)
+        disp.ingest(self_line(session=3), 2.0, "w")
+        self.joined(fp)
+        pos = fp_pos(0.0, 0.0, 3.0); pos["heading"] = 0.0                # I face north
+        fp.on_pos(pos, 3.0)
+        fp.held = {"item": "shell", "mono": 3.0}
+        disp.ingest(mp_fleet_line(3, 0, 15, session=3), 3.0, "w")        # 15 m north: ahead
+        disp.ingest(mp_fleet_line(5, 0, -10, session=3), 3.0, "w")       # 10 m south: behind, nearer
+        self.assertFalse({x["id"]: x for x in fp.peers(3.0)}[5]["ahead"])
+        self.assertEqual(lines(fp.use(3.0)), ["attack 5 shell"])         # roam: nearest wins, direction ignored
+        fp.set_mode("track", 4.0)
+        fp.held = {"item": "shell", "mono": 4.0}
+        disp.ingest(mp_fleet_line(3, 0, 60, session=3), 4.0, "w")        # only the kart behind in range
+        with self.assertRaisesRegex(kc.CommandError, "K5 is behind you"):
+            fp.use(4.0)
+
+    def test_roam_never_drops_the_wish_and_targets_stale_peers(self):
+        # owner 2026-11-13: roam is forgiving. The joined kart keeps waiting for a host that vanished (grace
+        # never expires), keeps re-asking a Heltec that will not take the wish (every 15 s instead of giving
+        # up after 3), and a peer whose last fix is up to 60 s old still counts within 40 m.
+        fp, disp = self.fp()
+        fp.set_mode("roam", 1.0)
+        disp.ingest(self_line(session=3), 2.0, "w")
+        self.joined(fp)
+        fp.held = {"item": "shell", "mono": 3.0}
+        fp.on_pos(fp_pos(0.0, 0.0, 3.0), 3.0)
+        disp.ingest(mp_fleet_line(5, 0, 35, session=3), 3.0, "w")       # 35 m: out of TRACK range, in ROAM range
+        p = {x["id"]: x for x in fp.peers(3.0)}
+        self.assertTrue(p[5]["in_range"])
+        self.assertTrue({x["id"]: x for x in fp.peers(40.0)}[5]["in_range"])     # fix 37 s old: still counts
+        self.assertFalse({x["id"]: x for x in fp.peers(70.0)}[5]["in_range"])    # 67 s: not any more
+        self.assertEqual(lines(fp.use(40.0)), ["attack 5 shell"])
+        # the host's game ends and never comes back: the wish and a new held item survive the grace
+        fp.held = {"item": "lightning", "mono": 41.0}
+        fp.on_game_line(mp_game_line(0, peers=[], hosts=[], ended="host lost"), 42.0)
+        self.assertEqual(fp.wish, 3)
+        r = fp.multi_tick(42.0 + kc.MP_REJOIN_GRACE_S + 1.0)
+        self.assertEqual((fp.wish, fp.held["item"], lines(r)), (3, "lightning", []))
+        self.assertEqual(fp.wish_note, "waiting for K3")
+        r = fp.on_game_line(mp_game_line(0, peers=[], hosts=[3]), 200.0)  # the host is back: join again at once
+        self.assertEqual(lines(r), ["session join 3"])
+        self.assertEqual(lines(fp.multi_tick(200.5)), [])                   # 2 s throttle
+        # a Heltec that never takes the wish: roam keeps asking, slowly, instead of dropping it
+        fp2, disp2 = self.fp()
+        fp2.set_mode("roam", 1.0)
+        fp2.join(3, 2.0)
+        sent = 0
+        for t in range(3, 120):
+            sent += len(lines(fp2.multi_tick(float(t))))
+        self.assertEqual(fp2.wish, 3)
+        self.assertGreaterEqual(sent, 6)                                    # ~ every 15 s over 2 min
+        self.assertLessEqual(sent, 9)
 
     def test_refused_core2_use_is_surfaced_for_3_s(self):
         # a Core2 tap the server refuses shows on the dash (the Core2 itself only says USING...)

@@ -437,6 +437,17 @@ Added 2026-11-09 (owner: "a freeplay mode where random boxes show up you gotta d
 you boosts, slow speeds etc., that runs without the pit"). SIMULATION-tested only (unit tests, the e2e
 stack, headless screenshots); not yet driven on kart 2.
 
+**Two modes (2026-11-13).** Tapping FREEPLAY while it is off opens a chooser: **TRACK** (drive one lap to
+set the course, boxes on the loop, timed laps) or **ROAM** (owner: "just drive around not on a track, get
+random boxes put on the map and be able to shell anyone"). ROAM needs no course: boxes land in a 15-60 m ring
+around the kart, a box left more than 150 m behind is moved back (one per tick), there is no lap line, and
+a shell goes to the nearest kart in range in ANY direction (TRACK keeps the "ahead" rule). ROAM is also
+forgiving: positions up to 60 s old still count for targeting (range 40 m), and a joined kart never gives up
+on its host (it keeps waiting / re-asking instead of leaving the game). `POST /api/freeplay {"mode":
+"roam"|"track"}` (may ride with `"on": true`); `mode` is kept in freeplay.json and shown in `/api/state
+freeplay.mode` and on the chip (FREEPLAY ROAM). The Core2 item screen lists the held shell/lightning FIRST
+(three slots: three carried boosts used to hide it).
+
 **What it is.** `kartcore.FreeplayGame` builds a zones document in the same shape mapsync delivers
 (`{"version": "freeplay-N", "enabled": true, "source": "freeplay", "zones": [item boxes], "track": {...}}`)
 and the server hands it to the normal `GameEngine.set_zones`. Everything after that is the existing game

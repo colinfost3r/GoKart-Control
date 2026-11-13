@@ -1168,7 +1168,24 @@ class FleetRatePolicy(unittest.TestCase):
     def rates(self):
         return [(m["kart"], m["arg"]) for m in self.link.lines if m.get("cmd") == "rate"]
 
-    def test_fleet_rate_pinned_by_config(self):
+    def test_race_field_keeps_karts_in_a_radio_gap(self):
+        # review 2026-11-13: auto-end counted only karts heard in the last 5 s, so a laps race ended while a
+        # kart was in a radio gap and that kart was never placed. The field now keeps karts heard within 60 s.
+        import pit_server as ps
+        app = self.app
+        t0 = app._started_mono
+        with app.lock:
+            app.fleet.ingest(tele(1), t0, "w"); app.fleet.ingest(tele(2), t0, "w")
+            self.assertEqual(app._race_field(t0 + 1), [1, 2])
+            app.fleet.ingest(tele(1), t0 + 20, "w")                          # kart 2 silent for 20 s
+            self.assertEqual(app._race_field(t0 + 20), [1, 2])               # still in the field
+            app.fleet.ingest(tele(1), t0 + 70, "w")
+            self.assertEqual(app._race_field(t0 + 70), [1])                  # 70 s: gone
+            app.fleet.race["entered"] = [2]
+            app.fleet.ingest(tele(2), t0 + 71, "w")
+            self.assertEqual(app._race_field(t0 + 72), [2])                  # entry list still limits it
+
+
         # 2026-11-13: a repeater at the edge of range flipped the fleet 1 <-> 2 Hz five times in 25 min
         # (a command to every kart + a flash write on every Heltec each time). "fleet_rate": 2 in
         # config.json pins it: the repeater rule is ignored, the pin is re-sent every 300 s.
@@ -1237,11 +1254,11 @@ class ScaleMismatch(unittest.TestCase):
         def hear(**kw):
             f.ingest(tele(2, **kw), t, "w")
         ev = []
-        for i in range(25):                                                # SPORT requested, live 0.50 (ECO)
+        for i in range(int(pc.SCALE_MISMATCH_S * 2) + 5):                  # SPORT requested, live 0.50 (ECO)
             t = i * 0.5
             hear(mode_req=2, scale=0.50, stopped=False)
             ev += f.watch_scales(t)
-            if t < 10:
+            if t < pc.SCALE_MISMATCH_S:
                 self.assertIsNone(f.karts[2].snapshot(t)["scale_mismatch"])
         self.assertEqual([e[:2] for e in ev], [(2, "start")])
         self.assertEqual(f.karts[2].snapshot(t)["scale_mismatch"]["want"], 1.0)

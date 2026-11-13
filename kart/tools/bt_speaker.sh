@@ -48,6 +48,11 @@ PY
 }
 hci_ok() { hciconfig hci0 2>/dev/null | grep -q "UP RUNNING"; }
 connected() { bluetoothctl info "$1" 2>/dev/null | grep -q "Connected: yes"; }
+KART_USER="${GOKART_KART_USER:-kart}"
+sink_up() {   # root: does the kart user's PipeWire have the speaker's A2DP sink? (connected in bluez is not enough)
+  runuser -u "$KART_USER" -- env XDG_RUNTIME_DIR="/run/user/$(id -u "$KART_USER")" wpctl status -n 2>/dev/null \
+    | sed -n '/Sinks:/,/Sources:/p' | grep -q "bluez_output.${1//:/_}"
+}
 sink_id() {   # PipeWire node id of the speaker's A2DP sink, empty when it is not connected
   wpctl status -n 2>/dev/null | sed -n '/Sinks:/,/Sources:/p' | grep "bluez_output.${1//:/_}" | grep -oE '[0-9]+\.' | head -1 | tr -d .
 }
@@ -81,8 +86,16 @@ watch() {
       else [ "$last" != noadapter ] && logger -t $TAG "no usable Bluetooth adapter (hci0)"; last=noadapter; sleep 20; continue; fi
     fi
     if connected "$mac"; then
-      [ "$last" != up ] && logger -t $TAG "speaker $mac connected"
-      last=up
+      if sink_up "$mac"; then
+        [ "$last" != up ] && logger -t $TAG "speaker $mac connected"
+        last=up; nosink=0
+      else                                                    # bluez says connected but PipeWire has no sink
+        nosink=$(( ${nosink:-0} + 1 ))                        # (profile failed / WirePlumber not up yet): sounds
+        if [ "$nosink" -ge 3 ]; then                          # would go to the HDMI panel; drop and reconnect
+          logger -t $TAG "speaker $mac connected without an audio sink for 30 s; reconnecting"
+          bluetoothctl disconnect "$mac" >/dev/null 2>&1; nosink=0; last=down
+        fi
+      fi
     else
       [ "$last" = up ] && logger -t $TAG "speaker $mac dropped; reconnecting until it is back"
       last=down

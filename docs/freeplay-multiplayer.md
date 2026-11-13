@@ -19,6 +19,10 @@ when present, only observes (and its STOP / SLOW / race rules still win, as for 
   (karts heard in the last 10 s with my session).
 - Courses stay per kart in v1 (each kart keeps its own freeplay loop and boxes); only the items and hits
   are shared. (Sharing the host's course needs the pit or a bulk channel: later.)
+- ROAM (2026-11-13, `POST /api/freeplay {"mode": "roam"}`, the FREEPLAY button's chooser): no course at all.
+  Boxes land in a 15-60 m ring around the kart and are brought back when left 150 m behind; there is no
+  lap line. A shell in ROAM goes to the nearest kart in range in ANY direction (TRACK keeps the ahead rule).
+  `mode` is persisted in freeplay.json and shows in `/api/state freeplay.mode` / the chip (FREEPLAY ROAM).
 
 ## 2. Items (what a mystery box gives you in multiplayer)
 

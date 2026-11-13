@@ -652,8 +652,42 @@ class ServerPieces(unittest.TestCase):
         app._stash_carried(None, True)                      # nothing carried: nothing stashed, nothing logged
         self.assertIsNone(app._inv_pending)
         self.assertEqual(len(app.log.recs), 1)
+        # review 2026-11-13: an ENABLED pit document keeps the inventory (set_zones only drops it when the new
+        # document is off), so stashing there would duplicate the items on resume: no stash
+        app.game.set_zones(doc, 80.0)
+        app.game.inventory.append({"item": "boost", "secs": 7, "scale": 0.75, "zone": "fp", "mono": 80.0})
+        pit_on = tc.zones_doc(tc.item_zone()); pit_on["source"] = "pit"
+        app._stash_carried(pit_on, False)
+        self.assertIsNone(app._inv_pending)
+        app._stash_carried(dict(pit_on, enabled=False), True)
+        self.assertEqual(app._inv_pending[0][0]["item"], "boost")
+        # ... and the stash is what game-state.json keeps while the engine's inventory is empty (key-off mid-race)
+        import tempfile, threading, json as _json
+        with tempfile.TemporaryDirectory() as d:
+            app.lock = threading.RLock()
+            app.game_state_path = os.path.join(d, "game-state.json"); app._game_saved = None
+            app.game.set_zones(None, 81.0)                  # dropped by the engine ...
+            self.assertEqual(app.game.inventory, [])
+            app._save_game_state()
+            saved = _json.load(open(app.game_state_path))
+            self.assertEqual([i["item"] for i in saved["inventory"]], ["boost"])   # ... kept on disk
 
-    def test_session_log_unwritable_dir_falls_back(self):
+    def test_core2_sees_the_held_item_first(self):
+        # 2026-11-13: the Core2 shows three slots; with the held shell listed last, three carried boosts hid
+        # it. The held item now leads the `inv` line, and a Core2 tap's slot is mapped back to item_use's
+        # order (engine items first, held item last).
+        import types
+        app = self.ks.App.__new__(self.ks.App)
+        app.game = types.SimpleNamespace(inventory=[{"item": "boost"}, {"item": "boost3", "charges": 2}, {"item": "boost"}])
+        app.freeplay = types.SimpleNamespace(held={"item": "shell"})
+        self.assertEqual(app._inv_names(), ["shell", "boost", "boost3*2", "boost"])
+        app.freeplay.held = None
+        self.assertEqual(app._inv_names(), ["boost", "boost3*2", "boost"])
+        S = self.ks.App._core2_slot
+        self.assertEqual([S(0, True, 3), S(1, True, 3), S(3, True, 3)], [3, 0, 2])    # held first on the Core2
+        self.assertEqual([S(0, False, 3), S(2, False, 3)], [0, 2])                     # nothing held: unchanged
+
+
         log = self.ks.SessionLog("/proc/definitely/not/here", max_mb=10)
         log.write("event", what="ok")
         log.close()

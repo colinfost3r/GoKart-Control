@@ -303,7 +303,7 @@ function freeChip(f) {                       // -> null (hidden) or {text, cls}
   if (f.phase === "paused_race") return { text: "FREEPLAY PAUSED (race)", cls: "paused" };
   if (f.phase === "no_gps") return { text: "FREEPLAY: waiting for GPS", cls: "rec" };
   if (f.phase === "recording") return { text: `FREEPLAY: drive one lap to set the course \u00b7 ${Math.round((f.record && f.record.distance_m) || 0)} m`, cls: "rec" };
-  if (f.phase === "ready") return { text: `FREEPLAY \u00b7 ${n} box${n === 1 ? "" : "es"} \u00b7 ${f.collected || 0} collected`, cls: "" };
+  if (f.phase === "ready") return { text: `FREEPLAY${f.mode === "roam" ? " ROAM" : ""} \u00b7 ${n} box${n === 1 ? "" : "es"} \u00b7 ${f.collected || 0} collected`, cls: "" };
   return null;
 }
 function renderFree(f) {
@@ -343,12 +343,14 @@ function mpChip(f, m, base) {                // the FREEPLAY chip with the sessi
   const tail = !ids.length ? "waiting for karts" : others.length ? "with " + others.map(kName).join(" ") : "";
   return { text: `FREEPLAY · ${m.hosting ? "my game" : kName(m.session) + "'s game"}${tail ? " · " + tail : ""}`, cls: "tap mp" };
 }
+const fpRoam = () => !!(S && S.freeplay && S.freeplay.mode === "roam");   // ROAM: shells reach any direction
 function mpNearest(m) {                      // nearest in-range peer AHEAD of me (the shell's target) or undefined
   const d = (p) => (nul(p.dist_m) ? 1e9 : p.dist_m);
-  return mpPeers(m).filter((p) => p.in_range === true && p.ahead !== false).sort((a, b) => d(a) - d(b))[0];
+  return mpPeers(m).filter((p) => p.in_range === true && (fpRoam() || p.ahead !== false)).sort((a, b) => d(a) - d(b))[0];
 }
 function mpBehind(m) {                       // nearest in-range peer that is behind me (a shell cannot reach it)
   const d = (p) => (nul(p.dist_m) ? 1e9 : p.dist_m);
+  if (fpRoam()) return undefined;
   return mpPeers(m).filter((p) => p.in_range === true && p.ahead === false).sort((a, b) => d(a) - d(b))[0];
 }
 function renderMulti(f, m) {
@@ -363,7 +365,7 @@ function renderMulti(f, m) {
   // I got hit (the SLOW banner shows the rest): a thud for a shell, a crackle for lightning, once per hit
   const lh = m && m.last_hit;
   if (lh && lh.applied && !nul(lh.age_s) && lh.age_s < 2) {
-    const hk = `${lh.from}:${lh.item}:${Math.round((performance.now() - lh.age_s * 1000) / 1500)}`;
+    const hk = `${lh.from}:${lh.item}:${nul(lh.seq) ? Math.round((performance.now() - lh.age_s * 1000) / 1500) : lh.seq}`;
     if (hk !== mpUi.lastHitKey) { mpUi.lastHitKey = hk; Snd.play(lh.item === "lightning" ? "zap" : "hit"); }
   }
   if (inS) txt("mpScore", "★ " + (Number(m.score) || 0));
@@ -1034,10 +1036,32 @@ document.querySelectorAll(".mbtn").forEach((btn) => {
     };
     raf = requestAnimationFrame(tick);
   });
+  // tap while OFF: pick TRACK or ROAM (the chooser hides by itself after 10 s); tap while ON (or with the
+  // chooser open): off / close
+  const chooser = $("freeChoose");
+  let chooseTimer = null;
+  const closeChooser = () => { show("freeChoose", false); if (chooseTimer) clearTimeout(chooseTimer); chooseTimer = null; };
   b.addEventListener("pointerup", () => {
     if (!raf) return;                          // the hold already fired
     reset();
+    const f = S && S.freeplay;
+    if (f && !f.on && chooser.classList.contains("hidden")) {
+      show("freeChoose", true);
+      chooseTimer = setTimeout(closeChooser, 10000);
+      return;
+    }
+    closeChooser();
+    if (f && !f.on) return;
     post("/api/freeplay", { toggle: true }).then((j) => { if (!j.ok) txt("cmdNote", `freeplay: ${j.error}`); });
+  });
+  chooser.addEventListener("click", (e) => {
+    const g = e.target.closest("button[data-fpmode]");
+    if (!g) return;
+    closeChooser();
+    post("/api/freeplay", { on: true, mode: g.dataset.fpmode }).then((j) => {
+      if (!j.ok) txt("cmdNote", `freeplay: ${j.error}`);
+      else { flash(g.dataset.fpmode === "roam" ? "ROAM" : "TRACK", "lap"); Snd.play("lap"); }
+    });
   });
   ["pointercancel", "lostpointercapture"].forEach((ev) => b.addEventListener(ev, () => { if (raf) reset(); }));
 })();
