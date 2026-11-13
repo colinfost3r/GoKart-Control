@@ -104,10 +104,30 @@ without a flash header. All artifacts are **prepared, not installed**.
 
 The existing `apply_tune.py`, `install_rx_filter.py`, RAM loader and lifecycle tools
 are specifically pinned to kart 3. **They cannot install these new packages. Do not
-work around their identity/hash checks.** A separately reviewed per-target procedure
-must bind the fresh identity, complete current configuration, exact proposed bytes
-and Lisp ownership. Require exact ACK/readback, retained failure evidence and no
-blind retry/rollback after an uncertain send. This guide does not provide a writer.
+work around their identity/hash checks.**
+
+**Tune (since 2026-11-13):** `tools/vesc/apply_fleet_tune.py` is the separate reviewed writer
+for a package made by `prepare_fleet_kart.py`. It needs the kart ID and controller UUID stated
+again on the command line, refuses kart 3 and the reserved controllers, rebuilds the package
+independently, requires fresh controller bytes identical to the package's `before/` and
+stationary fault-free telemetry, and for a write also requires `--apply`,
+`--acknowledge-persistent-write` and the hash of the reviewed proposed bytes. It writes once,
+requires the ACK and an exact 376-field read-back, and never retries or rolls back. Run it
+offline first, then `--preflight-only`, and write only with the owner's explicit go-ahead for
+that kart. Because offsets are re-measured at boot, capture, prepare and apply in one powered
+session; after a power cycle the old package is refused and a new capture is needed.
+[Kart 4's record](../hardware/vesc/kart4/2026-11-13/README.md) is the worked example.
+
+**Protection limits:** `prepare_fleet_kart.py --match-protection-limits` also copies five
+limits from kart 3 (`l_in_current_min` −12 A, `l_abs_current_max` 220 A, `l_min_vin` 60 V,
+`l_max_vin` 90 V, `m_fault_stop_time_ms` 500). The owner chose this for kart 4 after seeing
+its values (−200 A, 420 A, 12 V, 84 V, 50 ms). It is an explicit per-kart choice, off by
+default; decide it for kart 5 from kart 5's own capture.
+
+**Filter:** there is still no kart 4/5 installer. A separately reviewed per-target procedure
+must bind the fresh identity, complete current configuration and Lisp ownership, require exact
+ACK/readback, retain failure evidence and never blindly retry or roll back after an uncertain
+send.
 
 The filter requires native ADC application 2, Current Reverse Button type 3,
 buttons 0, servo output off, safe-start on and deadband 0.15; unsupported application

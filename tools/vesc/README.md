@@ -207,6 +207,34 @@ python3 -B -m unittest discover -s tests -v
 ```
 
 
+## Kart 4/5 packages and their guarded tune writer
+
+`prepare_fleet_kart.py` builds an offline package for kart 4 or 5 from that kart's own capture
+and the reviewed kart-3 source; see the [replication guide](../../docs/kart4-kart5-replication.md).
+`--match-protection-limits` adds five owner-approved protection limits to the twelve tune
+fields; it is off unless asked for, per kart.
+
+`apply_fleet_tune.py` is the only writer for those packages. It is bound to the package's kart
+ID and controller UUID, both stated again on the command line, and to the UUID the controller
+reports. Kart 3 and the reserved controllers are refused.
+
+```sh
+# offline validation only: prints the proposed-bytes hash
+python3 -B tools/vesc/apply_fleet_tune.py PACKAGE --kart-id 4 --expected-uuid ACTUAL_UUID
+# read-only preflight: four read commands
+python3 -B tools/vesc/apply_fleet_tune.py PACKAGE --kart-id 4 --expected-uuid ACTUAL_UUID \
+  --preflight-only --port /dev/cu.ACTUAL_VESC_PORT --out NEW_EVIDENCE_DIR
+```
+
+A write additionally needs `--apply`, `--acknowledge-persistent-write` and
+`--expect-proposed-sha256` with the hash of the reviewed bytes, and the owner's explicit
+go-ahead for that kart. It is one `SET_MCCONF`, an ACK and an exact 376-field read-back, with
+no retry or rollback; an uncertain result is recorded as such. Do not rerun it after success:
+the controller no longer matches the package's `before/` and it will refuse.
+
+`telemetry_trace.py --port PORT --expected-uuid UUID --out FILE.jsonl` records `GET_VALUES` at
+10 Hz for a supervised pedal check. It sends read commands 0 and 4 only.
+
 ## Guarded kart 3 tune trial
 
 The fixed trial copies only the 12 fields in `tune.TRIAL_FIELDS` from the pinned dated reference

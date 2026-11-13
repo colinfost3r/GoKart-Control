@@ -238,12 +238,18 @@ Neither new unit's UUID/BLE/pairing/capture is known yet. Never guess or clone k
   filter. All other motor bytes and all app fields remain target-specific. Review all 376
   fields; retained operating differences block equivalent-tune acceptance. In particular,
   battery regen minimum and current scales are not copied automatically.
-- **There is no validated kart4/5 apply tool yet.** Existing `apply_tune.py` and
-  `install_rx_filter.py` are deliberately kart3-pinned. Do not bypass pins/hash checks.
-  Build/review a per-target apply procedure after real captures exist: fresh identity/rest,
-  exact proposed bytes, Lisp ownership, ACK/readback, uncertain-send journal and no automatic
-  retry/rollback. `proposed_motor_response.bin` is a read-response-shaped review artifact,
-  not a packet to send to the controller.
+- **Tune writer exists since November 13:** `tools/vesc/apply_fleet_tune.py` writes a prepared
+  package once, bound to the kart ID, the stated UUID and the controller's own UUID, with
+  ACK, exact read-back and no retry. Each write needs the owner's explicit go-ahead for that
+  kart. `apply_tune.py` and `install_rx_filter.py` stay kart3-pinned; do not bypass their pins.
+- **Kart 4's VESC has the tune (November 13):** 15 settings changed (the reviewed fields plus
+  five protection limits the owner chose), read back, confirmed after a power cycle and a
+  wheels-up pedal check. UUID `55004d000951343037353739`. Its stored drivetrain numbers are 14
+  poles / 2.769 / 0.083 m, so its Heltec speed factor must be about 0.507, not 2.48 or kart 3's
+  1.736. See [the record](../hardware/vesc/kart4/2026-11-13/README.md).
+- **Still missing for karts 4/5:** a reverse-filter installer (none exists; kart 4 has no
+  filter), kart 4's Heltec/Core2 commissioning, and everything for kart 5, which has not been
+  captured.
 - Supervise each unit's normal cold boots, correct filtered direction, repeated starts from
   full rest, then accessory coexistence and intentional mode controls. Do not rerun Hall or
   pedal calibration. Resolve native ADC prerequisite differences before filter installation.

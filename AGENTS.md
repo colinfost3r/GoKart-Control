@@ -35,6 +35,14 @@
   375 fields were preserved. Consult HANDOFF for cold-boot/Heltec acceptance. Karts 4/5 are
   the next copies of kart 3; karts 1/2 remain Eamon's test units. Preserve each target
   calibration/identity; fleet preparation is offline and does not authorize blind imports.
+- Explicit maintenance exception 2026-11-13 (kart 4 only): after reviewing kart 4's read-only
+  capture the owner approved one persistent SET_MCCONF carrying the twelve reviewed tune fields
+  plus five protection limits set to kart 3's values (`l_in_current_min`, `l_abs_current_max`,
+  `l_min_vin`, `l_max_vin`, `m_fault_stop_time_ms`). Applied once with
+  `tools/vesc/apply_fleet_tune.py`, exact 376-field readback, cold-boot check; see
+  hardware/vesc/kart4/2026-11-13/. Kart 5 needs its own capture, review and approval. The
+  reverse filter is not installed on kart 4. Do not infer permission for other fields,
+  controllers or a repeat of this write.
 - Owner decision 2026-11-12 (native game rules): the host ("game maker") chooses the speed its
   course is played at, ECO or NORMAL. Joining writes that mode and locks the joined kart's mode
   buttons to it; pit commands still win. A boost is a step up from the mode in force (BOOST one

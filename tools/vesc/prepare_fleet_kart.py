@@ -9,8 +9,8 @@ from pathlib import Path
 import re
 
 from compare import compare_decoded, cell
-from decode import decode_payloads
-from tune import TRIAL_FIELDS, motor_spans, patch_motor, sha256, snapshot
+from decode import DEFAULT_SCHEMA, decode_configuration, decode_payloads
+from tune import TRIAL_FIELDS, motor_spans, sha256, snapshot
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_UUID = '37004e000951343037353739'
@@ -32,6 +32,13 @@ FILTER_PRECONDITIONS = {
     'app_adc_conf.hyst': 0.15000000596046448,
 }
 LIMIT_MATCH_FIELDS = ('l_current_max_scale', 'l_current_min_scale', 'l_in_current_min')
+# Owner decision 2026-11-13, after reviewing kart 4's capture: these five protection limits may
+# also be copied from kart 3. They are NOT part of the twelve-field operating tune and are only
+# copied when asked for explicitly, per kart. Values are the reviewed kart-3 source values.
+PROTECTION_LIMITS = {
+    'l_in_current_min': -12.0, 'l_abs_current_max': 220.0,
+    'l_min_vin': 60.0, 'l_max_vin': 90.0, 'm_fault_stop_time_ms': 500,
+}
 
 
 def uuid_text(value):
@@ -77,6 +84,24 @@ def target_specific(group, field):
                       'p_pid_offset', 'm_invert_direction', 'foc_phase_filter_enable'})
 
 
+def patch_fields(source, before, fields):
+    """Copy the exact source bytes of the named motor fields; every other byte stays the target's."""
+    source_spans, target_spans = motor_spans(source), motor_spans(before)
+    if source_spans != target_spans:
+        raise ValueError('Source and target motor serialization spans differ')
+    if len(set(fields)) != len(fields):
+        raise ValueError('Duplicate field in the copy scope')
+    proposed, permitted = bytearray(before), set()
+    for name in fields:
+        start, end = target_spans[name]
+        proposed[start:end] = source[start:end]
+        permitted.update(range(start, end))
+    if len(proposed) != len(before) or any(proposed[i] != before[i] for i in range(len(before)) if i not in permitted):
+        raise ValueError('Package changed an unapproved motor byte')
+    decode_configuration(proposed, DEFAULT_SCHEMA / 'parameters_mcconf.xml', 14)
+    return bytes(proposed), target_spans
+
+
 def filter_artifact(target_uuid):
     source = FILTER_SOURCE.read_bytes()
     if sha256(source) != FILTER_SOURCE_SHA or len(source) != 3981:
@@ -98,9 +123,11 @@ def filter_artifact(target_uuid):
     return adapted, blob
 
 
-def prepare(source_raw, target_raw, *, kart_id, target_uuid):
+def prepare(source_raw, target_raw, *, kart_id, target_uuid, protection_limits=False):
     if type(kart_id) is not int or kart_id not in (4, 5):
         raise ValueError('Only kart IDs 4 and 5 are in scope; IDs 1/2 belong to Eamon and 3 is the source')
+    if type(protection_limits) is not bool:
+        raise ValueError('protection_limits is an explicit yes/no choice')
     target_uuid = uuid_text(target_uuid)
     if target_uuid in RESERVED_UUIDS:
         raise ValueError('Target UUID belongs to a reserved/source controller')
@@ -117,14 +144,19 @@ def prepare(source_raw, target_raw, *, kart_id, target_uuid):
         raise ValueError('Source does not contain the reviewed twelve-field tune including motor braking -5 A')
     if source_values['l_in_current_min'] != -12 or any(source_values[k] != 1 for k in LIMIT_MATCH_FIELDS[:2]):
         raise ValueError('Source battery-regeneration/scales are not the reviewed baseline')
+    if set(PROTECTION_LIMITS) & set(TRIAL_FIELDS):
+        raise ValueError('Protection limits overlap the operating-tune scope')
+    if protection_limits and any(source_values.get(k) != v for k, v in PROTECTION_LIMITS.items()):
+        raise ValueError('Source does not hold the reviewed protection limits')
+    fields = tuple(TRIAL_FIELDS) + (tuple(PROTECTION_LIMITS) if protection_limits else ())
     compare_decoded(source, target)
-    proposed_motor, spans = patch_motor(source_bytes['motor_configuration'], before['motor_configuration'])
+    proposed_motor, spans = patch_fields(source_bytes['motor_configuration'], before['motor_configuration'], fields)
     proposed_bytes = dict(before, motor_configuration=proposed_motor)
     proposed = decode_payloads(proposed_bytes)
     target_audit = compare_decoded(target, proposed)
     source_audit = compare_decoded(source, proposed)
     patches, remaining, blockers = [], [], []
-    for field in TRIAL_FIELDS:
+    for field in fields:
         start, end = spans[field]
         patches.append({'field': field, 'before': target['motor_configuration']['values'][field],
                         'proposed': proposed['motor_configuration']['values'][field],
@@ -134,7 +166,7 @@ def prepare(source_raw, target_raw, *, kart_id, target_uuid):
     changed = 0
     for group, audit in target_audit.items():
         for row in audit['fields']:
-            allowed = group == 'motor_configuration' and row['field'] in TRIAL_FIELDS
+            allowed = group == 'motor_configuration' and row['field'] in fields
             row['action'] = 'copy_reviewed_source_bytes' if allowed else 'preserve_target_bytes'
             if row['status'] == 'different':
                 if not allowed:
@@ -159,7 +191,11 @@ def prepare(source_raw, target_raw, *, kart_id, target_uuid):
         'target': {'identity': target['identity'], 'provenance': target['provenance']},
         'source_persistence_verification': 'not established by runtime captures; review separate save/cold-boot evidence',
         'expected_before_sha256': {k: sha256(v) for k, v in before.items()},
-        'allowlisted_motor_fields': list(TRIAL_FIELDS), 'patches': patches,
+        'allowlisted_motor_fields': list(fields), 'patches': patches,
+        'protection_limits': {
+            'copied': protection_limits, 'fields': dict(PROTECTION_LIMITS) if protection_limits else {},
+            'authority': ('owner decision 2026-11-13: also set these five protection limits to the reviewed kart-3 values'
+                          if protection_limits else 'not requested; target protection limits preserved')},
         'proposed_motor_response_sha256': sha256(proposed_motor),
         'proposed_motor_format': 'GET_MCCONF command-14 response payload, NOT a write command or serial frame',
         'summary': {'total_fields': 376, 'motor_fields': 189, 'app_fields': 187,
@@ -182,9 +218,13 @@ def prepare(source_raw, target_raw, *, kart_id, target_uuid):
                    'native_app_preconditions': FILTER_PRECONDITIONS,
                    'kart3_installers_compatible': False},
         'scope_notes': [
-            'This copies exactly twelve named operating settings, not the complete source tune.',
+            'This copies exactly twelve named operating settings, not the complete source tune.'
+            + (' By explicit owner decision it also copies five protection limits: ' + ', '.join(PROTECTION_LIMITS) + '.'
+               if protection_limits else ''),
             'Every remaining motor/app difference is listed and requires review. Resolve ordinary operating-limit differences before commissioning; never silently copy calibration to make a full match.',
-            'In particular, target battery-regeneration l_in_current_min and current scales are preserved and must be reviewed against source -12 A / 1.0 / 1.0.',
+            ('Target current scales are preserved and must be reviewed against source 1.0 / 1.0; battery regeneration is copied with the protection limits.'
+             if protection_limits else
+             'In particular, target battery-regeneration l_in_current_min and current scales are preserved and must be reviewed against source -12 A / 1.0 / 1.0.'),
             'Hall/motor parameters, controller measurement offsets, pedal endpoints, drivetrain metadata and all identities remain target-specific bytes. Kart ID is not the VESC controller_id.',
             'These dated runtime captures do not verify saved flash, present stationary state, hardware ratings or physical calibration. Complete backups and fresh matching readbacks are required before a separately reviewed write.',
             'Existing kart-3 apply_tune/install_rx_filter/RAM lifecycle helpers remain pinned to kart 3 and must not be used or have pins bypassed for this plan.',
@@ -240,8 +280,12 @@ def main():
     parser.add_argument('--kart-id', type=int, choices=(4, 5), required=True)
     parser.add_argument('--target-uuid', required=True, help='Actual UUID independently matched to the physically labeled target')
     parser.add_argument('--out', type=Path, required=True, help='New offline output directory')
+    parser.add_argument('--match-protection-limits', action='store_true',
+                        help='Also copy the five owner-approved protection limits (regen, absolute current, '
+                             'input-voltage trips, fault stop time) from kart 3; an explicit per-kart choice')
     args = parser.parse_args()
-    plan, artifacts = prepare(args.source_kart3, args.target, kart_id=args.kart_id, target_uuid=args.target_uuid)
+    plan, artifacts = prepare(args.source_kart3, args.target, kart_id=args.kart_id, target_uuid=args.target_uuid,
+                              protection_limits=args.match_protection_limits)
     write_plan(plan, artifacts, args.out)
     print(f'OFFLINE ONLY: {plan["summary"]["changed_fields"]} proposed field changes; '
           f'{plan["summary"]["unresolved_operating_differences"]} remaining operating differences require review. Nothing applied.')

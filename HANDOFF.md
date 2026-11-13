@@ -3,6 +3,18 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Kart 4 VESC tuned to match kart 3 — November 13, 2026
+
+Kart 4's controller (UUID `55004d000951343037353739`) was captured read-only, compared with
+kart 3 and, with the owner's go-ahead, given kart 3's tune by one persistent write: the twelve
+reviewed fields plus five protection limits the owner chose after seeing kart 4's values. Read
+back exactly, confirmed after a power cycle, and pedal-checked wheels-up with fault 0. The new
+writer is `tools/vesc/apply_fleet_tune.py`; `prepare_fleet_kart.py --match-protection-limits`
+is the per-kart option for the limits. Kart 4 has **no reverse filter** and its boards were not
+yet commissioned; kart 5 is untouched. 584 tests pass.
+[Record](hardware/vesc/kart4/2026-11-13/README.md),
+[replication guide](docs/kart4-kart5-replication.md).
+
 ## Game rules installed on kart 3 — November 13, 2026 (host not updated)
 
 **545 tests across eight suites passed, zero skipped; eight firmware targets compiled.**

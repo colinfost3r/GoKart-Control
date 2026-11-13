@@ -127,6 +127,53 @@ class FleetPreparationTests(unittest.TestCase):
         self.assertEqual(sum(len(g['fields']) for g in plan['target_vs_proposed_all_fields'].values()), 376)
         self.assertEqual(sum(len(g['fields']) for g in plan['source_vs_proposed_all_fields'].values()), 376)
 
+    def test_protection_limits_copied_only_on_explicit_request(self):
+        target_limits = {'l_in_current_min': -200.0, 'l_abs_current_max': 420.0, 'l_min_vin': 12.0, 'l_max_vin': 84.0}
+        for field, value in target_limits.items():
+            motor_field(self.target, field, value)
+        plan, artifacts = self.prepare()
+        kept = decode_payloads(dict(artifacts['before'], motor_configuration=artifacts['proposed_motor']))
+        for field, value in target_limits.items():
+            self.assertEqual(kept['motor_configuration']['values'][field], value, field)
+        self.assertEqual(plan['protection_limits'], {'copied': False, 'fields': {},
+                         'authority': 'not requested; target protection limits preserved'})
+        blockers = {r['field'] for r in plan['operating_differences_require_resolution']}
+        self.assertTrue(set(target_limits) <= blockers)
+
+        plan, artifacts = self.prepare(protection_limits=True)
+        self.assertEqual(plan['allowlisted_motor_fields'], list(fleet.TRIAL_FIELDS) + list(fleet.PROTECTION_LIMITS))
+        self.assertEqual(plan['protection_limits']['fields'], fleet.PROTECTION_LIMITS)
+        self.assertIn('owner decision 2026-11-13', plan['protection_limits']['authority'])
+        before, after = artifacts['before']['motor_configuration'], artifacts['proposed_motor']
+        spans = motor_spans(before)
+        allowed = set()
+        for field in plan['allowlisted_motor_fields']:
+            allowed.update(range(*spans[field]))
+        self.assertEqual([i for i in range(len(before)) if before[i] != after[i] and i not in allowed], [])
+        copied = decode_payloads(dict(artifacts['before'], motor_configuration=after))['motor_configuration']['values']
+        for field, value in fleet.PROTECTION_LIMITS.items():
+            self.assertEqual(copied[field], value, field)
+        self.assertEqual(copied['foc_motor_r'], kept['motor_configuration']['values']['foc_motor_r'])
+        blockers = {r['field'] for r in plan['operating_differences_require_resolution']}
+        self.assertFalse(set(fleet.PROTECTION_LIMITS) & blockers)
+        self.assertEqual(artifacts['before']['app_configuration'], artifacts['source']['app_configuration'][:0] + artifacts['before']['app_configuration'])
+        self.assertFalse(plan['commissioning_ready'])
+        self.assertIn('also copies five protection limits', ' '.join(plan['scope_notes']))
+
+    def test_protection_limits_need_reviewed_source_values_and_a_real_yes_or_no(self):
+        for value in (1, 'yes', None):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.prepare(protection_limits=value)
+        for field, value in (('l_abs_current_max', 221), ('l_min_vin', 59), ('l_max_vin', 84)):
+            with self.subTest(field=field):
+                original = (self.source / 'motor_configuration.bin').read_bytes()
+                motor_field(self.source, field, value)
+                self.prepare()  # the twelve-field package does not depend on these source values
+                with self.assertRaisesRegex(ValueError, 'reviewed protection limits'):
+                    self.prepare(protection_limits=True)
+                (self.source / 'motor_configuration.bin').write_bytes(original)
+                refresh(self.source)
+
     def test_distinct_target_pedal_endpoint_and_controller_id_stay_target_specific(self):
         file = self.target / 'app_configuration.bin'
         data = bytearray(file.read_bytes())
@@ -244,6 +291,11 @@ class FleetPreparationTests(unittest.TestCase):
         with patch.object(sys, 'argv', argv), redirect_stdout(io.StringIO()) as out:
             fleet.main()
         self.assertIn('OFFLINE ONLY', out.getvalue())
+        self.assertFalse(json.loads((self.base / 'cli' / 'plan.json').read_text())['protection_limits']['copied'])
+        limits = argv[:-1] + [str(self.base / 'cli-limits'), '--match-protection-limits']
+        with patch.object(sys, 'argv', limits), redirect_stdout(io.StringIO()):
+            fleet.main()
+        self.assertTrue(json.loads((self.base / 'cli-limits' / 'plan.json').read_text())['protection_limits']['copied'])
         for option in ('--apply', '--port'):
             with patch.object(sys, 'argv', argv + [option]), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 fleet.main()
