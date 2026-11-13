@@ -80,7 +80,10 @@ never enters the control parser.
 
 Core2 USB `status` adds `course_proto:1`, `course_source`, `course_points`, `course_error`,
 `gps_reported_fix`, `gps_fresh`, `gps_has_position`, `gps_position_age_ms`, `gps_sats`,
-`parse_errors` and `map_follow`. `gps_position_age_ms:-1` means no retained valid position.
+`parse_errors`, `map_follow`, `map_site` and `home_site`. `gps_position_age_ms:-1` means no
+retained valid position. `map_site` names the built-in street-line site (`SHOP`, `MANRESA`)
+containing the fresh own fix, else `none`; `home_site` is the site shown while there is no
+fix and no course ([COURSE_MAP](COURSE_MAP.md#built-in-street-lines)).
 A Heltec-reported fix is not accepted as fresh unless coordinates and source age validate.
 These additions diagnose absent course data separately from missing/stale GPS; they do not
 change incoming telemetry rates or any live motor-control contract.

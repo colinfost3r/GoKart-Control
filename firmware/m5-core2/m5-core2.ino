@@ -8,6 +8,7 @@
 #include "MapView.h"
 #include "CourseStorage.h"
 #include "DriverView.h"
+#include "SiteMap.h"
 #include "ScreenLifecycle.h"
 #include "LiveGame.h"
 #include "GameStorage.h"
@@ -30,6 +31,10 @@ static bool courseReceive(const esp_now_recv_info_t*i,const uint8_t*d,int n){ret
 
 #endif
 
+#if !M5_DEMO
+// Which built-in site the map shows while there is no fix and no course. Display only.
+m5dash::HomeSite<m5dash::SiteNvs> homeSite;
+#endif
 M5Canvas canvas(&M5.Display);
 m5dash::State state;
 m5dash::StartupScreen startupScreen;
@@ -45,6 +50,7 @@ int heldMode=-1; bool holdFired=false;
 const char* localModeNotice=nullptr;uint32_t localModeNoticeMs=0;
 m5link::Lines<400> usbLines;
 uint32_t touchPresses=0;int touchX=-1,touchY=-1;
+static const char* siteName(int index){const m5dash::Site* s=m5dash::SiteMap::get(index);return s?s->name:"none";}
 static void displayStatus(){
   const uint32_t now=millis();const auto& k=state.karts[state.self];
   bool modeReady=state.canRequest(now);
@@ -54,13 +60,20 @@ static void displayStatus(){
 #if M5_USE_ESPNOW
   modeReady=modeReady&&!maintenance.active()&&wireless.channelAligned(now);
 #endif
-  Serial.printf("{\"t\":\"m5_status\",\"fw\":\"m5-v1.5\",\"transport\":\"%s\",\"kart\":%d,\"live\":%s,\"vesc\":%s,\"mode_ready\":%s,\"page\":\"%s\",\"touch_enabled\":%s,\"touch_presses\":%lu,\"touch_x\":%d,\"touch_y\":%d,\"heap\":%lu,\"course_proto\":1,\"course_source\":\"%s\",\"course_points\":%u,\"course_error\":\"%s\",\"gps_reported_fix\":%s,\"gps_fresh\":%s,\"gps_has_position\":%s,\"gps_position_age_ms\":%ld,\"gps_sats\":%d,\"parse_errors\":%lu,\"map_follow\":%s}\n",
+  Serial.printf("{\"t\":\"m5_status\",\"fw\":\"m5-v1.5\",\"transport\":\"%s\",\"kart\":%d,\"live\":%s,\"vesc\":%s,\"mode_ready\":%s,\"page\":\"%s\",\"touch_enabled\":%s,\"touch_presses\":%lu,\"touch_x\":%d,\"touch_y\":%d,\"heap\":%lu,\"course_proto\":1,\"course_source\":\"%s\",\"course_points\":%u,\"course_error\":\"%s\",\"gps_reported_fix\":%s,\"gps_fresh\":%s,\"gps_has_position\":%s,\"gps_position_age_ms\":%ld,\"gps_sats\":%d,\"parse_errors\":%lu,\"map_follow\":%s,\"map_site\":\"%s\",\"home_site\":\"%s\"}\n",
     M5_DEMO?"demo":M5_USE_ESPNOW?"espnow":"uart",state.self,state.live(now)?"true":"false",
     state.live(now)&&k.vesc?"true":"false",modeReady?"true":"false",mapPage?"map":"dash",
     M5.Touch.isEnabled()?"true":"false",(unsigned long)touchPresses,touchX,touchY,(unsigned long)ESP.getFreeHeap(),courseManager.source(),unsigned(course.count),courseManager.error(),
     k.fixReported?"true":"false",k.positionFresh(now)?"true":"false",k.hasPosition?"true":"false",
     k.hasPosition?(long)(now-k.fixReceived):-1L,k.sats,(unsigned long)state.errors,
-    m5dash::MapView::make(state,course,now).following?"true":"false");
+    m5dash::MapView::make(state,course,now).following?"true":"false",
+    siteName(state.self&&k.positionFresh(now)?m5dash::SiteMap::containing(k.lat,k.lon):-1),
+#if M5_DEMO
+    "none"
+#else
+    siteName(homeSite.site)
+#endif
+    );
 }
 static void displayUsb(){
   unsigned budget=160;
@@ -157,16 +170,17 @@ void draw(uint32_t now) {
 #if M5_USE_ESPNOW
   if(liveGame.package.valid())shownCourse=&liveGame.course;
 #endif
-  view.draw(state,*shownCourse,now,mapPage,M5_DEMO,M5_BEGINNER_MODE,note,heldMode,holdMs,holdFired,
+  const m5dash::PlayerPreview* preview=nullptr;const m5dash::LiveGame* game=nullptr;
+  const m5game::share::Receiver* receiver=nullptr;int site=-1;
 #if M5_DEMO
-    &playerPreview
+  preview=&playerPreview;
 #else
-    nullptr
+  site=homeSite.site;
 #endif
 #if M5_USE_ESPNOW
-    , &liveGame, &courseRadio.client
+  game=&liveGame;receiver=&courseRadio.client;
 #endif
-  );
+  view.draw(state,*shownCourse,now,mapPage,M5_DEMO,M5_BEGINNER_MODE,note,heldMode,holdMs,holdFired,preview,game,receiver,site);
   canvas.pushSprite(0,0);
 }
 #if M5_USE_ESPNOW && !M5_DEMO
@@ -349,6 +363,7 @@ void setup() {
 
 #else
   loadCourse();
+  homeSite.load();
 #if M5_USE_ESPNOW
   if(gameStorage.load(liveGame.package))liveGame.load(liveGame.package.data(),liveGame.package.size());
 #endif
@@ -380,6 +395,14 @@ void loop() {
   servicePlayer(millis());
 #endif
   touch(millis());
-  if(uint32_t(now-drawMs)>=M5_DRAW_MS){drawMs=now;draw(now);}
+  if(uint32_t(now-drawMs)>=M5_DRAW_MS){
+    drawMs=now;
+#if !M5_DEMO
+    // A fresh own fix inside a built-in site makes it the one shown when GPS is missing.
+    const auto& own=state.karts[state.self];
+    if(state.self&&state.live(now)&&own.positionFresh(now))homeSite.seen(own.lat,own.lon);
+#endif
+    draw(now);
+  }
   delay(1);
 }

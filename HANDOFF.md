@@ -3,6 +3,16 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Core2 map: built-in street lines, not installed — November 13, 2026
+
+The Core2 map was black without a GPS fix or a host course. The Core2 source now carries
+OpenStreetMap street, building and shoreline outlines for the shop and for Manresa Island
+(a new extract, `pit/server/map/manresa-map.geojson`) and shows a site overview while it
+waits for GPS. Core2 images only, frozen as `2026-11-13-site-map`
+([manifest](docs/validation/m5-site-map-2026-11-13.json)); Heltec images are unchanged.
+**Not flashed anywhere yet**, and nothing about it is verified on hardware. 619 tests pass.
+[Details](firmware/m5-core2/COURSE_MAP.md#built-in-street-lines).
+
 ## Karts 4 and 5 brought to kart 3's level — November 13, 2026
 
 Both new karts now have kart 3's tune, the reverse-input filter, a paired Heltec and Core2 on

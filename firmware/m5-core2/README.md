@@ -106,6 +106,8 @@ remains separate from kart 3's completed telemetry and driver-mode checks.
   metadata; the compact display does not show its calibration factor.
 - MAP: own kart plus up to seven other directly/repeater-heard kart positions, labeled by ID;
   own kart gets an amber ring. North up, fixed 70 m own-follow view, optional internally stored or SD course outline.
+  Street, building and shoreline outlines for the shop and Manresa Island are built in
+  ([details](COURSE_MAP.md#built-in-street-lines)); without a fix or a course the map shows that site's overview.
   Only fresh markers inside the current view are drawn; distant peers do not zoom the map out.
   DASH opens telemetry/modes. FIRE is enabled only with a live confirmed native session,
   eligible inventory, fresh generation/controller state and (for shells) an in-range target.

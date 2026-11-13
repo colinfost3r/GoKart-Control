@@ -8,7 +8,9 @@ Karts 3, 4 and 5 are ready on the bench: tune, reverse filter, paired Heltec and
 and speed caps. None of the game has run on hardware, because an M5 kart gets its course from a
 **host kart**: a Pi kart whose Heltec sends the course to each player's Core2. Until a host runs
 software from this branch, the M5 karts cannot download a course, JOIN or FIRE, and their map
-page stays empty. The course package is rules version 2, so a host on older software is refused.
+page has no course or zones. (The Core2 build of November 13 with built-in street lines shows
+the shop's and Manresa's outlines without a host; that is context only.) The course package
+is rules version 2, so a host on older software is refused.
 
 ## What changes on the host kart
 

@@ -4,6 +4,7 @@
 #include "MapView.h"
 #include "PlayerPreview.h"
 #include "PreviewMap.h"
+#include "SiteMap.h"
 #include "DisplayMetrics.h"
 #include "LiveGame.h"
 #include <cstdio>
@@ -104,13 +105,16 @@ template<class Canvas> class DriverView {
     if(std::isfinite(volts))std::snprintf(b,sizeof b,"%.1f V",volts);else std::snprintf(b,sizeof b,"-- V");
     label(b,76,13,1,palette::text);
   }
-  void map(const State& state,const Course& course,uint32_t now,const PlayerPreview* preview,const LiveGame*game) {
-    const auto v=MapView::make(state,course,now);
+  void map(const State& state,const Course& course,uint32_t now,const PlayerPreview* preview,const LiveGame*game,int homeSite) {
+    auto v=MapView::make(state,course,now);
+    const Site* overview=nullptr;  // set only while a whole-site view stands in for a missing position
     if(preview)PreviewMap::draw(c,v);
-    else if(game)liveGeometry(v,*game,true);
     else {
-      // GPS/course-only live view needs no decorative grid.
-      (void)v;
+      // No own fix and no course: show the remembered site rather than a blank screen. It
+      // marks no position, and the status below still says what is missing.
+      if(!v.valid&&(overview=SiteMap::get(homeSite)))v=SiteMap::overview(homeSite);
+      // Built-in streets at a known site; elsewhere whatever context the host packaged.
+      if(!SiteMap::draw(c,v)&&game)liveGeometry(v,*game,true);
     }
     if(v.valid) {
       auto segment=[&](size_t a,size_t b){double x0,y0,x1,y1;
@@ -136,6 +140,7 @@ template<class Canvas> class DriverView {
     if(preview&&preview->stage==PlayerPreview::Stage::HostLost)status="HOST UNAVAILABLE";
     if(status){box({7,145,244,26},palette::amber);label(status,15,154,1,palette::amber);}
     if(preview)label("DEMO",8,225,1,palette::muted);
+    if(overview){char b[24];std::snprintf(b,sizeof b,"%s AREA",overview->name);label(b,8,225,1,palette::muted);}
     bool armed=preview&&preview->stage==PlayerPreview::Stage::Ready&&!preview->gpsLost&&!preview->linkLost;
     if(game)armed=game->canFire(state,now);
     box(layout::fire,armed?palette::amber:palette::dim);
@@ -219,10 +224,10 @@ public:
     label("openstreetmap.org/copyright",55,176,1,palette::muted);
   }
   void draw(const State& state,const Course& course,uint32_t now,bool mapPage,bool demo,bool beginner,
-            const char* notice=nullptr,int heldMode=-1,uint32_t holdMs=0,bool holdFired=false,const PlayerPreview* preview=nullptr,const LiveGame*game=nullptr,const m5game::share::Receiver*receiver=nullptr) {
+            const char* notice=nullptr,int heldMode=-1,uint32_t holdMs=0,bool holdFired=false,const PlayerPreview* preview=nullptr,const LiveGame*game=nullptr,const m5game::share::Receiver*receiver=nullptr,int homeSite=-1) {
     c.fillScreen(palette::bg);char b[54];const auto& k=state.karts[state.self];
     (void)demo; // Demo status is in its footer/notice, never a persistent top bar.
-    if(mapPage)map(state,course,now,preview,game);else dash(state,now,notice,heldMode,holdMs,holdFired);
+    if(mapPage)map(state,course,now,preview,game,homeSite);else dash(state,now,notice,heldMode,holdMs,holdFired);
     navigation(mapPage,now,preview,game,receiver,state);if(preview)invitation(*preview,now);
     if(game&&receiver)liveInvitation(*game,*receiver,now);
     // Controller restrictions/faults remain visible on either page and above game overlays.

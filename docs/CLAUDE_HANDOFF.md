@@ -28,6 +28,22 @@ back, and the wheel levelled off under them with the wheels up. It is provisiona
 check on the road. See
 [the November 13 install record](../hardware/m5/2026-11-13-kart3-game-rules-update/README.md).
 
+**Update, November 13 evening: built-in street lines for the Core2 map, built but not
+installed.** The owner found the map page black on the bench. That was by design: the live
+build drew nothing without a GPS fix or a course, and street context only arrived inside a
+host's course package. The repository's street data also stopped short of Manresa Island. The
+Core2 source now carries OpenStreetMap outlines for both sites (shop: 600 m square, 3,045
+lines; Manresa: 1.5 km square, 1,541 lines, from a new extract fetched that day), draws them
+under the live map, and with no fix and no course shows an overview of the last site the kart
+was seen at, with “WAITING FOR GPS” and no kart marker. Images are frozen as
+`firmware/build/bench-candidates/2026-11-13-site-map/`
+([manifest](validation/m5-site-map-2026-11-13.json)); only the three Core2 targets changed,
+so the Heltec images stay as they are. **Not flashed anywhere yet.** Offline only: frame time
+on a real Core2, colours in sunlight and registration against a real GPS track are unverified.
+Manresa's interior is thinly mapped (three service roads, under 30 outlines, the shoreline).
+Details: [built-in street lines](../firmware/m5-core2/COURSE_MAP.md#built-in-street-lines),
+[Manresa map notes](../pit/server/map/MANRESA-MAP.md).
+
 ## Game rules of November 12, on kart 3 since November 13
 
 A review of the FIRE path found three things the owner asked to change. They are implemented,

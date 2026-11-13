@@ -48,24 +48,34 @@ int main(int argc,char** argv){
   if(!std::strcmp(scene,"download"))p.since=now-1500;
   m5dash::State state;state.self=3;state.boot=1;state.metaSeen=true;state.metaMs=now;state.radio=true;state.pit=true;
   state.cap[0]=15;state.cap[1]=25;state.cap[2]=0;
+  // Live scenes without a preview: "live-manresa" follows a fix on the island; "site-shop" and
+  // "site-manresa" have no fix and no course, so the remembered site is shown instead.
+  int homeSite=-1;double baseLat=41.0938,baseLon=-73.4163;
+  const bool siteOnly=!std::strncmp(scene,"site-",5);
+  if(!std::strcmp(scene,"site-shop"))homeSite=0;
+  if(!std::strcmp(scene,"site-manresa"))homeSite=1;
+  if(!std::strcmp(scene,"live-manresa")){baseLat=41.0748;baseLon=-73.4101;}
   m5dash::Course course;course.closed=true;course.count=48;std::snprintf(course.name,sizeof course.name,"DEMO LOOP / NOT A SURVEYED COURSE");
-  for(size_t i=0;i<48;++i){double a=i*6.283185307179586/48;course.lat[i]=41.0938+0.0003*std::sin(a);course.lon[i]=-73.4163+0.0005*std::cos(a);}
+  for(size_t i=0;i<48;++i){double a=i*6.283185307179586/48;course.lat[i]=baseLat+0.0003*std::sin(a);course.lon[i]=baseLon+0.0005*std::cos(a);}
   for(unsigned i=1;i<=8;++i){auto& k=state.karts[i];double a=phase+m5dash::PreviewMap::kartPhase(i);
     k.seen=true;k.received=now;k.vesc=true;k.confirmed=true;k.mode=1;k.fault=0;k.fix=true;k.fixReported=true;k.hasPosition=true;k.fixReceived=now;k.sats=10;
-    k.lat=41.0938+0.0003*std::sin(a);k.lon=-73.4163+0.0005*std::cos(a);k.gpsKph=22;k.volts=79.4;k.motorA=12;k.battA=4;k.escC=32;
+    k.lat=baseLat+0.0003*std::sin(a);k.lon=baseLon+0.0005*std::cos(a);k.gpsKph=22;k.volts=79.4;k.motorA=12;k.battA=4;k.escC=32;
   }
   if(p.gpsLost)state.karts[3].fix=false;
   if(p.linkLost){for(auto& k:state.karts)k.received=now-6000;state.metaMs=now-6000;}
-  if(!std::strcmp(scene,"no-course"))course.count=0;
+  if(!std::strcmp(scene,"no-course")||!std::strcmp(scene,"live-manresa")||siteOnly)course.count=0;
+  if(siteOnly)for(auto& k:state.karts)k.fix=false;
   if(!std::strcmp(scene,"fault"))state.karts[3].fault=5;
   if(!std::strcmp(scene,"stopped"))state.karts[3].stopped=true;
   if(!std::strcmp(scene,"slow"))state.karts[3].slow=5;
-  bool live=!std::strcmp(scene,"live");
+  bool live=!std::strncmp(scene,"live",4)||siteOnly;
   m5dash::LiveGame game;m5game::share::Receiver receiver;
   bool native=argc>4&&!std::strncmp(scene,"native-",7);
   if(native){
     std::ifstream f(argv[4],std::ios::binary);std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(f)),{});
     if(!game.load(bytes.data(),bytes.size()))return 2;course=game.course;
+    // "native-there": every kart at the package's first course point, wherever that is.
+    if(!std::strcmp(scene,"native-there"))for(auto& k:state.karts){k.lat=course.lat[0];k.lon=course.lon[0];}
     state.gameVersion=m5game::GAME_VERSION;state.gameReady=true;state.token=123;state.gameSession=game.package.host();state.hosts=state.courseHosts=1u<<(state.gameSession-1);
     state.hostCourse[state.gameSession]=game.package.digest();state.hostBoot[state.gameSession]=game.courseBoot=222;
     for(auto&k:state.karts)k.session=state.gameSession;
@@ -76,7 +86,7 @@ int main(int argc,char** argv){
   std::cout<<"<svg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 320 240'>\n";
   SvgCanvas canvas;m5dash::DriverView<SvgCanvas> view(canvas);
   if(!std::strcmp(scene,"startup"))view.startup(true);
-  else if(native)view.draw(state,course,now,map,false,false,"Hold a mode button to request",-1,0,false,nullptr,&game,&receiver);
-  else view.draw(state,course,now,map,!live,false,live?"Hold a mode button to request":"Mode controls disabled in demo",-1,0,false,live?nullptr:&p);
+  else if(native)view.draw(state,course,now,map,false,false,"Hold a mode button to request",-1,0,false,nullptr,&game,&receiver,homeSite);
+  else view.draw(state,course,now,map,!live,false,live?"Hold a mode button to request":"Mode controls disabled in demo",-1,0,false,live?nullptr:&p,nullptr,nullptr,homeSite);
   std::cout<<"</svg>\n";
 }

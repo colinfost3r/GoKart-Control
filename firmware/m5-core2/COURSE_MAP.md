@@ -22,6 +22,36 @@ shows “HELTEC LINK LOST”. It never invents a position or follows a different
 course, a valid own fix still produces the numbered marker and “NO COURSE LOADED”. No road image, external
 server or base station is needed for this local display.
 
+## Built-in street lines
+
+Since November 13 the `m5` and `m5-espnow` builds carry street outlines for the two sites the
+fleet uses, so the map is not blank before a host course has been downloaded:
+
+| Site | Area stored | Lines | Source |
+| --- | --- | ---: | --- |
+| `SHOP` | 600 m square around 41.0938, -73.4163 | 3,045 | `pit/server/map/sono-map.geojson` |
+| `MANRESA` | 1.5 km square around 41.0748, -73.4101 | 1,541 | `pit/server/map/manresa-map.geojson` |
+
+- **Following a fix inside a site:** roads, building outlines and shoreline are drawn under the
+  course, zones and kart markers. Only lines near the 70 m view are drawn.
+- **No fix and no course:** the map shows an overview of one site (240 m tall at the shop,
+  1.3 km at Manresa) with “WAITING FOR GPS”, the site name in the lower-left corner and **no
+  own marker**. Which site is remembered from the last fresh own fix inside one, stored as one
+  byte in the `m5site` NVS namespace; a board that has never had such a fix shows the shop.
+- **Outside both sites:** nothing built in is drawn. A downloaded host package then supplies
+  its own context lines, as before. Inside a site the package's copy is not drawn on top.
+- The lines are OpenStreetMap outlines, not a survey, a course or a boundary. Manresa's
+  interior is thinly mapped ([notes](../../pit/server/map/MANRESA-MAP.md)).
+
+Regenerate the tables after changing a source extract or a site's extent in the tool:
+
+```sh
+python3 tools/m5/export_site_maps.py          # writes firmware/m5-core2/site_lines.inc
+python3 tools/m5/export_site_maps.py --check  # exit 1 when the file is out of date
+```
+
+The standalone `m5-demo` build is unchanged and still draws its own 240 m shop crop.
+
 ## Provision an outline over the Core2 USB port
 
 The existing pit editor's `zones.track` is the source format. Export the intended real course:
@@ -84,7 +114,9 @@ through ESP-NOW or the Heltec maintenance console.
 
 `status` now reports `course_proto`, `course_source` (`internal`, `sd`, `none`),
 `course_points`, `course_error`, `gps_reported_fix`, `gps_fresh`, `gps_has_position`,
-`gps_position_age_ms`, `gps_sats`, `parse_errors` and `map_follow`. `course status` also gives
+`gps_position_age_ms`, `gps_sats`, `parse_errors`, `map_follow`, `map_site` (the built-in
+site containing the fresh own fix, else `none`) and `home_site` (the site the no-GPS overview
+shows). `course status` also gives
 the course name, record CRC and upload progress. These separate missing course data from a
 missing/stale/invalid own GPS fix. No motor temperature is inferred.
 

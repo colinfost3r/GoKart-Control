@@ -115,8 +115,11 @@ This is a light native player, not full Pi game parity:
   new carried item instead of automatically applying it. Inventory does not survive reconnect,
   course change or reboot. Hotlap/race ranking/global pickup arbitration are outside this version.
 - S/F counts/times local crossings; it is not pit-authoritative race ranking. No photographic
-  map tiles or Google Maps. OSM context is limited to geography already present in the host
-  repository; an uncharted location can have course/zones but no surrounding line work.
+  map tiles or Google Maps. The Core2 carries its own street outlines for the shop and for
+  Manresa Island ([built-in street lines](../firmware/m5-core2/COURSE_MAP.md#built-in-street-lines))
+  and draws those instead of the package's lines there. Elsewhere, context is limited to the
+  geography the host packaged; an uncharted location can have course/zones but no surrounding
+  line work.
 - One fresh paired host invitation is selected at a time; there is no multi-host browser.
 - FIRE acceptance means the local Heltec accepted an attack/effect request. It does not prove
   the remote kart was slowed; inspect LoRa attack ACKs and actual VESC readback during acceptance.

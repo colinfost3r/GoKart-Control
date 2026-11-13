@@ -61,7 +61,9 @@ voltage relayed by Heltec. There is no measured SOC field and no local percentag
 Lost GPS hides speed; lost VESC/link hides voltage. FIRE is a compact lower-right control.
 
 Live builds use the same telemetry card but do **not** draw invented game markers or
-the shop demo background. Full host background/zone/lapline packaging and download are
+the shop demo background. (Since November 13 they draw their own built-in street outlines
+for the shop and Manresa Island; see
+[COURSE_MAP](../firmware/m5-core2/COURSE_MAP.md#built-in-street-lines).) Full host background/zone/lapline packaging and download are
 still needed; the current USB course upload accepts an outline only. This preview is
 not evidence of lap counting, pickups, boost effects or real radio synchronization.
 

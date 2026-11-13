@@ -16,6 +16,13 @@ BASE=Path(os.environ.get('GOKART_SHARED_ROOT',str(ROOT)))
 spec=importlib.util.spec_from_file_location('provision_course',ROOT/'tools/m5/provision_course.py')
 provision=importlib.util.module_from_spec(spec);spec.loader.exec_module(provision)
 DOC={'schema':1,'name':'Test outline','closed':True,'points':[[41.0938,-73.4163],[41.094,-73.416]]}
+def tool(name,path):
+    s=importlib.util.spec_from_file_location(name,ROOT/path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
+def ink(c):
+    """A 16-bit display colour as the SVG fixture prints it."""
+    r,g,b=(c>>11)&31,(c>>5)&63,c&31
+    return '#%02x%02x%02x'%((r*255+15)//31,(g*255+31)//63,(b*255+15)//31)
+SHORE,BUILDING,ROAD,PACKAGE_LINE=ink(0x3b71),ink(0x3a0a),ink(0x5b6f),ink(((68>>3)<<11)|((88>>2)<<5)|(100>>3))
 
 class Fake:
     def __init__(self,wrong=False,fail=None):self.calls=[];self.wrong=wrong;self.fail=fail
@@ -33,6 +40,96 @@ class MapCourseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             exe=Path(t)/'check';subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-g','-I'+str(include),'-I'+str(ROOT/'firmware/m5-core2'), '-I'+str(ROOT/'firmware/libraries/M5Game/src'),'-I'+str(BASE/'firmware/libraries/M5DisplayLink'),str(path),'-o',str(exe)],check=True)
             return subprocess.run([str(exe)],check=True,capture_output=True,text=True).stdout
+    def renderer(self,directory):
+        include=Path(os.environ.get('ARDUINOJSON_DIR','/private/tmp/gokart-arduino/user/libraries/ArduinoJson/src'))
+        exe=Path(directory)/'render'
+        subprocess.run([shutil.which('c++'),'-std=c++17','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-I'+str(include),'-I'+str(ROOT/'firmware/m5-core2'), '-I'+str(ROOT/'firmware/libraries/M5Game/src'),'-I'+str(BASE/'firmware/libraries/M5DisplayLink'),str(ROOT/'firmware/m5-core2/tests/render_driver.cpp'),'-o',str(exe)],check=True)
+        return exe
+    @staticmethod
+    def strokes(svg):
+        import xml.etree.ElementTree as ET
+        doc=ET.fromstring(svg);paths=[e.attrib['stroke'] for e in doc if e.tag.endswith('path')]
+        text=' '.join(e.text or '' for e in doc if e.tag.endswith('text'))
+        return paths,text,sum(1 for e in doc if e.tag.endswith('circle'))
+    def test_native_site_map(self):
+        self.assertIn('site map passed',self.native(ROOT/'firmware/m5-core2/tests/site_map_test.cpp'))
+    def test_site_lines_match_their_sources(self):
+        # The compiled tables must be exactly what the exporter makes from the tracked extracts.
+        export=tool('export_site_maps','tools/m5/export_site_maps.py')
+        text,summary=export.render()
+        self.assertEqual(text,(ROOT/'firmware/m5-core2/site_lines.inc').read_text())
+        self.assertEqual(set(summary),{'shop','manresa'})
+        self.assertTrue(all(0<n<=export.MAX_LINES for n in summary.values()))
+        self.assertIn('OpenStreetMap contributors; ODbL',text)
+        r=subprocess.run(['python3','-I',str(ROOT/'tools/m5/export_site_maps.py'),'--check'],capture_output=True,text=True)
+        self.assertEqual(r.returncode,0);self.assertTrue(json.loads(r.stdout)['current'])
+    def test_site_sources_are_licensed_outlines_without_addresses(self):
+        for name in ('sono-map.geojson','manresa-map.geojson'):
+            doc=json.loads((BASE/'pit/server/map'/name).read_text())
+            self.assertIn('OpenStreetMap',doc['attribution']);self.assertIn('odbl',doc['license'])
+            for f in doc['features']:
+                self.assertLessEqual(set(f['properties']),{'kind','class','name','osm_way_id'})
+        island=json.loads((BASE/'pit/server/map/manresa-map.geojson').read_text())
+        kinds={f['properties']['kind'] for f in island['features']}
+        self.assertLessEqual({'coastline','building','road'},kinds)
+        self.assertFalse(any(f['properties'].get('name') for f in island['features'] if f['properties']['kind']!='road'))
+    def test_overpass_conversion_keeps_only_drawable_ways(self):
+        convert=tool('osm_site_geojson','tools/m5/osm_site_geojson.py')
+        square=[{'lat':41.0,'lon':-73.0},{'lat':41.0,'lon':-73.001},{'lat':41.001,'lon':-73.001},{'lat':41.0,'lon':-73.0}]
+        way=lambda i,tags,geometry=square[:2]:{'type':'way','id':i,'tags':tags,'geometry':geometry}
+        doc={'elements':[
+            way(9,{'highway':'service','name':'Plant Road'}),way(8,{'highway':'footway'}),way(7,{'highway':'residential'}),
+            way(6,{'building':'yes','addr:street':'Private Lane','name':'Private House'},square),way(5,{'building':'no'},square),
+            way(4,{'natural':'coastline'}),way(3,{'man_made':'pier'}),way(2,{'railway':'rail'}),way(1,{'natural':'water'},square),
+            way(10,{'highway':'service'},square[:1]),way(11,{'amenity':'parking'},square),
+            {'type':'relation','id':12,'tags':{'building':'house'},'members':[]},{'type':'node','id':13,'lat':41,'lon':-73}]}
+        out=convert.convert(doc,source='test',description='test')
+        got=[(f['properties']['kind'],f['properties']['osm_way_id'],f['geometry']['type']) for f in out['features']]
+        self.assertEqual(got,[('water','1','Polygon'),('coastline','4','LineString'),('pier','3','LineString'),
+                              ('building','6','Polygon'),('road','7','LineString'),('road','9','LineString'),('rail','2','LineString')])
+        house=next(f for f in out['features'] if f['properties']['kind']=='building')
+        self.assertEqual(house['properties'],{'kind':'building','class':'','osm_way_id':'6'})
+        self.assertEqual(next(f for f in out['features'] if f['properties']['osm_way_id']=='9')['properties']['name'],'Plant Road')
+        self.assertEqual(house['geometry']['coordinates'][0][1],[-73.001,41.0])
+        self.assertIn('odbl',out['license'])
+    def test_live_map_draws_site_streets_and_overviews(self):
+        with tempfile.TemporaryDirectory() as t:
+            exe=self.renderer(t)
+            def scene(*args):return self.strokes(subprocess.check_output([str(exe),*args],text=True))
+            # Following a fix at the shop: streets under the course, no overview label.
+            paths,text,circles=scene('live','map')
+            self.assertGreater(paths.count(BUILDING)+paths.count(ROAD),20);self.assertNotIn('AREA',text);self.assertGreater(circles,0)
+            # Following a fix on the island with no course: real context, honest status.
+            paths,text,circles=scene('live-manresa','map')
+            self.assertGreater(paths.count(ROAD),0);self.assertIn('NO COURSE LOADED',text);self.assertNotIn('AREA',text);self.assertGreater(circles,0)
+            # No fix and no course: the remembered site, named, with no kart marker.
+            for name,label,mark in (('site-shop','SHOP AREA',BUILDING),('site-manresa','MANRESA AREA',SHORE)):
+                paths,text,circles=scene(name,'map')
+                self.assertGreater(paths.count(mark),50,name);self.assertIn('WAITING FOR GPS',text);self.assertIn(label,text)
+                self.assertEqual(circles,0,name);self.assertNotIn('NO COURSE',text)
+            # No remembered site: as before, an empty map that says what is missing.
+            paths,text,circles=scene('site-none','map')
+            self.assertEqual([p for p in paths if p in (SHORE,BUILDING,ROAD)],[]);self.assertIn('WAITING FOR GPS',text);self.assertNotIn('AREA',text)
+            # The dash page never draws map lines.
+            paths,text,circles=scene('site-shop','dash')
+            self.assertEqual([p for p in paths if p in (SHORE,BUILDING,ROAD)],[]);self.assertNotIn('AREA',text)
+    def test_host_package_lines_only_where_no_site_is_built_in(self):
+        import sys
+        sys.path.insert(0,str(ROOT/'kart/server'))   # m5_course imports its neighbour kartcore
+        try:course=tool('m5_course','kart/server/m5_course.py')
+        finally:sys.path.remove(str(ROOT/'kart/server'))
+        def package(lat,lon):
+            doc={'enabled':True,'source':'freeplay','zones':[],'track':{'closed':True,'points':[[lat,lon],[lat+.0002,lon],[lat+.0002,lon+.0002]]}}
+            return course.export(doc,host=2,instance=1,revision=1,background=[([lat+.0001,lon-.0001],[lat+.0001,lon+.0003])])
+        with tempfile.TemporaryDirectory() as t:
+            exe=self.renderer(t)
+            def scene(lat,lon):
+                path=Path(t)/'package.bin';path.write_bytes(package(lat,lon))
+                return self.strokes(subprocess.check_output([str(exe),'native-there','map','0',str(path)],text=True))[0]
+            away=scene(41.2,-73.0)      # no built-in site: the host's context line is drawn
+            self.assertEqual(away.count(PACKAGE_LINE),1);self.assertEqual([p for p in away if p in (SHORE,BUILDING,ROAD)],[])
+            shop=scene(41.0938,-73.4163)  # built-in streets cover the view: the host's copy is not drawn over them
+            self.assertEqual(shop.count(PACKAGE_LINE),0);self.assertGreater(shop.count(BUILDING)+shop.count(ROAD),20)
     def test_native_map_upload_and_storage(self):
         result=self.native(ROOT/'firmware/m5-core2/tests/map_course_test.cpp')
         self.assertIn('record_crc='+provision.prepare(DOC)[2],result)
