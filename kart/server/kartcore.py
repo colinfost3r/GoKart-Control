@@ -1903,6 +1903,8 @@ MP_DR_MAX_S = 3.0            # a peer's last fix is moved along its heading at i
 MP_HEARD_S = 10.0            # no game line yet: peers = fleet karts heard this recently with my session
 MP_RESEND_S = 5.0            # the wished session is not in force: re-send at most this often ...
 MP_MAX_TRIES = 3             # ... and drop the wish after this many sends that did not take
+MP_REJOIN_GRACE_S = 30.0     # my host's game ended (host Heltec rebooted?): keep the wish + held item this long and
+#                              re-join as soon as the host is heard hosting again (audit 2026-11-13)
 MP_EVENTS_KEEP = 12
 MP_ALL = 255                 # GK_ADDR_ALL: `attack all ...`
 
@@ -2096,6 +2098,7 @@ class FreeplayGame:
         self.wish_tries = 0          # session commands sent since the wish was last in force
         self.wish_sent = None        # mono of the last one
         self.wish_note = None        # why the wish was dropped (rejected 3 times, the host's game ended)
+        self.wish_grace_until = None # joined kart whose host vanished: re-join window end (mono), else None
         self.use_refused = None      # {"text", "seq", "mono"}: a Core2 tap the server refused (dash flashes it)
         self._use_refused_seq = 0
         self._resend_due = False     # link up / Heltec reboot: the firmware forgot, send the wish again
@@ -2481,6 +2484,7 @@ class FreeplayGame:
         self.wish = wish
         self.wish_tries = 0
         self.wish_note = None
+        self.wish_grace_until = None
         self._resend_due = False
         self._touch(persist=True)
 
@@ -2601,11 +2605,17 @@ class FreeplayGame:
         prev_sess, prev_host, prev_peers = self.session, self.hosting, self.peer_ids
         new_end = ended is not None and ended != self.ended
         if new_end:
-            if isinstance(self.wish, int):           # never re-join a host that left or vanished
-                self.wish_note = f"K{self.wish}'s game ended ({ended})"
-                self.wish, self.wish_tries, self._resend_due = None, 0, False
-                self._touch(persist=True)
-            self._drop_held()
+            if isinstance(self.wish, int):
+                # audit 2026-11-13: a host Heltec reboot ended everyone's game for good (its Pi re-hosts 1-2 s
+                # later, nobody re-joined). Keep the wish and the held item for a grace; _wish_check re-joins
+                # the moment the host is heard hosting again, or gives up when the grace runs out.
+                if self.wish_grace_until is None:
+                    self.wish_grace_until = now + MP_REJOIN_GRACE_S
+                    self.wish_note = f"K{self.wish}'s game ended ({ended}): rejoining if K{self.wish} comes back"
+                    self.wish_tries, self._resend_due = 0, False
+                    self._touch(persist=True)
+            else:
+                self._drop_held()
         elif sess and prev_sess and sess != prev_sess:
             self._drop_held()                        # a different game: the held item does not carry over
         self.session, self.hosting, self.peer_ids, self.hosts = sess, hosting, peers, hosts
@@ -2680,6 +2690,23 @@ class FreeplayGame:
 
     def _wish_check(self, now, recs):
         if self.wish is None or not self.on or not self.fw_ok:
+            return
+        if self.wish_grace_until is not None and isinstance(self.wish, int):
+            if self._wish_met():                                           # back in the host's game
+                self.wish_grace_until, self.wish_note, self.wish_tries = None, None, 0
+                self._touch(persist=True)
+                return
+            if now >= self.wish_grace_until:
+                note = f"K{self.wish}'s game ended: K{self.wish} did not come back"
+                self._rec(recs, "freeplay_leave", session=self._session(), wish=self.wish, why=note, auto=True)
+                self._mevent(now, "session", session=self._session(), hosting=self._hosting(), ended="host gone")
+                self.wish, self.wish_tries, self.wish_note, self.wish_grace_until = None, 0, note, None
+                self._drop_held()
+                self._touch(persist=True)
+                return
+            # the firmware accepts `session join N` only while it hears N hosting: send when it does, 2 s apart
+            if self.wish in self.hosts and (self.wish_sent is None or now - self.wish_sent >= 2.0):
+                self._send_wish(recs, now, resend="host is back")
             return
         if self._resend_due:
             self._resend_due = False

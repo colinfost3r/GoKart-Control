@@ -2102,8 +2102,9 @@ class Multiplayer(unittest.TestCase):
         fp.held = {"item": "shell", "mono": 5.0}
         r = fp.on_game_line(mp_game_line(0, ended="host left"), 6.0)
         self.assertEqual(evs(r, "freeplay_session")[0]["ended"], "host left")
-        self.assertEqual((fp.wish, fp.held), (None, None))               # never re-join a host that left
+        self.assertEqual((fp.wish, fp.held["item"]), (3, "shell"))       # kept for the re-join grace (2026-11-13)
         self.assertIn("host left", fp.wish_note)
+        self.assertIn("rejoining", fp.wish_note)
         self.assertEqual(lines(fp.multi_tick(30.0)), [])
         ev = fp.snapshot(6.0)["multi"]["events"]
         self.assertEqual((ev[-2]["ev"], ev[-1]["ev"], ev[-1]["ended"]), ("peer", "session", "host left"))
@@ -2224,6 +2225,34 @@ class Multiplayer(unittest.TestCase):
         with self.assertRaisesRegex(kc.CommandError, "no karts in the game"):
             fp.use(3.0)
         self.assertEqual(fp.held["item"], "lightning")                    # kept
+
+    def test_joined_kart_rejoins_a_host_that_rebooted(self):
+        # audit 2026-11-13: the host's Heltec reboot ended the game for everyone, for good. Now a joined kart keeps
+        # its wish (and held item) for MP_REJOIN_GRACE_S and re-joins as soon as the host is heard hosting again.
+        fp, disp = self.fp()
+        disp.ingest(self_line(session=3), 2.0, "w")
+        self.joined(fp)
+        fp.held = {"item": "shell", "mono": 2.5}
+        r = fp.on_game_line(mp_game_line(0, peers=[], hosts=[], ended="host left"), 3.0)
+        self.assertEqual((fp.wish, fp.held["item"]), (3, "shell"))        # kept
+        self.assertIn("rejoining", fp.wish_note)
+        self.assertEqual(lines(r), [])
+        self.assertEqual(lines(fp.multi_tick(4.0)), [])                   # host not heard yet: nothing to send
+        r = fp.on_game_line(mp_game_line(0, peers=[], hosts=[3]), 5.0)     # the host is back, hosting
+        self.assertEqual(lines(r), ["session join 3"])
+        self.assertEqual(evs(r, "freeplay_join")[0]["resend"], "host is back")
+        self.assertEqual(lines(fp.multi_tick(6.0)), [])                   # 2 s throttle
+        self.assertEqual(lines(fp.multi_tick(7.5)), ["session join 3"])
+        fp.on_game_line(mp_game_line(3, peers=[3, 5], hosts=[3]), 8.0)     # joined again
+        self.assertEqual((fp._session(), fp.wish, fp.wish_grace_until, fp.wish_note, fp.held["item"]),
+                         (3, 3, None, None, "shell"))
+        # the host never comes back: the grace runs out, the wish and the held item go
+        fp.on_game_line(mp_game_line(0, peers=[], hosts=[], ended="host lost"), 10.0)
+        self.assertEqual(fp.wish, 3)
+        r = fp.multi_tick(10.0 + kc.MP_REJOIN_GRACE_S + 0.1)
+        self.assertEqual((fp.wish, fp.held), (None, None))
+        self.assertIn("did not come back", fp.wish_note)
+        self.assertEqual(evs(r, "freeplay_leave")[0]["auto"], True)
 
     def test_peers_distance_dead_reckoning(self):
         fp, disp = self.fp()

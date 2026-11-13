@@ -522,6 +522,47 @@ class Laps(unittest.TestCase):
         self.assertIsNone(g.session)
         self.assertIsNone(self.f.snapshot(self.t)["race"]["session"])
 
+    def test_entries_limit_auto_end_and_placing(self):
+        # audit 2026-11-13: a powered kart parked in the pits blocked the auto-finish and was placed with 0 laps
+        g = self.f.game
+        g.race_begin(1, self.t)                                       # 1 lap race, entries 1 and 2; kart 5 online, parked
+        for k in (1, 2):
+            self.fix(k, -5, 0)
+        self.fix(1, 5, 0); self.fix(2, 5, 0)
+        self.fix(1, -5, 0, dt=25); self.fix(2, -5, 0)                 # both finish their lap
+        self.assertEqual([k for k, _ in g.take_finishes()], [1, 2])
+        self.assertFalse(g.check_end([1, 2, 5]))                      # every ONLINE kart: kart 5 blocks it
+        self.assertTrue(g.check_end([1, 2]))                          # the entry list (pit_server._race_field): ends
+        g.reset_laps()
+        g.race_begin(0, self.t)
+        for k in (1, 2):
+            self.fix(k, -5, 0); self.fix(k, 5, 0)
+        fin = g.race_stop([1, 2, 5], entered=[1, 2])                  # kart 5 online, not entered
+        self.assertEqual(fin[:2], [(1, 101), (2, 102)])
+        self.assertIn((5, 0), fin)                                    # it still gets "not in the race"
+        self.assertEqual([r["kart"] for r in g.session.snapshot()["results"]], [1, 2])
+
+    def test_race_state_survives_a_server_restart(self):
+        # audit 2026-11-13: a pit server restart mid-race lost laps and the session (memory only)
+        g = self.f.game
+        g.race_begin(3, self.t, "go")
+        for k in (1, 2):
+            self.fix(k, -5, 0); self.fix(k, 5, 0)
+        self.fix(1, -5, 0, dt=25)                                     # kart 1: lap 1
+        doc = g.export_state(self.t)
+        self.assertEqual((doc["v"], doc["session"]["laps_target"], doc["laps"]["1"]["laps"]), (1, 3, 1))
+        g2 = pc.Game()
+        g2.set_doc(g.doc)                                             # the restarted server loads the same zones
+        bid = pc.boot_id()
+        if bid is None:                                               # no /proc boot id here: never restored
+            self.assertFalse(g2.import_state(doc, self.t))
+            return
+        self.assertTrue(g2.import_state(doc, self.t + 1.0))
+        self.assertEqual((g2.laps[1].laps, g2.laps[2].laps, g2.session.laps_target, g2.session.running), (1, 0, 3, True))
+        self.assertFalse(pc.Game().import_state(dict(doc, boot_id="other"), self.t))          # another boot
+        self.assertFalse(g2.import_state(doc, self.t + pc.RACE_STATE_MAX_AGE_S + 1))        # too old
+        self.assertFalse(pc.Game().import_state(doc, self.t))                                # lap line differs
+
     def test_stop_race_places_everyone(self):
         g = self.f.game
         g.race_begin(0, self.t)                                       # untimed: only STOP RACE ends it
