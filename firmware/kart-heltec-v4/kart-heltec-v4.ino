@@ -613,6 +613,11 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         if (reportRate != arg) { reportRate = (uint8_t)arg; prefs.putUChar("rate", (uint8_t)arg); logf("report rate %u Hz (pit)", arg); }
         cmdResult = GK_RES_APPLIED; break;
       }
+      case GK_CMD_GAME: {                                  // 0.3.7: the pit's freeplay game -> the Pi (freeplay on, host / join); arg 0 = end
+        Serial.printf("{\"t\":\"fpgame\",\"kart\":%u,\"arg\":%u,\"seq\":%u}\n", kartId, arg, seq);
+        if (arg) logf("pit game: %s, host kart %u", (arg & 0x10) ? "ROAM" : "TRACK", arg & 0x0F); else logf("pit game: end");
+        cmdResult = GK_RES_APPLIED; break;
+      }
       case GK_CMD_RACE: {                                  // arg = seconds until GO; 0 or 100+position = race finished
         if (arg == 0 || (arg >= 100 && arg <= 100 + GK_MAX_KARTS)) {
           bool wasHold = raceHold; raceHold = false;

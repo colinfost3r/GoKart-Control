@@ -154,3 +154,16 @@ Decodes the new fields into tele JSON (`session`, `atk_to/item/seq`, `ack_from/s
   START. The pit's STOP, SLOW and race countdown still override everything.
 - A pit game with zones pauses freeplay on that kart, including multiplayer actions.
 - Attacks are ignored across sessions and from karts not in my session.
+
+
+## 6. From the pit (kart 0.3.7, base 0.2.3)
+
+The pit page's Race panel has a **Freeplay game** block: pick TRACK or ROAM and a host kart (AUTO = the
+lowest kart heard in the last minute), hold START GAME. The pit broadcasts one `game` command
+(`GK_CMD_GAME`, arg = host kart id, +16 for ROAM; `POST /api/game {"on": true, "mode": "roam", "host": 2}`),
+retried like any command until each kart echoes it. The kart Heltec prints
+`{"t":"fpgame","kart":N,"arg":A,"seq":S}` and its Pi does what the dash taps would: freeplay on in that mode
+(ECO as usual), then `session host` on the host kart and `session join HOST` on the others (`pit@lora` in
+the kart's op log). END GAME sends arg 0: `session leave`, then freeplay off. A kart on older firmware
+acknowledges the command and does nothing. Per-kart outcomes show in CMDS; the fleet cards show
+HOST / G<host> once the session forms. The pit's own GAME (zones) still pauses freeplay while it is on.

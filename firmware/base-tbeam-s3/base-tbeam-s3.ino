@@ -337,6 +337,7 @@ static uint8_t cmdFromName(const char* s) {
   if (!strcmp(s, "boost")) return GK_CMD_BOOST;   // arg = scale percent 10..100, lasts 5 s
   if (!strcmp(s, "race"))  return GK_CMD_RACE;    // arg = seconds until GO (1..30), timed from issued_utc
   if (!strcmp(s, "rate"))  return GK_CMD_RATE;    // arg = 1 or 2 Hz
+  if (!strcmp(s, "game"))  return GK_CMD_GAME;    // arg = 0 end | host kart 1..8, +16 ROAM; the kart Pi does the rest (0.2.3)
   return GK_CMD_NONE;
 }
 

@@ -412,6 +412,19 @@ function buildRace() {
       <button id="raceStop" class="hold racestopbtn">STOP RACE<small>hold 1 s · final results</small></button></div>
     <p class="note">START RACE sends one "race" command to all karts: each holds at zero power, then all launch
       together when the lights go out. STOP still wins during the hold; START releases a kart early.</p>
+    <div class="lbl" style="margin-top:14px">Freeplay game: kart-to-kart items, no pit track needed (kart firmware 0.3.7+)</div>
+    <div class="racegrid" style="grid-template-columns:repeat(2,1fr)">
+      <button data-fpmode="track">TRACK<small>each kart laps its own course</small></button>
+      <button data-fpmode="roam">ROAM<small>anywhere, boxes follow, shell any direction</small></button></div>
+    <div class="lbl" style="margin-top:8px">Host kart (AUTO = the lowest kart heard in the last minute)</div>
+    <div class="racegrid" style="grid-template-columns:repeat(9,1fr)">${[0, 1, 2, 3, 4, 5, 6, 7, 8].map((k) => `<button data-fphost="${k}">${k ? "K" + k : "AUTO"}</button>`).join("")}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button id="fpStart" class="hold startall" style="flex:1">START GAME<small>hold 1 s · freeplay on + one session for all</small></button>
+      <button id="fpEnd" class="hold racestopbtn" style="flex:1">END GAME<small>hold 1 s · leave + freeplay off</small></button></div>
+    <div id="fpNow" class="sm"></div>
+    <p class="note">START GAME sends one "game" command to all karts: each turns FREEPLAY on in that mode, the host kart
+      hosts and the others join it (per-kart outcomes in ${MOBILE ? "LOG" : "CMDS"}; the fleet cards show HOST / G&lt;host&gt; once the
+      session forms). A kart on older firmware acknowledges it and does nothing. The pit's own GAME (zones) still pauses freeplay.</p>
     <p class="note">SEND GRID MODES sends the selected mode + START to entered karts and STOP to karts not entered,
       with per-kart outcomes in ${MOBILE ? "LOG" : "CMDS"}. CLEAR RACE FLAG only clears the race flag; it sends nothing.
       Entry and filters never remove a kart from telemetry or fleet commands.</p>`;
@@ -428,6 +441,15 @@ function buildRace() {
   // phone: hold 1 s, then a confirm sheet with a big GO button (a pocket tap must never start a race)
   holdButton($("raceStart"), 1000, () => { GKSound.ensure(); if (MOBILE) confirmRace(startRace); else startRace(); });
   holdButton($("raceOn"), 1000, () => post("/api/race", { active: true }).then((j) => { if (j && j.ok) toast(`Race on: ${j.race.issued.length} commands queued`); }));
+  // freeplay game for the whole fleet (docs/freeplay-multiplayer.md "From the pit")
+  document.querySelectorAll("[data-fpmode]").forEach((b) => b.addEventListener("click", () => { store.set("gk_fpmode", b.dataset.fpmode); updateRace(); }));
+  document.querySelectorAll("[data-fphost]").forEach((b) => b.addEventListener("click", () => { store.set("gk_fphost", Number(b.dataset.fphost)); updateRace(); }));
+  holdButton($("fpStart"), 1000, () => {
+    GKSound.ensure();
+    const mode = store.get("gk_fpmode", "roam"), host = store.get("gk_fphost", 0) || null;
+    post("/api/game", { on: true, mode, host }).then((j) => { if (j && j.ok) toast(`Game sent: ${mode.toUpperCase()}, host K${j.game.host} (each kart answers in ${MOBILE ? "LOG" : "CMDS"})`); });
+  });
+  holdButton($("fpEnd"), 1000, () => post("/api/game", { on: false }).then((j) => { if (j && j.ok) toast("Game end sent to all karts"); }));
   raceBuilt = true;
 }
 function updateRace() {
@@ -452,6 +474,13 @@ function updateRace() {
   const rs = store.get("gk_racesecs", 5), rl = store.get("gk_racelaps", 0);
   document.querySelectorAll("[data-racesecs]").forEach((b) => b.classList.toggle("sel", Number(b.dataset.racesecs) === rs));
   document.querySelectorAll("[data-racelaps]").forEach((b) => b.classList.toggle("sel", Number(b.dataset.racelaps) === rl));
+  const fm = store.get("gk_fpmode", "roam"), fh = store.get("gk_fphost", 0);
+  document.querySelectorAll("[data-fpmode]").forEach((b) => b.classList.toggle("sel", b.dataset.fpmode === fm));
+  document.querySelectorAll("[data-fphost]").forEach((b) => b.classList.toggle("sel", Number(b.dataset.fphost) === fh));
+  $("fpStart").disabled = !S.server.link.connected; $("fpEnd").disabled = !S.server.link.connected;
+  const pg = S.fleet.pit_game;
+  $("fpNow").textContent = !pg ? "" : pg.on ? `last: ${String(pg.mode).toUpperCase()}, host K${pg.host}, ${hhmmss(pg.wall)} by ${pg.by}`
+    : `last: ended ${hhmmss(pg.wall)} by ${pg.by}`;
   const ses = race.session;
   $("raceStop").disabled = !S.server.link.connected || !ses || ses.state !== "running";
   // before GO a finish would release the grid hold, so the server turns STOP RACE into STOP ALL

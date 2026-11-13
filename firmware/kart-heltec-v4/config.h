@@ -3,7 +3,7 @@
 // variant (which runs on this exact board). Everything else is this project's choice.
 #pragma once
 
-#define FW_VERSION      "kart-0.3.6"
+#define FW_VERSION      "kart-0.3.7"
 #define DEFAULT_KART_ID 1            // runtime override: USB command "id N" (stored in flash)
 
 // ---- Core2 item screen (ESP-NOW) -------------------------------------------

@@ -172,6 +172,7 @@ enum GkCommand : uint8_t {
   GK_CMD_BOOST    = 6,   // timed current-scale override: arg = scale in percent (10..100), 5 s over LoRa; USB `boost SECS SCALE`
   GK_CMD_RACE     = 7,   // race start: hold the kart at zero power now, release (GO) arg seconds after issued_utc_s (1..30); all karts share the pit clock
   GK_CMD_RATE     = 8,   // telemetry rate: arg 1 or 2 Hz, saved on the kart (the pit sends 1 while a repeater is in use: a 50 ms slot cannot hold a packet and its copy)
+  GK_CMD_GAME     = 9,   // freeplay game from the pit (kart 0.3.7, base 0.2.3): arg 0 = end it (leave the session, freeplay off); else bits 0-3 = the host kart 1..8, bit 4 = ROAM (clear = TRACK). The kart Pi turns freeplay on and hosts or joins (docs/freeplay-multiplayer.md "From the pit")
 };
 
 // Result of the last command a kart received, reported inside telemetry.

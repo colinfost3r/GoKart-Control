@@ -452,5 +452,25 @@ class ShieldBlocksAHit(unittest.TestCase):
         self.assertIn('msg.get("why") == "shield"', pi)
 
 
+class PitGameCommand(unittest.TestCase):
+    """GK_CMD_GAME (kart 0.3.7, base 0.2.3): one pit tap starts a freeplay session on every kart. The base
+    maps the pit's "game" name to the id, the kart forwards it to its Pi as an `fpgame` line, and the Pi
+    hosts / joins. Four codebases; this keeps them agreeing in source."""
+
+    def test_every_hop_knows_the_game_command(self):
+        hdr = read(os.path.join(FW, "libraries", "GoKartProtocol", "GoKartProtocol.h"))
+        self.assertIsNotNone(re.search(r"GK_CMD_GAME\s*=\s*9", hdr), "GK_CMD_GAME = 9 missing from GoKartProtocol.h")
+        base = read(os.path.join(FW, "base-tbeam-s3", "base-tbeam-s3.ino"))
+        self.assertRegex(base, r'strcmp\(s, "game"\)\)\s+return GK_CMD_GAME')
+        kart = read(os.path.join(FW, "kart-heltec-v4", "kart-heltec-v4.ino"))
+        case = re.search(r"case GK_CMD_GAME:.*?break;", kart, re.S)
+        self.assertIsNotNone(case, "kart firmware does not handle GK_CMD_GAME")
+        self.assertIn('\\"t\\":\\"fpgame\\"', case.group(0))
+        pit = read(os.path.join(FW, "..", "pit", "server", "pitcore.py"))
+        self.assertIn('"game"', pit.split("VALID_CMDS = ")[1].split("\n")[0])
+        kp = read(os.path.join(FW, "..", "kart", "server", "kart_server.py"))
+        self.assertIn('t == "fpgame"', kp)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
