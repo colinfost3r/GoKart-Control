@@ -107,31 +107,26 @@ for g in dialout video render input; do
   getent group "$g" >/dev/null && usermod -aG "$g" "$KART_USER"
 done
 
-echo "--- sound: ALSA default = the panel's HDMI speakers (vc4-hdmi); Chromium falls back to ALSA (no PipeWire/Pulse)"
-apt-get install -y --no-install-recommends alsa-utils || warn "alsa-utils failed"
-getent group audio >/dev/null && usermod -aG audio "$KART_USER"
-# vc4-hdmi wants IEC958 frames: the "hdmi" pcm converts, "plug" fixes rate/format. Exclusive (no dmix):
-# while Chromium plays, `aplay` waits for the device. GOKART_HDMI_CARD overrides the card (Pi 4: vc4hdmi0 / vc4hdmi1).
-HDMI_CARD="${GOKART_HDMI_CARD:-}"
-if [ -z "$HDMI_CARD" ]; then
-  for c in vc4hdmi vc4hdmi0 vc4hdmi1; do [ -e "/proc/asound/$c" ] && { HDMI_CARD="$c"; break; }; done
-fi
-if [ -n "$HDMI_CARD" ]; then
-  cat > /etc/asound.conf <<EOF
-# Written by GoKart install.sh: game sounds out of the HDMI panel's speakers ($HDMI_CARD).
-pcm.!default {
-  type plug
-  slave.pcm "hdmi:CARD=$HDMI_CARD,DEV=0"
-}
-ctl.!default {
-  type hw
-  card $HDMI_CARD
-}
-EOF
-  echo "/etc/asound.conf -> $HDMI_CARD (test: speaker-test -c2 -t sine -l1)"
-else
-  warn "no vc4-hdmi sound card found (/proc/asound); game sounds go to the default ALSA device"
-fi
+echo "--- sound: PipeWire (Chromium -> PipeWire -> the Bluetooth speaker when connected, else the HDMI panel)"
+# pipewire-alsa routes plain ALSA through PipeWire too; pre-2026-11-13 installs pointed ALSA straight at
+# vc4-hdmi with /etc/asound.conf, which would now fight PipeWire for the device.
+apt-get install -y --no-install-recommends pipewire pipewire-pulse pipewire-alsa wireplumber \
+  libspa-0.2-bluetooth libpulse0 alsa-utils rfkill || warn "pipewire packages failed"
+rm -f /etc/asound.conf
+for g in audio pipewire; do getent group "$g" >/dev/null && usermod -aG "$g" "$KART_USER"; done
+install -d /etc/wireplumber/wireplumber.conf.d
+install -m 644 "$DEST"/config/wireplumber/*.conf /etc/wireplumber/wireplumber.conf.d/
+# PipeWire + WirePlumber run in the kart user's systemd session: enabled for every user, and the
+# session is kept from boot (linger) so the speaker's A2DP profile exists before the kiosk logs in.
+systemctl --global enable pipewire.socket pipewire-pulse.socket wireplumber.service >/dev/null 2>&1 || true
+loginctl enable-linger "$KART_USER" || warn "enable-linger failed"
+# Bluetooth: the onboard radio came rfkill soft-blocked on both 2026-11 images (bluetoothd: Failed to set mode)
+rfkill unblock bluetooth 2>/dev/null || true
+systemctl enable --now bluetooth >/dev/null 2>&1 || warn "bluetooth.service not enabled"
+# Speaker keeper (tools/bt_speaker.sh watch); pair once as $KART_USER: tools/bt_speaker.sh pair MAC
+sed "s/@KART_USER@/$KART_USER/g" "$DEST/systemd/gokart-bt-speaker.service" > /etc/systemd/system/gokart-bt-speaker.service
+systemctl daemon-reload
+systemctl enable --now gokart-bt-speaker.service >/dev/null 2>&1 || warn "gokart-bt-speaker not started"
 
 echo "--- udev: /dev/heltec"
 install -m 644 "$DEST/udev/99-gokart-heltec.rules" /etc/udev/rules.d/99-gokart-heltec.rules

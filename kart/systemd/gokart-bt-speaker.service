@@ -1,0 +1,16 @@
+# Installed by kart/install.sh. Keeps the kart's Bluetooth speaker (server/config.json "bt_speaker")
+# connected: tools/bt_speaker.sh watch. The A2DP profile itself lives in @KART_USER@'s PipeWire
+# session (linger), so this only drives bluetoothd; with no bt_speaker configured it idles.
+[Unit]
+Description=GoKart kart Bluetooth speaker keeper (tools/bt_speaker.sh watch)
+After=bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=/opt/gokart-kart/tools/bt_speaker.sh watch
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

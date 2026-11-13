@@ -194,7 +194,7 @@ body.pulse .meter.boost .btrack { border-color: #fff2b8; }
 .sndwrap { position: absolute; right: 8px; bottom: 22px; z-index: 3; max-width: 248px; display: flex; flex-direction: row-reverse;
   flex-wrap: wrap-reverse; justify-content: flex-start; align-items: center; gap: 6px; }
 /* row-reverse: the mute button rightmost, then the hint, then TEST SOUND */
-.sndbtn { order: -2; } .sndhint { order: -1; }
+.sndbtn { order: -3; } .musbtn { order: -2; } .sndhint { order: -1; }
 .sndbtn { width: 56px; height: 56px; padding: 0; background: rgba(0,0,0,.42); border: 2px solid rgba(255,255,255,.55); color: #fff;
   display: flex; align-items: center; justify-content: center; }
 .sndbtn svg { width: 30px; height: 30px; }
