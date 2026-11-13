@@ -1,6 +1,6 @@
 # Prebuilt images
 
-> **Current images: kart 0.3.4, base and repeater 0.2.2, Core2 item screen 0.3.5** (2026-11-13, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
+> **Current images: kart 0.3.5, base and repeater 0.2.2, Core2 item screen 0.3.6** (2026-11-13, below). `kart-heltec-v4-ble-0.1.0.merged.bin` and the 0.2.0
 > set are kept for rollback only; 0.1.0 predates the relay bit, `slow_mph`, BOOST, RACE and the
 > 27-byte beacon. To refresh: `./build.sh kart compile` (also `base`, `repeater`), copy
 > `build/<sketch>/<sketch>.ino.merged.bin` here under a new version name, add the row and the
@@ -16,6 +16,8 @@ check what you got.
 | `kart-heltec-v4-ble-0.3.2.merged.bin` | Heltec WiFi LoRa 32 V4.3 | ESP-NOW channel pinned across WiFi reconnect scans (stored AP channel, re-set 6 s after each retry), broadcasts every 400 ms | `da66b5f7c6958bd9f91deaa9f2668c191e5f43ef22d1d85cf65073528b7484ca` |
 | `kart-heltec-v4-ble-0.3.3.merged.bin` | Heltec WiFi LoRa 32 V4.3 | WiFi reconnect scans only while the kart is stationary (VESC/GPS speed gate), channel re-pin 2.5 s after a retry | `faf7cef3f319c4e2bacb43c776c12d2b186dc2681ccc38ff51de1ee10a8088ed` |
 | `kart-heltec-v4-ble-0.3.4.merged.bin` | Heltec WiFi LoRa 32 V4.3 | no WiFi at all when the stored SSID is empty / `none` / `clear` / `off` (the radio stays parked on the Core2 channel), no driver-side reconnect loop (`WiFi.setAutoReconnect(false)`: a missing network made the core rescan continuously and only one Core2 tap in three got through), `wifi clear` on the USB console. App-only flash keeps NVS: `esptool --chip esp32s3 write_flash 0xe000 otadata 0x10000 kart-heltec-v4.ino.bin` | `b157c64b6981f04bc1b6bb30d23a58aebf5e75e0eceeb8e43175cc091efa5e34` |
+| `kart-heltec-v4-ble-0.3.5.merged.bin` | Heltec WiFi LoRa 32 V4.3 | **one fixed ESP-NOW channel** (`GK_ESPNOW_CH` = 1) whenever WiFi is off, pinned at init. ESP-NOW has no channel negotiation: the kart was parked on a remembered AP channel (6) while its Core2 had settled on another (4), so every tap went to an empty channel and no `invuse` ever reached the Pi (kart 1, 2026-11-13). A remembered AP channel is now only honoured while WiFi is actually in play (OTA at the pit). | `944958e51a6239dced9bd773c97a3a5da83bf8bca3c4e134f79633ca6aa60d21` |
+| `core2-items-0.3.6.merged.bin` | M5Stack Core2 | matching fixed channel (`FIXED_CH` = 1): with no WiFi credentials it sits on the kart's channel instead of hopping 1-13 (hunting is how it settled on ch 4 while its kart sat on ch 6). Falls back to hopping after 30 s of silence, so a kart still on an AP channel is found anyway. | `06dc30df4b0b0ed8698e68edc18324c5c74c9ccca4e5d836507ab60d9638f5bb` |
 | `core2-items-0.2.1.merged.bin` | M5Stack Core2 | rides out WiFi-scan gaps (6 s link grace, rehunt only after 20 s, from the last good channel) | `9816b295836c68a339f9b8106ac77bf3ed5de9856c71e33fae7d2d4582b900f0` |
 | `core2-items-0.2.2.merged.bin` | M5Stack Core2 | power follows the kart key: USB power lost -> 15 s on-screen countdown -> power off (tap to stay on) | `c70d1cd812c5147864c0d444eaa3a19c80a94949d3f1c7b98e57c8545bb78228` |
 | `core2-items-0.3.0.merged.bin` | M5Stack Core2 | OTA over the pit AP (joins at boot, ArduinoOTA as gokart-core2.local; `wifi SSID PASS` over USB once, NVS) | `e92c9f7e2111a4ec3d6318a13ead7ab2fe9b952d3dbb668300993547263781b3` |

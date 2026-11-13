@@ -1261,9 +1261,12 @@ static void serviceEspnow() {
     peer.channel = 0; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
     esp_now_add_peer(&peer);
     esp_now_register_recv_cb(espnowOnRecv);
-    espnowCh = prefs.getUChar("espch", 1);
+    // 0.3.5: no WiFi = no AP to agree on, so use the fleet's fixed channel instead of a remembered
+    // one. The stored AP channel is only honoured when WiFi is actually in play (OTA at the pit).
+    espnowCh = wifiWanted() ? prefs.getUChar("espch", GK_ESPNOW_CH) : GK_ESPNOW_CH;
+    esp_wifi_set_channel(espnowCh, WIFI_SECOND_CHAN_NONE);
     espnowUp = true;
-    logf("espnow up (Core2 item screen, ch %u)", espnowCh);
+    logf("espnow up (Core2 item screen, ch %u%s)", espnowCh, wifiWanted() ? "" : " fixed");
   }
   if (WiFi.status() == WL_CONNECTED) {
     uint8_t ch = (uint8_t)WiFi.channel();                        // remember the AP's channel

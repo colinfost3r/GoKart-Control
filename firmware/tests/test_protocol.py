@@ -399,5 +399,35 @@ class ModeTable(unittest.TestCase):
         self.assertTrue(all(abs(fw[i][0] - fw[j][0]) > 0.03 for i in range(3) for j in range(i)), fw)
 
 
+class EspnowChannel(unittest.TestCase):
+    """The kart and its Core2 item screen talk over ESP-NOW, which has NO channel negotiation: both
+    radios must already sit on the same 2.4 GHz channel or every frame is lost in silence. Each side
+    hardcodes it (kart-heltec-v4/config.h GK_ESPNOW_CH, core2-items FIXED_CH) and nothing at runtime
+    reconciles them, so the two constants must agree here.
+
+    Field failure this guards (2026-11-13): the firmwares each derived the channel from the last WiFi
+    AP they had seen. With WiFi off there was no AP to agree on, the kart sat on ch 6 and its Core2 on
+    ch 4, and every Core2 tap was sent to an empty channel - no boost, no shell, nothing logged on the
+    Pi. The whole Python suite passed throughout: it exercises the Pi's game logic, which begins only
+    AFTER this radio hop. This test cannot see a radio either, but it does catch the two ends drifting
+    apart in source, which is what actually happened."""
+
+    def _one(self, path, pattern, what):
+        src = read(os.path.join(FW, *path))
+        m = re.search(pattern, src, re.M)
+        self.assertIsNotNone(m, f"{'/'.join(path)}: {what} not found")
+        return int(m.group(1))
+
+    def test_both_ends_use_the_same_channel(self):
+        kart = self._one(("kart-heltec-v4", "config.h"),
+                         r"^#define\s+GK_ESPNOW_CH\s+(\d+)", "GK_ESPNOW_CH")
+        core2 = self._one(("core2-items", "core2-items.ino"),
+                          r"^static const uint8_t FIXED_CH\s*=\s*(\d+)", "FIXED_CH")
+        self.assertEqual(kart, core2,
+                         f"kart GK_ESPNOW_CH={kart} but Core2 FIXED_CH={core2}: taps would be sent "
+                         f"to an empty channel and silently lost")
+        self.assertTrue(1 <= kart <= 13, f"channel {kart} is not a legal 2.4 GHz channel")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

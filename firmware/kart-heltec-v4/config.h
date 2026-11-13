@@ -3,8 +3,15 @@
 // variant (which runs on this exact board). Everything else is this project's choice.
 #pragma once
 
-#define FW_VERSION      "kart-0.3.4"
+#define FW_VERSION      "kart-0.3.5"
 #define DEFAULT_KART_ID 1            // runtime override: USB command "id N" (stored in flash)
+
+// ---- Core2 item screen (ESP-NOW) -------------------------------------------
+// The kart and its Core2 must sit on the SAME 2.4 GHz channel; ESP-NOW has no channel negotiation.
+// With WiFi off (the normal fleet state) there is no AP to agree on, so both ends hardcode this one.
+// It must match FIXED_CH in firmware/core2-items. Found 2026-11-13: the kart remembered an old AP
+// channel (6) while its Core2 had settled on another (4), so every tap was sent to an empty channel.
+#define GK_ESPNOW_CH    1
 
 // ---- VESC writes -----------------------------------------------------------
 // 1 = this firmware may send COMM_SET_MCCONF_TEMP (mode / stop / start) when a
