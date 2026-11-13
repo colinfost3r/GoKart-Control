@@ -125,10 +125,13 @@ function render() {
   const mphEl = $("mph");
   const wheel = fresh && me.vesc_fresh && !nul(d.wheel_mph) ? Math.abs(d.wheel_mph) : null;
   let arcMph = null;
-  if (fresh && !nul(d.gps_mph)) { txt("mph", Math.round(d.gps_mph)); svgCls(mphEl, "mphnum"); txt("mphSrc", "GPS"); arcMph = d.gps_mph; }
+  // wheels turning while GPS says stopped (kart on a stand, or GPS lagging): the wheel number is the useful one
+  const spinning = wheel !== null && wheel > 3 && fresh && !nul(d.gps_mph) && d.gps_mph < 2;
+  if (spinning) { txt("mph", Math.round(wheel)); svgCls(mphEl, "mphnum"); txt("mphSrc", "WHEEL"); arcMph = wheel; }
+  else if (fresh && !nul(d.gps_mph)) { txt("mph", Math.round(d.gps_mph)); svgCls(mphEl, "mphnum"); txt("mphSrc", "GPS"); arcMph = d.gps_mph; }
   else if (wheel !== null) { txt("mph", Math.round(wheel)); svgCls(mphEl, "mphnum"); txt("mphSrc", "WHEEL"); arcMph = wheel; }
   else { txt("mph", !fresh ? "NO DATA" : "NO FIX"); svgCls(mphEl, "mphnum na"); txt("mphSrc", "GPS"); }
-  txt("mphNote", fresh && !g.fix_fresh
+  txt("mphNote", spinning ? "wheels turning, GPS 0 mph" : fresh && !g.fix_fresh
     ? (wheel !== null ? "NO GPS FIX: wheel speed" : !nul(g.fix_age_s) ? `last fix ${ageText(g.fix_age_s)} ago` : "")
     : (wheel !== null ? `wheel ${wheel.toFixed(0)} mph` : ""));
   const game = S.game || {}, meter = (game.meter || {});
