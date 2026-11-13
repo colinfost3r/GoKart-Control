@@ -16,6 +16,18 @@ import os
 import time
 from collections import deque
 
+
+RACE_STATE_MAX_AGE_S = 1800.0   # a saved race/laps state is restored after a pit server restart if this recent
+
+
+def boot_id():
+    """This boot's id (Linux); monotonic times in a saved state are only valid within the same boot."""
+    try:
+        with open("/proc/sys/kernel/random/boot_id") as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
 KART_IDS = tuple(range(1, 9))
 ALL_KARTS = 255
 
@@ -801,6 +813,50 @@ class Game:
         self.session = None
 
     # -- race session ---------------------------------------------------------
+    def export_state(self, now):
+        """Laps + race session as plain JSON (audit 2026-11-13: a pit server restart mid-race lost the race).
+        Monotonic times stay as they are: CLOCK_MONOTONIC is system-wide, valid within one boot (boot_id)."""
+        ses = self.session
+        return {"v": 1, "boot_id": boot_id(), "saved_mono": now,
+                "lapline": self._lapline(),
+                "laps": {str(k): {"laps": st.laps, "started_mono": st.started_mono, "started_wall": st.started_wall,
+                                  "last_s": st.last_s, "best_s": st.best_s, "crossings": st.crossings}
+                         for k, st in self.laps.items()},
+                "session": None if ses is None else {
+                    "laps_target": ses.laps_target, "go_mono": ses.go_mono, "go_wall": ses.go_wall,
+                    "finished": {str(k): v for k, v in ses.finished.items()}, "seen": sorted(ses.seen),
+                    "pending": [list(x) for x in ses.pending], "ended_by": ses.ended_by,
+                    "finished_wall": ses.finished_wall, "results": ses.results},
+                "line_moves_in_race": self.line_moves_in_race}
+
+    def import_state(self, doc, now):
+        """Restore export_state() after the zones are loaded: same boot, within RACE_STATE_MAX_AGE_S, same lap
+        line. Returns True when restored."""
+        try:
+            if not (isinstance(doc, dict) and doc.get("v") == 1 and doc.get("boot_id") and doc["boot_id"] == boot_id()
+                    and isinstance(doc.get("saved_mono"), (int, float)) and 0 <= now - doc["saved_mono"] <= RACE_STATE_MAX_AGE_S
+                    and doc.get("lapline") == self._lapline()):
+                return False
+            laps = {}
+            for k, d in (doc.get("laps") or {}).items():
+                st = LapState()
+                st.laps, st.started_mono, st.started_wall = int(d.get("laps") or 0), d.get("started_mono"), d.get("started_wall")
+                st.last_s, st.best_s, st.crossings = d.get("last_s"), d.get("best_s"), int(d.get("crossings") or 0)
+                laps[int(k)] = st
+            ses = None
+            sd = doc.get("session")
+            if isinstance(sd, dict):
+                ses = RaceSession(sd.get("laps_target"), sd.get("go_mono"), sd.get("go_wall"))
+                ses.finished = {int(k): v for k, v in (sd.get("finished") or {}).items()}
+                ses.seen = set(int(k) for k in sd.get("seen") or [])
+                ses.pending = [tuple(x) for x in sd.get("pending") or []]
+                ses.ended_by, ses.finished_wall, ses.results = sd.get("ended_by"), sd.get("finished_wall"), sd.get("results")
+            self.laps, self.session = laps, ses
+            self.line_moves_in_race = int(doc.get("line_moves_in_race") or 0)
+            return True
+        except (TypeError, ValueError, KeyError):
+            return False
+
     def race_begin(self, laps_target, go_mono, go_wall=None):
         self.reset_laps()
         self.session = RaceSession(laps_target, go_mono, go_wall)
@@ -838,16 +894,20 @@ class Game:
             return True
         return False
 
-    def race_stop(self, online, wall=None, all_karts=range(1, 9)):
+    def race_stop(self, online, wall=None, all_karts=range(1, 9), entered=None):
         """STOP RACE: freeze laps, place every kart not finished yet (laps desc, then earliest last
         crossing; karts with no completed lap last, by id) and return the finish commands
-        [(kart, arg)]: 100 + position for karts in the race, 0 for the rest."""
+        [(kart, arg)]: 100 + position for karts in the race, 0 for the rest.
+        entered (audit 2026-11-13): the pit's entry list when it has one -- a powered kart sitting in the
+        pits is not placed in the results."""
         ses = self.session
         if ses is None:
             ses = self.session = RaceSession(0, None, None)
         if not ses.running:
             return []
         field = (set(online) | ses.seen | set(self.laps)) - set(ses.finished)
+        if entered:
+            field &= set(entered)
         done = [k for k in field if k in self.laps and self.laps[k].laps > 0]
         done.sort(key=lambda k: (-self.laps[k].laps, self.laps[k].started_mono, k))
         rest = sorted(k for k in field if k not in done)

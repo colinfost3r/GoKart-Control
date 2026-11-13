@@ -344,13 +344,15 @@ class EndToEnd(unittest.TestCase):
             while used is None and time.time() < deadline:
                 s = st.state()
                 held = mp(s)["held"]
-                if held and (held["item"] == "lightning" or any(p["in_range"] for p in mp(s)["peers"])):
+                if held and (held["item"] == "lightning" or any(p["in_range"] and p.get("ahead") is not False
+                                                                  for p in mp(s)["peers"])):
                     code, body = st.request("POST", "/api/freeplay", {"use": True})
                     if code == 200:
                         used = held["item"]
                         self.assertIsNone(json.loads(body)["freeplay"]["multi"]["held"])
                     else:
-                        self.assertEqual(json.loads(body)["error"], "no one in range")   # moved apart meanwhile
+                        err = json.loads(body)["error"]                                   # moved apart / fell behind meanwhile
+                        self.assertTrue(err == "no one in range" or err.endswith("is behind you"), err)
                 time.sleep(0.25)
             self.assertIsNotNone(used, "no held item used within 150 s")
             s = st.wait(lambda s: mp(s)["attack"] and mp(s)["attack"]["result"] in ("acked", "done")

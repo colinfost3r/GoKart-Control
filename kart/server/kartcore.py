@@ -506,6 +506,8 @@ MULTI_ITEM_TABLE = (("boost", 0.22, 7, 0.75), ("shell", 0.24, None, None), ("lig
 MULTI_HELD_ITEMS = ("shell", "lightning")
 RACE_GO_GRACE_S = 0.0        # the overlay/laps follow the computed GO instant; the go line only confirms it
 RACE_STATES = {0: "idle", 1: "countdown", 2: "running", 3: "finished"}
+RACE_IDLE_CLEAR_S = 40.0     # beacon idle (state 0) this long after a finish: FINISHED clears, laps count again
+RACE_PAUSE_AFTER_FINISH_S = 60.0   # freeplay stays paused this long after the flag
 HEADING_SLEW_DPS = 120.0     # heading-up map: max rotation rate
 ZONE_TYPES = ("boost", "mud", "item", "lapline")
 MUD_DEFAULT_SCALE = 0.5
@@ -722,6 +724,13 @@ GPS_HEADING_MIN_MPS = 1.5    # Doppler heading is noise below this; keep the las
 CORR_WINDOW_S = 30.0         # base correction: mean over this window
 CORR_MAX_BASE_AGE_S = 5.0
 CORR_MAX_M = 25.0
+
+
+def _bearing_deg(a, b):
+    """Compass bearing from a to b ((lat, lon) tuples), 0 = north, 90 = east: the GPS heading convention."""
+    dn = (b[0] - a[0]) * 111320.0
+    de = (b[1] - a[1]) * 111320.0 * math.cos(math.radians(a[0]))
+    return math.degrees(math.atan2(de, dn)) % 360.0
 
 
 def _dist_m(a, b):
@@ -1719,7 +1728,29 @@ class GameEngine:
                 r.update(position=r["pos"] or r["last_pos"], position_source="beacon_state")
         elif r["state"] == 1 and prev_state != 1 and r["finished"]:
             r.update(finished=False, position=None, finish_mono=None, finish_lap=None, position_source=None)
+        # Audit 2026-11-13: after STOP RACE the beacon goes idle (0) and stays there; NEW RACE / RESET LAPS at the pit
+        # never reach the kart, so "finished" froze the lap count until the next countdown. Idle long enough = over.
+        if r["finished"] and r["state"] == 0:
+            if r.get("idle_since") is None:
+                r["idle_since"] = now
+            elif now - r["idle_since"] >= RACE_IDLE_CLEAR_S:
+                r.update(finished=False, position=None, finish_mono=None, finish_lap=None, position_source=None,
+                         idle_since=None)
+                self._reset_lap()
+                self._rec(recs, "lap_reset", now, why="race over (pit idle)")
+        else:
+            r["idle_since"] = None
         return recs
+
+    def race_active(self, now):
+        """A pit race owns the kart: grid hold, countdown/running beacon state, or the flag less than
+        RACE_PAUSE_AFTER_FINISH_S ago. Freeplay pauses for it (audit 2026-11-13: it only paused for pit ZONES)."""
+        r = self.race
+        if r["hold"] or r["state"] in (1, 2):
+            return True
+        if r["go_at"] is not None and now < r["go_at"]:
+            return True
+        return bool(r["finished"] and r["finish_mono"] is not None and now - r["finish_mono"] < RACE_PAUSE_AFTER_FINISH_S)
 
     def _finish(self, pos, src, now, recs):
         self.cancel_items(now, "race finished", recs)
@@ -1976,11 +2007,15 @@ FP_PHASES = ("recording", "ready", "paused_pit", "off", "no_gps")
 # link up or Heltec reboot), the held item, the item roll and the target choice.
 FW_MULTIPLAYER = (0, 2, 5)   # first firmware with `session` / `attack` and the game / hit / attack lines
 MP_RANGE_M = 25.0            # a shell reaches a peer this close (its dead-reckoned position) ...
+MP_AHEAD_DEG = 75.0          # ... and within this of my heading (owner 2026-11-13: shelling someone behind you is dumb);
+#                              no heading yet (never moved) = no direction gate
 MP_FIX_FRESH_S = 10.0        # ... whose fix is younger than this
 MP_DR_MAX_S = 3.0            # a peer's last fix is moved along its heading at its gps_kph for at most this long
 MP_HEARD_S = 10.0            # no game line yet: peers = fleet karts heard this recently with my session
 MP_RESEND_S = 5.0            # the wished session is not in force: re-send at most this often ...
 MP_MAX_TRIES = 3             # ... and drop the wish after this many sends that did not take
+MP_REJOIN_GRACE_S = 30.0     # my host's game ended (host Heltec rebooted?): keep the wish + held item this long and
+#                              re-join as soon as the host is heard hosting again (audit 2026-11-13)
 MP_EVENTS_KEEP = 12
 MP_ALL = 255                 # GK_ADDR_ALL: `attack all ...`
 
@@ -2151,6 +2186,7 @@ class FreeplayGame:
         self.rec = None              # LoopRecorder while the course is being driven
         self.no_adopt = False        # after a course reset: record, never adopt the pit's track
         self.kart = None             # (lat, lon, mono) last usable position
+        self.kart_heading = None     # last good Doppler heading (deg, 0 = north) that came with it
         self.phase = "off"
         self.pause_reason = None
         self.pit_track = None
@@ -2174,6 +2210,9 @@ class FreeplayGame:
         self.wish_tries = 0          # session commands sent since the wish was last in force
         self.wish_sent = None        # mono of the last one
         self.wish_note = None        # why the wish was dropped (rejected 3 times, the host's game ended)
+        self.wish_grace_until = None # joined kart whose host vanished: re-join window end (mono), else None
+        self.use_refused = None      # {"text", "seq", "mono"}: a Core2 tap the server refused (dash flashes it)
+        self._use_refused_seq = 0
         self._resend_due = False     # link up / Heltec reboot: the firmware forgot, send the wish again
         self.held = None             # {"item": "shell"|"lightning", "mono"}
         self.use_pending = None      # {"item", "to", "mono"}: `attack` sent, no sent/rejected line yet
@@ -2270,6 +2309,8 @@ class FreeplayGame:
             return recs
         lat, lon = float(pos["lat"]), float(pos["lon"])
         self.kart = (lat, lon, now)
+        if _num(pos.get("heading")):
+            self.kart_heading = float(pos["heading"])
         if not self.on or self.course is not None or self.phase not in ("recording", "no_gps"):
             return recs
         if not self.no_adopt and self.pit_track is not None:
@@ -2367,8 +2408,9 @@ class FreeplayGame:
         return recs
 
     # -- which document the engine runs -------------------------------------------------------
-    def select(self, pit_doc, now, demo=False):
-        """-> (zones document for GameEngine.set_zones, records). Updates phase/pause_reason."""
+    def select(self, pit_doc, now, demo=False, race=False):
+        """-> (zones document for GameEngine.set_zones, records). Updates phase/pause_reason.
+        race = the kart's GameEngine says a pit race owns it (race_active): freeplay pauses like for pit zones."""
         recs = []
         if pit_doc is not self._pit_seen:
             self._pit_seen = pit_doc
@@ -2384,6 +2426,8 @@ class FreeplayGame:
             phase, reason = "off", "demo"
         elif self._pit_on:
             phase, reason = "paused_pit", "pit game on"
+        elif race:
+            phase, reason = "paused_race", "pit race"
         elif self.course is not None:
             phase = "ready"
         else:
@@ -2557,6 +2601,7 @@ class FreeplayGame:
         self.wish = wish
         self.wish_tries = 0
         self.wish_note = None
+        self.wish_grace_until = None
         self._resend_due = False
         self._touch(persist=True)
 
@@ -2632,9 +2677,15 @@ class FreeplayGame:
             near = [p for p in self.peers(now) if p["in_range"]]
             if not near:
                 raise CommandError("no one in range")
-            tgt = min(near, key=lambda p: p["dist_m"])
+            ahead = [p for p in near if p["ahead"] is not False]        # unknown heading: no direction gate
+            if not ahead:
+                b = min(near, key=lambda p: p["dist_m"])
+                raise CommandError(f"K{b['id']} is behind you")
+            tgt = min(ahead, key=lambda p: p["dist_m"])
             to, dist, line = tgt["id"], tgt["dist_m"], f"attack {tgt['id']} shell"
         else:
+            if not self.peers(now):
+                raise CommandError("no karts in the game")
             to, line = MP_ALL, "attack all lightning"
         recs = []
         self.held = None
@@ -2672,11 +2723,17 @@ class FreeplayGame:
         prev_sess, prev_host, prev_peers = self.session, self.hosting, self.peer_ids
         new_end = ended is not None and ended != self.ended
         if new_end:
-            if isinstance(self.wish, int):           # never re-join a host that left or vanished
-                self.wish_note = f"K{self.wish}'s game ended ({ended})"
-                self.wish, self.wish_tries, self._resend_due = None, 0, False
-                self._touch(persist=True)
-            self._drop_held()
+            if isinstance(self.wish, int):
+                # audit 2026-11-13: a host Heltec reboot ended everyone's game for good (its Pi re-hosts 1-2 s
+                # later, nobody re-joined). Keep the wish and the held item for a grace; _wish_check re-joins
+                # the moment the host is heard hosting again, or gives up when the grace runs out.
+                if self.wish_grace_until is None:
+                    self.wish_grace_until = now + MP_REJOIN_GRACE_S
+                    self.wish_note = f"K{self.wish}'s game ended ({ended}): rejoining if K{self.wish} comes back"
+                    self.wish_tries, self._resend_due = 0, False
+                    self._touch(persist=True)
+            else:
+                self._drop_held()
         elif sess and prev_sess and sess != prev_sess:
             self._drop_held()                        # a different game: the held item does not carry over
         self.session, self.hosting, self.peer_ids, self.hosts = sess, hosting, peers, hosts
@@ -2754,6 +2811,23 @@ class FreeplayGame:
     def _wish_check(self, now, recs):
         if self.wish is None or not self.on or not self.fw_ok:
             return
+        if self.wish_grace_until is not None and isinstance(self.wish, int):
+            if self._wish_met():                                           # back in the host's game
+                self.wish_grace_until, self.wish_note, self.wish_tries = None, None, 0
+                self._touch(persist=True)
+                return
+            if now >= self.wish_grace_until:
+                note = f"K{self.wish}'s game ended: K{self.wish} did not come back"
+                self._rec(recs, "freeplay_leave", session=self._session(), wish=self.wish, why=note, auto=True)
+                self._mevent(now, "session", session=self._session(), hosting=self._hosting(), ended="host gone")
+                self.wish, self.wish_tries, self.wish_note, self.wish_grace_until = None, 0, note, None
+                self._drop_held()
+                self._touch(persist=True)
+                return
+            # the firmware accepts `session join N` only while it hears N hosting: send when it does, 2 s apart
+            if self.wish in self.hosts and (self.wish_sent is None or now - self.wish_sent >= 2.0):
+                self._send_wish(recs, now, resend="host is back")
+            return
         if self._resend_due:
             self._resend_due = False
             self.wish_tries = 0
@@ -2793,14 +2867,18 @@ class FreeplayGame:
             if pid == self._my_id():
                 continue
             ks = fleet.get(pid)
-            dist, fresh, score, age = None, False, 0, None
+            dist, fresh, score, age, pos = None, False, 0, None, None
             if ks is not None:
                 score, age = ks.multi.get("score", 0), _age(ks.last_mono, now)
                 pos, fix_age = peer_position(ks, now)
                 if pos is not None and me is not None:
                     dist = round(_dist_m(me, pos), 1)
                 fresh = fix_age is not None and fix_age < MP_FIX_FRESH_S
+            rel = None
+            if pos is not None and me is not None and self.kart_heading is not None:
+                rel = round((_bearing_deg(me, pos) - self.kart_heading + 180.0) % 360.0 - 180.0, 1)   # -180..180, 0 = dead ahead
             out.append({"id": pid, "dist_m": dist, "in_range": dist is not None and fresh and dist <= MP_RANGE_M,
+                        "ahead": None if rel is None else abs(rel) <= MP_AHEAD_DEG, "rel_deg": rel,
                         "score": score, "age_s": age})
         return out
 
@@ -2826,4 +2904,13 @@ class FreeplayGame:
                        for e in self.mevents],
             "wish": self.wish,
             "note": self.wish_note,
+            "use_refused": ({"text": self.use_refused["text"], "seq": self.use_refused["seq"],
+                             "age_s": _age(self.use_refused["mono"], now)}
+                            if self.use_refused and now - self.use_refused["mono"] <= 3.0 else None),
         }
+
+    def note_use_refusal(self, text, now):
+        """The Core2 asked to use an item and item_use said no: surface the reason for ~3 s (the Core2 itself
+        only shows USING..., the dash flashes this on the item button like its own refused taps)."""
+        self._use_refused_seq += 1
+        self.use_refused = {"text": str(text), "seq": self._use_refused_seq, "mono": now}

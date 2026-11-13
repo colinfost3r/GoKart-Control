@@ -263,7 +263,7 @@ function renderGame(game, fresh, st) {
   show("lapPanel", on && (!fpRun || game.lapline === true));
   show("gameChip", !on && !fpRun);
   show("lapStrip", on);
-  if (!on) txt("gameChip", "GAME OFF");
+  if (!on) txt("gameChip", gameOffText(game.off_reason));   // say why (audit 2026-11-13: "GAME OFF" hid "no zones from the pit")
   else {
     const lap = game.lap || {};
     const finished = !!(game.race && game.race.finished);
@@ -283,11 +283,20 @@ function renderGame(game, fresh, st) {
 }
 
 /* freeplay (kart-local item boxes, no pit): chip next to GAME, FREEPLAY button state */
+function gameOffText(why) {
+  if (!why) return "GAME OFF";
+  if (why.indexOf("no zones from the pit") >= 0) return "NO ZONES (PIT)";
+  if (why.indexOf("off at the pit") >= 0) return "GAME OFF (PIT)";
+  if (why.indexOf("config") >= 0) return "GAME OFF (CONFIG)";
+  if (why.indexOf("no zones") >= 0) return "NO ZONES";
+  return "GAME OFF";
+}
 function freeRunning(f) { return !!f && f.on && (f.phase === "ready" || f.phase === "recording" || f.phase === "no_gps"); }
 function freeChip(f) {                       // -> null (hidden) or {text, cls}
   if (!f || !f.on) return null;
   const n = (f.boxes || []).length;
   if (f.phase === "paused_pit") return { text: "FREEPLAY PAUSED (pit game on)", cls: "paused" };
+  if (f.phase === "paused_race") return { text: "FREEPLAY PAUSED (race)", cls: "paused" };
   if (f.phase === "no_gps") return { text: "FREEPLAY: waiting for GPS", cls: "rec" };
   if (f.phase === "recording") return { text: `FREEPLAY: drive one lap to set the course \u00b7 ${Math.round((f.record && f.record.distance_m) || 0)} m`, cls: "rec" };
   if (f.phase === "ready") return { text: `FREEPLAY \u00b7 ${n} box${n === 1 ? "" : "es"} \u00b7 ${f.collected || 0} collected`, cls: "" };
@@ -314,7 +323,7 @@ function renderFree(f) {
 const MP_ITEMS = { shell: "SHELL", lightning: "LIGHTNING" };
 const MP_LEAVE_MS = 3000;
 const mpUi = { leaveUntil: 0, note: "", noteUntil: 0, fb: null, fbUntil: 0, rouletteAt: -1e9, rouletteUntil: 0,
-  inviteKey: null, lastSeq: null, busy: false, glyph: null };
+  inviteKey: null, lastSeq: null, busy: false, glyph: null, lastRefusalSeq: null };
 function mpOf(f) {                           // -> the multi block when its controls apply, else null
   const m = f && f.multi;
   return m && typeof m === "object" && m.fw_ok === true && freeRunning(f) ? m : null;
@@ -330,12 +339,23 @@ function mpChip(f, m, base) {                // the FREEPLAY chip with the sessi
   const tail = !ids.length ? "waiting for karts" : others.length ? "with " + others.map(kName).join(" ") : "";
   return { text: `FREEPLAY · ${m.hosting ? "my game" : kName(m.session) + "'s game"}${tail ? " · " + tail : ""}`, cls: "tap mp" };
 }
-function mpNearest(m) {                      // nearest in-range peer (the shell's target) or undefined
+function mpNearest(m) {                      // nearest in-range peer AHEAD of me (the shell's target) or undefined
   const d = (p) => (nul(p.dist_m) ? 1e9 : p.dist_m);
-  return mpPeers(m).filter((p) => p.in_range === true).sort((a, b) => d(a) - d(b))[0];
+  return mpPeers(m).filter((p) => p.in_range === true && p.ahead !== false).sort((a, b) => d(a) - d(b))[0];
+}
+function mpBehind(m) {                       // nearest in-range peer that is behind me (a shell cannot reach it)
+  const d = (p) => (nul(p.dist_m) ? 1e9 : p.dist_m);
+  return mpPeers(m).filter((p) => p.in_range === true && p.ahead === false).sort((a, b) => d(a) - d(b))[0];
 }
 function renderMulti(f, m) {
   const inS = !!m && !!m.session;
+  // a Core2 tap the server refused ("K1 is behind you", "no one in range", "kart STOPPED"): same flash as
+  // a refused tap of the button below, once per refusal
+  const ur = m && m.use_refused;
+  if (ur && ur.text && ur.seq !== mpUi.lastRefusalSeq) {
+    mpUi.lastRefusalSeq = ur.seq;
+    mpFeedback((m.held && m.held.item) || "shell", String(ur.text).toUpperCase().slice(0, 40), "miss", 2.5);
+  }
   if (inS) txt("mpScore", "★ " + (Number(m.score) || 0));
   show("mpScore", inS);
   // INVITE: hosts heard while not in a session (at most 3 rows: they fit above the scale bar)
@@ -356,8 +376,9 @@ function renderMulti(f, m) {
   if (fb) text = fb.text;
   else if (held && now >= mpUi.rouletteUntil) {
     if (held === "shell") {
-      const near = mpNearest(m);
-      text = near ? `SHELL ▶ ${kName(near.id)}${nul(near.dist_m) ? "" : " · " + Math.round(near.dist_m) + " m"}` : "SHELL · no one in range";
+      const near = mpNearest(m), behind = mpBehind(m);
+      text = near ? `SHELL ▶ ${kName(near.id)}${nul(near.dist_m) ? "" : " · " + Math.round(near.dist_m) + " m"}`
+        : behind ? `SHELL · ${kName(behind.id)} BEHIND YOU` : "SHELL · no one in range";
       en = !!near;
     } else {
       const n = mpPeers(m).length;

@@ -1618,6 +1618,51 @@ class Freeplay(unittest.TestCase):
         self.assertEqual(lines(r), [])
         self.assertEqual(len(fp.boxes), 3)
 
+    def test_freeplay_pauses_for_a_pit_race(self):
+        # audit 2026-11-13: freeplay only paused for pit ZONES; a kart with no zones cached kept its boxes live
+        # and timed laps on its own line during the race. select(race=True) = paused like for pit zones.
+        fp, _ = self.ready(seed=6)
+        pit_off = zones_doc(boost_zone(), enabled=False)
+        doc, recs = fp.select(pit_off, 2.0, race=True)
+        self.assertIs(doc, pit_off)
+        self.assertEqual((fp.phase, fp.pause_reason), ("paused_race", "pit race"))
+        self.assertEqual(evs(recs, "freeplay_phase")[0]["phase"], "paused_race")
+        fp.fw_ok = True
+        with self.assertRaisesRegex(kc.CommandError, "paused"):
+            fp.host(2.5)                                                   # no hosting mid-race
+        doc, _ = fp.select(pit_off, 3.0, race=False)
+        self.assertEqual((doc["source"], fp.phase), ("freeplay", "ready"))
+        # the engine's view of "a race owns me"
+        g = kc.GameEngine()
+        self.assertFalse(g.race_active(0.0))
+        g.race["hold"] = True
+        self.assertTrue(g.race_active(0.0))
+        g.race["hold"] = False; g.race["state"] = 2
+        self.assertTrue(g.race_active(0.0))
+        g.race["state"] = 0; g.race["finished"] = True; g.race["finish_mono"] = 10.0
+        self.assertTrue(g.race_active(30.0))                               # still paused right after the flag
+        self.assertFalse(g.race_active(10.0 + kc.RACE_PAUSE_AFTER_FINISH_S + 1))
+
+    def test_finished_clears_once_the_pit_is_idle(self):
+        # audit 2026-11-13: after STOP RACE the beacon idles at state 0 and NEW RACE never reaches the kart,
+        # so "finished" froze lap counting until the next countdown. 40 s of idle = over, laps count again.
+        g = kc.GameEngine()
+        g.set_zones(zones_doc(lap_zone()), 0.0)
+        g.on_self(fix(-20, 0, race_state=2), 1.0)
+        g.on_self(fix(10, 0, race_state=2), 2.0)                           # cross: lap clock starts
+        self.assertTrue(g.lap["running"])
+        g.on_self(fix(12, 0, race_pos=1, race_state=3), 3.0)               # STOP RACE: beacon says finished, P1
+        self.assertTrue(g.race["finished"])
+        g.on_self(fix(12, 0, race_state=0), 10.0)                          # pit idle...
+        g.on_self(fix(12, 0, race_state=0), 30.0)
+        self.assertTrue(g.race["finished"])                                # ...not long enough yet
+        r = g.on_self(fix(12, 0, race_state=0), 10.0 + kc.RACE_IDLE_CLEAR_S + 0.5)
+        self.assertFalse(g.race["finished"])
+        self.assertEqual(evs(r, "lap_reset")[0]["why"], "race over (pit idle)")
+        g.on_self(fix(-20, 0, race_state=0), 60.0)
+        r = g.on_self(fix(10, 0, race_state=0), 61.0)                      # laps count again
+        self.assertEqual(len(evs(r, "lap_start")), 1)
+
     def test_precedence_with_the_pit(self):
         fp, _ = self.ready(seed=6)
         pit_on = zones_doc(boost_zone())
@@ -2065,8 +2110,9 @@ class Multiplayer(unittest.TestCase):
         fp.held = {"item": "shell", "mono": 5.0}
         r = fp.on_game_line(mp_game_line(0, ended="host left"), 6.0)
         self.assertEqual(evs(r, "freeplay_session")[0]["ended"], "host left")
-        self.assertEqual((fp.wish, fp.held), (None, None))               # never re-join a host that left
+        self.assertEqual((fp.wish, fp.held["item"]), (3, "shell"))       # kept for the re-join grace (2026-11-13)
         self.assertIn("host left", fp.wish_note)
+        self.assertIn("rejoining", fp.wish_note)
         self.assertEqual(lines(fp.multi_tick(30.0)), [])
         ev = fp.snapshot(6.0)["multi"]["events"]
         self.assertEqual((ev[-2]["ev"], ev[-1]["ev"], ev[-1]["ended"]), ("peer", "session", "host left"))
@@ -2136,6 +2182,86 @@ class Multiplayer(unittest.TestCase):
         self.assertEqual([(e["ev"], e["from"]) for e in m["events"] if e["ev"] == "hit"], [("hit", 3), ("hit", 5)])
         self.assertEqual(fp.on_multi_line("bogus", {}, 5.0), [])
 
+    def test_shell_only_reaches_karts_ahead(self):
+        # owner 2026-11-13: shelling someone behind you is dumb. The target must be within MP_AHEAD_DEG of
+        # my last good heading; a nearer kart behind me is skipped, and alone in range it is refused by name.
+        fp, disp = self.fp()
+        disp.ingest(self_line(session=3), 2.0, "w")
+        self.joined(fp)
+        pos = fp_pos(0.0, 0.0, 3.0); pos["heading"] = 0.0                # I face north
+        fp.on_pos(pos, 3.0)
+        fp.held = {"item": "shell", "mono": 3.0}
+        disp.ingest(mp_fleet_line(3, 0, 15, session=3), 3.0, "w")        # 15 m north: ahead
+        disp.ingest(mp_fleet_line(5, 0, -10, session=3), 3.0, "w")       # 10 m south: behind (and nearer)
+        p = {x["id"]: x for x in fp.peers(3.0)}
+        self.assertEqual((p[3]["ahead"], p[5]["ahead"]), (True, False))
+        self.assertAlmostEqual(p[3]["rel_deg"], 0.0, delta=1.0)
+        self.assertAlmostEqual(abs(p[5]["rel_deg"]), 180.0, delta=1.0)
+        r = fp.use(3.0)
+        self.assertEqual(lines(r), ["attack 3 shell"])                   # not the nearer kart behind me
+        fp.held = {"item": "shell", "mono": 4.0}
+        disp.ingest(mp_fleet_line(3, 0, 60, session=3), 4.0, "w")        # 3 drives out of range
+        with self.assertRaisesRegex(kc.CommandError, "K5 is behind you"):
+            fp.use(4.0)
+        disp.ingest(mp_fleet_line(3, 14, 5, session=3), 5.0, "w")        # 70 deg off the bow: still ahead
+        self.assertTrue({x["id"]: x for x in fp.peers(5.0)}[3]["ahead"])
+        disp.ingest(mp_fleet_line(3, 15, 2.6, session=3), 6.0, "w")      # ~80 deg: not any more
+        self.assertFalse({x["id"]: x for x in fp.peers(6.0)}[3]["ahead"])
+        fp.kart_heading = None                                           # never moved: no direction gate
+        fp.held = {"item": "shell", "mono": 7.0}
+        disp.ingest(mp_fleet_line(3, 0, 60, session=3), 7.0, "w")
+        self.assertEqual(lines(fp.use(7.0)), ["attack 5 shell"])
+
+    def test_refused_core2_use_is_surfaced_for_3_s(self):
+        # a Core2 tap the server refuses shows on the dash (the Core2 itself only says USING...)
+        fp, disp = self.fp()
+        self.assertIsNone(fp.snapshot(1.0)["multi"]["use_refused"])
+        fp.note_use_refusal("K5 is behind you", 2.0)
+        u = fp.snapshot(2.5)["multi"]["use_refused"]
+        self.assertEqual((u["text"], u["seq"], u["age_s"]), ("K5 is behind you", 1, 0.5))
+        fp.note_use_refusal("no one in range", 3.0)
+        self.assertEqual(fp.snapshot(3.1)["multi"]["use_refused"]["seq"], 2)        # a new seq per refusal
+        self.assertIsNone(fp.snapshot(6.5)["multi"]["use_refused"])                 # gone after 3 s
+
+    def test_lightning_with_nobody_in_the_game_is_refused(self):
+        # audit 2026-11-13: `attack all lightning` with no peers burned the item ("done, acked []" after 5 s)
+        fp, disp = self.fp()
+        disp.ingest(self_line(session=3), 2.0, "w")
+        fp.join(3, 2.0)
+        fp.on_game_line(mp_game_line(3, peers=[], hosts=[3]), 2.1)
+        fp.held = {"item": "lightning", "mono": 3.0}
+        with self.assertRaisesRegex(kc.CommandError, "no karts in the game"):
+            fp.use(3.0)
+        self.assertEqual(fp.held["item"], "lightning")                    # kept
+
+    def test_joined_kart_rejoins_a_host_that_rebooted(self):
+        # audit 2026-11-13: the host's Heltec reboot ended the game for everyone, for good. Now a joined kart keeps
+        # its wish (and held item) for MP_REJOIN_GRACE_S and re-joins as soon as the host is heard hosting again.
+        fp, disp = self.fp()
+        disp.ingest(self_line(session=3), 2.0, "w")
+        self.joined(fp)
+        fp.held = {"item": "shell", "mono": 2.5}
+        r = fp.on_game_line(mp_game_line(0, peers=[], hosts=[], ended="host left"), 3.0)
+        self.assertEqual((fp.wish, fp.held["item"]), (3, "shell"))        # kept
+        self.assertIn("rejoining", fp.wish_note)
+        self.assertEqual(lines(r), [])
+        self.assertEqual(lines(fp.multi_tick(4.0)), [])                   # host not heard yet: nothing to send
+        r = fp.on_game_line(mp_game_line(0, peers=[], hosts=[3]), 5.0)     # the host is back, hosting
+        self.assertEqual(lines(r), ["session join 3"])
+        self.assertEqual(evs(r, "freeplay_join")[0]["resend"], "host is back")
+        self.assertEqual(lines(fp.multi_tick(6.0)), [])                   # 2 s throttle
+        self.assertEqual(lines(fp.multi_tick(7.5)), ["session join 3"])
+        fp.on_game_line(mp_game_line(3, peers=[3, 5], hosts=[3]), 8.0)     # joined again
+        self.assertEqual((fp._session(), fp.wish, fp.wish_grace_until, fp.wish_note, fp.held["item"]),
+                         (3, 3, None, None, "shell"))
+        # the host never comes back: the grace runs out, the wish and the held item go
+        fp.on_game_line(mp_game_line(0, peers=[], hosts=[], ended="host lost"), 10.0)
+        self.assertEqual(fp.wish, 3)
+        r = fp.multi_tick(10.0 + kc.MP_REJOIN_GRACE_S + 0.1)
+        self.assertEqual((fp.wish, fp.held), (None, None))
+        self.assertIn("did not come back", fp.wish_note)
+        self.assertEqual(evs(r, "freeplay_leave")[0]["auto"], True)
+
     def test_peers_distance_dead_reckoning(self):
         fp, disp = self.fp()
         self.assertEqual(fp.peers(2.0), [])
@@ -2160,7 +2286,8 @@ class Multiplayer(unittest.TestCase):
         self.assertAlmostEqual(p["dist_m"], 10.0, delta=0.2)
         self.assertFalse(p["in_range"])                                  # fix 10.5 s old
         fp.on_game_line(mp_game_line(3, peers=[3, 7]), 13.0)
-        self.assertEqual(fp.peers(13.0)[1], {"id": 7, "dist_m": None, "in_range": False, "score": 0, "age_s": None})
+        self.assertEqual(fp.peers(13.0)[1], {"id": 7, "dist_m": None, "in_range": False, "ahead": None, "rel_deg": None,
+                                             "score": 0, "age_s": None})
         k = kc.KartState(3)
         k.ingest({"t": "fleet", "kart": 3}, 0.0, "w")
         self.assertEqual(k.multi, {f: 0 for f in kc.MULTI_TELE_FIELDS})   # old firmware: absent = 0
@@ -2213,7 +2340,7 @@ class Multiplayer(unittest.TestCase):
 
     def test_snapshot_always_complete(self):
         keys = {"session", "hosting", "peers", "hosts", "held", "score", "attack", "last_hit", "fw_ok", "events",
-                "wish", "note"}
+                "wish", "note", "use_refused"}
         m = kc.FreeplayGame().snapshot(0.0)["multi"]
         self.assertEqual(set(m), keys)
         self.assertEqual((m["session"], m["hosting"], m["peers"], m["hosts"], m["held"], m["score"], m["attack"],

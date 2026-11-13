@@ -199,6 +199,11 @@ class App:
         self.zones_comment = None
         self._zones_mtime = None
         self._load_zones()
+        # race + laps survive a pit server restart within the same boot (audit 2026-11-13: memory only before)
+        self.race_state_path = os.path.join(log_dir, "race-state.json")
+        self._race_state_saved = None
+        self._race_state_mono = 0.0
+        self._restore_race_state()
         self.link = Link(self._on_line, self._on_link_state, port=cfg.get("serial_port"),
                          tcp=cfg.get("tcp"), log=self._console)
         self.cmds = pitcore.CommandManager(self.fleet, self._send, log=self._cmd_log,
@@ -425,6 +430,9 @@ class App:
         now, t = time.monotonic(), time.time()
         wall = wall_iso(t)
         with self.lock:
+            ses = self.fleet.game.session
+            if ses is not None and ses.running and not body.get("force"):      # audit 2026-11-13: it silently wiped a running race
+                raise pitcore.CommandError("a race is running: STOP RACE (or NEW RACE) first")
             c = self.cmds.submit("race", pitcore.ALL_KARTS, secs, source=f"{who} (race start)", now=now, wall=wall)
             self.fleet.game.race_begin(laps, now + secs, wall_iso(t + secs))   # also resets lap timing
             race = self.fleet.race
@@ -495,6 +503,54 @@ class App:
         """A finish command is worth airtime only for a kart heard in the last STALE_S."""
         return pitcore.link_status(self.fleet.karts[k].last_tele_mono, now) in ("online", "stale")
 
+    def _restore_race_state(self):
+        try:
+            with open(self.race_state_path) as f:
+                doc = json.load(f)
+        except (OSError, ValueError):
+            return
+        now = time.monotonic()
+        with self.lock:
+            ok = isinstance(doc, dict) and self.fleet.game.import_state(doc, now)
+            if ok and isinstance(doc.get("race"), dict):
+                self.fleet.race.update(doc["race"])
+        if ok:
+            ses = self.fleet.game.session
+            self.log.write("event", what="race_state_restored", laps=len(self.fleet.game.laps),
+                           session=None if ses is None else ("running" if ses.running else "finished"))
+            print(f"{wall_iso()} race state restored from {self.race_state_path}", flush=True)
+
+    def _save_race_state(self, now):
+        """Every ~2 s from the ticker, only when something changed."""
+        if now - self._race_state_mono < 2.0:
+            return
+        self._race_state_mono = now
+        with self.lock:
+            doc = self.fleet.game.export_state(now)
+            doc["race"] = dict(self.fleet.race)
+        try:
+            text = json.dumps(doc, separators=(",", ":"))
+        except (TypeError, ValueError):
+            return
+        if text == self._race_state_saved:
+            return
+        self._race_state_saved = text
+        tmp = self.race_state_path + ".tmp"
+        try:
+            with open(tmp, "w") as f:
+                f.write(text)
+            os.replace(tmp, self.race_state_path)
+        except OSError:
+            pass
+
+    def _race_field(self, now):
+        """Karts that count for auto-end and placing: the online ones, limited to the pit's entry list when it
+        has one (audit 2026-11-13: a powered kart parked in the pits blocked the auto-finish of a laps race and
+        got placed with 0 laps)."""
+        online = self._online(now)
+        ent = self.fleet.race.get("entered") or []
+        return [k for k in online if k in ent] if ent else online
+
     def race_stop(self, who):
         """STOP RACE: final results, every kart gets its finish command (ZONES.md "Race finish").
         Before GO it is ABORT START instead: a race finish would release the grid hold at once
@@ -515,7 +571,7 @@ class App:
                 aborted = True
             else:
                 aborted = False
-                fin = self.fleet.game.race_stop(self._online(now), wall)
+                fin = self.fleet.game.race_stop(self._race_field(now), wall, entered=self.fleet.race.get("entered") or None)
                 res = self.fleet.game.session.snapshot()
         self._state_cache = None
         if aborted:
@@ -559,7 +615,7 @@ class App:
             if k is not None:
                 self.cmds.on_tele(k, now, wall)
                 fin = self.fleet.game.take_finishes()        # a kart completed the race length
-                ended = self.fleet.game.check_end(self._online(now), wall)
+                ended = self.fleet.game.check_end(self._race_field(now), wall)
             elif msg.get("t") == "sent":
                 self.cmds.on_sent(msg)
             if fin and self.link.connected:
@@ -622,6 +678,7 @@ class App:
                 self.log.write("event", what="scale_mismatch" if what == "start" else "scale_mismatch_end",
                                kart=k, **(info or {}))
             self._race_tick(time.monotonic())
+            self._save_race_state(time.monotonic())
 
     def _rate_policy(self, now):
         """Lock held. Repeater heard in the last 60 s: "rate 1" to all karts now and every 30 s.

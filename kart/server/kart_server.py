@@ -663,9 +663,10 @@ class App:
                 self.game.set_pit(pkg.get("pit") if pkg else None)
                 # freeplay decides which document runs: the pit's game wins; else freeplay's while on
                 # (select, then respawns, then select again so a box placed this tick is in the document)
-                _, game = self.freeplay.select(pit_zones, now, demo=d is not None)
+                race = self.game.race_active(now)
+                _, game = self.freeplay.select(pit_zones, now, demo=d is not None, race=race)
                 game += self.freeplay.tick(now)
-                zones, more = self.freeplay.select(pit_zones, now, demo=d is not None)
+                zones, more = self.freeplay.select(pit_zones, now, demo=d is not None, race=race)
                 game += more + self.game.set_zones(d.zones if d is not None else zones, now)
                 if self._game_pending is not None and d is None:
                     game += self.game.import_state(self._game_pending, now)
@@ -841,8 +842,11 @@ class App:
         slot = msg.get("slot")
         try:
             self.item_use({"use": slot if isinstance(slot, int) else 0}, "core2@espnow")
-        except (ValueError, kartcore.CommandError):
-            pass                                        # logged by item_use; nothing else to do
+        except (ValueError, kartcore.CommandError) as e:
+            with self.lock:                             # logged by item_use; tell the driver why (dash flash)
+                self.freeplay.note_use_refusal(str(e), time.monotonic())
+            self._state_cache = (0.0, b"{}")
+            self._parts_cache = (0.0, {})
 
     MULTI_KEYS = ("host", "join", "leave", "use")
 
