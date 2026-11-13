@@ -1,7 +1,30 @@
 # Collaborator handoff
 
-**Current entry point: [Claude handoff — November 12](docs/CLAUDE_HANDOFF.md).**
+**Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
+
+## Game rules installed on kart 3 — November 13, 2026 (host not updated)
+
+**545 tests across eight suites passed, zero skipped; eight firmware targets compiled.**
+
+Owner decisions of November 12 after a review of the FIRE path are now in source and on both of
+kart 3's boards: the host chooses the game speed (ECO or NORMAL, Pi setting `freeplay_speed`),
+a joined kart is locked to it, BOOST is one mode up and ROCKET/STAR the top mode, and a boost
+whose end could not be written is finished once, lower-only (the one recorded exception to
+"reconnect is read-only", see `AGENTS.md`). The course package is rules version 2, so **old and
+new firmware cannot play together**: a host must run this source's `kart` Heltec build and
+`kart/server` before kart 3 can download a course or join.
+
+Kart 3 was updated over USB with the VESC off, then checked with the VESC on: identity, the three
+mode readbacks at the November 10 values, wheels-up forward/reverse with fault 0, and a
+ten-minute soak. None of the new game behaviour has run on hardware, because no host is updated.
+Eamon's branch is merged through `cb7011c`. Kart 3's speed caps were about 43% high (kart 2's 2.48
+factor against 20 stored poles instead of 14); the owner had `speedcal 1.736` stored on its Heltec.
+ECO 15163 and NORMAL 25272 ERPM were then written from the Core2 and read back. Provisional until
+a GPS check on the road.
+[Install record](hardware/m5/2026-11-13-kart3-game-rules-update/README.md),
+[manifest](docs/validation/m5-game-rules-2026-11-13.json),
+[Claude handoff](docs/CLAUDE_HANDOFF.md).
 
 ## Native host course and Core2 game candidate — November 12, 2026 (not installed)
 

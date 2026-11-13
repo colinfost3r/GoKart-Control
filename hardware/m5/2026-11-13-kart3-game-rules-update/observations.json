@@ -1,0 +1,574 @@
+{
+  "date": "2026-11-13",
+  "kart_id": 3,
+  "operator": "owner at the kart; uploads run from the bench Mac over USB",
+  "source_commit": "64e08cb (game rules); merge 1cabf76 with upstream cb7011c changes no source of these targets",
+  "candidate_manifest": "docs/validation/m5-game-rules-2026-11-13.json",
+  "vesc_power": "off for the backup and both uploads (vesc_link false, zero VESC packets); powered afterwards for the check and the soak",
+  "method": "esptool 4.9.0: read 0x8000..0x170000 first, then write_flash of the application only at 0x10000, 460800 baud; bootloader, partition table, otadata and NVS not written",
+  "boards": {
+    "core2": {
+      "usb_port": "/dev/cu.usbserial-59740081161",
+      "mac": "3c:8a:1f:d7:57:28",
+      "active_slot_before": "app0",
+      "application_before": {
+        "target": "m5-espnow",
+        "candidate": "2026-11-12-player",
+        "bytes": 1356752,
+        "sha256": "894a1a34537b5894110ddb120b2419f18b0fad8432b0e7acac775306ce58d3ac",
+        "read_back_from_flash": true
+      },
+      "application_written": {
+        "target": "m5-espnow",
+        "candidate": "2026-11-13-game-rules",
+        "bytes": 1357056,
+        "sha256": "0d904a89671272c08f794e848047e28341e6d232968723afdc3c017054e1a169",
+        "esptool_hash_verified": true,
+        "independent_readback": false
+      },
+      "after": {
+        "fw": "m5-v1.5",
+        "transport": "espnow",
+        "kart": 3,
+        "live": true,
+        "page": "map",
+        "heap": 147500,
+        "parse_errors": 0,
+        "course_source": "none",
+        "espnow_peer": "f8:5b:1b:a2:db:10",
+        "linked": true,
+        "channel": 2,
+        "channel_aligned": true,
+        "ota_configured": true,
+        "ota_active": false,
+        "hostname": "gokart-display-3",
+        "course_peers": [],
+        "game_stage": 0
+      }
+    },
+    "heltec": {
+      "usb_port": "/dev/cu.usbmodem1101",
+      "mac": "f8:5b:1b:a2:db:10",
+      "active_slot_before": "app0",
+      "application_before": {
+        "target": "kart-m5-espnow",
+        "candidate": "2026-11-12-player",
+        "bytes": 1348976,
+        "sha256": "d43662645457f51283010d655cc2f60d5740adafc015adc59910e70fd136cab9",
+        "read_back_from_flash": true
+      },
+      "application_written": {
+        "target": "kart-m5-espnow",
+        "candidate": "2026-11-13-game-rules",
+        "bytes": 1350896,
+        "sha256": "84e1da0ea79dbd576df5e4adc9bce04e8673aa305441943c29ea86d5bc7b4486",
+        "esptool_hash_verified": true,
+        "independent_readback": false
+      },
+      "after": {
+        "fw": "kart-0.3.3",
+        "built": "Nov 12 2026 19:42:53",
+        "kart": 3,
+        "writes": true,
+        "transport": "ble",
+        "radio": true,
+        "vescmac": "f7:bd:23:cc:62:0e",
+        "uuid_pin": "37004e000951343037353739",
+        "id_ok": false,
+        "limits_ok": false,
+        "baseline_source": "none",
+        "revert_missed": false,
+        "speed_cal": 2.48,
+        "session": 0,
+        "hosting": false,
+        "heap": 49284,
+        "heap_min": 38480,
+        "vesc_link": false,
+        "wifi_joined": true,
+        "uptime_s": 38
+      }
+    }
+  },
+  "environment": "kart 2 on the air hosting game session 2 and the pit base heard; kart 3 stayed at session 0. The pit sent RATE 1 (telemetry rate) to kart 3 repeatedly; no other remote command was seen",
+  "side_effects": [
+    "each esptool read or write reboots that board once",
+    "ports were opened with the driver default line state; no other reset was seen"
+  ],
+  "vesc_on_check": {
+    "setup": "owner lifted the wheels and powered the VESC; console watched read-only (only `status` sent)",
+    "heltec": {
+      "vesc_fw": "6.02",
+      "vesc_hw": "75_300_R2",
+      "vesc_uuid": "37004e000951343037353739",
+      "id_ok": true,
+      "limits_ok": true,
+      "baseline_source": "read",
+      "baseline_suspect": false,
+      "revert_missed": false,
+      "vesc_crc_err": 0,
+      "l_current_max": 140.0,
+      "l_in_current_max": 100.0,
+      "max_duty": 0.95,
+      "poles": 20,
+      "gear": 2.769,
+      "wheel_m": 0.406,
+      "uuid_matches_pin": true,
+      "heltec_rebooted_on_vesc_power": false
+    },
+    "adopted_at_link_up": {
+      "mode": "SPORT",
+      "scale": 1.0,
+      "max_erpm": 150000,
+      "note": "the VESC's stored limits after its power cycle, adopted without a write"
+    },
+    "mode_log_lines": [
+      [
+        20.8,
+        "vesc write scale 0.500, cap 15 mph = 21661 ERPM"
+      ],
+      [
+        21.0,
+        "vesc write verify ok (scale 0.500, ERPM 21661)"
+      ],
+      [
+        26.3,
+        "vesc write scale 0.750, cap 25 mph = 36102 ERPM"
+      ],
+      [
+        26.5,
+        "vesc write verify ok (scale 0.750, ERPM 36102)"
+      ],
+      [
+        32.4,
+        "vesc write scale 1.000, no speed cap (150000 ERPM)"
+      ],
+      [
+        32.9,
+        "vesc write verify ok (scale 1.000, ERPM 150000)"
+      ],
+      [
+        37.7,
+        "vesc write scale 0.500, cap 15 mph = 21661 ERPM"
+      ],
+      [
+        38.4,
+        "vesc write verify ok (scale 0.500, ERPM 21661)"
+      ]
+    ],
+    "mode_commands": [
+      [
+        20.8,
+        {
+          "src": 0,
+          "seq": 116,
+          "cmd": 8,
+          "arg": 1,
+          "result": 2
+        }
+      ],
+      [
+        20.8,
+        {
+          "src": 254,
+          "seq": 1,
+          "cmd": 1,
+          "arg": 0,
+          "result": 1
+        }
+      ],
+      [
+        26.3,
+        {
+          "src": 254,
+          "seq": 2,
+          "cmd": 1,
+          "arg": 1,
+          "result": 1
+        }
+      ],
+      [
+        32.4,
+        {
+          "src": 254,
+          "seq": 3,
+          "cmd": 1,
+          "arg": 2,
+          "result": 1
+        }
+      ],
+      [
+        37.7,
+        {
+          "src": 254,
+          "seq": 4,
+          "cmd": 1,
+          "arg": 0,
+          "result": 1
+        }
+      ],
+      [
+        49.4,
+        {
+          "src": 0,
+          "seq": 117,
+          "cmd": 8,
+          "arg": 1,
+          "result": 2
+        }
+      ]
+    ],
+    "limit_readbacks_in_order": [
+      {
+        "scale_max": 1.0,
+        "max_erpm": 150000,
+        "cap_mph": 0,
+        "id_ok": true,
+        "limits_ok": true
+      },
+      {
+        "scale_max": 0.5,
+        "max_erpm": 21661,
+        "cap_mph": 15,
+        "id_ok": true,
+        "limits_ok": true
+      },
+      {
+        "scale_max": 0.75,
+        "max_erpm": 36102,
+        "cap_mph": 25,
+        "id_ok": true,
+        "limits_ok": true
+      },
+      {
+        "scale_max": 1.0,
+        "max_erpm": 150000,
+        "cap_mph": 0,
+        "id_ok": true,
+        "limits_ok": true
+      },
+      {
+        "scale_max": 0.5,
+        "max_erpm": 21661,
+        "cap_mph": 15,
+        "id_ok": true,
+        "limits_ok": true
+      }
+    ],
+    "matches_2026-11-10_readbacks": true,
+    "state_segments": [
+      {
+        "at_s": 0.2,
+        "mode": "SPORT",
+        "scale": 1.0,
+        "confirmed": true,
+        "samples": 41,
+        "erpm_max": 0,
+        "erpm_min": 0,
+        "motor_a_max_abs": 0.0
+      },
+      {
+        "at_s": 20.8,
+        "mode": "SPORT",
+        "scale": 1.0,
+        "confirmed": false,
+        "samples": 1,
+        "erpm_max": 0,
+        "erpm_min": 0,
+        "motor_a_max_abs": 0.0
+      },
+      {
+        "at_s": 21.2,
+        "mode": "ECO",
+        "scale": 0.5,
+        "confirmed": true,
+        "samples": 11,
+        "erpm_max": 19800,
+        "erpm_min": 0,
+        "motor_a_max_abs": 22.9
+      },
+      {
+        "at_s": 26.7,
+        "mode": "NORMAL",
+        "scale": 0.75,
+        "confirmed": true,
+        "samples": 12,
+        "erpm_max": 31074,
+        "erpm_min": 0,
+        "motor_a_max_abs": 72.5
+      },
+      {
+        "at_s": 32.9,
+        "mode": "SPORT",
+        "scale": 1.0,
+        "confirmed": true,
+        "samples": 10,
+        "erpm_max": 36776,
+        "erpm_min": 0,
+        "motor_a_max_abs": 91.7
+      },
+      {
+        "at_s": 37.9,
+        "mode": "SPORT",
+        "scale": 1.0,
+        "confirmed": false,
+        "samples": 1,
+        "erpm_max": 0,
+        "erpm_min": 0,
+        "motor_a_max_abs": 0.0
+      },
+      {
+        "at_s": 38.4,
+        "mode": "ECO",
+        "scale": 0.5,
+        "confirmed": true,
+        "samples": 103,
+        "erpm_max": 19619,
+        "erpm_min": 0,
+        "motor_a_max_abs": 25.4
+      }
+    ],
+    "wheel_motion": {
+      "samples_2hz": 211,
+      "forward_erpm_max": 36776,
+      "reverse_erpm_min": -8630,
+      "reverse_note": "one reverse run, in the first watch right after power-up (SPORT as adopted); the mode log holds forward runs only",
+      "faults_seen": [
+        0
+      ],
+      "vesc_link_dropped": false,
+      "motor_a_max_abs": 91.7,
+      "volts_min": 67.7,
+      "volts_max": 74.8,
+      "esc_c_max": 15.1,
+      "no_load_note": "SPORT reached 36776 ERPM at 0.94 duty, so NORMAL's 36102 ERPM cap sits at this kart's no-load top speed"
+    },
+    "final_state": "ECO confirmed, zero ERPM, fault 0",
+    "operator_report": "owner reported the sequence done and that it felt right"
+  },
+  "soak": {
+    "conditions": "VESC on, ECO, wheels up, pedal and screen untouched; both consoles logged, only `status` sent (Heltec every 10 s, Core2 every 15 s)",
+    "seconds": 610,
+    "heltec": {
+      "resets": 0,
+      "self_samples": 1219,
+      "vesc_link_always_up": true,
+      "faults_seen": [
+        0
+      ],
+      "modes_seen": [
+        "ECO"
+      ],
+      "erpm_min": 0,
+      "erpm_max": 0,
+      "heap_free_first": 45412,
+      "heap_free_last": 44976,
+      "heap_free_lowest_sampled": 42684,
+      "heap_min_first": 37620,
+      "heap_min_last": 37360,
+      "heap_min_by_minute": [
+        37620,
+        37620,
+        37360,
+        37360,
+        37360,
+        37360,
+        37360,
+        37360,
+        37360,
+        37360,
+        37360
+      ],
+      "vesc_crc_err_last": 0,
+      "vesc_packets_first": 1447,
+      "vesc_packets_last": 5627,
+      "revert_missed": false,
+      "log_lines": [],
+      "remote_commands": {
+        "{\"arg\": 1, \"cmd\": 8, \"result\": 2, \"src\": 0}": 8
+      }
+    },
+    "core2": {
+      "resets": 0,
+      "status_samples": 41,
+      "live_always": true,
+      "vesc_always": true,
+      "heap_first": 147148,
+      "heap_last": 147148,
+      "heap_lowest_sampled": 146888,
+      "parse_errors_last": 0,
+      "touch_presses_first": 10,
+      "touch_presses_last": 10,
+      "espnow_before": {
+        "linked": true,
+        "channel": 2,
+        "channel_aligned": true,
+        "tx_lines": 777,
+        "tx_failed": 1,
+        "tx_dropped": 4,
+        "rx_lines": 1952,
+        "rx_dropped": 23,
+        "rx_invalid": 0,
+        "channel_hops": 1,
+        "rssi": -38
+      },
+      "espnow_after": {
+        "linked": true,
+        "channel": 2,
+        "channel_aligned": true,
+        "tx_lines": 2030,
+        "tx_failed": 1,
+        "tx_dropped": 4,
+        "rx_lines": 5120,
+        "rx_dropped": 33,
+        "rx_invalid": 0,
+        "channel_hops": 1,
+        "rssi": -39
+      }
+    }
+  },
+  "private_capture_sha256": {
+    "core2-after.log": "41a458fee6b817fbdf2f4cb452c9b604b68d59646250604dcb601cbaa7077683",
+    "core2-before-app0.bin": "894a1a34537b5894110ddb120b2419f18b0fad8432b0e7acac775306ce58d3ac",
+    "core2-before-read.log": "2ccf6c66d9a6e343613e0e714d913526fdbd8d3bfdc66cb9bb00d2961c6c3438",
+    "core2-soak-end.log": "657e1a8fb8d986aae3f84b2b514b889e0102efaed549737dc811131509e348c5",
+    "core2-soak-start.log": "d2e5aab2170c9e28b390f18b5257265073279cc9af246730f34c14a58ff9a8ac",
+    "core2-soak.tsv": "ba2417dccf225e5a0173ecfdaf79cbc946afa2af9fa4834c7024ca76f232f69b",
+    "core2-speedcal.log": "f6f347f912c97ed65c23e90520742f147139defcc23f7caaab341aa5c82cdf04",
+    "core2-upload.log": "7498dd3d3e0e04706b471817a12f49987da2f7a0f0677f3b88b72ee3afe6b0a1",
+    "heltec-after.log": "18784f2faead93926b03a53480b9513d7985012fa434f667542af5d1983e031a",
+    "heltec-before-app0.bin": "d43662645457f51283010d655cc2f60d5740adafc015adc59910e70fd136cab9",
+    "heltec-before-read.log": "93bca45556dd6315316883729cb2f974fad86c7e96298e032b32fab709773d01",
+    "heltec-before.log": "3e89c6023e8963c10b1303d4b81adcd1bf9dee96a4d4697b35ab5cc278ea814e",
+    "heltec-modes.tsv": "3b63fde36bb24ade54612cd74bc1a83ee469b3f2919ee5dad68729bc6172ec89",
+    "heltec-soak.tsv": "a4574c0648e7ba7a3fa84600509a0a69ae60e80e9a81d33c73611f07ad6124cd",
+    "heltec-speedcal-modes.tsv": "620fc728fae4d98fc168c94d58dee3992933605d3a33384558d07c6ff80e5746",
+    "heltec-speedcal-modes2.tsv": "948826e5d6a6487d7ddc6b512afe776c9bf3c3b9a98f64f8fbec573e10a0e259",
+    "heltec-speedcal.log": "ff672894cca765bf61b3386f5e8317b7c0c44ec223531d8f5aa759babc03a104",
+    "heltec-upload.log": "a74cfe6e0e1edb199248ba616435ee1aab49089c0aa09cdbcd8e5b34bb32901b",
+    "heltec-vesc-on.log": "99be6b9bf584051fa4b6b9ca9c5a8f340cb39a093a451b572cdae911b6d97f90"
+  },
+  "not_verified": [
+    "everything that needs the host: course download, JOIN and its mode write, the game-speed lock, FIRE, relative boost",
+    "a boost end after a real VESC link loss or Heltec restart (the new recovery path has only run in the native harness)",
+    "pit STOP/SLOW/BOOST and a VESC cold boot with these applications",
+    "GPS, map follow and speed (no fix indoors); kart 3 speed calibration",
+    "Core2 or Heltec OTA with these applications; independent post-write readback",
+    "load, road or endurance behaviour"
+  ],
+  "speed_calibration": {
+    "owner_decision": "2026-11-13: set kart 3's Heltec speed factor to 1.736 (provisional until a GPS check outdoors)",
+    "derivation": "2.48 was measured on kart 2 by GPS against its stored 14 poles / 2.769 / 0.406 m. Kart 3 stores 20 poles with the same gear and wheel numbers, and the owner confirms the same motor, gearing and wheels, so 2.48 x 14/20 = 1.736 gives kart 3 the same ERPM caps as kart 2 (ECO 15163, NORMAL 25272)",
+    "command": "console `speedcal 1.736` on the Heltec; stored in the Heltec's preferences, nothing written to the VESC by it",
+    "console_log": [
+      "speed calibration 1.736 stored (caps re-apply at the next mode command)"
+    ],
+    "before": {
+      "speed_cal": 2.48,
+      "cap_mph": 15,
+      "cap_erpm": 21661,
+      "max_erpm": 21661,
+      "scale_max": 0.5
+    },
+    "after": {
+      "speed_cal": 1.736,
+      "cap_mph": 15,
+      "cap_erpm": 15163,
+      "max_erpm": 21661,
+      "scale_max": 0.5
+    },
+    "until_a_mode_was_selected": {
+      "seconds_logged": 586,
+      "live_limits_seen": [
+        {
+          "scale_max": 0.5,
+          "max_erpm": 21661
+        }
+      ],
+      "mode_actual_reported": [
+        "None"
+      ],
+      "note": "the VESC kept the cap written before the change and the Heltec reported the actual mode as unknown, because that cap matched no mode"
+    },
+    "applied_from_core2": {
+      "mode_log_lines": [
+        [
+          166.3,
+          "vesc write scale 0.500, cap 15 mph = 15163 ERPM"
+        ],
+        [
+          166.5,
+          "vesc write verify ok (scale 0.500, ERPM 15163)"
+        ],
+        [
+          176.1,
+          "vesc write scale 0.750, cap 25 mph = 25272 ERPM"
+        ],
+        [
+          176.1,
+          "vesc write verify: re-reading (got scale 0.500, ERPM 15163; want 0.750, 25272)"
+        ],
+        [
+          176.3,
+          "vesc write verify ok (scale 0.750, ERPM 25272)"
+        ]
+      ],
+      "mode_commands": [
+        [
+          166.3,
+          {
+            "src": 254,
+            "seq": 5,
+            "cmd": 1,
+            "arg": 0,
+            "result": 1
+          }
+        ],
+        [
+          176.1,
+          {
+            "src": 254,
+            "seq": 6,
+            "cmd": 1,
+            "arg": 1,
+            "result": 1
+          }
+        ]
+      ],
+      "limit_readbacks_in_order": [
+        {
+          "scale_max": 0.5,
+          "max_erpm": 21661
+        },
+        {
+          "scale_max": 0.5,
+          "max_erpm": 15163
+        },
+        {
+          "scale_max": 0.75,
+          "max_erpm": 25272
+        }
+      ],
+      "wheel_peak_erpm_by_mode": {
+        "ECO": 14799,
+        "NORMAL": 23556
+      },
+      "earlier_peaks_with_2.48": {
+        "ECO": 19800,
+        "NORMAL": 31074
+      },
+      "faults_seen": [
+        0
+      ],
+      "vesc_link_dropped": false,
+      "resets": 0,
+      "final_state": "NORMAL confirmed, zero ERPM",
+      "speed_cal_reported": 1.736
+    },
+    "state": "stored on the Heltec, written to the VESC by ECO and NORMAL mode commands and read back; wheels-up peaks sit just under the new caps",
+    "not_verified": [
+      "GPS speed against the caps on the road (full pedal in ECO should settle at 15 mph)",
+      "SLOW and the game's 5 mph effects at the new factor",
+      "whether the pit and kart-Pi displays, which use a fixed 2.48, show kart 3's wheel speed correctly"
+    ]
+  }
+}

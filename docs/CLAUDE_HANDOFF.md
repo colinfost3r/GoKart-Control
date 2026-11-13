@@ -15,18 +15,31 @@ STOP/SLOW/BOOST, a sustained soak, a VESC cold boot, GPS, and everything that ne
 (course download, JOIN, FIRE). See
 [the install record](../hardware/m5/2026-11-12-kart3-player-update/README.md).
 
-## Evening of November 12: the source is ahead of what kart 3 runs
+**Update, November 13: kart 3 now runs the game-rules candidate** (`2026-11-13-game-rules`).
+Both applications were written over USB with the VESC off, after reading back and keeping the
+November 12 pair. With the VESC then powered: identity and limits read cleanly, ECO/NORMAL/SPORT
+were written and verified at the November 10 values, the wheel ran forward and reverse with
+fault 0, and the owner reported the pedal felt right. A ten-minute soak with the VESC on then
+ran with no reset, fault or link drop; the Heltec's heap low-water mark settled at 37.4 kB. The
+host is **not** updated, so nothing that needs it (course download, JOIN, the game-speed lock,
+FIRE, the boost changes) has run on hardware. Kart 3's Heltec speed factor was also changed from
+2.48 to **1.736** (owner decision): the new ECO and NORMAL caps were written from the Core2, read
+back, and the wheel levelled off under them with the wheels up. It is provisional until a GPS
+check on the road. See
+[the November 13 install record](../hardware/m5/2026-11-13-kart3-game-rules-update/README.md).
 
-A review of the FIRE path found three things the owner asked to change. They are implemented
-and tested offline; **nothing has been flashed**, so kart 3 still runs the afternoon candidate
-(`2026-11-12-player`) with the old behaviour until both of its boards are re-flashed.
+## Game rules of November 12, on kart 3 since November 13
+
+A review of the FIRE path found three things the owner asked to change. They are implemented,
+tested offline and installed on kart 3 (both boards). **The host kart is not updated**, and old
+and new firmware cannot play together, so none of the new behaviour has been exercised yet.
 
 | Review finding | State in source |
 | --- | --- |
 | A boost stayed on the controller if its end could not be written (VESC link down, stale read, Heltec restart) | Fixed: finished once, lower-only, including after a Heltec restart |
 | BOOST was an absolute 75% scale: no effect in NORMAL, less power in SPORT | Fixed: a boost is a step up from the mode in force |
 | A later BOOST overwrote a running ROCKET | Fixed: a running boost is never weakened or shortened |
-| Kart 3 speed caps use kart 2's 2.48 factor with 20 stored poles (caps about 43% high if the motors match) | **Open; next task.** Needs a GPS-versus-ERPM measurement on kart 3 |
+| Kart 3 speed caps used kart 2's 2.48 factor with 20 stored poles (caps about 43% high if the motors match) | **Provisional fix, November 13:** `speedcal 1.736` (= 2.48 × 14/20) is stored on kart 3's Heltec, giving kart 2's caps. ECO 0.50 / 15163 and NORMAL 0.75 / 25272 ERPM were written from the Core2 and read back; wheels-up peaks fell from 19800 / 31074 to 14799 / 23556 ERPM. Still to do: confirm by GPS on the road (full pedal in ECO should settle at 15 mph). After any `speedcal` change the VESC keeps the old cap, and the Heltec shows the actual mode as unknown, until a mode is selected |
 | One late status line (over 700 ms) ends the Core2 game and clears items | Open |
 | 6.5 s without the host's LoRa course packet ends the game | Open (by design; margin is thin) |
 | FIRE triggers on a single tap | Open |
@@ -42,14 +55,15 @@ New rules, all owner decisions of November 12 and described in
 - The "reconnect is read-only" rule has one recorded exception for a missed boost end; see
   `AGENTS.md`.
 
-To put this on hardware: re-flash kart 3's Core2 (`m5-espnow`) and Heltec (`kart-m5-espnow`),
-flash the host Heltec (`kart`) and deploy `kart/server` to the host Pi, all from the same
-commit. The host Pi has no screen control for the game speed yet; it is set in `config.json`.
+Still to put on hardware: flash the host Heltec (`kart`) and deploy `kart/server` to the host
+Pi from the same commit as kart 3's boards. The host Pi has no screen control for the game
+speed yet; it is set in `config.json`.
 
 All eight firmware targets compile from this source. The application images are frozen in
 ignored `firmware/build/bench-candidates/2026-11-13-game-rules/`; their hashes and the test
-result are in [the manifest](validation/m5-game-rules-2026-11-13.json). Flash kart 3 from those
-frozen files, not from a fresh build (a rebuild embeds different paths and hashes differently).
+result are in [the manifest](validation/m5-game-rules-2026-11-13.json). Flash from those frozen
+files, not from a fresh build (a rebuild embeds different paths and hashes differently). The
+host `kart` image for this source is `kart.app.bin` in that folder.
 
 ## Project and Git
 
@@ -70,9 +84,12 @@ git status --short --branch
 git fetch origin
 ```
 
-The candidate manifest is [m5-player-2026-11-12.json](validation/m5-player-2026-11-12.json).
-Application binaries are frozen locally under ignored `firmware/build/bench-candidates/2026-11-12-player/`;
-they are not Git deliverables. Rebuild on a fresh machine and record the bytes actually uploaded.
+The current candidate manifest is
+[m5-game-rules-2026-11-13.json](validation/m5-game-rules-2026-11-13.json); the one it replaced on
+kart 3 is [m5-player-2026-11-12.json](validation/m5-player-2026-11-12.json). Application binaries
+are frozen locally under ignored `firmware/build/bench-candidates/2026-11-13-game-rules/` and
+`2026-11-12-player/`; they are not Git deliverables. Rebuild on a fresh machine and record the
+bytes actually uploaded.
 The older `2026-11-12/` bundle/manifest belongs to the display-only checkpoint `a21ed7c`.
 
 ## What changed and what remains
@@ -115,6 +132,11 @@ Never substitute `core2-items` for this dashboard. Two things to know:
 - The manifest's build-input hash for `firmware/core2-items/core2-items.ino` predates the merge.
   None of the eight candidate targets compile that file.
 
+On November 13 his branch was merged again, through **`cb7011c`** (merge `1cabf76`): `core2-items`
+0.3.3/0.3.5 and server/pit UI work (rejoin grace after a host reboot, race field, shell targeting).
+It touches none of the eight M5 targets. It does change `kart/server`, which the host update
+deploys; all 545 tests pass on the merged tree.
+
 ## Next session: coordinated kart3 and host acceptance
 
 1. Identify physical USB/OTA endpoints and current app hashes; preserve NVS/rollback evidence.
@@ -132,8 +154,9 @@ Never substitute `core2-items` for this dashboard. Two things to know:
    `tools/m5/pair_course_fallback.py` (same arguments and plan) handles that. Neither tool's
    `--apply` has run on hardware yet.
    Stop the Pi serial owner while provisioning the host from another computer, then restore it.
-   The player's own Heltec must be running so Core2 can identify kart3. Channel6 was the last
-   local pairing checkpoint; verify the host uses the same channel rather than guessing.
+   The player's own Heltec must be running so Core2 can identify kart3. Kart 3's pair was on
+   channel 2 on November 12 and 13 (it follows the Wi-Fi access point); verify the host uses the
+   same channel rather than guessing.
 4. Existing installed Core2 opens OTA by holding its old top status bar1.8s. The candidate uses
    the upper-right DASH/MAP button held1.8s (or USB `ota on`). First press toggles page;
    continuing hold opens updates. Use `tools/m5/ota_core2.py`, password file0600 and official
@@ -156,18 +179,22 @@ Legacy base/repeaters ignore type5; updated repeater is required only for relay-
 identity coverage. The first test can use direct host/player LoRa with no base. This is freshness,
 not cryptographic LoRa replay protection. Course download and own-kart commands are authenticated.
 
-## Installed on kart 3 — candidate applications since November 12
+## Installed on kart 3 — game-rules applications since November 13
 
 | Installed target | SHA-256 | Reports |
 | --- | --- | --- |
-| Heltec `kart-m5-espnow` | `d43662645457f51283010d655cc2f60d5740adafc015adc59910e70fd136cab9` | `kart-0.3.3`, built Nov 12 08:55:51 |
-| Core2 `m5-espnow` | `894a1a34537b5894110ddb120b2419f18b0fad8432b0e7acac775306ce58d3ac` | `m5-v1.5`, answers `m5_game` |
+| Heltec `kart-m5-espnow` | `84e1da0ea79dbd576df5e4adc9bce04e8673aa305441943c29ea86d5bc7b4486` | `kart-0.3.3`, built Nov 12 19:42:53 |
+| Core2 `m5-espnow` | `0d904a89671272c08f794e848047e28341e6d232968723afdc3c017054e1a169` | `m5-v1.5`, answers `m5_game` |
 
-The previous `4a582f0` pair (Heltec `11e556e8…21f2`, Core2 `996c4387…9b0a`) was read back from
-flash before the update and is kept privately for rollback; see the
-[install record](../hardware/m5/2026-11-12-kart3-player-update/README.md). The November 11
-observations below were made on that previous pair; on the candidate, identity, the three mode
-readbacks and wheels-up forward/reverse were repeated on November 12, cold-boot behaviour was not.
+Both report the same version strings as the pair they replaced; tell them apart by hash or by
+the Heltec's build time. The November 12 pair (Heltec `d4366264…cab9`, Core2 `894a1a34…d3ac`)
+was read back from flash before this update and is the rollback; see the
+[November 13 install record](../hardware/m5/2026-11-13-kart3-game-rules-update/README.md) and
+[the November 12 one](../hardware/m5/2026-11-12-kart3-player-update/README.md). The November 11
+observations below were made on the older `4a582f0` pair; identity, the three mode readbacks and
+wheels-up forward/reverse were repeated on November 12 and again on November 13 after a VESC
+power-up. A power-cycled VESC comes up on its stored limits (scale 1.00, 150000 ERPM) and the
+Heltec adopts that as SPORT without writing; the kart stays in SPORT until a mode is chosen.
 
 - Core2 v1.3 / K010-V13, Heltec WiFi LoRa 32 V4.3 + L76K. Encrypted local pair; channel 6 on
   November 11, channel 2 after this update because the Heltec follows the Wi-Fi access point.
