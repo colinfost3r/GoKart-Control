@@ -95,6 +95,23 @@ change incoming telemetry rates or any live motor-control contract.
 `courses` / `course_boots` arrays indexed by kart ID minus1. Unknown fields remain optional to
 legacy displays. Existing mode requests/metadata stay intact.
 
+## Pit race additions (November 13)
+
+`display` adds three fields about a pit race start, for display only:
+
+| Field | Meaning |
+| --- | --- |
+| `race_hold` | `true` while the Heltec holds the kart on the grid |
+| `race_go_ms` | milliseconds until GO while held, else 0 |
+| `race_went_ms` | milliseconds since a GO that released this kart, for three seconds, else 0. A kart under pit STOP is not released by GO and never reports it |
+
+The Core2 turns `race_go_ms` into a local deadline at the moment the line arrives, so it can
+only show GO late, never early, and it shows GO only from `race_went_ms`. It also reads
+`race_pos` (1 to 8, 0 unknown) and `race_state` (0 idle, 1 countdown, 2 running, 3 finished)
+from the own `self` line, which the Heltec takes from the pit beacon and drops after 30 s
+without one. A display on older firmware ignores all five; a Heltec on older firmware does
+not send the three new ones and the Core2 then shows no countdown.
+
 `m5game TOKEN REQUEST SESSION ACTION ARG COURSE BOOT CRC` is a separate typed allowlist.
 TOKEN/REQUEST/COURSE/BOOT are8 hex digits, SESSION/ACTION2, ARG4, CRC4 (CRC16 over bytes before
 its separating space). Encoded line is59 bytes including newline. Action:1 JOIN,2 LEAVE,3 SHELL,

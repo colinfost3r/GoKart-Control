@@ -203,6 +203,36 @@ static void testTimers(){
   const size_t count=vesc.writes.size();command(GK_CMD_RATE,1,13);assert(reportRate==1&&result()==GK_RES_APPLIED);
   command(GK_CMD_PING,0,14);assert(result()==GK_RES_APPLIED&&vesc.writes.size()==count);
 }
+static void testRaceDisplay(){
+  // What the paired display is told about a pit race start: the hold and its remaining time,
+  // then GO only when this kart was actually released by it.
+  bool hold;uint32_t go,went;
+  modeReq=0;vesc.live.currentMaxScale=.5f;
+  m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&!went);
+  command(GK_CMD_RACE,3,10);assert(raceHold&&vesc.writes.back().currentMaxScale==0);
+  m5RaceStart(nowMs,hold,go,went);assert(hold&&go==3000&&!went);completeWrite();
+  advance(1000);m5RaceStart(nowMs,hold,go,went);assert(hold&&go>1900&&go<2000&&!went);
+  advance(2000);refresh();serviceWrites();assert(!raceHold&&vesc.writes.back().currentMaxScale==.5f);
+  m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&went==1);completeWrite();
+  advance(2900);m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&went>2900&&went<=3000);
+  advance(200);m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&!went);
+  // A new hold forgets the previous GO at once.
+  refresh();command(GK_CMD_RACE,2,11);completeWrite();advance(2000);refresh();serviceWrites();completeWrite();
+  m5RaceStart(nowMs,hold,go,went);assert(went);
+  refresh();command(GK_CMD_RACE,5,12);m5RaceStart(nowMs,hold,go,went);assert(hold&&go==5000&&!went);completeWrite();
+  // A start aborted before GO releases the hold without announcing GO, then or later.
+  refresh();command(GK_CMD_RACE,0,13);assert(!raceHold);m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&!went);completeWrite();
+  advance(6000);refresh();serviceWrites();m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&!went);
+  // A stopped kart is not released by GO, so the display is never told GO.
+  command(GK_CMD_STOP,0,14);
+  for(int step=0;step<3;++step){serviceWrites();completeWrite();advance(STOP_RAMP_STEP_MS);refresh();}
+  assert(stopActive&&rampIdx<0&&vesc.live.currentMaxScale==0);
+  const size_t writes=vesc.writes.size();
+  command(GK_CMD_RACE,2,15);assert(raceHold&&vesc.writes.size()==writes);
+  m5RaceStart(nowMs,hold,go,went);assert(hold&&go==2000&&!went);
+  advance(2000);refresh();serviceWrites();assert(!raceHold&&stopActive);
+  m5RaceStart(nowMs,hold,go,went);assert(!hold&&!go&&!went);
+}
 static void testLinkChange(){
   command(GK_CMD_SET_MODE,1,1);const size_t count=vesc.writes.size();
   vesc.sample.receivedMs=0;serviceWrites();assert(wState==W_IDLE&&result()==GK_RES_UNKNOWN);
@@ -468,6 +498,7 @@ int main(int argc,char** argv){
   else if(scenario=="guard"){assert(argc==3);testGuard(argv[2]);}
   else if(scenario=="passthrough")testPassthrough();else if(scenario=="ack")testAck();
   else if(scenario=="stop-start")testStopStart();else if(scenario=="timers")testTimers();
+  else if(scenario=="race-display")testRaceDisplay();
   else if(scenario=="link-change")testLinkChange();else if(scenario=="ceiling")testCeiling();
   else if(scenario=="baseline")testBaseline();
   else if(scenario=="baseline-wrong-identity")testWrongBaselineIdentity();

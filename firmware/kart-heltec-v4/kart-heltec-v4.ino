@@ -195,6 +195,7 @@ bool     ovActive = false; float ovScale = 1.0f; uint32_t ovUntilMs = 0;
 // Race start: grid hold at zero power until GO. GO is issued_utc + arg when the kart has GPS/beacon time (all
 // karts release together), else arg seconds after receipt. STOP keeps the kart stopped; START releases early.
 bool     raceHold = false; uint32_t raceGoMs = 0; uint32_t raceGoUnix = 0;
+uint32_t raceWentMs = 0;                          // when a grid hold last ended in a GO that released this kart (0 = none): shown by the paired display
 // Limits as first read from this controller after link-up: everything we write echoes these
 // (not the capture constants), so each kart keeps its own configuration.
 VescActiveLimits origLimits; bool origValid = false;
@@ -610,6 +611,7 @@ static void serviceWrites() {
   }
   if (raceHold && (int32_t)(now - raceGoMs) >= 0) {
     raceHold = false;
+    if (!stopActive) raceWentMs = now ? now : 1;     // a stopped kart is not released by GO: nothing to announce
     Serial.printf("{\"t\":\"race\",\"kart\":%u,\"event\":\"go\"}\n", kartId);
     logf("race: GO");
     autoWrite("race GO");
@@ -796,7 +798,7 @@ static void handleCommand(uint8_t src, uint8_t seq, uint8_t cmd, uint8_t arg, ui
         if (issued && nowU) goInMs = goAt > nowU ? (uint32_t)(goAt - nowU) : 0;   // 0 = arrived after GO: release now
         else goInMs = (uint32_t)arg * 1000UL;
         if (goInMs > 31000UL) goInMs = (uint32_t)arg * 1000UL;                   // clocks disagree wildly: fall back
-        raceHold = true; raceGoMs = nowMs + goInMs; raceGoUnix = issued ? issued + arg : 0; ovActive = false;
+        raceHold = true; raceGoMs = nowMs + goInMs; raceGoUnix = issued ? issued + arg : 0; ovActive = false; raceWentMs = 0;
         boostEndOwed = false; boostMarkClear();
         Serial.printf("{\"t\":\"race\",\"kart\":%u,\"event\":\"countdown\",\"go_in_ms\":%lu,\"secs\":%u,\"go_utc\":%lu}\n", kartId, (unsigned long)goInMs, arg, (unsigned long)raceGoUnix);
         logf("race: grid hold, GO in %lu ms", (unsigned long)goInMs);
@@ -905,8 +907,17 @@ static void serviceM5() {
 #endif
 #endif
 }
+// What the paired display is told about a pit race start. Display only; nothing here changes control.
+// hold: the grid hold is in force. goMs: ms until GO while held. wentMs: ms since a GO that released
+// this kart, for three seconds (never 0 while it is being announced).
+static inline void m5RaceStart(uint32_t now, bool& hold, uint32_t& goMs, uint32_t& wentMs) {
+  hold = raceHold;
+  goMs = raceHold && (int32_t)(raceGoMs - now) > 0 ? raceGoMs - now : 0;
+  wentMs = !raceHold && raceWentMs && now - raceWentMs < 3000 ? now - raceWentMs + 1 : 0;
+}
 static void m5Report() {
 #if GK_M5_LINK
+  bool raceHeld; uint32_t raceGoIn, raceWent; m5RaceStart(millis(), raceHeld, raceGoIn, raceWent);
   CmdEnt* e = cmdEnt(m5Owner);
   uint8_t result = e ? e->result : (m5Owner.src >= 0 ? GK_RES_UNKNOWN : m5Result);
   uint8_t hosts = 0; for (uint8_t k = 1; k <= GK_MAX_KARTS; ++k) if (kartHosting(k)) hosts |= 1u << (k-1);
@@ -918,7 +929,8 @@ static void m5Report() {
     "{\"t\":\"display\",\"v\":1,\"kart\":%u,\"boot\":%lu,\"token\":%lu,\"mode_ready\":%s,"
     "\"request\":%lu,\"result\":%u,\"radio\":%s,\"pit\":%s,\"base_rssi\":%d,\"rate\":%u,"
     "\"speed_cal\":%.3f,\"drops\":%lu,\"modes\":[{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f},{\"mph\":%u,\"scale\":%.3f}],"
-    "\"game_v\":2,\"game_mode\":%u,\"game_session\":%u,\"hosts\":%u,\"game_request\":%lu,\"game_result\":%u,\"game_ready\":%s,\"shield\":%u,\"star_ms\":%lu,\"course_hosts\":%u,\"courses\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],\"course_boots\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu]}",
+    "\"game_v\":2,\"game_mode\":%u,\"game_session\":%u,\"hosts\":%u,\"game_request\":%lu,\"game_result\":%u,\"game_ready\":%s,\"shield\":%u,\"star_ms\":%lu,\"course_hosts\":%u,\"courses\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],\"course_boots\":[%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu],"
+    "\"race_hold\":%s,\"race_go_ms\":%lu,\"race_went_ms\":%lu}",
     kartId, (unsigned long)m5Boot, (unsigned long)(m5Gate.consumed ? 0 : m5Gate.token), gkBool(m5ModeReady()),
     (unsigned long)m5Request, result, gkBool(radioOk), gkBool(baseHeardMs && millis()-baseHeardMs < 30000),
     (int)baseRssi, reportRate, speedCal, (unsigned long)m5Drops,
@@ -927,7 +939,8 @@ static void m5Report() {
     gameMode, gameSession, hosts, (unsigned long)m5GameRequest, gameResult, gkBool(m5ModeReady() && radioOk), m5Shield,
     (unsigned long)(int32_t(m5StarUntil-millis())>0 ? m5StarUntil-millis() : 0), courseHosts,
     (unsigned long)courseGeneration[1].digest,(unsigned long)courseGeneration[2].digest,(unsigned long)courseGeneration[3].digest,(unsigned long)courseGeneration[4].digest,(unsigned long)courseGeneration[5].digest,(unsigned long)courseGeneration[6].digest,(unsigned long)courseGeneration[7].digest,(unsigned long)courseGeneration[8].digest,
-    (unsigned long)courseGeneration[1].boot,(unsigned long)courseGeneration[2].boot,(unsigned long)courseGeneration[3].boot,(unsigned long)courseGeneration[4].boot,(unsigned long)courseGeneration[5].boot,(unsigned long)courseGeneration[6].boot,(unsigned long)courseGeneration[7].boot,(unsigned long)courseGeneration[8].boot);
+    (unsigned long)courseGeneration[1].boot,(unsigned long)courseGeneration[2].boot,(unsigned long)courseGeneration[3].boot,(unsigned long)courseGeneration[4].boot,(unsigned long)courseGeneration[5].boot,(unsigned long)courseGeneration[6].boot,(unsigned long)courseGeneration[7].boot,(unsigned long)courseGeneration[8].boot,
+    gkBool(raceHeld), (unsigned long)raceGoIn, (unsigned long)raceWent);
   if (n > 0 && n < (int)sizeof b) m5Emit(b);
 #endif
 }

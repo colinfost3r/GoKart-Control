@@ -112,6 +112,11 @@ remains separate from kart 3's completed telemetry and driver-mode checks.
   DASH opens telemetry/modes. FIRE is enabled only with a live confirmed native session,
   eligible inventory, fresh generation/controller state and (for shells) an in-range target.
   Missing GPS is unavailable, never an invented position at (0,0). This is not geofencing.
+- PIT RACE (November 13, display only): while the Heltec holds the kart on the grid, both pages
+  show **GRID HOLD / GO IN** with the seconds left; **GO** appears for three seconds when the
+  Heltec reports it released the kart; then a **RACE P2** chip while the pit beacon says the race
+  is running and **FINISHED P2** when it ends. The Core2 only shows what the Heltec reports: it
+  never shows GO from its own clock, never over a pit STOP, and has no lap count or lap times.
 - Hold ECO/NORMAL/SPORT for **650 ms** to request a mode on a commissioned write-capable
   companion; release before trying again. This works over ESP-NOW on kart 3 and is also supported by UART.
   Both initial read-only Heltec targets keep these controls unavailable. Pending, rejected,

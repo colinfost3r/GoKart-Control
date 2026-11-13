@@ -68,7 +68,15 @@ int main(int argc,char** argv){
   if(!std::strcmp(scene,"fault"))state.karts[3].fault=5;
   if(!std::strcmp(scene,"stopped"))state.karts[3].stopped=true;
   if(!std::strcmp(scene,"slow"))state.karts[3].slow=5;
-  bool live=!std::strncmp(scene,"live",4)||siteOnly;
+  // Pit race scenes, as the own Heltec would report them: grid hold, GO, running, finished.
+  const bool raceScene=!std::strncmp(scene,"race-",5);
+  if(!std::strcmp(scene,"race-grid")){state.raceHold=true;state.raceGoAt=now+3400;}
+  if(!std::strcmp(scene,"race-grid-long")){state.raceHold=true;state.raceGoAt=now+11200;}
+  if(!std::strcmp(scene,"race-go")){state.raceWent=true;state.raceWentAt=now-400;}
+  if(!std::strcmp(scene,"race-running")){state.raceState=2;state.racePos=2;}
+  if(!std::strcmp(scene,"race-finished")){state.raceState=3;state.racePos=1;}
+  if(!std::strcmp(scene,"race-stopped")){state.raceHold=true;state.raceGoAt=now+3400;state.karts[3].stopped=true;}
+  bool live=!std::strncmp(scene,"live",4)||siteOnly||raceScene;
   m5dash::LiveGame game;m5game::share::Receiver receiver;
   bool native=argc>4&&!std::strncmp(scene,"native-",7);
   if(native){

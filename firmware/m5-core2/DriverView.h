@@ -157,6 +157,25 @@ template<class Canvas> class DriverView {
       if(line[0]){c.fillRect(5,220,246,16,palette::bg);label(line,9,225,1,palette::muted);}
     }
   }
+  // Pit race, display only. The Heltec holds the kart on the grid and releases it at GO; this
+  // shows what it reports and never predicts past it.
+  void race(const State& state,uint32_t now,bool mapPage) {
+    const int left=state.raceCountdown(now);
+    if(left>=0) {
+      box({60,44,200,98},palette::amber);
+      label("GRID HOLD / GO IN",109,52,1,palette::amber);
+      if(left>=10)digit(left/10,115,66,42,63,palette::amber);
+      digit(left%10,left>=10?163:139,66,42,63,palette::amber);
+      return;
+    }
+    if(state.raceGo(now)) {box({60,44,200,98},palette::eco);label("GO",124,69,6,palette::eco);return;}
+    const uint8_t shown=state.raceShown(now);if(!shown)return;
+    char b[16];const bool done=shown==3;
+    if(state.racePos)std::snprintf(b,sizeof b,"%s P%u",done?"FINISHED":"RACE",unsigned(state.racePos));
+    else std::snprintf(b,sizeof b,"%s",done?"FINISHED":"RACE");
+    const HitRect r=mapPage?HitRect{4,34,88,22}:HitRect{128,8,88,22};
+    box(r,done?palette::amber:palette::cyan);label(b,r.x+8,r.y+7,1,done?palette::amber:palette::cyan);
+  }
   void dash(const State& state,uint32_t now,const char* notice,int heldMode,uint32_t holdMs,bool holdFired) {
     const auto& k=state.karts[state.self];const bool live=state.live(now),vesc=live&&k.vesc;
     const float speedMph=gpsMph(state,now);const bool speed=std::isfinite(speedMph);
@@ -230,6 +249,7 @@ public:
     if(mapPage)map(state,course,now,preview,game,homeSite);else dash(state,now,notice,heldMode,holdMs,holdFired);
     navigation(mapPage,now,preview,game,receiver,state);if(preview)invitation(*preview,now);
     if(game&&receiver)liveInvitation(*game,*receiver,now);
+    race(state,now,mapPage);
     // Controller restrictions/faults remain visible on either page and above game overlays.
     const char* alert=nullptr;
     if(state.live(now)&&k.vesc){

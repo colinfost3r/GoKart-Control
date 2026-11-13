@@ -130,6 +130,40 @@ class MapCourseTests(unittest.TestCase):
             self.assertEqual(away.count(PACKAGE_LINE),1);self.assertEqual([p for p in away if p in (SHORE,BUILDING,ROAD)],[])
             shop=scene(41.0938,-73.4163)  # built-in streets cover the view: the host's copy is not drawn over them
             self.assertEqual(shop.count(PACKAGE_LINE),0);self.assertGreater(shop.count(BUILDING)+shop.count(ROAD),20)
+    def test_native_race_view(self):
+        self.assertIn('race view passed',self.native(ROOT/'firmware/m5-core2/tests/race_view_test.cpp'))
+    def test_race_fields_have_one_spelling_on_both_boards(self):
+        heltec=(ROOT/'firmware/kart-heltec-v4/kart-heltec-v4.ino').read_text()
+        core2=(ROOT/'firmware/m5-core2/DisplayState.h').read_text()
+        self.assertIn(r'\"race_hold\":%s,\"race_go_ms\":%lu,\"race_went_ms\":%lu}"',heltec)
+        self.assertIn(r'\"race_pos\":%u,\"race_state\":%u}"',heltec)
+        for key in ('race_hold','race_go_ms','race_went_ms','race_pos','race_state'):
+            self.assertIn('doc["%s"]'%key,core2,key)
+    def test_race_screens_show_what_the_heltec_reports(self):
+        import xml.etree.ElementTree as ET
+        with tempfile.TemporaryDirectory() as t:
+            exe=self.renderer(t)
+            def labels(scene,page):
+                doc=ET.fromstring(subprocess.check_output([str(exe),scene,page],text=True))
+                found=[e for e in doc if e.tag.endswith('text')]
+                for e in found:
+                    self.assertLessEqual(float(e.attrib['x'])+float(e.attrib['textLength']),320,(scene,page,e.text))
+                    self.assertLessEqual(float(e.attrib['y']),240,(scene,page,e.text))
+                return [e.text for e in found]
+            for page in ('map','dash'):
+                grid=labels('race-grid',page)
+                self.assertIn('GRID HOLD / GO IN',grid);self.assertNotIn('GO',grid)
+                self.assertIn('GRID HOLD / GO IN',labels('race-grid-long',page))
+                go=labels('race-go',page)
+                self.assertIn('GO',go);self.assertNotIn('GRID HOLD / GO IN',go)
+                self.assertIn('RACE P2',labels('race-running',page))
+                self.assertIn('FINISHED P1',labels('race-finished',page))
+                # GO does not release a pit STOP: the stop is shown, the countdown is not.
+                stopped=labels('race-stopped',page)
+                self.assertIn('PIT STOP ACTIVE',stopped);self.assertNotIn('GRID HOLD / GO IN',stopped);self.assertNotIn('GO',stopped)
+                quiet=' '.join(labels('live',page))
+                for word in ('GRID HOLD','RACE','FINISHED'):self.assertNotIn(word,quiet)
+                self.assertNotIn('GO',labels('live',page))
     def test_native_map_upload_and_storage(self):
         result=self.native(ROOT/'firmware/m5-core2/tests/map_course_test.cpp')
         self.assertIn('record_crc='+provision.prepare(DOC)[2],result)

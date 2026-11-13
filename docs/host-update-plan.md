@@ -22,7 +22,7 @@ M5 player support, and the players get the same source.
 
 | Part | Change | Size of the difference from Eamon's branch |
 | --- | --- | --- |
-| Host Heltec | `kart` application, frozen as `2026-11-13-upstream-036/kart.app.bin` (reports `kart-0.3.6`), written at `0x10000` only | `kart-heltec-v4.ino` +492 / −39 lines, plus the `M5Game` library and a small `VescLink` change |
+| Host Heltec | `kart` application, frozen as `2026-11-13-race-screen/kart.app.bin` (reports `kart-0.3.6`), written at `0x10000` only | `kart-heltec-v4.ino` +492 / −39 lines, plus the `M5Game` library and a small `VescLink` change |
 | Host Pi | `kart/server` deployed with `kart/deploy.sh gokart-kart-N.local` | `kart_server.py` +124, `kartcore.py` +131, new `m5_course.py`, `static/app.js` +22 |
 | Host Pi config | `"freeplay_speed": "eco"` or `"normal"` in `/opt/gokart-kart/server/config.json` | one setting; there is no screen control for it yet |
 | Host Heltec settings | one course-only pairing per player Core2 (`tools/m5/pair_course.py`) | does not touch the kart's own pairing or the VESC |
@@ -46,8 +46,8 @@ repeaters, kart ID and Wi-Fi settings.
    driving one lap.
 2. **Eamon's go-ahead** for the firmware and server on that kart, after reading the diff above.
 3. **Player Heltec firmware.** Recommended: move karts 3, 4 and 5 to
-   `2026-11-13-upstream-036/kart-m5-espnow.app.bin` first (and their Core2s to that folder's
-   `m5-espnow.app.bin`, which adds the built-in street lines). The course download needs the host
+   `2026-11-13-race-screen/kart-m5-espnow.app.bin` first (and their Core2s to that folder's
+   `m5-espnow.app.bin`, which adds the built-in street lines and the pit-race screen). The course download needs the host
    Heltec and the player's Core2 on the same radio channel. With Wi-Fi off the host sits on
    channel 1, as do karts 4 and 5. **Kart 3 follows its Wi-Fi access point (channel 2)** and has
    no clean way to turn Wi-Fi off on its current build; the merged build adds `wifi clear`.
@@ -118,7 +118,7 @@ karts 3 to 5. Which of these was tried, and what was seen, is **not established*
 
 | Game | M5 kart today | What it needs |
 | --- | --- | --- |
-| Pit race (START RACE at the pit) | Takes part at the radio level: the Heltec holds the kart at the grid and releases it at GO, and the pit counts laps from its GPS. **The Core2 shows none of it**: no grid hold, countdown, position, laps or finish. A kart that is not in the pit's entered list is sent STOP | A race screen on the Core2 (not written). At the pit: the kart toggled as entered |
+| Pit race (START RACE at the pit) | Takes part at the radio level: the Heltec holds the kart at the grid and releases it at GO, and the pit counts laps from its GPS. **The Core2 on karts 3 to 5 shows none of it**: no grid hold, countdown, position or finish. A kart that is not in the pit's entered list is sent STOP | The race screen written on November 13 evening (`2026-11-13-race-screen`, both boards of each kart; not installed, never run on hardware). It shows the hold with a countdown, GO, position and finish; **no laps or lap times**. At the pit: the kart toggled as entered |
 | Freeplay on a track, hosted by a Pi kart | Cannot join until the host runs this branch | This plan |
 | ROAM freeplay (Eamon, November 13) | **Cannot join.** ROAM has no course, and an M5 kart joins by downloading one; the host refuses to publish and logs `m5_course_publish_refused` | New design work on the Core2 |
 

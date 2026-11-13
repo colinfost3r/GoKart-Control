@@ -57,6 +57,7 @@ class M5ControlRuntimeTests(unittest.TestCase):
             # The paired-M5 build's own definition (the Pi inventory, and its shield, are compiled out).
             section(source, '// A paired M5 kart has no Pi inventory.', '#endif // !GK_M5_ESPNOW'),
             function(source, 'm5ModeReady'),
+            function(source, 'm5RaceStart'),
             *[function(source, f) for f in ('peerFresh','peerInMySession','kartHosting','courseFresh','gameLeave','gameAttack','m5HandleGame','serviceGameJoin','applyHit')],
             function(source, 'm5HandleLine'),
             function(source, 'serviceVesc'),
@@ -97,6 +98,9 @@ class M5ControlRuntimeTests(unittest.TestCase):
 
     def test_boost_slow_and_race_timers_preserved(self):
         self.run_case('timers')
+
+    def test_paired_display_is_told_the_grid_hold_and_only_a_real_go(self):
+        self.run_case('race-display')
 
     def test_link_change_cancels_pending_result_without_replay(self):
         self.run_case('link-change')

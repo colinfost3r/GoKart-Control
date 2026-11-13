@@ -57,10 +57,23 @@ public:
   uint32_t hostCourse[9]{},hostBoot[9]{};uint8_t courseHosts=0;
   // gameMode: the own Heltec is locked to this mode by a joined game (255 = not locked).
   uint8_t gameVersion=0,gameSession=0,hosts=0,gameResult=0,shield=0,gameMode=255;uint32_t gameRequest=0,starMs=0;bool gameReady=false;
+  // Pit race as the own Heltec reports it. Display only: the Heltec holds and releases the kart.
+  bool raceHold=false,raceWent=false;uint32_t raceGoAt=0,raceWentAt=0;uint8_t racePos=0,raceState=0;
   uint32_t errors=0;
   bool live(uint32_t now) const {return self && karts[self].seen && uint32_t(now-karts[self].received)<=1500;}
   bool metadataFresh(uint32_t now) const { return metaSeen && uint32_t(now-metaMs)<700; }
   bool canRequest(uint32_t now) const {return !pending && live(now)&&metadataFresh(now)&&modeReady&&token&&karts[self].vesc&&!karts[self].stopped;}
+  // Race start is shown only from recent Heltec lines, and never over a pit STOP, which GO does not release.
+  bool raceFresh(uint32_t now) const {return live(now)&&metaSeen&&uint32_t(now-metaMs)<=2000&&!karts[self].stopped;}
+  // Whole seconds until GO while the kart is held on the grid (0 = any moment now); -1 = not held.
+  int raceCountdown(uint32_t now) const {
+    if(!raceFresh(now)||!raceHold)return -1;
+    const int32_t left=int32_t(raceGoAt-now);return left<=0?0:int((left+999)/1000);
+  }
+  // The Heltec released this kart at GO within the last three seconds.
+  bool raceGo(uint32_t now) const {return raceFresh(now)&&!raceHold&&raceWent&&uint32_t(now-raceWentAt)<3000;}
+  // 2 = race running, 3 = finished, as the pit beacon says; 0 otherwise.
+  uint8_t raceShown(uint32_t now) const {return live(now)&&(raceState==2||raceState==3)?raceState:0;}
   void tick(uint32_t now) {
     if(pending && (!live(now)||!metadataFresh(now)||uint32_t(now-pendingMs)>3000)) {pending=0;pendingUnknown=true;result=5;}
   }
@@ -83,6 +96,12 @@ public:
       courseHosts=doc["course_hosts"]|0;for(unsigned i=1;i<=8;++i){hostCourse[i]=doc["courses"][i-1]|0;hostBoot[i]=doc["course_boots"][i-1]|0;}
       gameVersion=doc["game_v"]|0;gameMode=doc["game_mode"]|255;gameSession=doc["game_session"]|0;hosts=doc["hosts"]|0;gameRequest=doc["game_request"]|0;gameResult=doc["game_result"]|0;gameReady=doc["game_ready"]|false;shield=doc["shield"]|0;starMs=doc["star_ms"]|0;
       modeReady=doc["mode_ready"]|false;radio=doc["radio"]|false;pit=doc["pit"]|false;
+      {
+        // Local deadline from the Heltec's remaining time. A line is never early, so GO is never shown early.
+        const uint32_t go=doc["race_go_ms"]|0U,went=doc["race_went_ms"]|0U;
+        raceHold=doc["race_hold"]|false;raceGoAt=now+std::min<uint32_t>(go,31000);
+        raceWent=went>0&&went<=3000;raceWentAt=now-went;
+      }
       baseRssi=doc["base_rssi"]|0;rate=doc["rate"]|0;speedCal=value(doc["speed_cal"]);
       for(int i=0;i<3;++i){cap[i]=value(doc["modes"][i]["mph"]);torque[i]=value(doc["modes"][i]["scale"]);}
       if(pending && doc["request"].is<uint32_t>() && doc["request"].as<uint32_t>()==pending) {
@@ -98,6 +117,10 @@ public:
     auto& k=karts[id];
     k.seen=true;k.received=now;k.vesc=doc["vesc_link"]|false;k.stopped=doc["stopped"]|false;
     k.session=doc["session"]|0;
+    if(own){
+      const unsigned pos=doc["race_pos"]|0U,st=doc["race_state"]|0U;
+      racePos=pos<=8?uint8_t(pos):0;raceState=st<=3?uint8_t(st):0;
+    }
     k.writes=doc["writes"]|false;k.confirmed=doc["mode_confirmed"]|false;
     k.mode=doc["mode_actual"].is<int>()?doc["mode_actual"].as<int>():-1;
     if(k.mode<0||k.mode>2)k.mode=-1;

@@ -194,6 +194,21 @@ the pit is sent STOP, track freeplay needs the host update, and **ROAM freeplay 
 joined at all** because it has no course to download. Kart 5's Heltec also counted 19% bad
 LoRa packets on the bench (7,452 of 40,107), cause not examined.
 
+**Pit-race screen written that evening, not installed.** The owner then said both kinds had
+been tried: a pit race and a kart-hosted game. For the pit race the Heltec now tells the
+paired Core2 about a grid hold (`race_hold`, `race_go_ms`) and about a GO that released the
+kart (`race_went_ms`), and the Core2 shows GRID HOLD with a countdown, GO, and a RACE or
+FINISHED chip with the position from the pit beacon. It is display only: no command, mode or
+VESC path changed, a stopped kart is never told GO, and the Core2 never shows GO from its own
+clock. It has no laps or lap times. 632 tests pass. Images are frozen as
+`firmware/build/bench-candidates/2026-11-13-race-screen/`
+([manifest](validation/m5-race-screen-2026-11-13.json)): all three Heltec kart images and all
+three Core2 images are new, so **both boards of each kart are flashed together**. It
+supersedes `2026-11-13-upstream-036`, which was never installed. **Nothing in it is on any
+kart and none of it has run on hardware.** A bench check after flashing: with the wheels up,
+`race 5` on the Heltec's USB console starts a five-second grid hold. The kart-hosted game is
+unchanged by this: it still needs the host update, and ROAM still cannot be joined.
+
 For the host test, mind the channel: Eamon's karts now sit on channel 1 with Wi-Fi off, and
 the course download needs the host Heltec and the player's Core2 on one channel. Kart 3's pair
 follows its Wi-Fi access point (channel 2 on November 12 and 13), so it will probably need
