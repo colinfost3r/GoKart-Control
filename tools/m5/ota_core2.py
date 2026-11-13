@@ -20,6 +20,12 @@ import sys
 import tempfile
 
 
+# A 1.4 MB image reached kart 3 at 3 to 8 kB/s on 2026-11-13 and took about three minutes.
+# The default stays short; a longer deadline is an explicit choice for a measured slow link.
+DEFAULT_TIMEOUT = 120
+MAX_TIMEOUT = 480
+
+
 class UploadError(Exception):
     pass
 
@@ -166,10 +172,11 @@ def main(argv=None):
     parser.add_argument('--image', required=True, type=Path, help='Compiled Core2 application .bin, not merged flash.')
     parser.add_argument('--credentials', required=True, type=Path, help='Private JSON file containing ota_password.')
     parser.add_argument('--espota', required=True, type=Path, help='Official tools/espota.py from the installed ESP32 core.')
-    parser.add_argument('--timeout', type=int, default=120, help='Total upload deadline, 1–120 seconds (default 120).')
+    parser.add_argument('--timeout', type=int, default=DEFAULT_TIMEOUT,
+                        help=f'Total upload deadline, 1–{MAX_TIMEOUT} seconds (default {DEFAULT_TIMEOUT}).')
     args = parser.parse_args(argv)
-    if not 1 <= args.timeout <= 120:
-        parser.error('--timeout must be 1–120 seconds')
+    if not 1 <= args.timeout <= MAX_TIMEOUT:
+        parser.error(f'--timeout must be 1–{MAX_TIMEOUT} seconds')
     if not args.host or any(c.isspace() or ord(c) < 33 for c in args.host) or '/' in args.host:
         parser.error('--host must be a hostname or IPv4 address')
     try:

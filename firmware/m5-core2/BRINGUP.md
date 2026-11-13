@@ -201,7 +201,7 @@ Keep the matching `ota_password` in a private `0600` JSON file under ignored
    Wait for `ota status` to report `ready:true`.
 3. Run `tools/m5/ota_core2.py` with explicit `--host`, application `--image`, private
    `--credentials`, and official `--espota` paths as shown in the README. Preserve the printed
-   SHA-256 and acknowledgement. The tool stops within 120 seconds; it never sends a VESC command.
+   SHA-256 and acknowledgement. The tool stops within 120 seconds unless `--timeout` (up to 480) says otherwise; it never sends a VESC command.
 4. Observe upload progress and the display restart. Read Core2 `status` and `ota status` after
    reboot: maintenance must be off. Confirm the expected installed build with the image/build
    evidence, not just the generic `m5-v1.5` status label.

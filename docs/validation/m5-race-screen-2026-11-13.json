@@ -6,10 +6,11 @@
   "source_state": "the working tree on top of parent_commit, committed together with this manifest; exact inputs are hashed below",
   "merged_upstream": "6e4c7882a9d198b14ba1cd60d4347087a456c63e",
   "supersedes_in_source": "docs/validation/m5-upstream-036-2026-11-13.json (never installed)",
-  "hardware_accessed": false,
-  "uploaded": false,
+  "hardware_accessed": true,
+  "uploaded": true,
+  "uploaded_to": "kart 3 Core2 only (m5-espnow), over the air on 2026-11-13; see hardware/m5/2026-11-13-kart3-core2-ota-race-screen/. No Heltec has any image of this candidate.",
   "vesc_settings_changed": false,
-  "not_installed_on": "any kart at the time of writing: karts 3, 4 and 5 run the 2026-11-13-game-rules images",
+  "not_installed_on": "any Heltec; the Core2s of karts 4 and 5. Kart 3 Heltec and both boards of karts 4 and 5 run the 2026-11-13-game-rules images",
   "what_changed": "Pit-race screen for the paired Core2, on top of 2026-11-13-upstream-036. The Heltec display line gains race_hold, race_go_ms and race_went_ms; the Core2 shows GRID HOLD with a countdown, GO for three seconds after the Heltec reports releasing the kart, and RACE / FINISHED with the position from the pit beacon. Display only: the only change outside reporting is one timestamp recorded when a grid hold ends in a GO on a kart that is not stopped. All three Heltec kart images and all three Core2 images are rebuilt; base and repeater are unchanged.",
   "compatibility": "Both boards of a kart should be updated together to get the countdown: an older Heltec does not send the new fields and an older Core2 ignores them, and either mix otherwise behaves as before. The LoRa protocol and the course package (rules version 2) are unchanged. Host Heltec, host Pi server, player Heltec and player Core2 must all be from this source for course download, JOIN and FIRE. An M5 kart cannot join a ROAM freeplay.",
   "tests": {
@@ -252,7 +253,8 @@
     ]
   },
   "not_verified": [
-    "anything on hardware: nothing in this folder has been flashed",
+    "the kart 3 Core2 over-the-air install beyond the uploader acknowledgement and the owner's look at the screen: no console check was possible",
+    "every Heltec image in this folder: none has been flashed",
     "a pit race on an M5 kart with this build: hold, countdown, GO and position have only run in the host-side harness and renderer",
     "how closely the Core2 countdown tracks the real GO over the paired link (it can only be late, by the link delay)",
     "the M5 pair link with the upstream channel rule (fixed channel 1 with no WiFi; remembered AP channel only while WiFi is in play)",

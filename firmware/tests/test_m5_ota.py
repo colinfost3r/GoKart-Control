@@ -130,12 +130,20 @@ class Core2OtaTests(unittest.TestCase):
                            'private-test-password', 0.2)
         self.assertLess(time.monotonic() - start, 2)
 
-    def test_cli_timeout_cannot_exceed_120_seconds(self):
-        result = subprocess.run([sys.executable, '-I', str(HELPER), '--host', 'x',
-            '--image', 'x', '--credentials', 'x', '--espota', 'x', '--timeout', '121'],
-            capture_output=True, text=True, timeout=2)
-        self.assertEqual(result.returncode, 2)
-        self.assertIn('1–120 seconds', result.stderr)
+    def test_cli_timeout_is_bounded_and_short_by_default(self):
+        def run(*timeout):
+            return subprocess.run([sys.executable, '-I', str(HELPER), '--host', 'x',
+                '--image', 'x', '--credentials', 'x', '--espota', 'x', *timeout],
+                capture_output=True, text=True, timeout=2)
+        for bad in ('481', '0', '-5'):
+            result = run('--timeout', bad)
+            self.assertEqual(result.returncode, 2, bad)
+            self.assertIn('1–480 seconds', result.stderr)
+        # A slow link may be given longer explicitly; the request then stops at the next check, not the bound.
+        result = run('--timeout', '480')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Cannot read credentials JSON', result.stderr)
+        self.assertEqual((ota.DEFAULT_TIMEOUT, ota.MAX_TIMEOUT), (120, 480))
 
 
 if __name__ == '__main__':

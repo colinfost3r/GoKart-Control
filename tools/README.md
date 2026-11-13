@@ -97,8 +97,9 @@ The image must be a Core2/ESP32 **application** `.bin`, not a Heltec/S3, bootloa
 image. A private immutable snapshot is hashed, and the exact SHA-256/byte count is printed
 before upload. Authentication is required with the current SHA256 protocol; an unauthenticated
 target or legacy downgrade is refused. Success requires the official uploader's explicit
-acknowledgement, not just its exit code. `--timeout` accepts 1–120 seconds and defaults to 120;
-a deadline or interruption terminates the worker. Verify device state before retrying an
+acknowledgement, not just its exit code. `--timeout` accepts 1–480 seconds and defaults to 120;
+a deadline or interruption terminates the worker. Raise it only for a measured slow link: on
+2026-11-13 kart 3's Core2 took a 1.4 MB image at 3 to 8 kB/s, about three minutes in all. Verify device state before retrying an
 uncertain transfer. USB recovery and post-reboot telemetry checks remain separate.
 
 Core2 follows the AP channel while maintenance is active, so ESP-NOW telemetry can pause;

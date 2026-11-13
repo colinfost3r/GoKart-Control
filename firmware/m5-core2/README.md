@@ -302,7 +302,7 @@ Replace the credentials and installed-core paths with the actual private file an
 `espota.py` from ESP32 Arduino **3.3.8**. Use an application `.ino.bin`, never a merged-flash,
 bootloader or Heltec image. The helper snapshots the image and prints its exact SHA-256, passes
 the password through a private pipe rather than argv, requires password authentication plus an
-explicit success acknowledgement, and enforces a maximum 120-second upload deadline. It sends
+explicit success acknowledgement, and enforces an upload deadline (120 seconds by default, `--timeout` up to 480 for a slow link). It sends
 no VESC commands. A timeout or uncertain result requires status verification before any retry.
 
 A successful uploader response must be followed by Core2 reboot/status verification, maintenance

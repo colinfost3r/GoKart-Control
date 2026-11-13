@@ -204,10 +204,23 @@ clock. It has no laps or lap times. 632 tests pass. Images are frozen as
 `firmware/build/bench-candidates/2026-11-13-race-screen/`
 ([manifest](validation/m5-race-screen-2026-11-13.json)): all three Heltec kart images and all
 three Core2 images are new, so **both boards of each kart are flashed together**. It
-supersedes `2026-11-13-upstream-036`, which was never installed. **Nothing in it is on any
-kart and none of it has run on hardware.** A bench check after flashing: with the wheels up,
-`race 5` on the Heltec's USB console starts a five-second grid hold. The kart-hosted game is
-unchanged by this: it still needs the host update, and ROAM still cannot be joined.
+supersedes `2026-11-13-upstream-036`, which was never installed. A bench check after flashing:
+with the wheels up, `race 5` on the Heltec's USB console starts a five-second grid hold. The
+kart-hosted game is unchanged by this: it still needs the host update, and ROAM still cannot
+be joined.
+
+**Kart 3's Core2 has the race-screen build, installed over the air that evening; no Heltec
+has it.** The owner asked for an over-the-air update. Three uploads stopped at the tool's
+two-minute deadline with the Core2 unchanged; the link was measured at 3 to 8 kB/s, so
+`tools/m5/ota_core2.py` now accepts `--timeout` up to 480 s, and the fourth upload was
+acknowledged after about three minutes. No USB was connected, so **nothing was checked on a
+console**; the owner then reported that the screen looks right, and that is the only check. Two consequences to carry:
+kart 3's Core2 now **boots from `app1` (`0x650000`)**, so a later USB update must not simply
+write `0x10000`; and with kart 3's Heltec still on the game-rules build the Core2 shows race
+position and finish but no countdown or GO. Karts 4 and 5 cannot be updated over the air at
+all (nothing provisioned), and kart 3's Heltec asks for an update password that is not held
+in any private file. See
+[the record](../hardware/m5/2026-11-13-kart3-core2-ota-race-screen/README.md).
 
 For the host test, mind the channel: Eamon's karts now sit on channel 1 with Wi-Fi off, and
 the course download needs the host Heltec and the player's Core2 on one channel. Kart 3's pair
