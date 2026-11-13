@@ -3,6 +3,15 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Reverse filter sticks on the ground on karts 4 and 5 — November 13, 2026
+
+The owner reports the direction switch sticking in forward and in reverse when karts 4 and 5
+are driven. The filter only accepts a change with the pedal released and the wheel essentially
+stopped for a quarter of a second, and it was only ever tested wheels-up. A removal step,
+`tools/vesc/fleet_rx_filter.py remove`, now exists and is tested offline; **it has not been
+used, and the filter is still on karts 3, 4 and 5.** Details and the servo-pin question are in
+the [Claude handoff](docs/CLAUDE_HANDOFF.md).
+
 ## Upstream kart 0.3.7 merged; the set to flash is `2026-11-13-upstream-037` — November 13, 2026
 
 Eamon's branch is merged through `008b458`: the pit can start a freeplay game for the whole

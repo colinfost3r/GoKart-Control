@@ -45,7 +45,11 @@ class FakeWire:
         self.telemetry = bundle['artifacts']['before']['telemetry']
         self.snapshots = []          # consumed first; then self.snapshot repeats
         self.snapshot = REST
+        self.statuses = []           # consumed first; then self.status repeats
         self.status = ARMED
+        self.erase_does_nothing = False
+        self.app_changes_after_erase = False
+        self.slow_telemetry_from = None   # index of the first telemetry read that takes a second
         self.context_active = False
         self.existing = False
         self.fail_action = None
@@ -72,9 +76,14 @@ class FakeWire:
         if action == self.fail_action and (self.fail_offset is None or offset == self.fail_offset):
             raise IOError('Uncertain serial delivery')
         if action == 'identity': return self.identity
-        if action == 'app': return self.app
+        if action == 'app':
+            if self.erased and self.app_changes_after_erase: return self.app[:-1] + bytes((self.app[-1] ^ 1,))
+            return self.app
         if action == 'motor': return self.motor
-        if action == 'telemetry': return self.telemetry
+        if action == 'telemetry':
+            if self.slow_telemetry_from is not None and len(self.sent('telemetry')) > self.slow_telemetry_from:
+                self.clock += 1.0
+            return self.telemetry
         if action == 'read':
             if self.delay_final_empty and not self.erased: self.clock += 1.0
             blob = self.blob()
@@ -83,7 +92,7 @@ class FakeWire:
                 data = bytes((data[0] ^ 1,)) + data[1:]
             return b'\x82' + struct.pack('>ii', len(blob), offset if blob else 0) + data
         if action == 'erase':
-            self.flash[:] = b'\xff' * flt.SECTOR_BYTES
+            if not self.erase_does_nothing: self.flash[:] = b'\xff' * flt.SECTOR_BYTES
             self.erased = True
             return b'\x84\x01'
         if action == 'write':
@@ -99,7 +108,8 @@ class FakeWire:
         if action == 'snapshot':
             text = self.snapshots.pop(0) if self.snapshots else self.snapshot
         elif action == 'status':
-            text = self.status
+            if self.erased: raise AssertionError('No REPL after an erase: it could start the interpreter again')
+            text = self.statuses.pop(0) if self.statuses else self.status
         else:
             text = '\n'.join(HEADINGS) + ('\nContextID: 41' if self.context_active else '')
         return Capture([b'\x87' + text.encode()], quiet_tail_seconds=0.5)
@@ -432,6 +442,143 @@ class FleetFilterTests(unittest.TestCase):
         for value in (None, 2, True):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 flt.status('FAKE', self.base / ('rx' + str(value)), self.bundle, expected_rx=value, **self.factories())
+
+
+    # ---- remove
+    def remove(self, **overrides):
+        kwargs = {'apply': True, 'supervised': True, **self.factories()}
+        kwargs.update(overrides)
+        return flt.remove('FAKE', self.out, self.bundle, **kwargs)
+
+    def test_remove_erases_exactly_the_package_script_once_and_writes_nothing(self):
+        self.wire.store()
+        result = self.remove()
+        self.assertEqual(len(self.wire.sent('erase')), 1)
+        self.assertFalse(self.wire.sent('write') or self.wire.sent('snapshot') or self.wire.sent('contexts'))
+        self.assertEqual(self.wire.blob(), b'')
+        self.assertTrue(result['complete'])
+        self.assertEqual(result['phase'], 'erased_power_cycle_required')
+        self.assertEqual(result['stored_before_sha256'], self.sha)
+        self.assertIn('forward, held', result['direction_until_power_cycle'])
+        self.assertIn('power cycle', result['boot_acceptance'])
+        self.assertFalse(result['activation_sent'] or result['settings_written'])
+        self.assertTrue(result['all_376_settings_preserved'])
+        self.assertEqual({a for a, _, _ in self.wire.actions}, {'identity', 'app', 'motor', 'telemetry', 'status', 'read', 'erase'})
+        erase_at = self.wire.actions.index(('erase', 0, 0))
+        # The last thing before the erase is the fresh rest check; after it, flash-level reads only.
+        self.assertEqual(self.wire.actions[erase_at - 2:erase_at], [('status', 0, 0), ('telemetry', 0, 0)])
+        self.assertEqual([a for a, _, _ in self.wire.actions[erase_at + 1:]], ['read', 'app', 'motor', 'identity'])
+        self.assertEqual(len(self.wire.sent('status')), 5)
+        # Afterwards the ordinary read-only observation sees an empty controller.
+        self.wire.erased = False
+        self.out = self.base / 'after'
+        seen = flt.observe('FAKE', self.out, self.bundle, samples=1, pause=0, **self.factories())
+        self.assertEqual((seen['stored_code_bytes'], seen['contexts']['snapshot']), (0, 'no_contexts_reported'))
+
+    def test_remove_when_the_filter_never_took_over_the_switch(self):
+        self.wire.store()
+        self.wire.status = '(gk-rx-status nil nil -1 -1 1 {0.0871} {0.0} 0)'
+        result = self.remove()
+        self.assertTrue(result['complete'])
+        self.assertIn('raw switch', result['direction_until_power_cycle'])
+
+    def test_remove_refuses_anything_but_this_package_script(self):
+        with self.assertRaisesRegex(ValueError, 'unexpected length'): self.remove()       # nothing stored
+        self.assertFalse(self.wire.sent('erase') or self.wire.sent('status'))
+        wire = self.fresh('other'); wire.existing = True                                  # someone else's code
+        with self.assertRaisesRegex(ValueError, 'unexpected length'): self.remove()
+        self.assertFalse(self.wire.sent('erase'))
+        wire = self.fresh('edited'); wire.store(); wire.corrupt_readback = True
+        with self.assertRaisesRegex(ValueError, 'differs from the exact package script'): self.remove()
+        self.assertFalse(self.wire.sent('erase'))
+
+    def test_remove_refuses_reverse_held_reverse_selected_motion_pedal_or_fault(self):
+        cases = (('(gk-rx-status t t 1507 1 0 {0.0871} {0.0} 0)', 'not reading forward'),     # reverse selected and applied
+                 ('(gk-rx-status t t 1507 0 0 {0.0871} {0.0} 0)', 'not reading forward'),     # switch just moved to reverse
+                 ('(gk-rx-status t t 1507 1 1 {0.0871} {0.0} 0)', 'holding reverse'),         # frozen in reverse
+                 ('(gk-rx-status nil t -1 1 1 {0.0871} {0.0} 0)', 'holding reverse'),         # stopped worker, reverse held
+                 ('(gk-rx-status t t 1507 -1 1 {0.0871} {0.0} 0)', 'no applied direction'),
+                 ('(gk-rx-status t t 1507 0 1 {0.13} {0.0} 0)', 'not at rest'),
+                 ('(gk-rx-status t t 1507 0 1 {0.0871} {51.0} 0)', 'not at rest'),
+                 ('(gk-rx-status t t 1507 0 1 {0.0871} {0.0} 3)', 'not at rest'),
+                 ('unbound variable gk-rx-filter-run', 'No unique complete'))
+        for index, (text, message) in enumerate(cases):
+            wire = self.fresh('state' + str(index)); wire.store(); wire.status = text
+            with self.subTest(text=text), self.assertRaisesRegex(ValueError, message): self.remove()
+            self.assertFalse(self.wire.sent('erase'))
+            self.assertEqual(self.wire.blob(), self.package.blob)
+            self.assertFalse(self.manifest()['complete'])
+        for index, (offset, value) in enumerate(((23, struct.pack('>i', 60)), (53, b'\x01'))):
+            wire = self.fresh('telemetry' + str(index)); wire.store()
+            raw = bytearray(wire.telemetry); raw[offset:offset + len(value)] = value; wire.telemetry = bytes(raw)
+            with self.subTest(offset=offset), self.assertRaisesRegex(ValueError, 'not at rest'): self.remove()
+            self.assertFalse(self.wire.sent('erase'))
+
+    def test_remove_refuses_a_change_at_the_final_check_or_a_slow_one(self):
+        for index, text in enumerate(('(gk-rx-status t t 1507 0 0 {0.0871} {0.0} 0)', '(gk-rx-status t t 1507 0 1 {0.2} {0.0} 0)',
+                                      '(gk-rx-status t t 1507 1 1 {0.0871} {0.0} 0)')):
+            wire = self.fresh('final' + str(index)); wire.store(); wire.statuses = [ARMED] * 4 + [text]
+            with self.subTest(text=text), self.assertRaisesRegex(ValueError, 'Final check'): self.remove()
+            self.assertEqual(len(self.wire.sent('status')), 5)
+            self.assertFalse(self.wire.sent('erase'))
+        wire = self.fresh('slow'); wire.store(); wire.slow_telemetry_from = 4     # the final telemetry read takes a second
+        with patch.object(flt.time, 'monotonic', side_effect=lambda: self.wire.clock):
+            with self.assertRaises(TimeoutError): self.remove()
+        self.assertFalse(self.wire.sent('erase'))
+        self.assertEqual(self.wire.blob(), self.package.blob)
+
+    def test_remove_refuses_other_controllers_changed_settings_and_missing_supervision(self):
+        self.wire.store(); self.wire.identity = (self.source / 'firmware.bin').read_bytes()
+        with self.assertRaises(ValueError): self.remove()
+        self.assertEqual(self.wire.actions, [('identity', 0, 0)])
+        wire = self.fresh('app'); wire.store(); wire.app = wire.app[:-1] + bytes((wire.app[-1] ^ 1,))
+        with self.assertRaisesRegex(ValueError, 'Application settings differ'): self.remove()
+        self.assertFalse(self.wire.sent('erase'))
+        wire = self.fresh('unsupervised'); wire.store()
+        with self.assertRaises(ValueError): self.remove(supervised=False)
+        self.assertEqual(self.wire.actions, [])
+        plan = self.remove(apply=False, connection_factory=lambda port: self.fail('opened'))
+        self.assertTrue(plan['offline_only'])
+        self.assertEqual((plan['flash_requests'], plan['writes'], plan['removes_blob_sha256']), (['erase'], 0, self.sha))
+        path = self.package_dir / 'rx-filter-codeblob.bin'
+        path.write_bytes(path.read_bytes().replace(b'0.12', b'0.92', 1))
+        with self.assertRaisesRegex(ValueError, 'changed after validation'): self.remove()
+        self.assertEqual(self.wire.actions, [])
+
+    def test_remove_uncertain_or_ineffective_erase_is_never_retried(self):
+        self.wire.store(); self.wire.fail_action = 'erase'
+        with self.assertRaises(IOError): self.remove()
+        self.assertEqual(self.wire.actions[-1], ('erase', 0, 0))
+        self.assertEqual(len(self.wire.sent('erase')), 1)
+        self.assertFalse(self.manifest()['complete'])
+        self.assertIn('No further sends', self.manifest()['failure_policy'])
+        wire = self.fresh('noop'); wire.store(); wire.erase_does_nothing = True
+        with self.assertRaisesRegex(ValueError, 'Code reported after erase'): self.remove()
+        self.assertEqual(len(self.wire.sent('erase')), 1)
+        self.assertFalse(self.manifest()['complete'])
+        # Settings that differ afterwards are reported, never called a clean removal.
+        wire = self.fresh('settings'); wire.store(); wire.app_changes_after_erase = True
+        with self.assertRaisesRegex(ValueError, 'Configuration changed during removal'): self.remove()
+        self.assertEqual(len(self.wire.sent('erase')), 1)
+        self.assertFalse(self.manifest()['complete'])
+
+    def test_remove_command_line_is_offline_without_apply_and_needs_every_flag(self):
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(flt.main(self.cli('remove')), 0)
+        plan = json.loads(out.getvalue())
+        self.assertTrue(plan['offline_only'])
+        self.assertEqual(plan['removes_blob_sha256'], self.sha)
+        bad = (('remove', '--apply', '--supervised', '--port', '/no-port', '--out', str(self.out)),
+               ('remove', '--expect-blob-sha256', self.sha),
+               ('remove', '--apply', '--supervised', '--expect-blob-sha256', self.sha, '--port', '/no-port'),
+               ('remove', '--port', '/no-port'), ('observe', '--apply'), ('status', '--supervised', '--expected-rx', '1'))
+        for args in bad:
+            with self.subTest(args=args), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                flt.main(self.cli(*args))
+        with self.assertRaisesRegex(ValueError, 'no device opened'):
+            flt.main(self.cli('remove', '--apply', '--supervised', '--expect-blob-sha256', '0' * 64,
+                              '--port', '/no-port', '--out', str(self.out)))
+        self.assertFalse(self.out.exists())
 
 
 class WireTests(unittest.TestCase):

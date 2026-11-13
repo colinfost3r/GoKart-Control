@@ -141,8 +141,9 @@ spoke last.
    intact and the worker armed in forward; after a switch change at rest, `--expected-rx 0`
    must report reverse. Then a supervised pedal check both ways.
 
-It refuses to install over existing code, and **there is no tested removal tool**: removal is
-by VESC Tool, at rest. Kart 3's in-memory trial stage is not repeated, because the filter core
+It refuses to install over existing code. Removal is `fleet_rx_filter.py remove` (one
+supervised erase with forward selected, then the owner's power cycle; see
+[the tools README](../tools/vesc/README.md)), added on November 13 and not yet used on hardware. Kart 3's in-memory trial stage is not repeated, because the filter core
 is byte-identical; the observation covers what is specific to each kart.
 [Kart 4's record](../hardware/vesc/kart4/2026-11-13/filter/README.md) is the worked example.
 

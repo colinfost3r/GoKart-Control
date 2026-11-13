@@ -50,6 +50,8 @@ reverse, and with `buttons` 0 the controller's own reverse input reads it the sa
 - **There is no tested removal tool for kart 4.** Removing the script means stopping it and
   erasing stored Lisp from VESC Tool, at rest. `fleet_rx_filter.py` refuses to install over
   existing code, so it cannot update or reinstall this copy either.
+  *Later that day:* `fleet_rx_filter.py remove` was added after the owner found the direction
+  switch sticking on the ground with karts 4 and 5. It is tested offline only.
 - Not verified: behaviour under load or on the road, a watchdog or brown-out restart, long
   running, and whether kart 4's switch input is electrically noisy (no edge count was taken).
 

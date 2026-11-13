@@ -235,6 +235,30 @@ base image are new (`kart-0.3.7`, `base-0.2.3`); the Core2 and repeater images a
 set to flash; no Heltec has it yet.** M5 karts still cannot take part in a pit-started game:
 the driver would join from the Core2 once the host runs this branch, track games only.
 
+**The reverse filter sticks on the ground (owner, November 13 evening).** On karts 4 and 5 the
+direction switch "sticks in forwards and backwards" when driven. The filter's own rule
+explains it: a switch change is accepted only after the pedal has been released and the motor
+has been under 50 ERPM, about 5 cm/s at the wheel, for 250 ms, with the switch steady for
+50 ms. A kart that is still creeping, or a foot resting on the pedal, keeps the old direction,
+and pressing the pedal then blocks the change. **It was only ever commissioned wheels-up**, on
+kart 3 as well, and on karts 4 and 5 the direction checks ran with the Heltec held off the
+VESC. Whether a frozen worker also plays a part is not established: no kart was on USB. A
+no-tools test was given to the owner (stop dead, foot off, flip, count one, go).
+`tools/vesc/fleet_rx_filter.py remove` now exists: one supervised erase of exactly the
+package's script with forward selected and held, then the owner's power cycle, after which the
+VESC reads the switch directly as karts 4 and 5 did until that morning. It is tested offline
+only (35 tests, 11 mutations caught) and **has not been used**; each removal is a VESC write
+needing the owner's go-ahead for that kart. Kart 3 has the same filter but also a genuinely
+noisy switch wire, so removing it there brings the original fault back.
+
+The owner asked whether the servo input could be used instead. Checked against the 6.02 source:
+with the app set to "ADC and UART" the firmware reads the reverse switch from the servo pin
+instead of RX, with an internal pull-up and **no debounce on either pin**. It is a different
+pin, not a filter; it helps only if that pin is electrically cleaner on this controller, which
+is unknown. It needs the switch rewired, the app setting changed (no tested tool writes app
+settings) and the filter removed first, since the filter stops and holds its last direction
+when the app setting changes.
+
 For the host test, mind the channel: Eamon's karts now sit on channel 1 with Wi-Fi off, and
 the course download needs the host Heltec and the player's Core2 on one channel. Kart 3's pair
 follows its Wi-Fi access point (channel 2 on November 12 and 13), so it will probably need
@@ -360,8 +384,8 @@ Neither new unit's UUID/BLE/pairing/capture is known yet. Never guess or clone k
 - **Kart 4 has the reverse filter (November 13):** installed with the new
   `tools/vesc/fleet_rx_filter.py` after its switch was observed in both positions, read back,
   and verified armed after a power cycle in forward and reverse, with a pedal check both ways.
-  See [the record](../hardware/vesc/kart4/2026-11-13/filter/README.md). No tested removal tool
-  exists for it.
+  See [the record](../hardware/vesc/kart4/2026-11-13/filter/README.md). A removal step was
+  added that evening (below); it is tested offline only.
 - **Kart 5 is at the same point (November 13):** VESC UUID `3d0020000951343037353739` tuned
   (10 settings; its exact read-back failed on one controller-measured offset, was not retried,
   and was confirmed by independent capture and cold boot), boards installed (Heltec
@@ -376,7 +400,7 @@ Neither new unit's UUID/BLE/pairing/capture is known yet. Never guess or clone k
   filter record. Nothing was changed. Until the owner and Eamon decide, avoid uncapped
   full-pedal runs on a freshly charged pack.
 - **Still missing on karts 4 and 5:** Wi-Fi and OTA settings, a GPS check of each speed factor
-  on the road, pit visibility and pit commands, link-loss checks, and a filter removal tool.
+  on the road, pit visibility and pit commands, and link-loss checks.
   `apply_fleet_tune.py` treats any read-back difference as uncertain, including a
   controller-measured offset moving by one count; that is safe but will recur.
 - Supervise each unit's normal cold boots, correct filtered direction, repeated starts from

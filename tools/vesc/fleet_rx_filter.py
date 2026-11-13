@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Kart-4/5 reverse-input filter: observe, install once, check the stored copy after a power-up.
+"""Kart-4/5 reverse-input filter: observe, install once, check after a power-up, remove.
 
 For packages made by prepare_fleet_kart.py. The target is bound to the package's kart ID and
 controller UUID, both stated again on the command line, and to the UUID the controller reports;
@@ -11,6 +11,9 @@ kart 3 and the reserved controllers are refused. Kart 3's own filter tools stay 
            byte. No activation: the script first runs at the owner's next normal power-up.
   status   after that power-up: the script's own state, the raw switch level, contexts and the
            stored bytes.
+  remove   one supervised erase of exactly the package's stored script, with forward selected
+           and held. The controller reads the switch directly again only after the owner's
+           next power cycle; until then it keeps the direction the filter last applied.
 
 It never sends a motor command, configuration write, reset or activation, never retries and
 never cleans up after an uncertain result. REPL reads may initialise the interpreter; an erase
@@ -273,6 +276,18 @@ class Session:
         self.save()
         return summary
 
+    def mutate(self, wire, action, offset=0):
+        """One journalled flash request and its exact acknowledgement. Never repeated."""
+        manifest = self.manifest
+        manifest['phase'] = action + '_attempted'
+        manifest['flash_attempts'].append({'action': action, 'offset': offset,
+                                           'request_frame_hex': self.bundle['package'].frame(action, offset).hex()})
+        self.save()
+        response = self.read(wire, action, f'ack_{len(manifest["flash_attempts"]):03d}', offset)
+        check_ack(action, response, offset)
+        manifest['flash_attempts'][-1]['ack_verified'] = True
+        self.save()
+
     def fail(self, error, policy):
         self.manifest['error'] = f'{type(error).__name__}: {error}'
         self.manifest['failure_policy'] = policy
@@ -340,16 +355,6 @@ def install(port, output, bundle, *, apply=False, supervised=False,
     manifest = session.manifest
     (session.output / 'planned-image.bin').write_bytes(package.image)
 
-    def mutate(wire, action, offset=0):
-        manifest['phase'] = action + '_attempted'
-        manifest['flash_attempts'].append({'action': action, 'offset': offset,
-                                           'request_frame_hex': package.frame(action, offset).hex()})
-        session.save()
-        response = session.read(wire, action, f'ack_{len(manifest["flash_attempts"]):03d}', offset)
-        check_ack(action, response, offset)
-        manifest['flash_attempts'][-1]['ack_verified'] = True
-        session.save()
-
     def forward_rest(pins, telemetry, what):
         if not telemetry_at_rest(telemetry) or not snapshot_at_rest(pins):
             raise ValueError(what + ': not at rest/fault-free in the released pedal region')
@@ -386,11 +391,11 @@ def install(port, output, bundle, *, apply=False, supervised=False,
             if time.monotonic() > wire.erase_deadline:
                 raise TimeoutError('Final safety/blob reads exceeded 750 ms; erase not sent')
             # The last empty-code read and the fresh input check share one bounded 750 ms window.
-            mutate(wire, 'erase')
+            session.mutate(wire, 'erase')
             if session.stored_total(wire, 'stored_after_erase') != 0:
                 raise ValueError('Code reported after erase; state unknown')
             for offset in package.write_offsets:
-                mutate(wire, 'write', offset)
+                session.mutate(wire, 'write', offset)
             manifest['phase'] = 'readback'
             session.save()
             manifest['readback_sha256'] = session.stored_bytes(wire, 'readback')
@@ -404,6 +409,86 @@ def install(port, output, bundle, *, apply=False, supervised=False,
             manifest.update({'phase': 'stored_verified_not_activated', 'complete': True,
                              'all_376_settings_preserved': True,
                              'boot_acceptance': 'pending owner-controlled physical power cycle'})
+    except BaseException as error:
+        session.fail(error, 'No further sends, retry, reset, activation or cleanup. Flash/runtime state may be partial.')
+        raise
+    finally:
+        session.finish()
+    return manifest
+
+
+def remove(port, output, bundle, *, apply=False, supervised=False,
+           connection_factory=SerialConnection, wire_factory=Wire):
+    """Erase exactly the package's stored script, once. Nothing is written in its place.
+
+    The erase stops the script but not what it last told the controller: the direction it
+    applied stays in force until the next power cycle. So removal is refused unless forward is
+    selected and forward is what the filter holds (or it never took over the switch)."""
+    package = bundle['package']
+    plan = {'kart_id': bundle['kart_id'], 'target_uuid': bundle['expected_identity']['uuid'], 'firmware': '6.02',
+            'removes_blob_sha256': sha256(package.blob), 'removes_blob_bytes': len(package.blob),
+            'flash_requests': ['erase'], 'writes': 0, 'settings_written': False,
+            'raw_switch_restored': 'only after the owner power-cycles the controller',
+            'direction_until_power_cycle': 'forward, held'}
+    if not apply:
+        return {'offline_only': True, **plan}
+    if not supervised:
+        raise ValueError('Fresh supervised wheels-up/pedal-released/forward-selected/cutoff setup required')
+    require_unchanged(bundle)
+    session = Session(bundle, output, 'remove', apply=True, supervised=True, phase='preflight', flash_attempts=[],
+                      native_detach_independently_readable=False)
+    manifest = session.manifest
+
+    def forward_rest(state, telemetry, what):
+        if not telemetry_at_rest(telemetry) or not control.at_rest(state):
+            raise ValueError(what + ': not at rest/fault-free in the released pedal region')
+        if state['rx'] != FORWARD_RX:
+            raise ValueError(what + ': reverse switch is not reading forward (RX high)')
+        if state['applied'] == 1:
+            raise ValueError(what + ': the filter is holding reverse, which would stay in force until the power '
+                             'cycle; power-cycle with forward selected, then remove')
+        if state['active'] and state['applied'] != 0:
+            raise ValueError(what + ': the filter has taken over the switch but reports no applied direction')
+
+    try:
+        with connection_factory(port) as connection:
+            wire = wire_factory(connection.fd, session.output, package)
+            app_before, motor_before = session.settings(wire, 'before')
+            # Only ever erase the script this package describes.
+            manifest['stored_before_sha256'] = session.stored_bytes(wire, 'stored')
+            manifest['preflight_samples'] = []
+            for index in range(4):
+                telemetry = decode_telemetry(session.read(wire, 'telemetry', f'telemetry_{index}'))
+                state = control.parse_status(wire.expression('status'))
+                forward_rest(state, telemetry, 'Preflight')
+                manifest['preflight_samples'].append({'telemetry': telemetry, 'filter_status': state})
+                session.save()
+            if session.read(wire, 'app', 'app_preerase') != app_before or session.read(wire, 'motor', 'motor_preerase') != motor_before:
+                raise ValueError('Configuration changed before erase')
+            require_unchanged(bundle)
+            preerase_started = time.monotonic()
+            final_state = control.parse_status(wire.expression('status', seconds=0.3))
+            final_values = decode_telemetry(session.read(wire, 'telemetry', 'telemetry_final_preerase'))
+            forward_rest(final_state, final_values, 'Final check before erase')
+            manifest['final_preerase_sample'] = {'telemetry': final_values, 'filter_status': final_state}
+            wire.erase_deadline = preerase_started + 0.75
+            manifest['final_preerase_window_seconds'] = time.monotonic() - preerase_started
+            session.save()
+            if time.monotonic() > wire.erase_deadline:
+                raise TimeoutError('Final safety reads exceeded 750 ms; erase not sent')
+            session.mutate(wire, 'erase')
+            # Flash-level reads only from here: a REPL request could start the interpreter again.
+            if session.stored_total(wire, 'stored_after_erase') != 0:
+                raise ValueError('Code reported after erase; state unknown')
+            app_after = session.read(wire, 'app', 'app_after')
+            motor_after = session.read(wire, 'motor', 'motor_after')
+            if app_after != app_before or motor_after != motor_before:
+                raise ValueError('Configuration changed during removal')
+            manifest['identity_after'] = require_target(session.read(wire, 'identity', 'identity_after'), bundle)
+            held = 'forward, held by the stopped filter' if final_state['active'] else 'raw switch: the filter had not taken it over'
+            manifest.update({'phase': 'erased_power_cycle_required', 'complete': True,
+                             'all_376_settings_preserved': True, 'direction_until_power_cycle': held,
+                             'boot_acceptance': 'pending owner-controlled physical power cycle, then observe: no stored code, no contexts'})
     except BaseException as error:
         session.fail(error, 'No further sends, retry, reset, activation or cleanup. Flash/runtime state may be partial.')
         raise
@@ -451,23 +536,24 @@ def status(port, output, bundle, *, expected_rx, connection_factory=SerialConnec
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('action', choices=('plan', 'observe', 'install', 'status'))
+    parser.add_argument('action', choices=('plan', 'observe', 'install', 'status', 'remove'))
     parser.add_argument('package', type=Path, help='Directory written by prepare_fleet_kart.py for this kart')
     parser.add_argument('--kart-id', type=int, choices=(4, 5), required=True)
     parser.add_argument('--expected-uuid', required=True, help='Controller UUID of the physically labelled target')
     parser.add_argument('--port', help='Explicit VESC USB serial port')
     parser.add_argument('--out', type=Path, help='New evidence directory, outside the package')
     parser.add_argument('--samples', type=int, default=5, help='observe: number of pin snapshots (default 5)')
-    parser.add_argument('--apply', action='store_true', help='install: actually erase and write')
-    parser.add_argument('--supervised', action='store_true', help='install: wheels up, pedal released, forward selected, operator at the cutoff')
-    parser.add_argument('--expect-blob-sha256', help='install: SHA-256 of the reviewed rx-filter-codeblob.bin')
+    parser.add_argument('--apply', action='store_true', help='install: actually erase and write; remove: actually erase')
+    parser.add_argument('--supervised', action='store_true', help='install/remove: wheels up, pedal released, forward selected, operator at the cutoff')
+    parser.add_argument('--expect-blob-sha256', help='install/remove: SHA-256 of the reviewed rx-filter-codeblob.bin')
     parser.add_argument('--expected-rx', type=int, choices=(0, 1), help='status: physical switch position, 1 forward / 0 reverse')
     args = parser.parse_args(argv)
-    live = args.action in ('observe', 'status') or (args.action == 'install' and args.apply)
-    if args.action != 'install' and (args.apply or args.supervised or args.expect_blob_sha256):
-        parser.error('--apply, --supervised and --expect-blob-sha256 belong to install')
-    if args.action == 'install' and args.apply != bool(args.expect_blob_sha256):
-        parser.error('install --apply and --expect-blob-sha256 must be supplied together')
+    flashing = args.action in ('install', 'remove')
+    live = args.action in ('observe', 'status') or (flashing and args.apply)
+    if not flashing and (args.apply or args.supervised or args.expect_blob_sha256):
+        parser.error('--apply, --supervised and --expect-blob-sha256 belong to install and remove')
+    if flashing and args.apply != bool(args.expect_blob_sha256):
+        parser.error(args.action + ' --apply and --expect-blob-sha256 must be supplied together')
     if args.action == 'status' and args.expected_rx is None:
         parser.error('status requires --expected-rx')
     if live and (not args.port or not args.out):
@@ -476,7 +562,7 @@ def main(argv=None):
         parser.error('Offline action: no --port or --out')
     bundle = load_package(args.package, kart_id=args.kart_id, expected_uuid=args.expected_uuid)
     blob_sha = sha256(bundle['package'].blob)
-    if args.action == 'install' and args.apply:
+    if flashing and args.apply:
         stated = args.expect_blob_sha256.lower()
         if not re.fullmatch(r'[0-9a-f]{64}', stated) or stated != blob_sha:
             raise ValueError('Stated script hash is not the hash of this package; no device opened')
@@ -495,6 +581,9 @@ def main(argv=None):
     elif args.action == 'status':
         result = status(args.port, args.out, bundle, expected_rx=args.expected_rx)
         summary = {k: result[k] for k in ('complete', 'armed', 'applied_direction', 'filter_status', 'readback_sha256')}
+    elif args.action == 'remove':
+        result = remove(args.port, args.out, bundle, apply=args.apply, supervised=args.supervised)
+        summary = result if result.get('offline_only') else {k: result[k] for k in ('complete', 'phase', 'direction_until_power_cycle', 'boot_acceptance')}
     else:
         result = install(args.port, args.out, bundle, apply=args.action == 'install' and args.apply, supervised=args.supervised)
         summary = result if result.get('offline_only') else {k: result[k] for k in ('complete', 'phase', 'readback_sha256', 'boot_acceptance')}

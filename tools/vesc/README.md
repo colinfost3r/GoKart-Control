@@ -235,12 +235,21 @@ the controller no longer matches the package's `before/` and it will refuse.
 `telemetry_trace.py --port PORT --expected-uuid UUID --out FILE.jsonl` records `GET_VALUES` at
 10 Hz for a supervised pedal check. It sends read commands 0 and 4 only.
 
-`fleet_rx_filter.py {plan|observe|install|status} PACKAGE --kart-id N --expected-uuid UUID` is
+`fleet_rx_filter.py {plan|observe|install|status|remove} PACKAGE --kart-id N --expected-uuid UUID` is
 the reverse-input filter tool for those packages; the
 [replication guide](../../docs/kart4-kart5-replication.md) has the procedure. `observe` and
 `status` change nothing. `install` is one supervised erase and exact write with read-back, needs
 `--apply --supervised --expect-blob-sha256` and the owner's go-ahead for that kart, and never
-activates, retries or cleans up. It cannot remove or replace an installed copy.
+activates, retries or cleans up. It cannot replace an installed copy in one step.
+
+`remove` (added 2026-11-13 after the filter proved too strict on the ground) is one supervised
+erase of exactly the package's stored script, with the same flags as `install`. It writes
+nothing. It refuses unless the stored bytes are the package's, the kart is at rest with the
+pedal released, forward is selected and forward is what the filter holds: the erase stops the
+script, but the direction it last applied stays in force **until the owner power-cycles the
+VESC**, and only then does the controller read the switch directly again. After the power
+cycle, `observe` must show no stored code and no contexts. The Heltec must be off the VESC, as
+for every other action. It has not yet been used on hardware.
 
 ## Guarded kart 3 tune trial
 

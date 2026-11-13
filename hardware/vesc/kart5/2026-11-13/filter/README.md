@@ -30,7 +30,9 @@ Kart 5's Heltec was held in its bootloader for all of this and restarted afterwa
 
 The limits listed in kart 4's record apply here unchanged: the filter starts at every normal
 power-up, accepts a switch change only at rest with the pedal released, does not repair a
-switch circuit, and **has no tested removal tool**.
+switch circuit, and **has no tested removal tool**. *Later that day:* `fleet_rx_filter.py
+remove` was added after the owner found the direction switch sticking on the ground with
+karts 4 and 5. It is tested offline only.
 
 ## Bus voltage above 84 V in the fast run
 

@@ -1,5 +1,12 @@
 # Kart 3 reverse input — wiring investigation
 
+**November 13 evening: the filter sticks in real driving.** With the same filter on karts 4 and
+5, the owner found the direction switch sticking on the ground. The interlock below (pedal
+released and under 50 ERPM for 250 ms) was a bench threshold and was never commissioned with a
+kart on its wheels; 50 ERPM is about 5 cm/s. Treat everything "successful" below as wheels-up
+only. `tools/vesc/fleet_rx_filter.py remove` can take the filter off karts 4 and 5; kart 3's
+own tools have no equivalent yet.
+
 **Latest: filter saved on kart 3 and normal startup checked in both switch positions.** The
 owner requested persistent installation after the successful wheels-up forward/reverse trial.
 Exact stored code matched after upload and two cold boots; the final live worker selected forward.

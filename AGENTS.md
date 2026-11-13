@@ -46,7 +46,13 @@
   reverse-input filter on kart 4 and approved the write after its switch was observed in both
   positions. Stored once with `tools/vesc/fleet_rx_filter.py` (kart 3's tested core, kart 4's
   UUID in the startup guard), read back exactly, and verified armed after a power cycle; see
-  hardware/vesc/kart4/2026-11-13/filter/. There is no tested removal tool.
+  hardware/vesc/kart4/2026-11-13/filter/. A removal step (`fleet_rx_filter.py remove`) was
+  added that evening and is tested offline only; using it is its own VESC write and needs the
+  owner's go-ahead for that kart.
+- Reported by the owner 2026-11-13: with the filter, the direction switch on karts 4 and 5
+  "sticks" on the ground. The filter accepts a change only with the pedal released and the
+  motor under 50 ERPM (about 5 cm/s) for 250 ms; it was commissioned wheels-up only, on every
+  kart. Do not install it on another kart, and do not call it accepted, without a ground test.
 - Explicit maintenance exception 2026-11-13 (kart 5 only): after reviewing kart 5's own capture
   the owner approved one persistent SET_MCCONF (the twelve reviewed tune fields plus the
   protection limits; on kart 5 only `l_abs_current_max` of those differed) and then the
