@@ -927,6 +927,17 @@ class RaceStopOnTheWire(unittest.TestCase):
         self.assertEqual([(m["cmd"], m["kart"], m["arg"]) for m in cmds], [("race", 2, 101)])
         self.assertEqual(sorted(out["skipped"]), [1, 3, 4, 5, 6, 7, 8])
 
+    def test_start_race_refused_while_one_runs(self):
+        # audit 2026-11-13: a second START RACE silently wiped the running race (laps, session)
+        app = self.app
+        app.race_start({"secs": 3, "laps": 0}, "t")
+        with self.assertRaisesRegex(pc.CommandError, "race is running"):
+            app.race_start({"secs": 3, "laps": 0}, "t")
+        self.assertTrue(app.fleet.game.session.running)                   # untouched
+        app.race_start({"secs": 3, "laps": 0, "force": True}, "t")         # explicit override still works
+        app.race_stop("t")                                                 # abort (before GO) ...
+        app.race_start({"secs": 3, "laps": 0}, "t")                        # ... then a fresh start is fine
+
     def test_stop_race_before_go_is_abort_start(self):
         app = self.app
         app.race_start({"secs": 10, "laps": 3}, "t")                           # still counting down

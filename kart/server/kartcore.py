@@ -503,6 +503,8 @@ MULTI_ITEM_TABLE = (("boost", 0.22, 7, 0.75), ("shell", 0.24, None, None), ("lig
 MULTI_HELD_ITEMS = ("shell", "lightning")
 RACE_GO_GRACE_S = 0.0        # the overlay/laps follow the computed GO instant; the go line only confirms it
 RACE_STATES = {0: "idle", 1: "countdown", 2: "running", 3: "finished"}
+RACE_IDLE_CLEAR_S = 40.0     # beacon idle (state 0) this long after a finish: FINISHED clears, laps count again
+RACE_PAUSE_AFTER_FINISH_S = 60.0   # freeplay stays paused this long after the flag
 HEADING_SLEW_DPS = 120.0     # heading-up map: max rotation rate
 ZONE_TYPES = ("boost", "mud", "item", "lapline")
 MUD_DEFAULT_SCALE = 0.5
@@ -1619,7 +1621,29 @@ class GameEngine:
                 r.update(position=r["pos"] or r["last_pos"], position_source="beacon_state")
         elif r["state"] == 1 and prev_state != 1 and r["finished"]:
             r.update(finished=False, position=None, finish_mono=None, finish_lap=None, position_source=None)
+        # Audit 2026-11-13: after STOP RACE the beacon goes idle (0) and stays there; NEW RACE / RESET LAPS at the pit
+        # never reach the kart, so "finished" froze the lap count until the next countdown. Idle long enough = over.
+        if r["finished"] and r["state"] == 0:
+            if r.get("idle_since") is None:
+                r["idle_since"] = now
+            elif now - r["idle_since"] >= RACE_IDLE_CLEAR_S:
+                r.update(finished=False, position=None, finish_mono=None, finish_lap=None, position_source=None,
+                         idle_since=None)
+                self._reset_lap()
+                self._rec(recs, "lap_reset", now, why="race over (pit idle)")
+        else:
+            r["idle_since"] = None
         return recs
+
+    def race_active(self, now):
+        """A pit race owns the kart: grid hold, countdown/running beacon state, or the flag less than
+        RACE_PAUSE_AFTER_FINISH_S ago. Freeplay pauses for it (audit 2026-11-13: it only paused for pit ZONES)."""
+        r = self.race
+        if r["hold"] or r["state"] in (1, 2):
+            return True
+        if r["go_at"] is not None and now < r["go_at"]:
+            return True
+        return bool(r["finished"] and r["finish_mono"] is not None and now - r["finish_mono"] < RACE_PAUSE_AFTER_FINISH_S)
 
     def _finish(self, pos, src, now, recs):
         r, lap = self.race, self.lap
@@ -2266,8 +2290,9 @@ class FreeplayGame:
         return recs
 
     # -- which document the engine runs -------------------------------------------------------
-    def select(self, pit_doc, now, demo=False):
-        """-> (zones document for GameEngine.set_zones, records). Updates phase/pause_reason."""
+    def select(self, pit_doc, now, demo=False, race=False):
+        """-> (zones document for GameEngine.set_zones, records). Updates phase/pause_reason.
+        race = the kart's GameEngine says a pit race owns it (race_active): freeplay pauses like for pit zones."""
         recs = []
         if pit_doc is not self._pit_seen:
             self._pit_seen = pit_doc
@@ -2283,6 +2308,8 @@ class FreeplayGame:
             phase, reason = "off", "demo"
         elif self._pit_on:
             phase, reason = "paused_pit", "pit game on"
+        elif race:
+            phase, reason = "paused_race", "pit race"
         elif self.course is not None:
             phase = "ready"
         else:
@@ -2535,6 +2562,8 @@ class FreeplayGame:
             tgt = min(ahead, key=lambda p: p["dist_m"])
             to, dist, line = tgt["id"], tgt["dist_m"], f"attack {tgt['id']} shell"
         else:
+            if not self.peers(now):
+                raise CommandError("no karts in the game")
             to, line = MP_ALL, "attack all lightning"
         recs = []
         self.held = None

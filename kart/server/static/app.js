@@ -263,7 +263,7 @@ function renderGame(game, fresh, st) {
   show("lapPanel", on && (!fpRun || game.lapline === true));
   show("gameChip", !on && !fpRun);
   show("lapStrip", on);
-  if (!on) txt("gameChip", "GAME OFF");
+  if (!on) txt("gameChip", gameOffText(game.off_reason));   // say why (audit 2026-11-13: "GAME OFF" hid "no zones from the pit")
   else {
     const lap = game.lap || {};
     const finished = !!(game.race && game.race.finished);
@@ -283,11 +283,20 @@ function renderGame(game, fresh, st) {
 }
 
 /* freeplay (kart-local item boxes, no pit): chip next to GAME, FREEPLAY button state */
+function gameOffText(why) {
+  if (!why) return "GAME OFF";
+  if (why.indexOf("no zones from the pit") >= 0) return "NO ZONES (PIT)";
+  if (why.indexOf("off at the pit") >= 0) return "GAME OFF (PIT)";
+  if (why.indexOf("config") >= 0) return "GAME OFF (CONFIG)";
+  if (why.indexOf("no zones") >= 0) return "NO ZONES";
+  return "GAME OFF";
+}
 function freeRunning(f) { return !!f && f.on && (f.phase === "ready" || f.phase === "recording" || f.phase === "no_gps"); }
 function freeChip(f) {                       // -> null (hidden) or {text, cls}
   if (!f || !f.on) return null;
   const n = (f.boxes || []).length;
   if (f.phase === "paused_pit") return { text: "FREEPLAY PAUSED (pit game on)", cls: "paused" };
+  if (f.phase === "paused_race") return { text: "FREEPLAY PAUSED (race)", cls: "paused" };
   if (f.phase === "no_gps") return { text: "FREEPLAY: waiting for GPS", cls: "rec" };
   if (f.phase === "recording") return { text: `FREEPLAY: drive one lap to set the course \u00b7 ${Math.round((f.record && f.record.distance_m) || 0)} m`, cls: "rec" };
   if (f.phase === "ready") return { text: `FREEPLAY \u00b7 ${n} box${n === 1 ? "" : "es"} \u00b7 ${f.collected || 0} collected`, cls: "" };

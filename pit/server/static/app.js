@@ -400,8 +400,9 @@ function buildRace() {
     <div class="lbl" style="margin-top:8px">Race mode</div>
     <div class="racegrid" style="grid-template-columns:repeat(3,1fr)">${MODES.map((m, i) => `<button data-racemode="${i}">${m}</button>`).join("")}</div>
     <div style="display:flex;gap:6px;margin-top:8px">
-      <button id="raceOn" class="hold startall" style="flex:1">RACE ON<small>hold 1 s</small></button>
-      <button id="raceOff" style="flex:1">RACE OFF</button></div>
+      <button id="raceOn" class="hold startall" style="flex:1">SEND GRID MODES<small>hold 1 s · mode + START to entries, STOP to the rest</small></button>
+      <button id="raceOff" style="flex:1">CLEAR RACE FLAG</button></div>
+    <div id="raceGuard" class="note" style="display:none;color:#ffb000;font-weight:700"></div>
     <div class="lbl" style="margin-top:10px">Race start: grid hold, then GO on the shared clock</div>
     <div class="racestart">
       <div class="racesecs">${[3, 5, 10].map((n) => `<button data-racesecs="${n}">${n} s</button>`).join("")}</div>
@@ -411,11 +412,12 @@ function buildRace() {
       <button id="raceStop" class="hold racestopbtn">STOP RACE<small>hold 1 s · final results</small></button></div>
     <p class="note">START RACE sends one "race" command to all karts: each holds at zero power, then all launch
       together when the lights go out. STOP still wins during the hold; START releases a kart early.</p>
-    <p class="note">RACE ON sends the selected mode + START to entered karts and STOP to karts not entered,
-      with per-kart outcomes in ${MOBILE ? "LOG" : "CMDS"}. RACE OFF only clears the race flag; it sends nothing.
+    <p class="note">SEND GRID MODES sends the selected mode + START to entered karts and STOP to karts not entered,
+      with per-kart outcomes in ${MOBILE ? "LOG" : "CMDS"}. CLEAR RACE FLAG only clears the race flag; it sends nothing.
       Entry and filters never remove a kart from telemetry or fleet commands.</p>`;
   const startRace = () => {
     const secs = store.get("gk_racesecs", 5), laps = store.get("gk_racelaps", 0);
+    if (!gameTiming() && !confirm("The pit GAME is OFF or has no lap line: laps and positions will not count.\nStart anyway?")) return;
     post("/race/start", { secs, laps }).then((j) => { if (j && j.ok) toast(`Race start sent: GO in ${j.secs} s${j.laps ? ", " + j.laps + " laps" : ""} (laps reset)`); });
   };
   holdButton($("raceStop"), 1000, () => post("/race/stop", {}).then((j) => {
@@ -440,7 +442,13 @@ function updateRace() {
   });
   document.querySelectorAll("[data-racemode]").forEach((b) => b.classList.toggle("sel", Number(b.dataset.racemode) === race.mode));
   $("raceOn").disabled = !S.server.link.connected;
-  $("raceStart").disabled = !S.server.link.connected;
+  // base without a GPS fix = no shared clock: commands expire and GO fires at once (audit 2026-11-13)
+  const baseFix = !!(S.fleet.base && S.fleet.base.fix);
+  $("raceStart").disabled = !S.server.link.connected || !baseFix;
+  const g = $("raceGuard");
+  g.textContent = !S.server.link.connected ? "T-Beam link down: START RACE blocked"
+    : !baseFix ? "BASE HAS NO GPS FIX: START RACE blocked (GO timing needs the base clock; give it sky)" : "";
+  g.style.display = g.textContent ? "" : "none";
   const rs = store.get("gk_racesecs", 5), rl = store.get("gk_racelaps", 0);
   document.querySelectorAll("[data-racesecs]").forEach((b) => b.classList.toggle("sel", Number(b.dataset.racesecs) === rs));
   document.querySelectorAll("[data-racelaps]").forEach((b) => b.classList.toggle("sel", Number(b.dataset.racelaps) === rl));

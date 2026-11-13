@@ -425,6 +425,9 @@ class App:
         now, t = time.monotonic(), time.time()
         wall = wall_iso(t)
         with self.lock:
+            ses = self.fleet.game.session
+            if ses is not None and ses.running and not body.get("force"):      # audit 2026-11-13: it silently wiped a running race
+                raise pitcore.CommandError("a race is running: STOP RACE (or NEW RACE) first")
             c = self.cmds.submit("race", pitcore.ALL_KARTS, secs, source=f"{who} (race start)", now=now, wall=wall)
             self.fleet.game.race_begin(laps, now + secs, wall_iso(t + secs))   # also resets lap timing
             race = self.fleet.race

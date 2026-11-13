@@ -1610,6 +1610,51 @@ class Freeplay(unittest.TestCase):
         self.assertEqual(lines(r), [])
         self.assertEqual(len(fp.boxes), 3)
 
+    def test_freeplay_pauses_for_a_pit_race(self):
+        # audit 2026-11-13: freeplay only paused for pit ZONES; a kart with no zones cached kept its boxes live
+        # and timed laps on its own line during the race. select(race=True) = paused like for pit zones.
+        fp, _ = self.ready(seed=6)
+        pit_off = zones_doc(boost_zone(), enabled=False)
+        doc, recs = fp.select(pit_off, 2.0, race=True)
+        self.assertIs(doc, pit_off)
+        self.assertEqual((fp.phase, fp.pause_reason), ("paused_race", "pit race"))
+        self.assertEqual(evs(recs, "freeplay_phase")[0]["phase"], "paused_race")
+        fp.fw_ok = True
+        with self.assertRaisesRegex(kc.CommandError, "paused"):
+            fp.host(2.5)                                                   # no hosting mid-race
+        doc, _ = fp.select(pit_off, 3.0, race=False)
+        self.assertEqual((doc["source"], fp.phase), ("freeplay", "ready"))
+        # the engine's view of "a race owns me"
+        g = kc.GameEngine()
+        self.assertFalse(g.race_active(0.0))
+        g.race["hold"] = True
+        self.assertTrue(g.race_active(0.0))
+        g.race["hold"] = False; g.race["state"] = 2
+        self.assertTrue(g.race_active(0.0))
+        g.race["state"] = 0; g.race["finished"] = True; g.race["finish_mono"] = 10.0
+        self.assertTrue(g.race_active(30.0))                               # still paused right after the flag
+        self.assertFalse(g.race_active(10.0 + kc.RACE_PAUSE_AFTER_FINISH_S + 1))
+
+    def test_finished_clears_once_the_pit_is_idle(self):
+        # audit 2026-11-13: after STOP RACE the beacon idles at state 0 and NEW RACE never reaches the kart,
+        # so "finished" froze lap counting until the next countdown. 40 s of idle = over, laps count again.
+        g = kc.GameEngine()
+        g.set_zones(zones_doc(lap_zone()), 0.0)
+        g.on_self(fix(-20, 0, race_state=2), 1.0)
+        g.on_self(fix(10, 0, race_state=2), 2.0)                           # cross: lap clock starts
+        self.assertTrue(g.lap["running"])
+        g.on_self(fix(12, 0, race_pos=1, race_state=3), 3.0)               # STOP RACE: beacon says finished, P1
+        self.assertTrue(g.race["finished"])
+        g.on_self(fix(12, 0, race_state=0), 10.0)                          # pit idle...
+        g.on_self(fix(12, 0, race_state=0), 30.0)
+        self.assertTrue(g.race["finished"])                                # ...not long enough yet
+        r = g.on_self(fix(12, 0, race_state=0), 10.0 + kc.RACE_IDLE_CLEAR_S + 0.5)
+        self.assertFalse(g.race["finished"])
+        self.assertEqual(evs(r, "lap_reset")[0]["why"], "race over (pit idle)")
+        g.on_self(fix(-20, 0, race_state=0), 60.0)
+        r = g.on_self(fix(10, 0, race_state=0), 61.0)                      # laps count again
+        self.assertEqual(len(evs(r, "lap_start")), 1)
+
     def test_precedence_with_the_pit(self):
         fp, _ = self.ready(seed=6)
         pit_on = zones_doc(boost_zone())
@@ -2168,6 +2213,17 @@ class Multiplayer(unittest.TestCase):
         fp.note_use_refusal("no one in range", 3.0)
         self.assertEqual(fp.snapshot(3.1)["multi"]["use_refused"]["seq"], 2)        # a new seq per refusal
         self.assertIsNone(fp.snapshot(6.5)["multi"]["use_refused"])                 # gone after 3 s
+
+    def test_lightning_with_nobody_in_the_game_is_refused(self):
+        # audit 2026-11-13: `attack all lightning` with no peers burned the item ("done, acked []" after 5 s)
+        fp, disp = self.fp()
+        disp.ingest(self_line(session=3), 2.0, "w")
+        fp.join(3, 2.0)
+        fp.on_game_line(mp_game_line(3, peers=[], hosts=[3]), 2.1)
+        fp.held = {"item": "lightning", "mono": 3.0}
+        with self.assertRaisesRegex(kc.CommandError, "no karts in the game"):
+            fp.use(3.0)
+        self.assertEqual(fp.held["item"], "lightning")                    # kept
 
     def test_peers_distance_dead_reckoning(self):
         fp, disp = self.fp()
