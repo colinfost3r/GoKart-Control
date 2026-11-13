@@ -741,8 +741,11 @@ class App:
         slot = msg.get("slot")
         try:
             self.item_use({"use": slot if isinstance(slot, int) else 0}, "core2@espnow")
-        except (ValueError, kartcore.CommandError):
-            pass                                        # logged by item_use; nothing else to do
+        except (ValueError, kartcore.CommandError) as e:
+            with self.lock:                             # logged by item_use; tell the driver why (dash flash)
+                self.freeplay.note_use_refusal(str(e), time.monotonic())
+            self._state_cache = (0.0, b"{}")
+            self._parts_cache = (0.0, {})
 
     MULTI_KEYS = ("host", "join", "leave", "use")
 

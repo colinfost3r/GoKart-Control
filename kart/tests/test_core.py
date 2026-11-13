@@ -2128,6 +2128,47 @@ class Multiplayer(unittest.TestCase):
         self.assertEqual([(e["ev"], e["from"]) for e in m["events"] if e["ev"] == "hit"], [("hit", 3), ("hit", 5)])
         self.assertEqual(fp.on_multi_line("bogus", {}, 5.0), [])
 
+    def test_shell_only_reaches_karts_ahead(self):
+        # owner 2026-11-13: shelling someone behind you is dumb. The target must be within MP_AHEAD_DEG of
+        # my last good heading; a nearer kart behind me is skipped, and alone in range it is refused by name.
+        fp, disp = self.fp()
+        disp.ingest(self_line(session=3), 2.0, "w")
+        self.joined(fp)
+        pos = fp_pos(0.0, 0.0, 3.0); pos["heading"] = 0.0                # I face north
+        fp.on_pos(pos, 3.0)
+        fp.held = {"item": "shell", "mono": 3.0}
+        disp.ingest(mp_fleet_line(3, 0, 15, session=3), 3.0, "w")        # 15 m north: ahead
+        disp.ingest(mp_fleet_line(5, 0, -10, session=3), 3.0, "w")       # 10 m south: behind (and nearer)
+        p = {x["id"]: x for x in fp.peers(3.0)}
+        self.assertEqual((p[3]["ahead"], p[5]["ahead"]), (True, False))
+        self.assertAlmostEqual(p[3]["rel_deg"], 0.0, delta=1.0)
+        self.assertAlmostEqual(abs(p[5]["rel_deg"]), 180.0, delta=1.0)
+        r = fp.use(3.0)
+        self.assertEqual(lines(r), ["attack 3 shell"])                   # not the nearer kart behind me
+        fp.held = {"item": "shell", "mono": 4.0}
+        disp.ingest(mp_fleet_line(3, 0, 60, session=3), 4.0, "w")        # 3 drives out of range
+        with self.assertRaisesRegex(kc.CommandError, "K5 is behind you"):
+            fp.use(4.0)
+        disp.ingest(mp_fleet_line(3, 14, 5, session=3), 5.0, "w")        # 70 deg off the bow: still ahead
+        self.assertTrue({x["id"]: x for x in fp.peers(5.0)}[3]["ahead"])
+        disp.ingest(mp_fleet_line(3, 15, 2.6, session=3), 6.0, "w")      # ~80 deg: not any more
+        self.assertFalse({x["id"]: x for x in fp.peers(6.0)}[3]["ahead"])
+        fp.kart_heading = None                                           # never moved: no direction gate
+        fp.held = {"item": "shell", "mono": 7.0}
+        disp.ingest(mp_fleet_line(3, 0, 60, session=3), 7.0, "w")
+        self.assertEqual(lines(fp.use(7.0)), ["attack 5 shell"])
+
+    def test_refused_core2_use_is_surfaced_for_3_s(self):
+        # a Core2 tap the server refuses shows on the dash (the Core2 itself only says USING...)
+        fp, disp = self.fp()
+        self.assertIsNone(fp.snapshot(1.0)["multi"]["use_refused"])
+        fp.note_use_refusal("K5 is behind you", 2.0)
+        u = fp.snapshot(2.5)["multi"]["use_refused"]
+        self.assertEqual((u["text"], u["seq"], u["age_s"]), ("K5 is behind you", 1, 0.5))
+        fp.note_use_refusal("no one in range", 3.0)
+        self.assertEqual(fp.snapshot(3.1)["multi"]["use_refused"]["seq"], 2)        # a new seq per refusal
+        self.assertIsNone(fp.snapshot(6.5)["multi"]["use_refused"])                 # gone after 3 s
+
     def test_peers_distance_dead_reckoning(self):
         fp, disp = self.fp()
         self.assertEqual(fp.peers(2.0), [])
@@ -2152,7 +2193,8 @@ class Multiplayer(unittest.TestCase):
         self.assertAlmostEqual(p["dist_m"], 10.0, delta=0.2)
         self.assertFalse(p["in_range"])                                  # fix 10.5 s old
         fp.on_game_line(mp_game_line(3, peers=[3, 7]), 13.0)
-        self.assertEqual(fp.peers(13.0)[1], {"id": 7, "dist_m": None, "in_range": False, "score": 0, "age_s": None})
+        self.assertEqual(fp.peers(13.0)[1], {"id": 7, "dist_m": None, "in_range": False, "ahead": None, "rel_deg": None,
+                                             "score": 0, "age_s": None})
         k = kc.KartState(3)
         k.ingest({"t": "fleet", "kart": 3}, 0.0, "w")
         self.assertEqual(k.multi, {f: 0 for f in kc.MULTI_TELE_FIELDS})   # old firmware: absent = 0
@@ -2205,7 +2247,7 @@ class Multiplayer(unittest.TestCase):
 
     def test_snapshot_always_complete(self):
         keys = {"session", "hosting", "peers", "hosts", "held", "score", "attack", "last_hit", "fw_ok", "events",
-                "wish", "note"}
+                "wish", "note", "use_refused"}
         m = kc.FreeplayGame().snapshot(0.0)["multi"]
         self.assertEqual(set(m), keys)
         self.assertEqual((m["session"], m["hosting"], m["peers"], m["hosts"], m["held"], m["score"], m["attack"],

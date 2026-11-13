@@ -721,6 +721,13 @@ CORR_MAX_BASE_AGE_S = 5.0
 CORR_MAX_M = 25.0
 
 
+def _bearing_deg(a, b):
+    """Compass bearing from a to b ((lat, lon) tuples), 0 = north, 90 = east: the GPS heading convention."""
+    dn = (b[0] - a[0]) * 111320.0
+    de = (b[1] - a[1]) * 111320.0 * math.cos(math.radians(a[0]))
+    return math.degrees(math.atan2(de, dn)) % 360.0
+
+
 def _dist_m(a, b):
     e, n = local_en(b[0], b[1], a)
     return math.hypot(e, n)
@@ -1865,6 +1872,8 @@ FP_PHASES = ("recording", "ready", "paused_pit", "off", "no_gps")
 # link up or Heltec reboot), the held item, the item roll and the target choice.
 FW_MULTIPLAYER = (0, 2, 5)   # first firmware with `session` / `attack` and the game / hit / attack lines
 MP_RANGE_M = 25.0            # a shell reaches a peer this close (its dead-reckoned position) ...
+MP_AHEAD_DEG = 75.0          # ... and within this of my heading (owner 2026-11-13: shelling someone behind you is dumb);
+#                              no heading yet (never moved) = no direction gate
 MP_FIX_FRESH_S = 10.0        # ... whose fix is younger than this
 MP_DR_MAX_S = 3.0            # a peer's last fix is moved along its heading at its gps_kph for at most this long
 MP_HEARD_S = 10.0            # no game line yet: peers = fleet karts heard this recently with my session
@@ -2040,6 +2049,7 @@ class FreeplayGame:
         self.rec = None              # LoopRecorder while the course is being driven
         self.no_adopt = False        # after a course reset: record, never adopt the pit's track
         self.kart = None             # (lat, lon, mono) last usable position
+        self.kart_heading = None     # last good Doppler heading (deg, 0 = north) that came with it
         self.phase = "off"
         self.pause_reason = None
         self.pit_track = None
@@ -2062,6 +2072,8 @@ class FreeplayGame:
         self.wish_tries = 0          # session commands sent since the wish was last in force
         self.wish_sent = None        # mono of the last one
         self.wish_note = None        # why the wish was dropped (rejected 3 times, the host's game ended)
+        self.use_refused = None      # {"text", "seq", "mono"}: a Core2 tap the server refused (dash flashes it)
+        self._use_refused_seq = 0
         self._resend_due = False     # link up / Heltec reboot: the firmware forgot, send the wish again
         self.held = None             # {"item": "shell"|"lightning", "mono"}
         self.use_pending = None      # {"item", "to", "mono"}: `attack` sent, no sent/rejected line yet
@@ -2155,6 +2167,8 @@ class FreeplayGame:
             return recs
         lat, lon = float(pos["lat"]), float(pos["lon"])
         self.kart = (lat, lon, now)
+        if _num(pos.get("heading")):
+            self.kart_heading = float(pos["heading"])
         if not self.on or self.course is not None or self.phase not in ("recording", "no_gps"):
             return recs
         if not self.no_adopt and self.pit_track is not None:
@@ -2514,7 +2528,11 @@ class FreeplayGame:
             near = [p for p in self.peers(now) if p["in_range"]]
             if not near:
                 raise CommandError("no one in range")
-            tgt = min(near, key=lambda p: p["dist_m"])
+            ahead = [p for p in near if p["ahead"] is not False]        # unknown heading: no direction gate
+            if not ahead:
+                b = min(near, key=lambda p: p["dist_m"])
+                raise CommandError(f"K{b['id']} is behind you")
+            tgt = min(ahead, key=lambda p: p["dist_m"])
             to, dist, line = tgt["id"], tgt["dist_m"], f"attack {tgt['id']} shell"
         else:
             to, line = MP_ALL, "attack all lightning"
@@ -2673,14 +2691,18 @@ class FreeplayGame:
             if pid == self._my_id():
                 continue
             ks = fleet.get(pid)
-            dist, fresh, score, age = None, False, 0, None
+            dist, fresh, score, age, pos = None, False, 0, None, None
             if ks is not None:
                 score, age = ks.multi.get("score", 0), _age(ks.last_mono, now)
                 pos, fix_age = peer_position(ks, now)
                 if pos is not None and me is not None:
                     dist = round(_dist_m(me, pos), 1)
                 fresh = fix_age is not None and fix_age < MP_FIX_FRESH_S
+            rel = None
+            if pos is not None and me is not None and self.kart_heading is not None:
+                rel = round((_bearing_deg(me, pos) - self.kart_heading + 180.0) % 360.0 - 180.0, 1)   # -180..180, 0 = dead ahead
             out.append({"id": pid, "dist_m": dist, "in_range": dist is not None and fresh and dist <= MP_RANGE_M,
+                        "ahead": None if rel is None else abs(rel) <= MP_AHEAD_DEG, "rel_deg": rel,
                         "score": score, "age_s": age})
         return out
 
@@ -2706,4 +2728,13 @@ class FreeplayGame:
                        for e in self.mevents],
             "wish": self.wish,
             "note": self.wish_note,
+            "use_refused": ({"text": self.use_refused["text"], "seq": self.use_refused["seq"],
+                             "age_s": _age(self.use_refused["mono"], now)}
+                            if self.use_refused and now - self.use_refused["mono"] <= 3.0 else None),
         }
+
+    def note_use_refusal(self, text, now):
+        """The Core2 asked to use an item and item_use said no: surface the reason for ~3 s (the Core2 itself
+        only shows USING..., the dash flashes this on the item button like its own refused taps)."""
+        self._use_refused_seq += 1
+        self.use_refused = {"text": str(text), "seq": self._use_refused_seq, "mono": now}
