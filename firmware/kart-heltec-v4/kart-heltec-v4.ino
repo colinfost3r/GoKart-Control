@@ -1172,10 +1172,18 @@ static void serviceLoraTx() {
 }
 
 // ---------------------------------------------------------------- wifi / ota
+static bool wifiWanted() {           // "" / none / clear / off = no network: the radio stays parked on espnowCh
+  return wifiSsid.length() > 0 && !wifiSsid.equalsIgnoreCase("none") && !wifiSsid.equalsIgnoreCase("clear")
+      && !wifiSsid.equalsIgnoreCase("off");
+}
 static void wifiStart() {
-  if (wifiSsid.length() == 0) return;
+  if (!wifiWanted()) { if (wifiSsid.length()) logf("wifi off ('%s' stored = no network)", wifiSsid.c_str()); return; }
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
+  // 0.3.4: no driver-side reconnect loop. With the network absent the core re-scans on every NO_AP_FOUND,
+  // which parks the radio off espnowCh most of the time (kart 1, 2026-11-13: one Core2 tap in three got
+  // through). Reconnects stay ours: serviceWifi, every 30 s, only while the kart is stationary.
+  WiFi.setAutoReconnect(false);
   WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
   wifiStarted = true;
 }
@@ -1362,9 +1370,12 @@ static void usbCommand(char* line) {
          invN > 1 ? invName(invItems[1]) : "-", invN > 2 ? invName(invItems[2]) : "-");
   }
   else if (!strcmp(line, "wifi") && arg) {
-    char* pw = strchr(arg, ' '); if (pw) { *pw++ = 0; }
-    prefs.putString("ssid", arg); prefs.putString("pass", pw ? pw : "");
-    logf("wifi credentials stored for '%s'; reboot to apply", arg);
+    if (!strcmp(arg, "clear")) { prefs.putString("ssid", ""); prefs.putString("pass", ""); logf("wifi credentials cleared; reboot to apply (radio stays on the Core2 channel)"); }
+    else {
+      char* pw = strchr(arg, ' '); if (pw) { *pw++ = 0; }
+      prefs.putString("ssid", arg); prefs.putString("pass", pw ? pw : "");
+      logf("wifi credentials stored for '%s'; reboot to apply", arg);
+    }
   }
   else if (!strcmp(line, "otapw") && arg) { prefs.putString("otapw", arg); logf("ota password stored; reboot to apply"); }
   else if (!strcmp(line, "rate") && arg) { int r = atoi(arg); if (r == 1 || r == 2) { reportRate = r; prefs.putUChar("rate", r); logf("report rate %d Hz", r); } else logf("rate must be 1 or 2"); }
