@@ -3,6 +3,14 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Upstream kart 0.3.5 merged, not installed — November 13, 2026
+
+Eamon's branch is merged through `139c810`, including his Heltec firmware changes (0.3.4 Wi-Fi
+handling and `wifi clear`, 0.3.5 fixed ESP-NOW channel 1 with Wi-Fi off). 586 tests pass, eight
+targets compile, images frozen as `2026-11-13-upstream-035`
+([manifest](docs/validation/m5-upstream-035-2026-11-13.json)). **Not flashed anywhere:** karts 3
+and 4 still run `2026-11-13-game-rules`. Only the Heltec kart images changed.
+
 ## Kart 4 VESC tuned to match kart 3 — November 13, 2026
 
 Kart 4's controller (UUID `55004d000951343037353739`) was captured read-only, compared with

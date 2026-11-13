@@ -143,6 +143,22 @@ same rule as the native player's BOOST). No firmware changed. Two conflicts: `ka
 keeps both his `music` setting and our `freeplay_speed` choice, and his new boost test was given
 fresh controller state because our freshness guard on `use_item` is retained. 546 tests pass.
 
+A third merge that day, through **`139c810`** (merge `29be4dd`), **does change the Heltec
+firmware**: upstream kart 0.3.4/0.3.5 (no Wi-Fi for an empty or sentinel SSID, no driver
+reconnect loop, `wifi clear`, and a fixed ESP-NOW channel 1 whenever Wi-Fi is off). His channel
+rule was folded into `serviceEspnowChannel()`, which both display variants share. 586 tests
+pass and all eight targets compile. The new images are frozen in
+`firmware/build/bench-candidates/2026-11-13-upstream-035/`
+([manifest](validation/m5-upstream-035-2026-11-13.json)) and **are not on any kart**: karts 3
+and 4 still run `2026-11-13-game-rules`. Only the three Heltec kart images differ; the Core2,
+base and repeater images are byte-identical, so a later update touches Heltecs only. They
+report `kart-0.3.5`, which finally distinguishes them from the installed `kart-0.3.3` builds.
+
+For the host test, mind the channel: Eamon's karts now sit on channel 1 with Wi-Fi off, and
+the course download needs the host Heltec and the player's Core2 on one channel. Kart 3's pair
+follows its Wi-Fi access point (channel 2 on November 12 and 13), so it will probably need
+Wi-Fi off for play (`wifi clear` exists from 0.3.4 on); kart 4 has no Wi-Fi and is on channel 1.
+
 ## Next session: coordinated kart3 and host acceptance
 
 1. Identify physical USB/OTA endpoints and current app hashes; preserve NVS/rollback evidence.
