@@ -1,0 +1,82 @@
+{
+  "started_at_utc": "2026-11-13T18:53:32.834473+00:00",
+  "mode": "preflight_only",
+  "status": "preflight_verified_no_settings_sent",
+  "kart_id": 5,
+  "source_sha256": {
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/plan.json": "61a0f0ca2ecca43196115268c01d784c5d3564b814f516cb1ec0e8462bfcba4e",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/proposed_motor_response.bin": "ee7f7b088c1702de4ee974d4d19cf354dfe8eb85d160ae4ba6802b8754c2140a",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/source/manifest.json": "faa9bb4ad75b9e41059c7d9e844a26374c24e0603332266efe1481913dd87bcd",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/source/firmware.bin": "750a84dbec2e8ee6507d87142a99d09a58475bd8413891f819db8fa71107aab5",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/source/telemetry.bin": "6aa09959e9382f9682628181e638ab4e6d26197f982824c4179500cfdcdc8944",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/source/motor_configuration.bin": "cf2e96afecc197f19764618ded28a37d8b29f3fcfc13871eaf514d9bc3e04f83",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/source/app_configuration.bin": "2f666b2e9eb8130251b6ba3a6aea3da28f5416e3d3e3ec56883507f65abf185d",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/before/manifest.json": "3749f09c6b19c9b5a1e7c104fc6b0b671335519081a0fe64c7a58f3db74f017f",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/before/firmware.bin": "e6998ab5406ae3fc5497aaa6d9dbe822856052e2b4c5d182e97f028992bb10b3",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/before/telemetry.bin": "869ab526c1d491a20059e850fb0cb08c82424e6fe53a73e23cfd81fd9b6c333c",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/before/motor_configuration.bin": "0b348b076647ce226e5a9c0870701a3a1de43e1e73b96f1e3c8f758b5ccab529",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/hardware/vesc/kart5/2026-11-13/prepared-limits/before/app_configuration.bin": "21bafda3b1190cc3e6a80f4dee0627a7de282f64e706879a26a83697c6ecbc87",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/third_party/vesc_tool/6.00/parameters_mcconf.xml": "b7cc767487bac6fc7526e29b4f71f54db4da0b29b9110b5de23d67fff74255b0",
+    "/Users/cofo/Projects/50 Day/GoKart Control/.worktrees/m5-v1.5/third_party/vesc_tool/6.00/parameters_appconf.xml": "33c64b9db644b524f5a90a85d3fc76130950cb7247c33cd915aa5bd0414f2436"
+  },
+  "expected_identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "test_version": 0,
+    "firmware_name": "no_hw_limits",
+    "uuid": "3d0020000951343037353739"
+  },
+  "allowlisted_motor_fields": [
+    "l_current_max",
+    "l_current_min",
+    "l_in_current_max",
+    "l_min_erpm",
+    "l_max_erpm",
+    "l_max_duty",
+    "foc_fw_current_max",
+    "foc_fw_duty_start",
+    "foc_openloop_rpm",
+    "foc_sl_erpm",
+    "cc_ramp_step_max",
+    "m_motor_temp_sens_type",
+    "l_in_current_min",
+    "l_abs_current_max",
+    "l_min_vin",
+    "l_max_vin",
+    "m_fault_stop_time_ms"
+  ],
+  "changed_motor_fields": [
+    "l_current_max",
+    "l_current_min",
+    "l_min_erpm",
+    "l_max_erpm",
+    "l_max_duty",
+    "foc_fw_current_max",
+    "foc_fw_duty_start",
+    "foc_openloop_rpm",
+    "m_motor_temp_sens_type",
+    "l_abs_current_max"
+  ],
+  "protection_limits_copied": true,
+  "retained_operating_differences": [
+    "motor_configuration / foc_observer_gain"
+  ],
+  "proposed_motor_response_sha256": "ee7f7b088c1702de4ee974d4d19cf354dfe8eb85d160ae4ba6802b8754c2140a",
+  "mutating_write_attempts": 0,
+  "ack_verified": false,
+  "readback_verified": false,
+  "retry_performed": false,
+  "rollback_performed": false,
+  "saved_flash_independently_verified": false,
+  "protocol_source": "https://github.com/vedderb/bldc/blob/f7c2b34e1cff2234cae98be3abf0cd50e249558f/comm/commands.c",
+  "persistence": "COMM_SET_MCCONF (13) stores the full motor configuration; runtime readback does not independently verify persistence across reboot.",
+  "before_sha256": {
+    "firmware": "e6998ab5406ae3fc5497aaa6d9dbe822856052e2b4c5d182e97f028992bb10b3",
+    "motor_configuration": "0b348b076647ce226e5a9c0870701a3a1de43e1e73b96f1e3c8f758b5ccab529",
+    "app_configuration": "21bafda3b1190cc3e6a80f4dee0627a7de282f64e706879a26a83697c6ecbc87",
+    "telemetry": "bd7fde2419adef70d3e78e0e245cdbb5b7aa9bd13dc39e3c84ca0937262dc9b4"
+  },
+  "full_write_frame_accepted": false,
+  "write_bytes_accepted": null,
+  "finished_at_utc": "2026-11-13T18:53:32.852937+00:00"
+}

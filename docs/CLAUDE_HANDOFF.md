@@ -277,8 +277,23 @@ Neither new unit's UUID/BLE/pairing/capture is known yet. Never guess or clone k
   and verified armed after a power cycle in forward and reverse, with a pedal check both ways.
   See [the record](../hardware/vesc/kart4/2026-11-13/filter/README.md). No tested removal tool
   exists for it.
-- **Still missing:** everything for kart 5, which has not been captured; a filter removal
-  tool; road and load checks on kart 4.
+- **Kart 5 is at the same point (November 13):** VESC UUID `3d0020000951343037353739` tuned
+  (10 settings; its exact read-back failed on one controller-measured offset, was not retried,
+  and was confirmed by independent capture and cold boot), boards installed (Heltec
+  `a4:cb:8f:a0:20:34`, Core2 `3c:8a:1f:d7:53:44`, VESC Bluetooth `dd:d4:b8:ff:58:f6`, channel 1,
+  default speed factor 2.48 because its VESC stores kart 2's numbers), modes read back at
+  15163 / 25272 / 150000 ERPM, reverse filter installed and verified armed, ten-minute soak
+  passed. Records: [VESC](../hardware/vesc/kart5/2026-11-13/README.md),
+  [filter](../hardware/vesc/kart5/2026-11-13/filter/README.md),
+  [boards](../hardware/m5/2026-11-13-kart5-first-install/README.md).
+- **Open tune question for karts 3–5:** kart 5's bus read 86.4 V for two samples at the end of
+  an uncapped wheels-up run with the pack at 83 V (no fault; `l_max_vin` 90 V). See the kart 5
+  filter record. Nothing was changed. Until the owner and Eamon decide, avoid uncapped
+  full-pedal runs on a freshly charged pack.
+- **Still missing on karts 4 and 5:** Wi-Fi and OTA settings, a GPS check of each speed factor
+  on the road, pit visibility and pit commands, link-loss checks, and a filter removal tool.
+  `apply_fleet_tune.py` treats any read-back difference as uncertain, including a
+  controller-measured offset moving by one count; that is safe but will recur.
 - Supervise each unit's normal cold boots, correct filtered direction, repeated starts from
   full rest, then accessory coexistence and intentional mode controls. Do not rerun Hall or
   pedal calibration. Resolve native ADC prerequisite differences before filter installation.

@@ -46,8 +46,19 @@
   reverse-input filter on kart 4 and approved the write after its switch was observed in both
   positions. Stored once with `tools/vesc/fleet_rx_filter.py` (kart 3's tested core, kart 4's
   UUID in the startup guard), read back exactly, and verified armed after a power cycle; see
-  hardware/vesc/kart4/2026-11-13/filter/. There is no tested removal tool. Kart 5 needs its own
-  observation and approval.
+  hardware/vesc/kart4/2026-11-13/filter/. There is no tested removal tool.
+- Explicit maintenance exception 2026-11-13 (kart 5 only): after reviewing kart 5's own capture
+  the owner approved one persistent SET_MCCONF (the twelve reviewed tune fields plus the
+  protection limits; on kart 5 only `l_abs_current_max` of those differed) and then the
+  reverse-input filter install, each with its own go-ahead. The tune write's exact read-back
+  failed on one controller-measured voltage offset and was not retried; independent captures
+  and a cold boot confirmed the intended values. See hardware/vesc/kart5/2026-11-13/. Do not
+  repeat either write or extend this to other fields or controllers.
+- Observed 2026-11-13, unresolved: kart 5's bus read 86.4 V for two samples at the end of an
+  uncapped wheels-up run near 34700 ERPM with the pack at 83 V. No fault (`l_max_vin` is 90 V on
+  karts 3-5). The tune is common to karts 3-5; treat uncapped full-pedal running on a near-full
+  pack as an open tune question for the owner and Eamon, and do not change limits to chase it
+  without their decision.
 - Owner decision 2026-11-12 (native game rules): the host ("game maker") chooses the speed its
   course is played at, ECO or NORMAL. Joining writes that mode and locks the joined kart's mode
   buttons to it; pit commands still win. A boost is a step up from the mode in force (BOOST one

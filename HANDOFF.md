@@ -3,6 +3,21 @@
 **Current entry point: [Claude handoff — November 12, updated November 13](docs/CLAUDE_HANDOFF.md).**
 Earlier dated entries below are history; the latest entry supersedes their UI details.
 
+## Karts 4 and 5 brought to kart 3's level — November 13, 2026
+
+Both new karts now have kart 3's tune, the reverse-input filter, a paired Heltec and Core2 on
+the same application images as kart 3, their own VESC bound by UUID, and ECO/NORMAL/SPORT read
+back at 15163 / 25272 / 150000 ERPM with the wheels up. Each VESC write had the owner's own
+go-ahead. Speed factors differ by design: kart 3 1.736, kart 4 0.507, kart 5 the default 2.48,
+all three giving the same ERPM caps and all three unverified on the road. Not done on 4 and 5:
+Wi-Fi/OTA, GPS checks, pit commands. Two things to read before relying on this: kart 5's tune
+write was logged as uncertain by the tool (one controller-measured offset; confirmed
+independently), and kart 5's bus read **86.4 V** briefly in an uncapped run on a near-full pack,
+an open tune question for all three karts. 613 tests pass.
+[Kart 5 VESC](hardware/vesc/kart5/2026-11-13/README.md),
+[kart 5 filter and the voltage reading](hardware/vesc/kart5/2026-11-13/filter/README.md),
+[kart 5 boards](hardware/m5/2026-11-13-kart5-first-install/README.md).
+
 ## Upstream kart 0.3.5 merged, not installed — November 13, 2026
 
 Eamon's branch is merged through `139c810`, including his Heltec firmware changes (0.3.4 Wi-Fi

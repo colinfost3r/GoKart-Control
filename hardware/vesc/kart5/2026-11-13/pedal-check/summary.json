@@ -1,0 +1,41 @@
+{
+  "samples": 492,
+  "span_s": 50.9,
+  "faults_seen": [
+    0
+  ],
+  "runs": [
+    {
+      "at_s": 9.8,
+      "seconds": 1.0,
+      "direction": "forward",
+      "peak_erpm": 5684,
+      "motor_a_max_abs": 24.0,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 36.1,
+      "seconds": 1.6,
+      "direction": "reverse",
+      "peak_erpm": -11158,
+      "motor_a_max_abs": 27.5,
+      "direction_flip_within_run": false
+    },
+    {
+      "at_s": 39.1,
+      "seconds": 1.7,
+      "direction": "forward",
+      "peak_erpm": 11783,
+      "motor_a_max_abs": 30.6,
+      "direction_flip_within_run": false
+    }
+  ],
+  "volts_min": 81.2,
+  "volts_max": 83.2,
+  "motor_a_min": 0.0,
+  "final": {
+    "erpm": 0,
+    "motor_current_a": 0.0,
+    "fault_code": 0
+  }
+}

@@ -15,9 +15,11 @@ and Core2 reported `mode_ready:true`. See the
 Pit MODE/STOP/START/SLOW/BOOST/RACE/game physical acceptance, loaded driving and fleet/range tests
 remain pending; a received `rate 1` command does not establish motor-command acceptance.
 
-**The next two M5 karts are assigned IDs 4 and 5.** Kart 4 reached the read-only checkpoint on
-2026-11-13 ([record](../../hardware/m5/2026-11-13-kart4-first-install/README.md)); kart 5 is
-untouched. Neither is commissioned for control by that. IDs 1 and 2
+**The next two M5 karts are assigned IDs 4 and 5.** Both were installed, paired, bound to
+their own VESCs and mode-checked with the wheels up on 2026-11-13
+([kart 4](../../hardware/m5/2026-11-13-kart4-first-install/README.md),
+[kart 5](../../hardware/m5/2026-11-13-kart5-first-install/README.md)). Wi-Fi/OTA, GPS, pit
+commands and road checks are still open on both. IDs 1 and 2
 remain Eamon's test karts; kart 3 is the reference. Follow the
 [kart-4/5 tune and reverse-filter preparation guide](../../docs/kart4-kart5-replication.md).
 For each, begin

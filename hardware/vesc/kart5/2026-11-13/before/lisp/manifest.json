@@ -1,0 +1,80 @@
+{
+  "started_at_utc": "2026-11-13T18:52:57.777010+00:00",
+  "port": "/dev/cu.usbmodem3041",
+  "transport": "usb_serial",
+  "expected_uuid": "3d0020000951343037353739",
+  "protocol_source_commit": "f7c2b34e1cff2234cae98be3abf0cd50e249558f",
+  "allowed_commands": [
+    0,
+    130
+  ],
+  "chunk_bytes": 256,
+  "scope": "stored_lisp_code_blob_excluding_8_byte_size_crc_flags_header",
+  "raw_flash_dump": false,
+  "autostart": "not_read_unknown",
+  "running_state": "not_read_unknown",
+  "header_crc_independently_verified": false,
+  "snapshot_atomic": false,
+  "concurrent_edit_limit": "Same-size concurrent code changes cannot be excluded.",
+  "capture_complete": true,
+  "status": "no_valid_blob",
+  "validated_code_bytes": 0,
+  "queries": [
+    {
+      "command": 0,
+      "requested_at_utc": "2026-11-13T18:52:57.779622+00:00",
+      "request_frame_hex": "020100000003",
+      "reply_received": true,
+      "transport_crc_verified": true,
+      "received_at_utc": "2026-11-13T18:52:57.780179+00:00",
+      "file": "replies/0001.bin",
+      "payload_bytes": 46,
+      "sha256": "e6998ab5406ae3fc5497aaa6d9dbe822856052e2b4c5d182e97f028992bb10b3"
+    },
+    {
+      "command": 130,
+      "requested_at_utc": "2026-11-13T18:52:57.780465+00:00",
+      "request_frame_hex": "020982000000000000000079d503",
+      "reply_received": true,
+      "length": 0,
+      "offset": 0,
+      "transport_crc_verified": true,
+      "received_at_utc": "2026-11-13T18:52:57.780890+00:00",
+      "file": "replies/0002.bin",
+      "payload_bytes": 9,
+      "sha256": "99ca04a4bf313cdd62c844d1bb8456a2787881dc4e234d142bdf1b30163c2f5e"
+    },
+    {
+      "command": 0,
+      "requested_at_utc": "2026-11-13T18:52:57.781011+00:00",
+      "request_frame_hex": "020100000003",
+      "reply_received": true,
+      "transport_crc_verified": true,
+      "received_at_utc": "2026-11-13T18:52:57.781490+00:00",
+      "file": "replies/0003.bin",
+      "payload_bytes": 46,
+      "sha256": "e6998ab5406ae3fc5497aaa6d9dbe822856052e2b4c5d182e97f028992bb10b3"
+    }
+  ],
+  "identity": {
+    "firmware": "6.02",
+    "hardware": "75_300_R2",
+    "uuid": "3d0020000951343037353739",
+    "paired": 0,
+    "test_version": 0,
+    "hardware_type": 0,
+    "custom_config_count": 0,
+    "has_phase_filters": 1,
+    "qml_hardware": 0,
+    "qml_app": 0,
+    "nrf_flags": 0,
+    "firmware_name": "no_hw_limits",
+    "remaining_hex": ""
+  },
+  "reported_code_bytes": 0,
+  "code_file": "lisp_code.bin",
+  "code_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "identity_rechecked": true,
+  "empty_result_meaning": "Firmware exposed no valid nonempty code blob; this is not proof of blank flash and does not establish autostart flags or execution state.",
+  "finished_at_utc": "2026-11-13T18:52:57.782800+00:00"
+}
