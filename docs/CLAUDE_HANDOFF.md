@@ -137,6 +137,12 @@ On November 13 his branch was merged again, through **`cb7011c`** (merge `1cabf7
 It touches none of the eight M5 targets. It does change `kart/server`, which the host update
 deploys; all 545 tests pass on the merged tree.
 
+Later the same day it was merged once more, through **`0506e57`**: Bluetooth dash speakers and
+music, and his Pi server now also steps a carried boost one mode above the requested mode (the
+same rule as the native player's BOOST). No firmware changed. Two conflicts: `kart_server.py`
+keeps both his `music` setting and our `freeplay_speed` choice, and his new boost test was given
+fresh controller state because our freshness guard on `use_item` is retained. 546 tests pass.
+
 ## Next session: coordinated kart3 and host acceptance
 
 1. Identify physical USB/OTA endpoints and current app hashes; preserve NVS/rollback evidence.
