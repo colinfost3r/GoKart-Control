@@ -1,0 +1,22 @@
+{
+  "_comment": "Bench preset around the shop at 50 Day St, Norwalk (box cut around nearby 165 Water St; covers both). course_shop.jpg is local-only (license).",
+  "version": 7,
+  "image": "course_shop_cteco_hc.jpg",
+  "bounds": {
+    "north": 41.0989218,
+    "south": 41.085921799999994,
+    "east": -73.4071611,
+    "west": -73.42416109999999
+  },
+  "origin": {
+    "lat": 41.09399,
+    "lon": -73.41637
+  },
+  "course": [],
+  "pit": {
+    "lat": 41.09399,
+    "lon": -73.41637
+  },
+  "source": "CT ECO / CT State GIS Office, CT 2023 Spring Aerial Imagery (4-band, 3 inch), exported from the Ortho_2023_tiled ImageServer for the shop box on 2026-11-05 (georeferenced by the state; bounds = export extent), CC0. course_shop.jpg (SkyFi Oct 2026) is being re-registered against it.",
+  "attribution": "CT ECO 2023 aerial"
+}

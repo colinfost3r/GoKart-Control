@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>GoKart Pit</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="op" data-page="op">
+<div id="simBanner" class="banner sim hidden">SIMULATION &mdash; data comes from the simulator, not real karts</div>
+<div id="connBanner" class="banner bad hidden"></div>
+<div class="topbar">
+  <span class="title">GoKart Pit</span>
+  <span id="linkChip" class="chip">T-Beam ?</span>
+  <span id="radioChip" class="chip">radio ?</span>
+  <span id="repChip" class="chip">no repeater</span>
+  <span id="corrChip" class="chip" title="pit radio fix vs the surveyed pit marker; tap to apply/stop applying">GPS corr off</span>
+  <span id="baseChip" class="chip">base GPS ?</span>
+  <span id="paceChip" class="chip bad hidden"></span>
+  <span id="healthChip" class="chip hidden"></span>
+  <span id="raceChip" class="chip">race off</span>
+  <button id="gameChip" class="chip gamechip off">GAME OFF</button>
+  <span class="spacer"></span>
+  <button id="sndBtn" class="chip sndchip" aria-label="sound">SOUND</button>
+  <button id="fOnline" class="toggle">Online only</button>
+  <button id="fEntered" class="toggle">Entered only</button>
+  <span id="hiddenNote" class="sm"></span>
+  <span id="clock" class="sm"></span>
+  <a href="/api/log/download" style="color:#fff" class="sm">Download log</a>
+  <a href="/logout" style="color:#fff" class="sm">Log out</a>
+</div>
+<div class="fleetbar">
+  <button id="stopAll" class="hold stopall">STOP ALL<small>hold 1 s</small></button>
+  <button id="startAll" class="hold startall">START ALL<small>hold 1 s</small></button><button id="slowAll" class="hold slowall">SLOW ALL<small>hold 1 s</small></button><button id="boostAll" class="hold boostall">BOOST ALL<small>hold 1 s</small></button>
+  <button data-allmode="0">ALL ECO</button>
+  <button data-allmode="1">ALL NORMAL</button>
+  <button data-allmode="2">ALL SPORT</button>
+  <span class="spacer"></span>
+  <span class="note" style="align-self:center">Wheel mph is GPS-calibrated (2.48x on kart 2, 2026-11-09).<br>Filters hide cards only; hidden karts still receive fleet commands.</span>
+</div>
+<div id="cards" class="cards"></div>
+<div class="lower">
+  <div class="panel">
+    <h3 class="maph">Course map <span id="mapNote" class="note"></span><span class="spacer"></span><button id="zoneEdit" class="zbtn">ZONES</button></h3>
+    <div id="zoneBar" class="zonebar hidden">
+      <div class="ztools">
+        <div class="zgroup"><span class="zglbl">PLACE</span>
+          <button data-ztool="boost" class="zt-boost">BOOST PAD</button><button data-ztool="mud" class="zt-mud">MUD</button><button data-ztool="item" class="zt-item">ITEM BOX</button></div>
+        <div class="zgroup"><span class="zglbl">COURSE</span>
+          <button data-ztool="lapline" class="zt-lap">LAP LINE</button><button data-ztool="track" class="zt-track">TRACK</button></div>
+        <div class="zgroup"><span class="zglbl">EDIT</span>
+          <button data-ztool="select">SELECT / MOVE</button><button data-ztool="delete" class="zt-del">DELETE</button></div>
+        <span class="spacer"></span>
+        <button id="zCancel" class="zcancel">CANCEL</button>
+        <button id="zSave" class="zsave">SAVE</button>
+      </div>
+      <div class="zquick">
+        <span class="zgroup zkart"><span class="zglbl">AT KART</span><select id="zAtKartSel" aria-label="kart to place at"><option value="1">K1</option><option value="2">K2</option><option value="3">K3</option><option value="4">K4</option><option value="5">K5</option><option value="6">K6</option><option value="7">K7</option><option value="8">K8</option></select><button id="zAtKart" class="zatkart">PLACE AT KART</button></span>
+        <span class="zgroup zauto"><span class="zglbl">AUTO</span><button data-zn="2">2</button><button data-zn="3">3</button><button data-zn="4">4</button><button data-zn="6">6</button><input id="zAutoN" type="number" min="1" max="20" step="1" value="3" inputmode="numeric" aria-label="number of item boxes"><button id="zAuto" class="zt-item">AUTO BOXES</button></span><span id="zAutoHint" class="note zautohint"></span>
+        <button id="zSnap" class="zchip sel" aria-pressed="true" title="Snap pads, mud and boxes to the track centreline (within 10 m)">SNAP</button><button id="zUndo" class="zchip" disabled title="Nothing to undo">UNDO</button>
+      </div>
+      <div id="zHint" class="zhint"></div>
+      <button id="zPaceGo" class="zpacego hidden">PACE CAR: record a lap</button>
+      <div class="zprops">
+        <span id="zSel" class="zsel">nothing selected</span>
+        <label class="zpname">Name <input id="zName" maxlength="40" autocomplete="off"></label>
+        <label class="zprad">Radius <input id="zRadius" type="range" min="3" max="60" step="1" value="5"> <b id="zRadiusVal" class="zradval">--</b></label>
+        <span class="ztrack zgroup"><span class="zglbl">TRACK</span><button id="tUndo">UNDO POINT</button><button id="tClose">CLOSE LOOP</button><button id="tClear">CLEAR</button></span>
+        <span class="spacer"></span>
+        <span id="zCounts" class="note"></span>
+      </div>
+      <div id="paceBar" class="pacebar">
+        <span class="zgroup"><span class="zglbl">PACE CAR</span><select id="pcKart" aria-label="pace car kart"><option value="1">K1</option><option value="2">K2</option><option value="3">K3</option><option value="4">K4</option><option value="5">K5</option><option value="6">K6</option><option value="7">K7</option><option value="8">K8</option></select><button id="pcRec" class="pcrec">&#9679; REC</button><button id="pcStop">STOP</button><button id="pcClear">CLEAR</button></span>
+        <label>Width <select id="pcWidth"><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option><option>12</option></select> m</label>
+        <label><input type="checkbox" id="pcLapline" checked> auto lap line</label>
+        <span id="pcStatus" class="note">drive the course with one kart: laps are detected when it returns to its start</span>
+        <div id="pcLaps" class="pclaps"></div>
+      </div>
+    </div>
+    <div class="mapwrap">
+      <canvas id="map" class="map"></canvas>
+      <div class="mapctl"><button data-zoom="in">+</button><button data-zoom="out">&minus;</button><button data-zoom="fit">Fit</button></div>
+    </div>
+  </div>
+  <div class="side">
+    <div class="panel"><h3>Command outcomes</h3><div id="outcomes"></div></div>
+    <div class="panel"><h3>Laps</h3><div id="laps"></div></div>
+    <div class="panel"><h3>Race</h3><div id="race"></div></div>
+    <div class="panel"><h3>Session log <span class="note">operator actions and events</span></h3><div id="baseStat" class="sm basestat"></div><div id="log" class="log"></div></div>
+  </div>
+</div>
+<script src="/static/watch.js"></script>
+<script src="/static/sound.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

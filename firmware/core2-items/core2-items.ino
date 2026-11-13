@@ -1,0 +1,536 @@
+/* GoKart Core2 item screen ("your items", bar-mounted M5Stack Core2).
+ *
+ * Listens for the kart Heltec's ESP-NOW inventory broadcasts (kart-0.3.0 `inv` line from the Pi),
+ * shows the carried item-box prizes, swipe left/right to pick one, tap to USE it (sent back to the
+ * Heltec, which relays {"t":"invuse",...} to the Pi over USB). No WiFi join: it hops channels until
+ * it hears a kart, then stays on that channel (tolerating the short gaps while the kart Heltec
+ * retries its pit WiFi). The rotation is fixed for the bar cradle (ROT below):
+ * no flip gesture, so a resting palm can never turn the screen over mid-ride.
+ *
+ * Build: firmware/build.sh core2 [upload /dev/cu.usbserial-XXXX]
+ */
+#include <M5Unified.h>
+#include <WiFi.h>
+#include <esp_now.h>
+#include <esp_wifi.h>
+#include <ArduinoOTA.h>
+#include <Preferences.h>
+
+#define FW_VERSION "core2-0.3.6"
+
+struct __attribute__((packed)) GkInvFrame { char m0, m1; uint8_t ver, kart, seq, n, items[3]; };
+struct __attribute__((packed)) GkUseFrame { char m0, m1; uint8_t ver, kart, slot, seq; };
+
+static M5Canvas cv(&M5.Display);
+static const uint8_t ROT = 2;                 // fixed for the bar cradle (owner 2026-11-10: "lock it")
+
+// link / inventory (written from the ESP-NOW callback)
+static volatile bool frameFresh = false;
+static uint8_t rxItems[3], rxN = 0, rxSeq = 0, rxKart = 0;
+static volatile uint8_t kartPin = 0;          // 0.3.1: NVS "kart" -- 0 = any kart, N = only kart N's broadcasts
+//                                               (two karts now broadcast at once; unpinned would flicker between them)
+static uint8_t heltecMac[6]; static bool heltecKnown = false;
+static uint32_t lastRxMs = 0;
+
+// UI state
+static uint8_t items[3], n = 0, invSeq = 0xFF, kart = 0;
+static int sel = 0;
+// The kart firmware (kart-0.3.5+) parks its radio on GK_ESPNOW_CH whenever it has no WiFi, which is
+// the normal fleet state. Hunting for a channel is what let this unit settle on ch 4 while its kart
+// sat on ch 6 (2026-11-13), so with no WiFi creds we simply sit on the same fixed channel.
+static const uint8_t FIXED_CH = 1;      // must match GK_ESPNOW_CH in firmware/kart-heltec-v4/config.h
+static uint32_t scanHopMs = 0; static uint8_t scanCh = FIXED_CH; static bool locked = false;
+static uint32_t useSentMs = 0; static uint8_t useSeq = 0, useTries = 0, useSlot = 0;
+static uint32_t lastDrawMs = 0; static bool dirty = true;
+
+/* USB power follows the kart key (cradle USB): key on boots the Core2 (the AXP powers up on
+ * VBUS insert), and when VBUS goes away the battery would run for hours, so we power off after
+ * a short on-screen countdown. A tap during the countdown keeps it on (handheld use) until USB
+ * power is next seen, which re-arms the auto-off. */
+static uint32_t vbusLostMs = 0;                 // 0 = VBUS present (or stay-on armed)
+static bool stayOn = false;                     // tapped during the countdown: no auto-off
+static uint32_t vbusPollMs = 0;
+static const uint32_t OFF_AFTER_MS = 15000;     // key off -> power off this much later
+
+/* OTA over the pit AP, so updates need no USB (owner 2026-11-11). Credentials live in NVS --
+ * `wifi SSID PASS` over USB serial, once; the repo is public, so they are never compiled in.
+ * The join runs at boot only (25 s window): since 0.2.2 powers off at key-off, every session
+ * is a fresh boot, so at the pit it always joins; and a kart away from the AP gives up once
+ * and never scans again mid-ride (a scan would drag the radio off the ESP-NOW channel).
+ * While joined the radio sits on the AP's channel = the kart Heltec's pinned channel.
+ * Flash with: espota.py -i gokart-core2.local -p 3232 -f core2-items.ino.bin */
+static Preferences prefs;
+static String wifiSsid, wifiPass;
+static bool wifiTrying = false, otaUp = false, otaBusy = false;
+static uint32_t wifiGiveUpMs = 0;
+static char usbLine[96]; static uint8_t usbN = 0;
+
+/* Names, colors and shapes mirror the dash (app.js ITEM_SVG / ITEM_COLOR / ITEM_SUB).
+   Codes: 1 boost, 2 rocket, 3 shell, 4 lightning, 5 mud, 6 boost3, 7 star, 8 magnet,
+   9 hotlap, 10 shield; a frame byte is code | (charges-1)<<4. */
+static const char* NAMES[11] = {"?", "BOOST", "ROCKET", "SHELL", "LIGHTNING", "MUD",
+                                "BOOST x3", "STAR", "MAGNET", "HOT LAP", "SHIELD"};
+static const char* SUBS[11]  = {"", "> NORMAL", "> SPORT", "", "", "",
+                                "> NORMAL x3", "SPORT + IMMUNE", "BIG PICKUP", "BEAT YOUR BEST", "AUTO BLOCK"};
+static const uint16_t COLORS[11] = {0xFFFF, 0xFD80, 0xFEA0, 0x3EF0, 0xFF20, 0xC449,
+                                    0xFD80, 0xFEA0, 0xFAEB, 0x7EBF, 0x3D30};
+static const uint16_t C_FLAME = 0xFBC0, C_FLAMEIN = 0xFEA0, C_PORT = 0x2BDF;
+
+static void onSent(const wifi_tx_info_t* info, esp_now_send_status_t st) {
+  Serial.printf("tx cb: %s\n", st == ESP_NOW_SEND_SUCCESS ? "delivered" : "FAILED");   // USB console diagnostics
+}
+
+static void onRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+  if (len != (int)sizeof(GkInvFrame)) return;
+  const GkInvFrame* f = (const GkInvFrame*)data;
+  if (f->m0 != 'G' || f->m1 != 'I' || f->ver != 1) return;
+  if (kartPin && f->kart != kartPin) return;   // pinned: other karts' frames are not ours
+  rxKart = f->kart; rxSeq = f->seq; rxN = f->n > 3 ? 3 : f->n;
+  for (int i = 0; i < 3; i++) rxItems[i] = f->items[i];
+  memcpy(heltecMac, info->src_addr, 6); heltecKnown = true;
+  lastRxMs = millis(); frameFresh = true;
+}
+
+static void sendUse(uint8_t slot) {
+  if (!heltecKnown) return;
+  esp_now_peer_info_t peer = {};
+  memcpy(peer.peer_addr, heltecMac, 6);
+  // 0.3.3: channel 0 ("current") can still resolve to the OLD AP channel after a manual
+  // re-tune (the WiFi-drop path): unicasts then die silently while broadcasts keep landing
+  // (field 2026-11-12: USING... flashed, the kart never heard a use). Pin to the real channel.
+  uint8_t cur; wifi_second_chan_t sc;
+  if (esp_wifi_get_channel(&cur, &sc) != ESP_OK || cur < 1 || cur > 14) cur = 0;
+  peer.channel = cur; peer.ifidx = WIFI_IF_STA; peer.encrypt = false;
+  esp_now_del_peer(heltecMac);
+  esp_err_t ra = esp_now_add_peer(&peer);
+  GkUseFrame f = {'G', 'U', 1, kart, slot, ++useSeq};
+  esp_err_t rs = esp_now_send(heltecMac, (const uint8_t*)&f, sizeof f);
+  Serial.printf("use tx: kart %u slot %u seq %u ch %u mac %02x:%02x:%02x:%02x:%02x:%02x add=%d send=%d\n",
+                kart, slot, useSeq, cur, heltecMac[0], heltecMac[1], heltecMac[2],
+                heltecMac[3], heltecMac[4], heltecMac[5], (int)ra, (int)rs);
+  useSentMs = millis(); useTries = 1; useSlot = slot;
+}
+
+// glyphs in the dash's 100x100 viewBox, scaled to GS around (cx, cy)
+static const float GS = 1.24f;
+static int gx, gy;
+static inline int X(float x) { return gx + (int)lroundf((x - 50) * GS); }
+static inline int Y(float y) { return gy + (int)lroundf((y - 50) * GS); }
+static void wline(float x0, float y0, float x1, float y1, float r, uint16_t col) {
+  cv.drawWideLine(X(x0), Y(y0), X(x1), Y(y1), r * GS, col);
+}
+static void boltPoly(float grow, uint16_t col) {       // the dash bolt, fan-triangulated from (45,56)
+  static const float P[6][2] = {{60, 3}, {18, 56}, {45, 56}, {34, 97}, {82, 40}, {54, 40}};
+  float cxp = 48.8f, cyp = 48.7f, q[6][2];
+  for (int i = 0; i < 6; i++) { q[i][0] = cxp + (P[i][0] - cxp) * grow; q[i][1] = cyp + (P[i][1] - cyp) * grow; }
+  for (int i = 0; i < 4; i++)
+    cv.fillTriangle(X(q[2][0]), Y(q[2][1]), X(q[(3 + i) % 6][0]), Y(q[(3 + i) % 6][1]),
+                    X(q[(4 + i) % 6][0]), Y(q[(4 + i) % 6][1]), col);
+}
+static void glyph(int cx, int cy, uint8_t code, uint16_t col) {
+  gx = cx; gy = cy;
+  if (code == 1) {                      // boost: double chevron, black outline under amber (dash exact)
+    for (int k = 0; k < 2; k++) {
+      float dy = k * 26;
+      wline(18, 50 + dy, 50, 22 + dy, 10, TFT_BLACK); wline(50, 22 + dy, 82, 50 + dy, 10, TFT_BLACK);
+    }
+    for (int k = 0; k < 2; k++) {
+      float dy = k * 26;
+      wline(18, 50 + dy, 50, 22 + dy, 5.5f, col); wline(50, 22 + dy, 82, 50 + dy, 5.5f, col);
+    }
+  } else if (code == 2) {               // rocket: white body, white fins, orange/yellow flame, blue porthole
+    cv.fillTriangle(X(40), Y(76), X(50), Y(99), X(60), Y(76), TFT_BLACK);        // flame outline
+    cv.fillTriangle(X(42), Y(78), X(50), Y(95), X(58), Y(78), C_FLAME);
+    cv.fillTriangle(X(45), Y(78), X(50), Y(88), X(55), Y(78), C_FLAMEIN);
+    cv.fillTriangle(X(36), Y(50), X(17), Y(81), X(39), Y(76), TFT_BLACK);        // fins, outlined
+    cv.fillTriangle(X(64), Y(50), X(83), Y(81), X(61), Y(76), TFT_BLACK);
+    cv.fillTriangle(X(37), Y(53), X(22), Y(77), X(39), Y(73), TFT_WHITE);
+    cv.fillTriangle(X(63), Y(53), X(78), Y(77), X(61), Y(73), TFT_WHITE);
+    for (int i = 0; i <= 20; i++) {                                              // teardrop body by slices
+      float t = i / 20.0f, y = 3 + t * 73;                                       // y 3..76
+      float half = 13.5f * sqrtf(t > 0.08f ? t : 0.08f) + (t > 0.8f ? -8 * (t - 0.8f) : 0);
+      cv.fillRect(X(50 - half) - 2, Y(y) - 3, (int)(2 * half * GS) + 4, 7, TFT_BLACK);
+    }
+    for (int i = 0; i <= 20; i++) {
+      float t = i / 20.0f, y = 3 + t * 73;
+      float half = 13.5f * sqrtf(t > 0.08f ? t : 0.08f) + (t > 0.8f ? -8 * (t - 0.8f) : 0);
+      cv.fillRect(X(50 - half), Y(y) - 2, (int)(2 * half * GS), 5, TFT_WHITE);
+    }
+    cv.fillCircle(X(50), Y(38), (int)(10 * GS), TFT_BLACK);                      // porthole
+    cv.fillCircle(X(50), Y(38), (int)(8 * GS), C_PORT);
+  } else if (code == 3) {               // shell: white disc, green dome, black hex plates (dash exact)
+    cv.fillEllipse(X(50), Y(54), (int)(46 * GS), (int)(40 * GS), TFT_BLACK);
+    cv.fillEllipse(X(50), Y(54), (int)(44 * GS), (int)(38 * GS), TFT_WHITE);
+    cv.fillEllipse(X(50), Y(48), (int)(40 * GS), (int)(34 * GS), TFT_BLACK);
+    cv.fillEllipse(X(50), Y(48), (int)(38 * GS), (int)(32 * GS), col);
+    const float hx[6][2] = {{38, 34}, {62, 34}, {70, 48}, {62, 62}, {38, 62}, {30, 48}};
+    for (int i = 0; i < 6; i++)
+      wline(hx[i][0], hx[i][1], hx[(i + 1) % 6][0], hx[(i + 1) % 6][1], 2.5f, TFT_BLACK);
+    wline(38, 34, 30, 22, 2.5f, TFT_BLACK); wline(62, 34, 70, 22, 2.5f, TFT_BLACK);
+    wline(70, 48, 86, 48, 2.5f, TFT_BLACK); wline(62, 62, 70, 74, 2.5f, TFT_BLACK);
+    wline(38, 62, 30, 74, 2.5f, TFT_BLACK); wline(30, 48, 14, 48, 2.5f, TFT_BLACK);
+  } else if (code == 4) {               // lightning: the dash bolt, black outline
+    boltPoly(1.16f, TFT_BLACK);
+    boltPoly(1.0f, col);
+  } else if (code == 5) {               // mud splat
+    cv.fillCircle(X(50), Y(58), (int)(32 * GS), TFT_BLACK);
+    cv.fillCircle(X(50), Y(58), (int)(29 * GS), col);
+    cv.fillCircle(X(84), Y(22), (int)(8 * GS), col);
+    cv.fillCircle(X(16), Y(84), (int)(7 * GS), col);
+  } else if (code == 6) {               // triple boost: three chevrons (dash boost3)
+    for (int pass = 0; pass < 2; pass++) {
+      float r = pass ? 4.5f : 8.5f; uint16_t c = pass ? col : TFT_BLACK;
+      for (int k = 0; k < 3; k++) {
+        float dy = k * 22;
+        wline(20, 42 + dy, 50, 16 + dy, r, c); wline(50, 16 + dy, 80, 42 + dy, r, c);
+      }
+    }
+  } else if (code == 7) {               // star with eyes (dash star)
+    static const float SP[10][2] = {{50, 4}, {61, 36}, {95, 37}, {68, 58}, {78, 91},
+                                    {50, 71}, {22, 91}, {32, 58}, {5, 37}, {39, 36}};
+    for (int pass = 0; pass < 2; pass++) {
+      float grow = pass ? 1.0f : 1.12f; uint16_t c = pass ? col : TFT_BLACK;
+      for (int i = 0; i < 10; i++) {
+        int j = (i + 1) % 10;
+        cv.fillTriangle(X(50), Y(50),
+                        X(50 + (SP[i][0] - 50) * grow), Y(50 + (SP[i][1] - 50) * grow),
+                        X(50 + (SP[j][0] - 50) * grow), Y(50 + (SP[j][1] - 50) * grow), c);
+      }
+    }
+    cv.fillCircle(X(40), Y(48), (int)(4.5f * GS), TFT_BLACK);
+    cv.fillCircle(X(60), Y(48), (int)(4.5f * GS), TFT_BLACK);
+  } else if (code == 8) {               // horseshoe magnet (dash magnet)
+    for (int pass = 0; pass < 2; pass++) {
+      float r = pass ? 7.5f : 10.5f; uint16_t c = pass ? col : TFT_BLACK;
+      wline(34, 14, 34, 50, r, c); wline(66, 14, 66, 50, r, c);
+      for (int a = 0; a <= 8; a++) {
+        float t0 = 3.14159f * a / 8, t1 = 3.14159f * (a + 1) / 8;
+        wline(50 - 16 * cosf(t0), 50 + 16 * sinf(t0), 50 - 16 * cosf(t1), 50 + 16 * sinf(t1), r, c);
+      }
+    }
+    cv.fillRect(X(27), Y(8), (int)(15 * GS), (int)(12 * GS), TFT_WHITE);
+    cv.fillRect(X(59), Y(8), (int)(15 * GS), (int)(12 * GS), TFT_WHITE);
+  } else if (code == 9) {               // stopwatch (dash hotlap)
+    cv.fillRect(X(42), Y(2), (int)(16 * GS), (int)(10 * GS), col);
+    cv.fillCircle(X(50), Y(56), (int)(40 * GS), TFT_BLACK);
+    cv.fillCircle(X(50), Y(56), (int)(37 * GS), TFT_WHITE);
+    cv.fillCircle(X(50), Y(56), (int)(29 * GS), col);
+    wline(50, 56, 50, 34, 3.5f, TFT_BLACK); wline(50, 56, 66, 64, 3.5f, TFT_BLACK);
+  } else if (code == 10) {              // shield badge (dash shield)
+    for (int pass = 0; pass < 2; pass++) {
+      float g = pass ? 1.0f : 1.1f; uint16_t c = pass ? col : TFT_BLACK;
+      static const float SH[7][2] = {{50, 5}, {88, 18}, {88, 48}, {72, 82}, {50, 96}, {28, 82}, {12, 48}};
+      for (int i = 0; i < 7; i++) {
+        int j = (i + 1) % 7;
+        cv.fillTriangle(X(50), Y(50), X(50 + (SH[i][0] - 50) * g), Y(50 + (SH[i][1] - 50) * g),
+                        X(50 + (SH[j][0] - 50) * g), Y(50 + (SH[j][1] - 50) * g), c);
+      }
+    }
+  }
+}
+
+static void draw() {
+  int W = M5.Display.width(), H = M5.Display.height();
+  cv.createSprite(W, H);
+  cv.fillSprite(TFT_BLACK);
+  bool link = locked && millis() - lastRxMs < 6000;      // WiFi-reconnect scans can gap ~4 s
+  cv.setTextDatum(top_left);
+  cv.setFont(&fonts::DejaVu18);
+  cv.setTextColor(link ? TFT_GREEN : TFT_RED);
+  cv.drawString(link || kart ? (String("KART ") + kart) : kartPin ? (String("KART ") + kartPin) : "NO KART", 10, 8);
+  cv.setTextDatum(top_right);
+  cv.setTextColor(TFT_DARKGREY);
+  cv.drawString(String(M5.Power.getBatteryLevel()) + "%", W - 10, 8);
+  cv.fillCircle(W / 2, 17, 6, link ? TFT_GREEN : TFT_RED);
+  if (otaUp) cv.fillCircle(W / 2 + 16, 17, 4, TFT_SKYBLUE);     // on the pit AP: OTA reachable
+
+  if (vbusLostMs) {                      // kart keyed off: full-screen countdown to power off
+    uint32_t left = millis() - vbusLostMs;
+    int secs = left >= OFF_AFTER_MS ? 0 : (int)((OFF_AFTER_MS - left) / 1000) + 1;
+    cv.setTextDatum(middle_center);
+    cv.setFont(&fonts::DejaVu24);
+    cv.setTextColor(TFT_ORANGE);
+    cv.drawString("KART OFF", W / 2, H / 2 - 56);
+    cv.setFont(&fonts::DejaVu56);
+    cv.setTextColor(TFT_WHITE);
+    cv.drawString(String(secs), W / 2, H / 2 + 4);
+    cv.setFont(&fonts::DejaVu18);
+    cv.setTextColor(TFT_DARKGREY);
+    cv.drawString("TAP TO STAY ON", W / 2, H / 2 + 64);
+    cv.pushSprite(0, 0);
+    cv.deleteSprite();
+    return;
+  }
+  if (!link) {
+    cv.setTextDatum(middle_center);
+    cv.setTextColor(TFT_WHITE);
+    cv.setFont(&fonts::DejaVu24);
+    cv.drawString("LOOKING", W / 2, H / 2 - 30);
+    cv.drawString("FOR KART", W / 2, H / 2);
+    cv.setFont(&fonts::DejaVu18);
+    cv.setTextColor(TFT_DARKGREY);
+    cv.drawString(locked ? "signal lost" : (String("channel ") + scanCh), W / 2, H / 2 + 40);
+  } else if (n == 0) {
+    cv.setTextDatum(middle_center);
+    cv.setFont(&fonts::DejaVu40);
+    cv.setTextColor(TFT_DARKGREY);
+    cv.drawString("?", W / 2, H / 2 - 24);
+    cv.setFont(&fonts::DejaVu18);
+    cv.setTextColor(TFT_WHITE);
+    cv.drawString("NO ITEMS", W / 2, H / 2 + 28);
+    cv.setTextColor(TFT_DARKGREY);
+    cv.drawString("hit a ? box", W / 2, H / 2 + 56);
+  } else {
+    if (sel >= n) sel = n - 1;
+    uint8_t code = items[sel] & 0x0F;
+    if (code > 10) code = 0;
+    uint8_t charges = (items[sel] >> 4) + 1;
+    uint16_t col = COLORS[code];
+    glyph(W / 2, H / 2 - 40, code, col);
+    cv.setTextDatum(middle_center);
+    cv.setFont(&fonts::DejaVu24);
+    cv.setTextColor(col);
+    cv.drawString(NAMES[code], W / 2, H / 2 + 46);
+    if (SUBS[code][0]) {                 // the mode it gives, like the dash prize wheel
+      cv.setFont(&fonts::DejaVu12);
+      cv.setTextColor(TFT_BLACK, TFT_WHITE);
+      cv.drawString(String(" ") + SUBS[code] + " ", W / 2, H / 2 + 66);
+      cv.setTextColor(TFT_WHITE, TFT_BLACK);
+    }
+    bool using_ = useTries && millis() - useSentMs < 1500;
+    cv.setFont(&fonts::DejaVu18);
+    cv.setTextColor(using_ ? TFT_YELLOW : TFT_WHITE, TFT_BLACK);
+    const char* act = code == 10 ? "BLOCKS BY ITSELF" : code == 9 ? "TAP TO ARM" : "TAP TO USE";
+    cv.drawString(using_ ? "USING..." : act, W / 2, H / 2 + 88);
+    if (charges > 1) {                  // triple boost: taps left
+      cv.setFont(&fonts::DejaVu24);
+      cv.setTextColor(col, TFT_BLACK);
+      cv.drawString(String("x") + charges, W - 34, 44);
+    }
+    for (int i = 0; i < n; i++)                             // slot dots
+      cv.fillCircle(W / 2 + (i - (n - 1) / 2.0f) * 24, H - 26, i == sel ? 8 : 5,
+                    i == sel ? TFT_WHITE : TFT_DARKGREY);
+    if (n > 1) {                                            // swipe arrows
+      cv.setTextColor(TFT_DARKGREY);
+      cv.setTextDatum(middle_left);  cv.drawString("<", 8, H / 2 - 40);
+      cv.setTextDatum(middle_right); cv.drawString(">", W - 8, H / 2 - 40);
+    }
+  }
+  cv.pushSprite(0, 0);
+  cv.deleteSprite();
+}
+
+void setup() {
+  auto cfg = M5.config();
+  M5.begin(cfg);
+  Serial.begin(115200);                  // explicit: the USB console must work whatever cfg defaults to
+  M5.Display.setRotation(ROT);
+  M5.Display.setBrightness(200);
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  WiFi.setSleep(false);                  // modem-sleep while joined would nap the radio between beacons
+  WiFi.setAutoReconnect(false);          // a reconnect scan would hop off the ESP-NOW channel
+  esp_now_init();
+  esp_now_register_recv_cb(onRecv);
+  esp_now_register_send_cb(onSent);
+  esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
+  prefs.begin("core2", false);
+  kartPin = prefs.getUChar("kart", 0);
+  wifiSsid = prefs.getString("ssid", "");
+  wifiPass = prefs.getString("pass", "");
+  if (wifiSsid.length()) {
+    WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
+    wifiTrying = true;
+    wifiGiveUpMs = millis() + 25000;
+  }
+  Serial.printf("%s wifi '%s' %s\n", FW_VERSION, wifiSsid.c_str(),
+                wifiSsid.length() ? "joining for OTA" : "not set (usb: wifi SSID PASS)");
+}
+
+static void otaStart() {
+  static char host[20];
+  snprintf(host, sizeof host, "gokart-core2-%u", kartPin);   // 0.3.2: per-kart mDNS name (two units collided)
+  ArduinoOTA.setHostname(host);
+  ArduinoOTA.onStart([]() {
+    otaBusy = true;
+    M5.Display.fillScreen(TFT_BLACK);
+    M5.Display.setTextDatum(middle_center);
+    M5.Display.setFont(&fonts::DejaVu24);
+    M5.Display.setTextColor(TFT_SKYBLUE);
+    M5.Display.drawString("UPDATING", M5.Display.width() / 2, M5.Display.height() / 2 - 20);
+  });
+  ArduinoOTA.onProgress([](unsigned p, unsigned total) {
+    static int last = -1;
+    int pct = total ? (int)(p * 100 / total) : 0;
+    if (pct == last) return;
+    last = pct;
+    int W = M5.Display.width();
+    M5.Display.fillRect(20, M5.Display.height() / 2 + 10, (W - 40) * pct / 100, 14, TFT_SKYBLUE);
+  });
+  ArduinoOTA.onError([](ota_error_t) { otaBusy = false; dirty = true; });
+  ArduinoOTA.begin();
+}
+
+/* USB console (one-time setup + checks): kart N|any | wifi SSID PASS | wifi clear | status */
+static void usbCommand(char* line) {
+  if (!strncmp(line, "kart ", 5)) {
+    char* a = line + 5;
+    if (!strcmp(a, "any") || !strcmp(a, "0")) {
+      prefs.putUChar("kart", 0); kartPin = 0;
+      Serial.println("kart pin cleared: any kart");
+    } else {
+      int n = atoi(a);
+      if (n < 1 || n > 8) { Serial.println("usage: kart 1-8 | kart any"); return; }
+      prefs.putUChar("kart", (uint8_t)n); kartPin = (uint8_t)n;
+      locked = false; n = 0;                 // drop the current lock: only the pinned kart from now on
+      Serial.printf("pinned to kart %u\n", kartPin);
+    }
+  } else if (!strncmp(line, "wifi ", 5)) {
+    char* a = line + 5;
+    if (!strcmp(a, "clear")) {
+      prefs.remove("ssid"); prefs.remove("pass");
+      wifiSsid = ""; Serial.println("wifi cleared");
+      return;
+    }
+    char* sp = strrchr(a, ' ');          // SSID may hold spaces, the password may not
+    if (!sp || sp == a) { Serial.println("usage: wifi SSID PASS | wifi clear"); return; }
+    *sp = 0;
+    prefs.putString("ssid", a); prefs.putString("pass", sp + 1);
+    Serial.printf("wifi stored for '%s'; reboots join it for OTA\n", a);
+    wifiSsid = a; wifiPass = sp + 1;
+    WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
+    wifiTrying = true; wifiGiveUpMs = millis() + 25000;
+  } else if (!strcmp(line, "use")) {     // fire the selected card from the console (bench testing)
+    if (n > 0 && locked) sendUse((uint8_t)sel);
+    else Serial.printf("no item/lock (n=%u locked=%d)\n", n, locked);
+  } else if (!strcmp(line, "status")) {
+    Serial.printf("%s pin %u kart %u locked %d ch %u wifi %s ip %s ota %d vbus %d mV batt %d%%\n",
+                  FW_VERSION, kartPin, kart, locked, scanCh,
+                  WiFi.status() == WL_CONNECTED ? wifiSsid.c_str() : "down",
+                  WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString().c_str() : "-",
+                  otaUp, M5.Power.getVBUSVoltage(), M5.Power.getBatteryLevel());
+  } else if (line[0]) {
+    Serial.println("commands: kart 1-8|any | wifi SSID PASS | wifi clear | status");
+  }
+}
+
+void loop() {
+  M5.update();
+  uint32_t ms = millis();
+
+  if (wifiTrying) {
+    if (WiFi.status() == WL_CONNECTED) {
+      wifiTrying = false; otaUp = true;
+      lastRxMs = ms;                     // 0.3.2: give the kart the full grace from WiFi-join time
+      otaStart();
+      Serial.printf("wifi %s ota gokart-core2.local ch %d\n",
+                    WiFi.localIP().toString().c_str(), WiFi.channel());
+      dirty = true;
+    } else if ((int32_t)(ms - wifiGiveUpMs) > 0) {
+      wifiTrying = false;
+      WiFi.disconnect(false);            // keep the radio for ESP-NOW; never scan again this boot
+      dirty = true;
+    }
+  }
+  if (otaUp) {
+    ArduinoOTA.handle();
+    if (WiFi.status() != WL_CONNECTED) { otaUp = false; dirty = true; }   // drove away: stay put
+    if (otaBusy) { delay(2); return; }   // mid-update: no draws, no power-off, no ESP-NOW sends
+    // 0.3.2: the kart comes first. Two shop APs share the SSID on different channels; when WiFi
+    // parks us where the pinned kart's Heltec is not, drop WiFi and go find the kart.
+    if (!otaBusy && ms - lastRxMs > 15000) {
+      otaUp = false;
+      WiFi.disconnect(false);            // keep the radio; no reconnect (autoReconnect is off)
+      locked = false; scanHopMs = 0; dirty = true;
+    }
+  }
+
+  while (Serial.available()) {           // USB console: wifi SSID PASS | wifi clear | status
+    char c = (char)Serial.read();
+    if (c == '\n' || c == '\r') {
+      usbLine[usbN] = 0;
+      if (usbN) usbCommand(usbLine);
+      usbN = 0;
+    } else if (usbN < sizeof(usbLine) - 1) {
+      usbLine[usbN++] = c;
+    }
+  }
+
+  if (frameFresh) {                      // adopt the newest broadcast
+    frameFresh = false;
+    locked = true; kart = rxKart;
+    if (rxSeq != invSeq) {
+      invSeq = rxSeq; n = rxN;
+      for (int i = 0; i < 3; i++) items[i] = rxItems[i];
+      if (sel >= n) sel = n ? n - 1 : 0;
+      useTries = 0;                      // inventory changed: the use landed (or is moot)
+      dirty = true;
+    }
+  }
+  // while joining or joined (OTA) the radio belongs to the AP: no channel hunting
+  if (!locked && !wifiTrying && !otaUp && ms - scanHopMs > 400) {   // hunt for the kart
+    scanHopMs = ms;
+    if (wifiSsid.length() == 0 && ms - lastRxMs < 30000) {
+      // fixed-channel fleet: stay where the kart is instead of hopping past it. After 30 s of
+      // silence fall back to hopping, so a kart still on an AP channel is found anyway.
+      if (scanCh != FIXED_CH) { scanCh = FIXED_CH; esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE); dirty = true; }
+    } else {
+      scanCh = scanCh >= 13 ? 1 : scanCh + 1;
+      esp_wifi_set_channel(scanCh, WIFI_SECOND_CHAN_NONE);
+      dirty = true;
+    }
+  }
+  if (locked && !wifiTrying && !otaUp && ms - lastRxMs > 20000) {   // really lost: hunt again
+    locked = false; scanHopMs = 0; dirty = true;
+    uint8_t cur; wifi_second_chan_t sc;
+    if (esp_wifi_get_channel(&cur, &sc) == ESP_OK && cur >= 1 && cur <= 13) scanCh = cur;
+  }
+  if (useTries >= 3 && ms - useSentMs > 2000) useTries = 0;  // 0.3.3: retries spent + nothing changed: let the driver tap again
+  if (useTries && useTries < 3 && ms - useSentMs > 120) {   // use: 3 sends, the Pi de-duplicates by seq
+    GkUseFrame f = {'G', 'U', 1, kart, useSlot, useSeq};
+    esp_now_send(heltecMac, (const uint8_t*)&f, sizeof f);
+    useTries++;
+  }
+
+  // usb power follows the kart key: VBUS gone -> countdown -> power off (getVBUSVoltage -1 = no PMIC
+  // support on this unit: never auto-off). VBUS back re-arms stay-on.
+  if (ms - vbusPollMs > 500) {
+    vbusPollMs = ms;
+    int16_t mv = M5.Power.getVBUSVoltage();
+    if (mv > 4000) {
+      if (vbusLostMs || stayOn) dirty = true;
+      vbusLostMs = 0; stayOn = false;
+    } else if (mv >= 0 && !vbusLostMs && !stayOn) {
+      vbusLostMs = ms ? ms : 1; dirty = true;
+    }
+    if (vbusLostMs) {
+      dirty = true;                      // the countdown digit ticks
+      if (ms - vbusLostMs > OFF_AFTER_MS) { M5.Display.fillScreen(TFT_BLACK); M5.Power.powerOff(); }
+    }
+  }
+
+  // touch: swipe = pick a slot, tap = use (rotation is fixed: no gestures can flip it)
+  static bool down = false; static int x0 = 0, y0 = 0; static uint32_t downMs = 0; static bool acted = false;
+  auto t = M5.Touch.getDetail();
+  if (t.isPressed() && vbusLostMs) {     // tap during the countdown: stay on, swallow the gesture
+    vbusLostMs = 0; stayOn = true; dirty = true;
+    down = true; acted = true; x0 = t.x; y0 = t.y; downMs = ms;
+  }
+  if (t.isPressed() && !down) { down = true; acted = false; x0 = t.x; y0 = t.y; downMs = ms; }
+  else if (t.isPressed() && down && !acted) {
+    int dx = t.x - x0;
+    if (abs(dx) > 50 && n > 1) {                                           // swipe
+      sel = (sel + (dx < 0 ? 1 : n - 1)) % n; acted = true; dirty = true;
+    }
+  } else if (!t.isPressed() && down) {
+    down = false;
+    if (!acted && ms - downMs < 400 && n > 0 && locked && !useTries) {     // tap: use
+      sendUse((uint8_t)sel); dirty = true;
+    }
+  }
+
+  if (useTries && ms - useSentMs > 1400 && ms - useSentMs < 1600) dirty = true;   // clear USING...
+  if (dirty && ms - lastDrawMs > 80) { lastDrawMs = ms; dirty = false; draw(); }
+  if (!locked) dirty = true;             // scanning: keep the channel number live
+  delay(5);
+}

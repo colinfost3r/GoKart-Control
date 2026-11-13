@@ -1,0 +1,5 @@
+# LilyGo T-Beam S3 Core running the GoKart base firmware -> stable /dev/tbeam
+# With the hardware USB-CDC build the board enumerates as Espressif's generic
+# "USB JTAG/serial debug unit" (303a:1001), read from the real board on 2026-11-05.
+# Only one ESP32-S3 is expected on the pit Pi, so match VID/PID alone.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", SYMLINK+="tbeam", GROUP="dialout", MODE="0660"

@@ -1,0 +1,476 @@
+#!/usr/bin/env python3
+"""Host-side checks of firmware/libraries/GoKartProtocol/GoKartProtocol.h.
+
+Dependency-free (standard library only). Run from anywhere:
+
+    python3 -I firmware/tests/test_protocol.py
+
+What it checks:
+  1. The packed wire structs parsed out of the header have the agreed sizes (47/27/14/16) and the
+     field offsets the pit/kart decoders and this file's hand-built layouts expect.
+  2. Hand-built little-endian packets decode field by field against those offsets.
+  3. The beacon position nibble helpers (Python mirror of gkBeaconPos/gkBeaconSetPos).
+  4. If a host C++ compiler is available (c++/clang++/g++): the header itself is compiled and run
+     to confirm sizeof/offsetof, gkValidate (old and new lengths, relay bit), the nibble helpers,
+     gkAirtimeUs, the slot plan (no two scheduled transmissions overlap at 1 Hz / 2 Hz), and that
+     gkTelemetryToJson emits exactly the documented field order. Skipped (reported) otherwise.
+  5. The field names the Pi readers use (pit/server/pitcore.py, kart/server/kartcore.py) exist in
+     the firmware's JSON (read as text; the Python modules are not imported).
+  6. The mode table (kart-heltec-v4/config.h MODES[]: current scale + top-speed cap per mode) and its
+     copies in the pit, the kart Pi, the kart simulator and both web UIs agree (read as text).
+"""
+import ast
+import json
+import os
+import re
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+import unittest
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+FW = os.path.dirname(HERE)
+REPO = os.path.dirname(FW)
+HEADER = os.path.join(FW, "libraries", "GoKartProtocol", "GoKartProtocol.h")
+
+CTYPES = {"uint8_t": "B", "int8_t": "b", "uint16_t": "H", "int16_t": "h",
+          "uint32_t": "I", "int32_t": "i", "GkHeader": "6s"}
+
+# Field order of gkTelemetryToJson, as documented in base-tbeam-s3/SERIAL_PROTOCOL.md ("tele").
+TELE_JSON_FIELDS = ["t", "kart", "seq", "lat", "lon", "fix", "gps_age_s", "sats", "gps_kph", "heading",
+                    "volts", "motor_a", "batt_a", "erpm", "duty", "esc_c", "fault", "mode_req",
+                    "mode_actual", "scale", "stopped", "vesc_link", "mode_confirmed", "pps", "wifi",
+                    "writes", "last_cmd_seq", "cmd_result", "ah", "uptime_s", "base_rssi", "slow_mph",
+                    "session", "atk_to", "atk_item", "atk_seq", "ack_from", "ack_seq", "score",
+                    "rssi", "snr", "rx_ms", "relayed"]
+# Extra keys the kart adds to its own USB "self" line (kart-heltec-v4.ino usbReport()).
+SELF_EXTRA_FIELDS = ["hdop", "fix_age_ms", "gps_hz", "base_lat", "base_lon", "base_fix_age_s",
+                     "race_pos", "race_state"]
+
+
+def read(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def parse_structs(src):
+    """{name: [(field, ctype, count)]} for every struct inside #pragma pack(push, 1)."""
+    m = re.search(r"#pragma pack\(push, 1\)(.*?)#pragma pack\(pop\)", src, re.S)
+    assert m, "packed block not found"
+    out = {}
+    for sm in re.finditer(r"struct (\w+) \{(.*?)\n\};", m.group(1), re.S):
+        fields = []
+        for line in sm.group(2).split("\n"):
+            line = line.split("//")[0].strip()
+            if not line:
+                continue
+            fm = re.match(r"(\w+)\s+(\w+)(?:\[(\d+)\])?;", line)
+            assert fm, f"unparsed field line in {sm.group(1)}: {line!r}"
+            fields.append((fm.group(2), fm.group(1), int(fm.group(3) or 1)))
+        out[sm.group(1)] = fields
+    return out
+
+
+def layout(fields):
+    """[(name, offset, struct-format)] and total size, little-endian packed."""
+    off, res = 0, []
+    for name, ctype, count in fields:
+        fmt = CTYPES[ctype]
+        if count > 1:
+            fmt = f"{count}{fmt}" if fmt != "B" else f"{count}s"
+        size = struct.calcsize("<" + fmt)
+        res.append((name, off, fmt))
+        off += size
+    return res, off
+
+
+def decode(fields, buf):
+    lay, size = layout(fields)
+    assert len(buf) == size
+    return {name: struct.unpack_from("<" + fmt, buf, off)[0] for name, off, fmt in lay}
+
+
+def beacon_pos(pos4, kart):
+    if not 1 <= kart <= 8:
+        return 0
+    return (pos4[(kart - 1) // 2] >> (((kart - 1) % 2) * 4)) & 0xF
+
+
+def beacon_set_pos(pos4, kart, p):
+    if not 1 <= kart <= 8:
+        return pos4
+    i, sh = (kart - 1) // 2, ((kart - 1) % 2) * 4
+    pos4 = list(pos4)
+    pos4[i] = (pos4[i] & ~(0xF << sh) & 0xFF) | ((p & 0xF) << sh)
+    return pos4
+
+
+def header_bytes(version, fleet, typ, src, dst, seq):
+    return bytes([version, fleet, typ, src, dst, seq])
+
+
+class StructLayout(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.structs = parse_structs(read(HEADER))
+
+    def test_sizes(self):
+        sizes = {n: layout(f)[1] for n, f in self.structs.items()}
+        self.assertEqual(sizes["GkHeader"], 6)
+        self.assertEqual(sizes["GkTelemetry"], 54)
+        self.assertEqual(sizes["GkBaseInfo"], 27)
+        self.assertEqual(sizes["GkCommandMsg"], 14)
+        self.assertEqual(sizes["GkRepeaterInfo"], 16)
+
+    def test_telemetry_offsets(self):
+        offs = {n: o for n, o, _ in layout(self.structs["GkTelemetry"])[0]}
+        expect = {"h": 0, "lat_e7": 6, "lon_e7": 10, "gps_kph_x10": 14, "heading_x10": 16, "sats": 18,
+                  "flags": 19, "volts_x10": 20, "motor_a_x10": 22, "batt_a_x10": 24, "erpm": 26,
+                  "duty_pct": 30, "esc_temp_x10": 31, "fault": 33, "mode_req": 34, "mode_actual": 35,
+                  "last_cmd_seq": 36, "cmd_result": 37, "ah_x100": 38, "uptime_s": 40, "base_rssi": 42,
+                  "gps_age_s": 43, "scale_x1000": 44, "slow_mph": 46, "session": 47, "atk_to": 48, "atk_item": 49,
+                  "atk_seq": 50, "ack_from": 51, "ack_seq": 52, "score": 53}
+        self.assertEqual(offs, expect)
+
+    def test_decode_telemetry(self):
+        buf = (header_bytes(0x81, 0x4B, 1, 3, 0xFF, 200)
+               + struct.pack("<iiHHBBHhhibhBBBBBHHbBHBBBBBBBB", 410939900, -734163700, 523, 1805, 9, 0x8F,
+                             784, -125, 312, -4200, -37, 245, 0, 2, 2, 17, 2, 1234, 65000, -71, 0, 571, 12,
+                             2, 255, 2, 9, 4, 7, 3))
+        d = decode(self.structs["GkTelemetry"], buf)
+        self.assertEqual(d["h"][3], 3)
+        self.assertEqual(d["h"][0] & 0x7F, 1)                  # version with the relay bit masked
+        self.assertTrue(d["h"][0] & 0x80)
+        self.assertEqual((d["lat_e7"], d["lon_e7"]), (410939900, -734163700))
+        self.assertEqual((d["motor_a_x10"], d["batt_a_x10"], d["erpm"]), (-125, 312, -4200))
+        self.assertEqual((d["duty_pct"], d["esc_temp_x10"]), (-37, 245))
+        self.assertEqual((d["last_cmd_seq"], d["cmd_result"], d["ah_x100"]), (17, 2, 1234))
+        self.assertEqual((d["base_rssi"], d["scale_x1000"], d["slow_mph"]), (-71, 571, 12))
+        self.assertEqual((d["session"], d["atk_to"], d["atk_item"], d["atk_seq"], d["ack_from"], d["ack_seq"], d["score"]),
+                         (2, 255, 2, 9, 4, 7, 3))
+
+    def test_decode_baseinfo(self):
+        pos = beacon_set_pos(beacon_set_pos([0, 0, 0, 0], 1, 2), 8, 1)
+        buf = (header_bytes(1, 0x4B, 3, 0, 0xFF, 9)
+               + struct.pack("<iiIHBBB4s", 410940000, -734164000, 1793990400, 907, 1, 3, 2, bytes(pos)))
+        d = decode(self.structs["GkBaseInfo"], buf)
+        self.assertEqual((d["utc_s"], d["phase_ms"], d["sync_src"], d["karts_online"], d["race_state"]),
+                         (1793990400, 907, 1, 3, 2))
+        self.assertEqual([beacon_pos(d["pos"], k) for k in range(1, 9)], [2, 0, 0, 0, 0, 0, 0, 1])
+
+    def test_decode_command(self):
+        buf = header_bytes(1, 0x4B, 2, 0, 4, 42) + struct.pack("<BBHI", 7, 5, 10, 1793990400)
+        d = decode(self.structs["GkCommandMsg"], buf)
+        self.assertEqual((d["cmd"], d["arg"], d["ttl_s"], d["issued_utc_s"]), (7, 5, 10, 1793990400))
+
+    def test_decode_repeater(self):
+        buf = header_bytes(0x81, 0x4B, 4, 0xF0, 0, 3) + struct.pack("<HHHbBH", 65535, 100, 4012, -60, 0b10000010, 77)
+        d = decode(self.structs["GkRepeaterInfo"], buf)
+        self.assertEqual((d["heard"], d["relayed"], d["batt_mv"], d["pit_rssi"], d["karts_mask"], d["uptime_min"]),
+                         (65535, 100, 4012, -60, 0x82, 77))
+
+    def test_nibbles(self):
+        pos = [0, 0, 0, 0]
+        for k in range(1, 9):
+            pos = beacon_set_pos(pos, k, 9 - k)
+        self.assertEqual([beacon_pos(pos, k) for k in range(1, 9)], [8, 7, 6, 5, 4, 3, 2, 1])
+        pos = beacon_set_pos(pos, 3, 15)
+        self.assertEqual([beacon_pos(pos, k) for k in range(1, 9)], [8, 7, 15, 5, 4, 3, 2, 1])
+        self.assertEqual(beacon_pos(pos, 0), 0)
+        self.assertEqual(beacon_pos(pos, 9), 0)
+
+
+HARNESS = r'''
+#include <cstdio>
+#include <cstddef>
+#include <cstring>
+#include "GoKartProtocol.h"
+static void pr(const char* k, long v, bool last = false) { printf("\"%s\":%ld%s", k, v, last ? "" : ","); }
+int main() {
+  printf("{");
+  pr("sz_tele", sizeof(GkTelemetry)); pr("sz_base", sizeof(GkBaseInfo)); pr("sz_cmd", sizeof(GkCommandMsg));
+  pr("sz_rep", sizeof(GkRepeaterInfo));
+  pr("off_slow", offsetof(GkTelemetry, slow_mph)); pr("off_scale", offsetof(GkTelemetry, scale_x1000));
+  pr("off_pos", offsetof(GkBaseInfo, pos)); pr("off_issued", offsetof(GkCommandMsg, issued_utc_s));
+  pr("air54", gkAirtimeUs(54)); pr("air47", gkAirtimeUs(47)); pr("air46", gkAirtimeUs(46)); pr("air27", gkAirtimeUs(27)); pr("air22", gkAirtimeUs(22));
+  pr("tele_len", GK_TELEMETRY_LEN); pr("off_session", offsetof(GkTelemetry, session)); pr("off_score", offsetof(GkTelemetry, score));
+  pr("air16", gkAirtimeUs(16)); pr("air14", gkAirtimeUs(14));
+  uint8_t b[54] = {0}; GkTelemetry t; memset(&t, 0, sizeof t);
+  gkFillHeader(t.h, GK_MSG_TELEMETRY, 2, GK_ADDR_ALL, 5); memcpy(b, &t, 54);
+  pr("val54", gkValidate(b, 54)); pr("val53", gkValidate(b, 53)); pr("val48", gkValidate(b, 48));
+  pr("val47", gkValidate(b, 47)); pr("val46", gkValidate(b, 46)); pr("val45", gkValidate(b, 45));
+  b[0] |= GK_HDR_RELAY_BIT; pr("val47relay", gkValidate(b, 47)); b[0] = 2; pr("valver2", gkValidate(b, 47));
+  b[0] = 1; b[1] = 0x4C; pr("valfleet", gkValidate(b, 47));
+  GkBaseInfo bi; memset(&bi, 0, sizeof bi); gkFillHeader(bi.h, GK_MSG_BASE_INFO, 0, GK_ADDR_ALL, 1);
+  pr("valb27", gkValidate((uint8_t*)&bi, 27)); pr("valb22", gkValidate((uint8_t*)&bi, 22)); pr("valb26", gkValidate((uint8_t*)&bi, 26));
+  for (int k = 1; k <= 8; k++) gkBeaconSetPos(bi, k, (uint8_t)(k * 2 - 1));
+  printf("\"pos\":["); for (int k = 1; k <= 8; k++) printf("%u%s", gkBeaconPos(bi, k), k < 8 ? "," : "],");
+  printf("\"posraw\":[%u,%u,%u,%u],", bi.pos[0], bi.pos[1], bi.pos[2], bi.pos[3]);
+  // busy check: kart 2 at 2 Hz occupies 42..58+23 ms and 542..; kart 1 opens at 992
+  pr("busy_k2_50", gkKartBusy(50000, 1000, 2, 2, false)); pr("busy_k2_545", gkKartBusy(545000, 1000, 2, 2, false));
+  pr("busy_k2_100", gkKartBusy(100000, 1000, 2, 2, false)); pr("busy_k1_995", gkKartBusy(995000, 1000, 1, 1, false));
+  pr("busy_k1_wrap", gkKartBusy(990000, 5000, 1, 1, false)); pr("busy_beacon_910", gkBeaconBusy(910000, 1000));
+  pr("busy_beacon_450", gkBeaconBusy(450000, 1000));
+  GkTelemetry j; memset(&j, 0, sizeof j); gkFillHeader(j.h, GK_MSG_TELEMETRY, 3, GK_ADDR_ALL, 7);
+  j.flags = GK_FLAG_GPS_FIX | GK_FLAG_STOPPED; j.lat_e7 = 410939900; j.lon_e7 = -734163700; j.mode_req = 255; j.mode_actual = 1;
+  j.scale_x1000 = 714; j.slow_mph = 5; j.h.version |= GK_HDR_RELAY_BIT;
+  j.session = 2; j.atk_to = 255; j.atk_item = 2; j.atk_seq = 9; j.ack_from = 4; j.ack_seq = 7; j.score = 3;
+  char out[GK_TELE_JSON_MAX]; gkTelemetryToJson(out, sizeof out, j, "tele", -80.0f, 9.5f, 1234);
+  printf("\"json\":%s,", out);
+  // a 47-byte (0.2.4) packet copied in: the game fields read as 0
+  GkTelemetry old; gkCopyTelemetry(old, (const uint8_t*)&j, 47);
+  pr("old_session", old.session); pr("old_score", old.score); pr("old_slow", old.slow_mph);
+  // worst case line length: every field at its widest
+  GkTelemetry w; memset(&w, 0xFF, sizeof w); gkFillHeader(w.h, GK_MSG_TELEMETRY, 8, GK_ADDR_ALL, 255); w.h.version |= GK_HDR_RELAY_BIT;
+  w.lat_e7 = -2147483647; w.lon_e7 = -2147483647; w.erpm = -2147483647; w.duty_pct = -128; w.motor_a_x10 = -32768; w.batt_a_x10 = -32768;
+  w.esc_temp_x10 = -32768; w.base_rssi = -128; w.mode_req = 2; w.mode_actual = 2; w.scale_x1000 = 65534; w.flags = 0xFF;
+  char wide[1200]; int wn = gkTelemetryToJson(wide, sizeof wide, w, "fleet", -127.0f, -20.0f, 4294967295UL);
+  pr("json_max", wn); pr("json_cap", GK_TELE_JSON_MAX);
+  char esc[16]; gkJsonStr(esc, sizeof esc, "a\"b\\c\x01\xff-long-tail");
+  printf("\"esc\":\"%s\"}\n", esc);
+  return 0;
+}
+'''
+
+
+def find_cxx():
+    for c in ("c++", "clang++", "g++"):
+        p = shutil.which(c)
+        if p:
+            return p
+    return None
+
+
+@unittest.skipUnless(find_cxx(), "no host C++ compiler")
+class CompiledHeader(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        d = tempfile.mkdtemp(prefix="gkproto-")
+        src, exe = os.path.join(d, "h.cpp"), os.path.join(d, "h")
+        with open(src, "w") as f:
+            f.write(HARNESS)
+        inc = os.path.dirname(HEADER)
+        subprocess.run([find_cxx(), "-std=c++17", "-Wall", "-I", inc, src, "-o", exe], check=True)
+        out = subprocess.run([exe], check=True, capture_output=True, text=True).stdout
+        cls.r = json.loads(out)
+        shutil.rmtree(d, ignore_errors=True)
+
+    def test_sizes_offsets(self):
+        r = self.r
+        self.assertEqual((r["sz_tele"], r["sz_base"], r["sz_cmd"], r["sz_rep"]), (54, 27, 14, 16))
+        self.assertEqual((r["off_slow"], r["off_scale"], r["off_pos"], r["off_issued"]), (46, 44, 23, 10))
+        self.assertEqual((r["tele_len"], r["off_session"], r["off_score"]), (54, 47, 53))
+
+    def test_validate(self):
+        r = self.r
+        self.assertEqual((r["val54"], r["val53"], r["val48"], r["val47"], r["val46"], r["val45"], r["val47relay"]), (1, 0, 0, 1, 1, 0, 1))
+        self.assertEqual((r["old_session"], r["old_score"], r["old_slow"]), (0, 0, 5))   # 0.2.4 packets: game fields 0
+        self.assertEqual((r["valver2"], r["valfleet"]), (0, 0))
+        self.assertEqual((r["valb27"], r["valb22"], r["valb26"]), (3, 3, 0))
+
+    def test_nibbles_match_python(self):
+        r = self.r
+        self.assertEqual(r["pos"], [1, 3, 5, 7, 9, 11, 13, 15])
+        self.assertEqual([beacon_pos(r["posraw"], k) for k in range(1, 9)], r["pos"])
+
+    def test_airtime(self):
+        r = self.r
+        self.assertEqual((r["air54"], r["air47"], r["air46"], r["air27"], r["air22"], r["air16"], r["air14"]),
+                         (25664, 23104, 23104, 16704, 14144, 12864, 11584))
+
+    def test_json_fits_its_buffer(self):
+        # the widest possible line must fit the shared GK_TELE_JSON_MAX buffer with room for the kart's USB extras
+        self.assertLess(self.r["json_max"], self.r["json_cap"] - 20)
+
+    def test_busy(self):
+        r = self.r
+        self.assertEqual((r["busy_k2_50"], r["busy_k2_545"], r["busy_k2_100"]), (1, 1, 0))
+        self.assertEqual((r["busy_k1_995"], r["busy_k1_wrap"]), (1, 1))
+        self.assertEqual((r["busy_beacon_910"], r["busy_beacon_450"]), (1, 0))
+
+    def test_slot_plan_no_overlap(self):
+        """Every kart at the same rate, worst-case late start, beacon in the tail: nothing overlaps.
+        At 1 Hz this includes repeater copies; at 2 Hz it does not (documented limitation)."""
+        air = self.r["air54"]
+        late, guard, relay = 16000, 8000, 25000
+        for rate, slot, with_relay in ((1, 100000, True), (2, 50000, False)):
+            iv = []
+            for k in range(1, 9):
+                for n in range(rate):
+                    s = (n * (1000000 // rate) + (k - 1) * slot - guard) % 1000000
+                    e = s + late + air + ((relay + air) if with_relay else 0)
+                    iv.append((s, e, f"kart{k}r{n}"))
+            b_air = self.r["air27"]
+            iv.append((905000, 905000 + 8000 + 2 * b_air + relay + 3000 + self.r["air16"], "beacon"))
+            iv = sorted((s if s < 900000 or e <= 1000000 else s - 1000000, e if s < 900000 or e <= 1000000 else e - 1000000, n)
+                        for s, e, n in iv)
+            for (s1, e1, n1), (s2, e2, n2) in zip(iv, iv[1:]):
+                self.assertLessEqual(e1, s2, f"rate {rate}: {n1} ends {e1} after {n2} starts {s2}")
+
+    def test_json_field_order(self):
+        j = self.r["json"]
+        self.assertEqual(list(j.keys()), TELE_JSON_FIELDS)
+        self.assertEqual((j["kart"], j["seq"], j["mode_req"], j["mode_actual"], j["scale"], j["slow_mph"]),
+                         (3, 7, None, 1, 0.714, 5))
+        self.assertEqual((j["session"], j["atk_to"], j["atk_item"], j["atk_seq"], j["ack_from"], j["ack_seq"], j["score"]),
+                         (2, 255, 2, 9, 4, 7, 3))
+        self.assertIs(j["relayed"], True)
+        self.assertIs(j["stopped"], True)
+        self.assertAlmostEqual(j["lat"], 41.09399)
+
+    def test_json_escape(self):
+        # quote and backslash escaped, control/non-ASCII bytes dropped, truncated to the 16-byte buffer
+        self.assertEqual(self.r["esc"], 'a"b\\c-long-ta')
+
+
+class ReaderFieldNames(unittest.TestCase):
+    """Names the Pi readers ask for must be ones the firmware writes."""
+
+    def _tuple(self, src, name):
+        m = re.search(name + r"\s*=\s*\((.*?)\)", src, re.S)
+        self.assertIsNotNone(m, name)
+        return re.findall(r'"(\w+)"', m.group(1))
+
+    def test_pit_reader(self):
+        src = read(os.path.join(REPO, "pit", "server", "pitcore.py"))
+        for name in ("VESC_FIELDS", "STATUS_FIELDS"):
+            missing = set(self._tuple(src, name)) - set(TELE_JSON_FIELDS)
+            self.assertFalse(missing, f"pitcore {name} reads fields the firmware never sends: {missing}")
+
+    def test_kart_reader(self):
+        src = read(os.path.join(REPO, "kart", "server", "kartcore.py"))
+        for name in ("VESC_FIELDS", "STATUS_FIELDS"):
+            missing = set(self._tuple(src, name)) - set(TELE_JSON_FIELDS + SELF_EXTRA_FIELDS)
+            self.assertFalse(missing, f"kartcore {name} reads fields the firmware never sends: {missing}")
+
+    def test_documented(self):
+        doc = read(os.path.join(FW, "base-tbeam-s3", "SERIAL_PROTOCOL.md"))
+        for f in TELE_JSON_FIELDS[1:]:
+            self.assertIn(f"`{f}`", doc, f"tele field {f} not documented in SERIAL_PROTOCOL.md")
+
+    def test_kart_sketch_extras(self):
+        src = read(os.path.join(FW, "kart-heltec-v4", "kart-heltec-v4.ino"))
+        for f in SELF_EXTRA_FIELDS:
+            self.assertIn('\\"%s\\":' % f, src, f"self extra {f} missing from usbReport()")
+
+
+class ModeTable(unittest.TestCase):
+    """The mode table lives in firmware/kart-heltec-v4/config.h (MODES[]: name, current scale, top mph);
+    the pit, the kart Pi, the kart simulator and the two web UIs carry copies. They must agree."""
+
+    def _fw(self):
+        src = read(os.path.join(FW, "kart-heltec-v4", "config.h"))
+        rows = re.findall(r'\{\s*"(\w+)",\s*([0-9.]+)f?,\s*(\d+)\s*\}', src)
+        self.assertEqual([r[0] for r in rows], ["ECO", "NORMAL", "SPORT"], rows)
+        return {i: (float(s), int(m)) for i, (_, s, m) in enumerate(rows)}
+
+    def _py_dict(self, path, name):
+        src = read(os.path.join(REPO, *path))
+        m = re.search(r"^" + name + r"\s*=\s*(\{[^}]*\})", src, re.M)
+        self.assertIsNotNone(m, f"{'/'.join(path)}: {name} not found")
+        return ast.literal_eval(m.group(1))
+
+    def test_python_copies(self):
+        fw = self._fw()
+        for path, scales, tops in ((("pit", "server", "pitcore.py"), "MODE_SCALES", "MODE_TOP_MPH"),
+                                   (("kart", "server", "kartcore.py"), "MODE_SCALES", "MODE_TOP_MPH"),
+                                   (("kart", "sim", "sim_heltec.py"), "MODE_SCALE", "MODE_TOP_MPH")):
+            sc, tp = self._py_dict(path, scales), self._py_dict(path, tops)
+            for i, (s, m) in fw.items():
+                self.assertAlmostEqual(sc[i], s, places=3, msg=f"{path[-1]} {scales}[{i}] != config.h")
+                self.assertEqual(tp[i], m, f"{path[-1]} {tops}[{i}] != config.h")
+
+    def test_web_ui_copies(self):
+        fw = self._fw()
+        for path in (("pit", "server", "static", "app.js"), ("kart", "server", "static", "app.js")):
+            src = read(os.path.join(REPO, *path))
+            m = re.search(r"const MODE_TOP_MPH = \[([^\]]*)\]", src)
+            self.assertIsNotNone(m, f"{path[-2]}/{path[-1]}: MODE_TOP_MPH not found")
+            self.assertEqual([int(x) for x in m.group(1).split(",")], [fw[i][1] for i in range(3)], path)
+
+    def test_table_sane(self):
+        fw = self._fw()
+        self.assertEqual(fw[2], (1.0, 0), "SPORT must be the controller's own limits (scale 1.0, no cap)")
+        self.assertTrue(fw[0][0] < fw[1][0] < fw[2][0], "scales must rise ECO < NORMAL < SPORT")
+        self.assertTrue(0 < fw[0][1] < fw[1][1], "caps must be set and rise ECO < NORMAL")
+        # mode_actual is matched on the scale within MODE_MATCH_TOL (0.015): the scales must stay apart
+        self.assertTrue(all(abs(fw[i][0] - fw[j][0]) > 0.03 for i in range(3) for j in range(i)), fw)
+
+
+class EspnowChannel(unittest.TestCase):
+    """The kart and its Core2 item screen talk over ESP-NOW, which has NO channel negotiation: both
+    radios must already sit on the same 2.4 GHz channel or every frame is lost in silence. Each side
+    hardcodes it (kart-heltec-v4/config.h GK_ESPNOW_CH, core2-items FIXED_CH) and nothing at runtime
+    reconciles them, so the two constants must agree here.
+
+    Field failure this guards (2026-11-13): the firmwares each derived the channel from the last WiFi
+    AP they had seen. With WiFi off there was no AP to agree on, the kart sat on ch 6 and its Core2 on
+    ch 4, and every Core2 tap was sent to an empty channel - no boost, no shell, nothing logged on the
+    Pi. The whole Python suite passed throughout: it exercises the Pi's game logic, which begins only
+    AFTER this radio hop. This test cannot see a radio either, but it does catch the two ends drifting
+    apart in source, which is what actually happened."""
+
+    def _one(self, path, pattern, what):
+        src = read(os.path.join(FW, *path))
+        m = re.search(pattern, src, re.M)
+        self.assertIsNotNone(m, f"{'/'.join(path)}: {what} not found")
+        return int(m.group(1))
+
+    def test_both_ends_use_the_same_channel(self):
+        kart = self._one(("kart-heltec-v4", "config.h"),
+                         r"^#define\s+GK_ESPNOW_CH\s+(\d+)", "GK_ESPNOW_CH")
+        core2 = self._one(("core2-items", "core2-items.ino"),
+                          r"^static const uint8_t FIXED_CH\s*=\s*(\d+)", "FIXED_CH")
+        self.assertEqual(kart, core2,
+                         f"kart GK_ESPNOW_CH={kart} but Core2 FIXED_CH={core2}: taps would be sent "
+                         f"to an empty channel and silently lost")
+        self.assertTrue(1 <= kart <= 13, f"channel {kart} is not a legal 2.4 GHz channel")
+
+
+class ShieldBlocksAHit(unittest.TestCase):
+    """kart-0.3.6: the Heltec applies a hit's SLOW itself, before the Pi hears of it, so the carried SHIELD
+    ("AUTO BLOCK" on the dash) has to be spent there. Kart 1 took kart 2's shell while holding one
+    (2026-11-13): the Pi only ever blocked the pit game's mud, and no test spanned the radio hop. Text-level
+    guards: applyHit consults the shield before the SLOW, the inv parser sees a shield past the three Core2
+    slots, and the Pi handles the `why` the firmware prints."""
+
+    def test_apply_hit_spends_the_shield_before_the_slow(self):
+        src = read(os.path.join(FW, "kart-heltec-v4", "kart-heltec-v4.ino"))
+        body = re.search(r"static void applyHit\(.*?\n}\n", src, re.S)
+        self.assertIsNotNone(body, "applyHit not found")
+        body = body.group(0)
+        self.assertIn("invTakeShield()", body)
+        self.assertLess(body.index("invTakeShield()"), body.index("GK_CMD_SLOW"))
+        self.assertIn('why = "shield"', body)
+        inv = re.search(r'!strcmp\(line, "inv"\)\)(.*?)\n  }\n', src, re.S)
+        self.assertIsNotNone(inv, "inv console branch not found")
+        self.assertIn("invShield = true", inv.group(1))
+        self.assertNotIn("invN < 3; t = strtok", inv.group(1))      # every token is read: a 4th item still shields
+        pi = read(os.path.join(FW, "..", "kart", "server", "kart_server.py"))
+        self.assertIn('msg.get("why") == "shield"', pi)
+
+
+class PitGameCommand(unittest.TestCase):
+    """GK_CMD_GAME (kart 0.3.7, base 0.2.3): one pit tap starts a freeplay session on every kart. The base
+    maps the pit's "game" name to the id, the kart forwards it to its Pi as an `fpgame` line, and the Pi
+    hosts / joins. Four codebases; this keeps them agreeing in source."""
+
+    def test_every_hop_knows_the_game_command(self):
+        hdr = read(os.path.join(FW, "libraries", "GoKartProtocol", "GoKartProtocol.h"))
+        self.assertIsNotNone(re.search(r"GK_CMD_GAME\s*=\s*9", hdr), "GK_CMD_GAME = 9 missing from GoKartProtocol.h")
+        base = read(os.path.join(FW, "base-tbeam-s3", "base-tbeam-s3.ino"))
+        self.assertRegex(base, r'strcmp\(s, "game"\)\)\s+return GK_CMD_GAME')
+        kart = read(os.path.join(FW, "kart-heltec-v4", "kart-heltec-v4.ino"))
+        case = re.search(r"case GK_CMD_GAME:.*?break;", kart, re.S)
+        self.assertIsNotNone(case, "kart firmware does not handle GK_CMD_GAME")
+        self.assertIn('\\"t\\":\\"fpgame\\"', case.group(0))
+        pit = read(os.path.join(FW, "..", "pit", "server", "pitcore.py"))
+        self.assertIn('"game"', pit.split("VALID_CMDS = ")[1].split("\n")[0])
+        kp = read(os.path.join(FW, "..", "kart", "server", "kart_server.py"))
+        self.assertIn('t == "fpgame"', kp)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

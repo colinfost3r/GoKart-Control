@@ -1,0 +1,104 @@
+{
+  "_comment": "Game zones for the bench preset (50 Day St). Edited from the pit operator page; see ZONES.md.",
+  "version": 5,
+  "enabled": true,
+  "zones": [
+    {
+      "id": "lap",
+      "type": "lapline",
+      "name": "Start / finish",
+      "shape": "line",
+      "a": [
+        41.0938995,
+        -73.4163411
+      ],
+      "b": [
+        41.093797,
+        -73.4163411
+      ],
+      "min_lap_s": 15
+    },
+    {
+      "id": "b1",
+      "type": "boost",
+      "name": "Boost pad",
+      "shape": "circle",
+      "lat": 41.0938482,
+      "lon": -73.4159728,
+      "r_m": 5.0,
+      "scale": 1.0,
+      "secs": 5,
+      "cooldown_s": 20
+    },
+    {
+      "id": "b2",
+      "type": "boost",
+      "name": "Boost pad 2",
+      "shape": "circle",
+      "lat": 41.0938482,
+      "lon": -73.4164998,
+      "r_m": 5.0,
+      "scale": 1.0,
+      "secs": 4,
+      "cooldown_s": 20
+    },
+    {
+      "id": "m1",
+      "type": "mud",
+      "name": "Mud",
+      "shape": "circle",
+      "lat": 41.0935877,
+      "lon": -73.4164998,
+      "r_m": 6.0,
+      "scale": 0.5
+    },
+    {
+      "id": "i1",
+      "type": "item",
+      "name": "Item box",
+      "shape": "circle",
+      "lat": 41.0937286,
+      "lon": -73.4164998,
+      "r_m": 4.0,
+      "cooldown_s": 15
+    }
+  ],
+  "track": {
+    "points": [
+      [
+        41.0938482,
+        -73.4164998
+      ],
+      [
+        41.0938482,
+        -73.4159728
+      ],
+      [
+        41.0937927,
+        -73.4158708
+      ],
+      [
+        41.0935834,
+        -73.4158424
+      ],
+      [
+        41.0934937,
+        -73.4159501
+      ],
+      [
+        41.0934852,
+        -73.4163694
+      ],
+      [
+        41.0935621,
+        -73.4164998
+      ],
+      [
+        41.0937286,
+        -73.4164998
+      ]
+    ],
+    "closed": true,
+    "width_m": 6.0
+  }
+}

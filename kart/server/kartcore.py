@@ -1,0 +1,2893 @@
+"""Kart display state: parsing the Heltec's USB lines, staleness, derived values.
+
+Pure logic: no sockets, no threads, no serial. Every function that cares about
+time takes `now` (a time.monotonic() value) so tests can drive the clock.
+
+Input contract: firmware/libraries/GoKartProtocol/GoKartProtocol.h
+`gkTelemetryToJson` (field table in firmware/base-tbeam-s3/SERIAL_PROTOCOL.md,
+`tele`). The kart Heltec prints `{"t":"self",...}` for itself (2 Hz) and
+`{"t":"fleet","kart":N,...}` for every other kart it hears, plus `log`, `cmd`,
+`ble` and `status` lines.
+
+Conventions (docs/requirements.md "Agreed telemetry fields"): a missing value is
+None (JSON null), never a fabricated zero. The firmware prints VESC numbers as
+0 when its VESC link is down, and gps_kph/heading as 0 without a fix, so those
+groups are only taken from samples whose `vesc_link` / `fix` flag is true, and
+each group keeps its own age. The derivations and fault names are copied from
+pit/server/pitcore.py so the pit and the kart show the same numbers.
+
+The Pi is display only (docs/requirements.md): nothing here talks to a VESC.
+Mode taps become text requests to the Heltec, which decides.
+"""
+from __future__ import annotations
+
+import math
+import random
+import re
+import time
+from collections import deque
+
+KART_IDS = tuple(range(1, 9))
+ONLINE_S = 5.0     # same thresholds as the pit (pitcore.ONLINE_S / STALE_S)
+STALE_S = 15.0
+SELF_FRESH_S = 3.0  # self lines arrive at 2 Hz over USB; older than this is stale for the driver
+
+KART_COLORS = {     # identical to pitcore.KART_COLORS so a kart has one colour everywhere
+    1: "#e6194b", 2: "#3cb44b", 3: "#ffe119", 4: "#4363d8",
+    5: "#f58231", 6: "#911eb4", 7: "#42d4f4", 8: "#f032e6",
+}
+MODE_NAMES = {0: "ECO", 1: "NORMAL", 2: "SPORT"}
+# What each mode writes (firmware/kart-heltec-v4/config.h MODES[]; firmware/tests/test_protocol.py checks
+# these copies against it): motor-current scale of the controller's 140 A, and a top-speed cap in mph
+# (0 = none, the controller's own ERPM bound). ECO 70 A / 15 mph, NORMAL 105 A / 25 mph, SPORT 140 A / uncapped.
+MODE_SCALES = {0: 0.50, 1: 0.75, 2: 1.0}
+MODE_TOP_MPH = {0: 15, 1: 25, 2: 0}
+CMD_CODES = {"mode": 1, "stop": 2, "start": 3, "ping": 4, "slow": 5, "boost": 6, "race": 7}
+CMD_NAMES = {v: k for k, v in CMD_CODES.items()}
+CMD_RESULT_NAMES = {0: "none", 1: "accepted", 2: "applied", 3: "no_vesc", 4: "rejected", 5: "unknown"}
+SRC_USB = 0xFE      # the firmware's source id for commands typed on its USB port (us)
+SRC_PIT = 0         # GK_ADDR_BASE
+
+VESC_FAULT_NAMES = {
+    0: "NONE", 1: "OVER_VOLTAGE", 2: "UNDER_VOLTAGE", 3: "DRV", 4: "ABS_OVER_CURRENT",
+    5: "OVER_TEMP_FET", 6: "OVER_TEMP_MOTOR", 7: "GATE_DRIVER_OVER_VOLTAGE",
+    8: "GATE_DRIVER_UNDER_VOLTAGE", 9: "MCU_UNDER_VOLTAGE",
+    10: "BOOTING_FROM_WATCHDOG_RESET", 11: "ENCODER_SPI",
+    12: "ENCODER_SINCOS_BELOW_MIN_AMPLITUDE", 13: "ENCODER_SINCOS_ABOVE_MAX_AMPLITUDE",
+    14: "FLASH_CORRUPTION", 15: "HIGH_OFFSET_CURRENT_SENSOR_1",
+    16: "HIGH_OFFSET_CURRENT_SENSOR_2", 17: "HIGH_OFFSET_CURRENT_SENSOR_3",
+    18: "UNBALANCED_CURRENTS", 19: "BRK", 20: "RESOLVER_LOT", 21: "RESOLVER_DOS",
+    22: "RESOLVER_LOS", 23: "FLASH_CORRUPTION_APP_CFG", 24: "FLASH_CORRUPTION_MC_CFG",
+    25: "ENCODER_NO_MAGNET", 26: "ENCODER_MAGNET_TOO_STRONG", 27: "PHASE_FILTER",
+}
+
+# --- derived values (same as pitcore) ---------------------------------------
+PACK_EMPTY_V = 60.0      # 20S Li-ion, 3.00 V/cell
+PACK_FULL_V = 84.0       # 20S Li-ion, 4.20 V/cell
+UNDER_LOAD_A = 20.0
+POLE_PAIRS = 7
+GEAR_RATIO = 2.769
+WHEEL_DIAMETER_M = 0.406
+# Measured 2026-11-09 on kart 2 (GPS vs ERPM over a drive): the controller's si_* numbers above are off by
+# this factor (real ERPM per mph = formula x WHEEL_CAL). Same constant as firmware config.h SPEED_CAL_DEFAULT.
+WHEEL_CAL = 2.48
+METERS_PER_MILE = 1609.34
+
+
+def battery_percent(volts):
+    """Linear 60.0 V = 0 % .. 84.0 V = 100 %, clamped. None in -> None out."""
+    if volts is None:
+        return None
+    pct = (float(volts) - PACK_EMPTY_V) / (PACK_FULL_V - PACK_EMPTY_V) * 100.0
+    return round(max(0.0, min(100.0, pct)), 1)
+
+
+def under_load(batt_a):
+    if batt_a is None:
+        return None
+    return abs(float(batt_a)) > UNDER_LOAD_A
+
+
+def wheel_mph(erpm):
+    """Contract formula x WHEEL_CAL (GPS-calibrated on kart 2, 2026-11-09)."""
+    if erpm is None:
+        return None
+    return round(float(erpm) / POLE_PAIRS / GEAR_RATIO / WHEEL_CAL * (WHEEL_DIAMETER_M * math.pi) * 60.0 / METERS_PER_MILE, 2)
+
+
+def erpm_for_mph(mph):
+    return mph * METERS_PER_MILE / 60.0 / (WHEEL_DIAMETER_M * math.pi) * GEAR_RATIO * POLE_PAIRS * WHEEL_CAL
+
+
+def kph_to_mph(kph):
+    return None if kph is None else round(float(kph) * 0.621371, 2)
+
+
+def link_status(last_mono, now, online_s=ONLINE_S, stale_s=STALE_S):
+    if last_mono is None:
+        return "never"
+    age = now - last_mono
+    if age <= online_s:
+        return "online"
+    if age <= stale_s:
+        return "stale"
+    return "offline"
+
+
+def _age(last_mono, now):
+    return None if last_mono is None else round(max(0.0, now - last_mono), 1)
+
+
+# --- one kart (self or fleet) -------------------------------------------------
+VESC_FIELDS = ("volts", "motor_a", "batt_a", "erpm", "duty", "esc_c", "fault", "ah", "scale")
+STATUS_FIELDS = ("seq", "mode_req", "mode_actual", "mode_confirmed", "stopped", "vesc_link",
+                 "pps", "wifi", "writes", "last_cmd_seq", "cmd_result", "uptime_s",
+                 "base_rssi", "rssi", "snr", "rx_ms", "race_pos", "race_state")
+# Multiplayer freeplay fields on self/fleet lines (firmware kart-0.2.5, docs/freeplay-multiplayer.md section 3/4):
+# plain integers, 0 when absent (older firmware / 46-47 byte frames).
+MULTI_TELE_FIELDS = ("session", "atk_to", "atk_item", "atk_seq", "ack_from", "ack_seq", "score")
+
+
+def _int0(v):
+    return int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) else 0
+
+
+class KartState:
+    def __init__(self, kart_id, trail_points=30, trail_s=30.0):
+        self.id = kart_id
+        self.color = KART_COLORS.get(kart_id, "#888888")
+        self.last_mono = None
+        self.last_wall = None
+        self.status = {}
+        self.last_vesc_mono = None
+        self.vesc = {}
+        self.last_fix_mono = None
+        self.gps_age_at_rx = None
+        self.fix = {}
+        self.gps_now = {}
+        self.trail = deque(maxlen=trail_points)
+        self.trail_s = trail_s
+        self.packets = 0
+        self.last_pit_mono = None       # self only: latest sample with base_rssi != 0
+        self.pit_rssi = None
+        self.multi = {f: 0 for f in MULTI_TELE_FIELDS}   # multiplayer freeplay fields (kart-0.2.5+), 0 = absent
+
+    def ingest(self, msg, now, wall):
+        self.packets += 1
+        self.last_mono = now
+        self.last_wall = wall
+        self.multi = {f: _int0(msg.get(f)) for f in MULTI_TELE_FIELDS}
+        self.status = {f: msg.get(f) for f in STATUS_FIELDS}
+        if msg.get("vesc_link") is True:
+            self.vesc = {f: msg.get(f) for f in VESC_FIELDS}
+            self.last_vesc_mono = now
+        self.gps_now = {"fix": msg.get("fix"), "sats": msg.get("sats"), "gps_age_s": msg.get("gps_age_s"),
+                        # USB-only self fields (firmware 2026-11-06+); absent = None
+                        "hdop": msg.get("hdop"), "fix_age_ms": msg.get("fix_age_ms"), "gps_hz": msg.get("gps_hz"),
+                        "base_lat": msg.get("base_lat"), "base_lon": msg.get("base_lon"),
+                        "base_fix_age_s": msg.get("base_fix_age_s")}
+        lat, lon = msg.get("lat"), msg.get("lon")
+        if msg.get("fix") is True and lat is not None and lon is not None:
+            self.fix = {"lat": lat, "lon": lon, "heading": msg.get("heading"),
+                        "gps_kph": msg.get("gps_kph"), "sats": msg.get("sats")}
+            age = msg.get("gps_age_s")
+            self.gps_age_at_rx = None if age in (None, 255) else float(age)
+            self.last_fix_mono = now
+            if not self.trail or (self.trail[-1][1], self.trail[-1][2]) != (lat, lon):
+                self.trail.append((now, lat, lon))
+        br = msg.get("base_rssi")
+        if isinstance(br, (int, float)) and br != 0:     # 0 = the Heltec has not heard the pit for 30 s
+            self.last_pit_mono = now
+            self.pit_rssi = br
+
+    def snapshot(self, now, online_s=ONLINE_S):
+        link = link_status(self.last_mono, now, online_s=online_s)
+        vesc_age = _age(self.last_vesc_mono, now)
+        fix_age = None
+        if self.last_fix_mono is not None:
+            fix_age = round(now - self.last_fix_mono + (self.gps_age_at_rx or 0.0), 1)
+        volts, fault = self.vesc.get("volts"), self.vesc.get("fault")
+        mr, ma = self.status.get("mode_req"), self.status.get("mode_actual")
+        vesc_fresh = vesc_age is not None and vesc_age <= online_s
+        fix_fresh = fix_age is not None and fix_age <= online_s
+        return {
+            "id": self.id,
+            "color": self.color,
+            "link": link,
+            "age_s": _age(self.last_mono, now),
+            "last_seen_wall": self.last_wall,
+            "packets": self.packets,
+            "status": dict(self.status),
+            "mode_req_name": MODE_NAMES.get(mr) if mr is not None else None,
+            "mode_actual_name": MODE_NAMES.get(ma) if ma is not None else None,
+            "vesc": dict(self.vesc),
+            "vesc_age_s": vesc_age,
+            "vesc_fresh": vesc_fresh,
+            "fault_name": VESC_FAULT_NAMES.get(fault, "UNKNOWN_CODE") if fault is not None else None,
+            "derived": {
+                "battery_pct": battery_percent(volts),
+                "under_load": under_load(self.vesc.get("batt_a")),
+                "wheel_mph": wheel_mph(self.vesc.get("erpm")),
+                "wheel_mph_calibrated": True,
+                # GPS ground speed only from a fresh fix: no fix is "unknown", never 0 mph.
+                "gps_mph": kph_to_mph(self.fix.get("gps_kph")) if fix_fresh else None,
+            },
+            "gps": {
+                "fix_now": self.gps_now.get("fix"),
+                "sats_now": self.gps_now.get("sats"),
+                "hdop_now": self.gps_now.get("hdop"),
+                "gps_hz": self.gps_now.get("gps_hz"),
+                "fix_age_ms": self.gps_now.get("fix_age_ms"),
+                "base": ({"lat": self.gps_now.get("base_lat"), "lon": self.gps_now.get("base_lon"),
+                          "fix_age_s": self.gps_now.get("base_fix_age_s")}
+                         if self.gps_now.get("base_lat") is not None else None),
+                "last_fix": dict(self.fix) if self.fix else None,
+                "fix_age_s": fix_age,
+                "fix_fresh": fix_fresh,
+            },
+            "trail": [[lat, lon] for (t, lat, lon) in self.trail if now - t <= self.trail_s],
+            "multi": dict(self.multi),
+        }
+
+
+# --- the whole display state --------------------------------------------------
+class KartDisplay:
+    """Everything the driver page shows. Callers hold the app lock."""
+
+    def __init__(self, configured_id=None):
+        self.configured_id = configured_id
+        self.me = KartState(configured_id or 0, trail_points=240, trail_s=120.0)
+        self.fleet = {}                      # kart id -> KartState
+        self.heltec_id = None                # from self lines (authoritative over config)
+        self.status = {}                     # latest {"t":"status"} reply
+        self.status_mono = None
+        self.ble = {}
+        self.ble_mono = None
+        self.logs = deque(maxlen=40)         # (wall, kart, msg)
+        self.cmds_seen = deque(maxlen=20)    # every {"t":"cmd"} line (any source)
+        self.simulation = False
+        self.rx_lines = 0
+        self.rx_bad = 0
+        self.gps_lines = 0
+        self.multi_lines = 0                 # game / hit / attack lines (multiplayer freeplay)
+        self.last_uptime = None
+        self.heltec_reboots = 0
+        # SLOW has no telemetry flag (all 8 flag bits are used), so it is inferred
+        # from command echoes: a SLOW the firmware took (accepted/applied/unknown)
+        # stays on until a START is echoed or the Heltec reboots.
+        self.slow = {"active": None, "mph": None, "since_wall": None, "basis": "unknown since display start"}
+        self.slow_first_self = True
+
+    # -- ingest ----------------------------------------------------------------
+    def ingest(self, msg, now, wall):
+        """Apply one parsed line. Returns the line type."""
+        t = msg.get("t")
+        if t == "self":
+            k = msg.get("kart")
+            if isinstance(k, int):
+                self.heltec_id = k
+                self.me.id = k
+                self.me.color = KART_COLORS.get(k, "#888888")
+            up = msg.get("uptime_s")
+            if isinstance(up, int):
+                # uptime_s is u16: a drop of more than a few seconds that is not a wrap means a reboot
+                if self.last_uptime is not None and up + 5 < self.last_uptime and self.last_uptime < 65000:
+                    self.heltec_reboots += 1
+                    self._slow_set(False, None, wall, "Heltec rebooted (SLOW is not kept across a reboot)")
+                if self.slow_first_self and up < 120:
+                    self._slow_set(False, None, wall, "Heltec booted recently, no SLOW since")
+                self.last_uptime = up
+            self.slow_first_self = False
+            sm = msg.get("slow_mph")
+            if isinstance(sm, int):          # firmware from 2026-11-06 reports SLOW in telemetry: no inference needed
+                if (sm > 0) != (self.slow.get("active") is True) or (sm > 0 and sm != self.slow.get("mph")):
+                    self._slow_set(sm > 0, sm or None, wall, "from Heltec telemetry (slow_mph)")
+                elif self.slow.get("basis") != "from Heltec telemetry (slow_mph)":
+                    self.slow["basis"] = "from Heltec telemetry (slow_mph)"
+            self.me.ingest(msg, now, wall)
+        elif t == "fleet":
+            k = msg.get("kart")
+            if k not in KART_IDS:
+                self.rx_bad += 1
+                return t
+            if k not in self.fleet:
+                self.fleet[k] = KartState(k)
+            self.fleet[k].ingest(msg, now, wall)
+        elif t == "cmd":
+            self.cmds_seen.append({"wall": wall, "mono": now, **{f: msg.get(f) for f in
+                                   ("kart", "src", "seq", "cmd", "arg", "result")}})
+            self._slow_from_cmd(msg, wall)
+        elif t == "log":
+            text = str(msg.get("msg"))
+            if text == "SIMULATION":
+                self.simulation = True
+            self.logs.append({"wall": wall, "kart": msg.get("kart"), "msg": text})
+        elif t == "status":
+            self.status = dict(msg)
+            self.status_mono = now
+            if str(msg.get("fw") or "").startswith("sim-"):
+                self.simulation = True
+        elif t == "gps":
+            self.gps_lines += 1             # 5 Hz position line; the game engine consumes it
+        elif t == "ble":
+            self.ble = dict(msg)
+            self.ble_mono = now
+        elif t in ("game", "hit", "attack"):
+            # multiplayer freeplay (firmware kart-0.2.5): consumed by FreeplayGame.on_multi_line; old firmware
+            # never prints them
+            self.multi_lines += 1
+        return t
+
+    def _slow_set(self, active, mph, wall, basis):
+        self.slow = {"active": active, "mph": mph, "since_wall": wall, "basis": basis}
+
+    def _slow_from_cmd(self, msg, wall):
+        cmd, res = msg.get("cmd"), msg.get("result")
+        who = "pit" if msg.get("src") == SRC_PIT else "display" if msg.get("src") == SRC_USB else "src %s" % msg.get("src")
+        if cmd == CMD_CODES["slow"] and res in (1, 2, 5):
+            mph = msg.get("arg") or 5               # firmware: arg 0 = SLOW_DEFAULT_MPH (5)
+            self._slow_set(True, mph, wall, f"SLOW {mph} mph from {who} ({CMD_RESULT_NAMES.get(res)})")
+        elif cmd == CMD_CODES["start"] and res in (1, 2, 3, 5):
+            # firmware clears slowActive before it checks the VESC, so any START it took ends SLOW
+            self._slow_set(False, None, wall, f"START from {who}")
+
+    def on_link_change(self):
+        """Serial link (re)connected: the Heltec may have rebooted while we were away."""
+        self.slow_first_self = True
+        self.last_uptime = None
+
+    # -- snapshot --------------------------------------------------------------
+    def pit_link(self, now):
+        me = self.me
+        if me.last_mono is None or now - me.last_mono > SELF_FRESH_S:
+            return {"state": "unknown", "rssi": None, "age_s": _age(me.last_pit_mono, now)}
+        br = me.status.get("base_rssi")
+        if isinstance(br, (int, float)) and br != 0:
+            return {"state": "ok", "rssi": br, "age_s": 0.0}
+        return {"state": "lost", "rssi": None, "age_s": _age(me.last_pit_mono, now)}
+
+    def snapshot(self, now):
+        me = self.me.snapshot(now, online_s=SELF_FRESH_S)
+        me["configured_id"] = self.configured_id
+        me["heltec_id"] = self.heltec_id
+        me["id_mismatch"] = (self.configured_id is not None and self.heltec_id is not None
+                             and self.configured_id != self.heltec_id)
+        fleet = [k.snapshot(now) for _, k in sorted(self.fleet.items())]
+        return {
+            "self": me,
+            "fleet": fleet,
+            "pit_link": self.pit_link(now),
+            "slow": dict(self.slow),
+            "simulation": self.simulation,
+            "heltec": {"status": dict(self.status), "status_age_s": _age(self.status_mono, now),
+                       "ble": dict(self.ble), "ble_age_s": _age(self.ble_mono, now),
+                       "reboots_seen": self.heltec_reboots,
+                       "logs": list(self.logs)[-12:]},
+            "cmds_seen": [{k: v for k, v in c.items() if k != "mono"} | {"age_s": _age(c["mono"], now),
+                          "cmd_name": CMD_NAMES.get(c["cmd"]), "result_name": CMD_RESULT_NAMES.get(c["result"])}
+                          for c in list(self.cmds_seen)[-6:]],
+            "rx_lines": self.rx_lines,
+            "rx_bad": self.rx_bad,
+            "gps_lines": self.gps_lines,
+        }
+
+
+# --- commands from the touchscreen ---------------------------------------------
+class CommandError(Exception):
+    pass
+
+
+def command_text(cmd, arg=None):
+    """Validate a driver/debug request and return the Heltec text line.
+    Allowed: mode 0|1|2, slow [mph], stop, start, ping, status."""
+    if cmd == "mode":
+        if arg not in (0, 1, 2):
+            raise CommandError("mode needs arg 0 (ECO), 1 (NORMAL) or 2 (SPORT)")
+        return f"mode {arg}"
+    if cmd == "slow":
+        if arg is None or arg == 0:
+            return "slow"
+        if not isinstance(arg, int) or isinstance(arg, bool) or not 1 <= arg <= 40:
+            raise CommandError("slow takes an integer mph 1-40 (or none for the firmware default)")
+        return f"slow {arg}"
+    if cmd in ("stop", "start", "ping", "status"):
+        return cmd
+    raise CommandError(f"unknown command {cmd!r} (mode, slow, stop, start, ping, status)")
+
+
+class CommandTracker:
+    """Outcome of each request we typed into the Heltec's USB port.
+
+    The firmware numbers USB commands itself (++usbSeq) and echoes
+    {"t":"cmd","src":254,...}, so a request is matched to the oldest unanswered
+    request with the same command code. Later self lines whose last_cmd_seq is
+    that seq refine the result (accepted -> applied). No echo within
+    ECHO_TIMEOUT_S = "no_echo" (outcome unknown). Nothing is ever resent."""
+
+    ECHO_TIMEOUT_S = 4.0
+
+    def __init__(self, keep=12):
+        self.items = deque(maxlen=keep)
+        self.next_id = 1
+
+    def sent(self, cmd, arg, line, ok, now, wall, who):
+        rec = {"id": self.next_id, "cmd": cmd, "arg": arg, "line": line, "who": who,
+               "sent_wall": wall, "sent_mono": now, "state": "sent" if ok else "link_down",
+               "seq": None, "result": None, "result_name": None, "echo_wall": None}
+        self.next_id += 1
+        self.items.append(rec)
+        return rec
+
+    def on_cmd_line(self, msg, wall):
+        if msg.get("src") != SRC_USB:
+            return None
+        code = msg.get("cmd")
+        for rec in self.items:
+            if rec["state"] == "sent" and CMD_CODES.get(rec["cmd"]) == code:
+                rec.update(state="echoed", seq=msg.get("seq"), result=msg.get("result"),
+                           result_name=CMD_RESULT_NAMES.get(msg.get("result")), echo_wall=wall)
+                return rec
+        return None
+
+    def on_self(self, msg):
+        seq, res = msg.get("last_cmd_seq"), msg.get("cmd_result")
+        if not self.items or seq is None:
+            return
+        rec = self.items[-1]
+        if rec["state"] == "echoed" and rec["seq"] == seq and res not in (None, 0) and res != rec["result"]:
+            rec["result"], rec["result_name"] = res, CMD_RESULT_NAMES.get(res)
+
+    def tick(self, now):
+        for rec in self.items:
+            if rec["state"] == "sent" and now - rec["sent_mono"] > self.ECHO_TIMEOUT_S:
+                rec["state"] = "no_echo"
+
+    def on_link_down(self):
+        for rec in self.items:
+            if rec["state"] == "sent":
+                rec["state"] = "link_lost"
+
+    def snapshot(self, now):
+        return [{k: v for k, v in r.items() if k != "sent_mono"} | {"age_s": _age(r["sent_mono"], now)}
+                for r in reversed(self.items)]
+
+
+# --- game layer (Mario Kart zones) ----------------------------------------------
+# Contract: pit/server/map/ZONES.md. The kart evaluates the zone file against its own
+# GPS (self lines, 2 Hz) so the game works with no radio and no Wi-Fi. The only lines
+# the game ever sends are `boost SECS SCALE` (timed current-scale override in the Heltec,
+# never above 1.0, auto-reverting, cancelled by STOP/START) and, for mud on firmware
+# kart-0.2.4+, `slow MPH SECS` (timed speed cap that reverts to the previous cap by itself).
+# Freeplay adds one `mode 0` when it is switched on (through the server's POST /cmd path,
+# not as a game record). Pure logic: the server sends the returned command lines and logs
+# every returned record.
+R_EARTH = 6371000.0
+ZONE_EXIT_HYST_M = 3.0       # "outside" again only > 3 m outside the edge
+LAP_REARM_M = 6.0            # lap line: after a crossing, the next one counts only once the kart has been
+                             # this far from the line (GPS jitter on the line, a kart parked on the grid)
+SWEEP_MAX_GAP_S = 1.5        # zone entry also tests the path from the previous fix if it is this recent
+                             # (2 Hz self-line fallback at speed: a 3 m pad fits between two fixes)
+GO_LINE_STANDALONE_S = 5.0   # a go line with no countdown seen (display restarted mid-hold) starts a race
+GAME_STATE_MAX_AGE_S = 1800.0  # lap/race timing restored after a server restart if saved this recently
+GAME_TIMING_EVENTS = ("lap_start", "lap", "lap_reset", "race_countdown", "race_go", "race_finish",
+                      "race_released", "zones_lap_restored")
+NO_FIX_EXIT_S = 5.0          # no fix for this long: leave every zone, forget the previous fix
+MUD_REPEAT_S = 2.0           # mud: re-send while inside
+MUD_SLOW_SECS = 4            # each mud command lasts this long (config mud_slow_secs 1-30; zone mud: the cap
+                             # ends <= this after leaving)
+MUD_SLOW_MPH = 5             # mud on firmware kart-0.2.4+: `slow 5 SECS` (a real speed cap, not a scale)
+MUD_SECS = MUD_SLOW_SECS     # old name
+FW_TIMED_SLOW = (0, 2, 4)    # first firmware with `slow MPH SECS`; older ones read it as a PERMANENT slow
+BOOST_STACK_MAX_S = 30       # stacked boosts: firmware `boost` SECS limit
+BOOST_DEFAULTS = {"secs": 5, "scale": 1.0, "cooldown_s": 20.0}
+ITEM_COOLDOWN_S = 15.0
+ITEM_REVEAL_S = 1.4
+ITEM_HOLD_CAP = 3              # held item-box prizes the driver can carry; a 4th takes effect at once
+INVENTORY_KEEP_S = 24 * 3600   # carried items survive a power cycle for this long (game-state.json saved_wall)
+HOLDABLE_ITEMS = ("boost", "rocket", "boost3", "star", "magnet", "hotlap", "shield")   # carried when item_hold is on
+MAGNET_S = 20                  # magnet: item boxes are picked up at double radius this long
+STAR_S = 8                     # star: SPORT power + immunity to mud for this long
+BOOST3_CHARGES = 3             # triple boost: one card, three taps            # an item box's effect waits this long after the roll so it lands when the dash prize-wheel finishes (owner 2026-11-10: boost was applying the instant you hit the box)
+# Item box roll (ZONES.md "Item boxes"): (name, probability, secs, scale); empty = nothing sent
+# (mud: secs is the engine's mud_secs, MUD_SLOW_SECS by default; the scale is only used on firmware < 0.2.4)
+# 2026-11-09 (owner): a BOOST item is NORMAL's scale (0.75: from ECO the firmware lifts the cap to NORMAL's 25 mph)
+# and the ROCKET (was "super") is SPORT's 1.0 (cap lifted to SPORT = uncapped), both for their secs.
+ITEM_TABLE = (("boost", 0.26, 7, 0.75), ("rocket", 0.10, 10, 1.0), ("mud", 0.18, MUD_SLOW_SECS, 0.5),
+              ("boost3", 0.08, 7, 0.75), ("star", 0.07, STAR_S, 1.0), ("magnet", 0.08, None, None),
+              ("hotlap", 0.08, None, None), ("shield", 0.07, None, None), ("empty", 0.08, None, None))
+# Multiplayer freeplay (docs/freeplay-multiplayer.md section 2): the roll on a FREEPLAY box while this kart is in
+# a session. shell/lightning are HELD (secs None: nothing is sent; FreeplayGame keeps them for `use`).
+MULTI_ITEM_TABLE = (("boost", 0.22, 7, 0.75), ("shell", 0.24, None, None), ("lightning", 0.12, None, None),
+                    ("rocket", 0.08, 10, 1.0), ("boost3", 0.06, 7, 0.75), ("star", 0.06, STAR_S, 1.0),
+                    ("shield", 0.08, None, None), ("magnet", 0.06, None, None), ("empty", 0.08, None, None))
+MULTI_HELD_ITEMS = ("shell", "lightning")
+RACE_GO_GRACE_S = 0.0        # the overlay/laps follow the computed GO instant; the go line only confirms it
+RACE_STATES = {0: "idle", 1: "countdown", 2: "running", 3: "finished"}
+RACE_IDLE_CLEAR_S = 40.0     # beacon idle (state 0) this long after a finish: FINISHED clears, laps count again
+RACE_PAUSE_AFTER_FINISH_S = 60.0   # freeplay stays paused this long after the flag
+HEADING_SLEW_DPS = 120.0     # heading-up map: max rotation rate
+ZONE_TYPES = ("boost", "mud", "item", "lapline")
+MUD_DEFAULT_SCALE = 0.5
+MIN_LAP_DEFAULT_S = 20.0
+MIN_CIRCLE_R_M = 3.0         # ZONES.md: >= 3 (pads are typically 5 m)
+SCALE_MIN, SCALE_MAX = 0.10, 1.00
+SCALE_TOL = 0.015            # firmware MODE_MATCH_TOL
+
+
+def boot_id():
+    """Linux boot id (a restarted process in the same boot shares CLOCK_MONOTONIC), else "nonlinux"."""
+    try:
+        with open("/proc/sys/kernel/random/boot_id") as f:
+            return f.read().strip()
+    except OSError:
+        return "nonlinux"
+
+
+def local_en(lat, lon, ref):
+    """(east, north) metres of lat/lon on the tangent plane at ref = (lat, lon)."""
+    return ((lon - ref[1]) * math.pi / 180.0 * R_EARTH * math.cos(math.radians(ref[0])),
+            (lat - ref[0]) * math.pi / 180.0 * R_EARTH)
+
+
+def point_in_polygon(p, poly):
+    """Even-odd ray cast; p and poly in the same planar coordinates."""
+    x, y = p
+    inside = False
+    n = len(poly)
+    for i in range(n):
+        x1, y1 = poly[i]
+        x2, y2 = poly[(i + 1) % n]
+        if (y1 > y) != (y2 > y):
+            xc = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+            if x < xc:
+                inside = not inside
+    return inside
+
+
+def dist_point_segment(p, a, b):
+    ax, ay = a
+    dx, dy = b[0] - ax, b[1] - ay
+    L2 = dx * dx + dy * dy
+    t = 0.0 if L2 == 0 else max(0.0, min(1.0, ((p[0] - ax) * dx + (p[1] - ay) * dy) / L2))
+    return math.hypot(p[0] - (ax + t * dx), p[1] - (ay + t * dy))
+
+
+def segment_crossing(p1, p2, q1, q2):
+    """Fraction t in [0, 1] along p1->p2 where it crosses segment q1-q2, else None.
+    Touching an end point counts; collinear overlap does not (no direction to cross)."""
+    rx, ry = p2[0] - p1[0], p2[1] - p1[1]
+    sx, sy = q2[0] - q1[0], q2[1] - q1[1]
+    den = rx * sy - ry * sx
+    if abs(den) < 1e-12:
+        return None
+    qpx, qpy = q1[0] - p1[0], q1[1] - p1[1]
+    t = (qpx * sy - qpy * sx) / den
+    u = (qpx * ry - qpy * rx) / den
+    if 0.0 <= t <= 1.0 and 0.0 <= u <= 1.0:
+        return t
+    return None
+
+
+def clamp_scale(x):
+    return max(SCALE_MIN, min(SCALE_MAX, float(x)))
+
+
+def boost_line(secs, scale):
+    """The Heltec USB command. secs 1-30, scale 0.10-1.00, never above 1.0."""
+    secs = int(max(1, min(30, round(float(secs)))))
+    return f"boost {secs} {clamp_scale(scale):.2f}"
+
+
+def slow_line(mph, secs):
+    """Timed SLOW (firmware kart-0.2.4+): cap MPH for SECS (1-60) s, then back to the previous cap."""
+    mph = int(max(1, min(40, round(float(mph)))))
+    secs = int(max(1, min(60, round(float(secs)))))
+    return f"slow {mph} {secs}"
+
+
+_FW_RE = re.compile(r"kart-(\d+)\.(\d+)\.(\d+)")
+
+
+def fw_version(fw):
+    """"kart-0.2.4" (also "sim-kart-0.2.4", "kart-0.2.4-dev") -> (0, 2, 4); anything else -> None."""
+    m = _FW_RE.search(fw) if isinstance(fw, str) else None
+    return tuple(int(x) for x in m.groups()) if m else None
+
+
+def fw_at_least(fw, want):
+    """True only when fw parses and is >= want; unknown firmware is never assumed new."""
+    v = fw_version(fw)
+    return v is not None and v >= tuple(want)
+
+
+def _num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def _pt(v):
+    return isinstance(v, (list, tuple)) and len(v) >= 2 and _num(v[0]) and _num(v[1])
+
+
+class Zone:
+    """One boost/mud area or a lap line, projected around its own reference point."""
+
+    def __init__(self, z):
+        self.raw = z
+        self.id = str(z.get("id"))
+        self.type = z.get("type")
+        self.name = z.get("name") or self.id
+        self.shape = z.get("shape")
+        if self.type == "lapline":
+            if self.shape not in (None, "line") or not (_pt(z.get("a")) and _pt(z.get("b"))):
+                raise ValueError("lapline needs shape line with points a and b")
+            self.ref = (float(z["a"][0]), float(z["a"][1]))
+            self.a = (0.0, 0.0)
+            self.b = local_en(float(z["b"][0]), float(z["b"][1]), self.ref)
+            self.min_lap_s = float(z["min_lap_s"]) if _num(z.get("min_lap_s")) and z["min_lap_s"] > 0 else MIN_LAP_DEFAULT_S
+            return
+        if self.shape == "circle":
+            if not (_num(z.get("lat")) and _num(z.get("lon")) and _num(z.get("r_m"))):
+                raise ValueError("circle needs lat, lon, r_m")
+            if z["r_m"] < MIN_CIRCLE_R_M:
+                raise ValueError(f"circle r_m {z['r_m']} < {MIN_CIRCLE_R_M:g} m")
+            self.ref = (float(z["lat"]), float(z["lon"]))
+            self.r = float(z["r_m"])
+        elif self.shape == "polygon":
+            pts = z.get("points")
+            if not isinstance(pts, list) or len(pts) < 3 or not all(_pt(p) for p in pts):
+                raise ValueError("polygon needs >= 3 [lat, lon] points")
+            self.ref = (float(pts[0][0]), float(pts[0][1]))
+            self.poly = [local_en(float(p[0]), float(p[1]), self.ref) for p in pts]
+        else:
+            raise ValueError(f"unknown shape {self.shape!r}")
+        if self.type == "item":
+            self.cooldown_s = float(z["cooldown_s"]) if _num(z.get("cooldown_s")) and z["cooldown_s"] >= 0 \
+                else ITEM_COOLDOWN_S
+            if self.shape == "circle" and self.r < MIN_CIRCLE_R_M:
+                raise ValueError("item box too small")
+            return
+        if self.type == "boost":
+            self.scale = clamp_scale(z["scale"]) if _num(z.get("scale")) else BOOST_DEFAULTS["scale"]
+            self.secs = int(max(1, min(30, z["secs"]))) if _num(z.get("secs")) else BOOST_DEFAULTS["secs"]
+            self.cooldown_s = float(z["cooldown_s"]) if _num(z.get("cooldown_s")) and z["cooldown_s"] >= 0 \
+                else BOOST_DEFAULTS["cooldown_s"]
+        else:   # mud
+            self.scale = clamp_scale(z["scale"]) if _num(z.get("scale")) else MUD_DEFAULT_SCALE
+
+    def outside_m(self, lat, lon):
+        """<= 0 inside the shape, else metres outside its edge."""
+        p = local_en(lat, lon, self.ref)
+        if self.shape == "circle":
+            return math.hypot(p[0], p[1]) - self.r
+        if point_in_polygon(p, self.poly):
+            return 0.0
+        n = len(self.poly)
+        return min(dist_point_segment(p, self.poly[i], self.poly[(i + 1) % n]) for i in range(n))
+
+    def swept(self, lat1, lon1, lat2, lon2):
+        """True if the straight path between two fixes passes through the shape (entry between samples)."""
+        p, q = local_en(lat1, lon1, self.ref), local_en(lat2, lon2, self.ref)
+        if self.shape == "circle":
+            return dist_point_segment((0.0, 0.0), p, q) <= self.r
+        n = len(self.poly)
+        return point_in_polygon(p, self.poly) or any(
+            segment_crossing(p, q, self.poly[i], self.poly[(i + 1) % n]) is not None for i in range(n))
+
+    def crossing(self, lat1, lon1, lat2, lon2):
+        return segment_crossing(local_en(lat1, lon1, self.ref), local_en(lat2, lon2, self.ref), self.a, self.b)
+
+    def line_dist_m(self, lat, lon):
+        return dist_point_segment(local_en(lat, lon, self.ref), self.a, self.b)
+
+
+def parse_zones(doc):
+    """-> (enabled, [Zone boost/mud], lapline Zone or None, [ignored {id, reason}])."""
+    if not isinstance(doc, dict) or not isinstance(doc.get("zones"), list):
+        return False, [], None, []
+    areas, lapline, ignored = [], None, []
+    seen = set()
+    for z in doc["zones"]:
+        if not isinstance(z, dict):
+            continue
+        zid = str(z.get("id"))
+        if z.get("type") not in ZONE_TYPES:
+            ignored.append({"id": zid, "reason": f"unknown type {z.get('type')!r}"})
+            continue
+        if zid in seen:
+            ignored.append({"id": zid, "reason": "duplicate id"})
+            continue
+        try:
+            zone = Zone(z)
+        except (ValueError, TypeError, KeyError) as e:
+            ignored.append({"id": zid, "reason": str(e)})
+            continue
+        seen.add(zid)
+        if zone.type == "lapline":
+            if lapline is None:
+                lapline = zone
+            else:
+                ignored.append({"id": zid, "reason": "only the first lap line is timed"})
+        else:
+            areas.append(zone)
+    return doc.get("enabled") is True, areas, lapline, ignored
+
+
+# --- GPS samples for the game: quality filter, outliers, heading, base correction ---
+GPS_LINE_FRESH_S = 2.0       # {"t":"gps"} lines seen this recently: the self line's position is not used
+GPS_MAX_HDOP = 4.0           # worse = drawn greyed, never used for triggers or laps
+GPS_MIN_SATS = 5
+GPS_JUMP_SLACK_M = 15.0      # outlier: further than speed * dt + 15 m from the last accepted sample
+GPS_HEADING_MIN_MPS = 1.5    # Doppler heading is noise below this; keep the last good one
+CORR_WINDOW_S = 30.0         # base correction: mean over this window
+CORR_MAX_BASE_AGE_S = 5.0
+CORR_MAX_M = 25.0
+
+
+def _bearing_deg(a, b):
+    """Compass bearing from a to b ((lat, lon) tuples), 0 = north, 90 = east: the GPS heading convention."""
+    dn = (b[0] - a[0]) * 111320.0
+    de = (b[1] - a[1]) * 111320.0 * math.cos(math.radians(a[0]))
+    return math.degrees(math.atan2(de, dn)) % 360.0
+
+
+def _dist_m(a, b):
+    e, n = local_en(b[0], b[1], a)
+    return math.hypot(e, n)
+
+
+class GpsFilter:
+    """One position sample in -> {lat, lon, kph, heading, hdop, sats, quality, usable, reset}.
+    quality: "good" | "poor" (hdop > 4 or sats < 5; drawn greyed, never triggers) |
+    "outlier" (jump > speed*dt + 15 m from the last accepted sample). A second sample
+    that agrees with a rejected one is accepted ("reset": the old track is not joined
+    to it, so no lap crossing is drawn across the jump). hdop/sats missing (older
+    firmware) are not filtered."""
+
+    def __init__(self):
+        self.acc = None          # (lat, lon, mono, mps) last accepted good sample
+        self.cand = None         # (lat, lon, mono) last rejected outlier
+        self.heading = None      # last good Doppler heading
+
+    def feed(self, lat, lon, kph, heading, hdop, sats, now, source):
+        mps = (float(kph) / 3.6) if _num(kph) else 0.0
+        if _num(heading) and mps >= GPS_HEADING_MIN_MPS:
+            self.heading = float(heading)
+        out = {"lat": lat, "lon": lon, "kph": kph if _num(kph) else None, "heading": self.heading,
+               "hdop": hdop if _num(hdop) else None, "sats": sats if _num(sats) else None,
+               "source": source, "mono": now, "usable": False, "reset": False}
+        if (_num(hdop) and hdop > GPS_MAX_HDOP) or (_num(sats) and sats < GPS_MIN_SATS):
+            out["quality"] = "poor"
+            return out
+        if self.acc is not None:
+            dt = max(0.0, now - self.acc[2])
+            limit = max(mps, self.acc[3]) * dt + GPS_JUMP_SLACK_M
+            if _dist_m(self.acc[:2], (lat, lon)) > limit:
+                c = self.cand
+                if c is not None and _dist_m(c[:2], (lat, lon)) <= mps * max(0.0, now - c[2]) + GPS_JUMP_SLACK_M:
+                    out["reset"] = True          # repeated: the kart really is over there
+                else:
+                    self.cand = (lat, lon, now)
+                    out["quality"] = "outlier"
+                    return out
+        self.cand = None
+        self.acc = (lat, lon, now, mps)
+        out.update(quality="good", usable=True)
+        return out
+
+
+class BaseCorrection:
+    """Optional position-domain correction (config "gps_correction", default off):
+    pit surveyed position (map package "pit") minus the pit radio's live fix
+    (self base_lat/base_lon, used while base_fix_age_s < 5), averaged over 30 s,
+    applied only when under 25 m. The vector is always computed and exposed."""
+
+    def __init__(self, enabled=False):
+        self.enabled = bool(enabled)
+        self.pit = None
+        self.samples = deque()   # (mono, dlat, dlon)
+
+    def set_pit(self, pit):
+        p = (float(pit["lat"]), float(pit["lon"])) if isinstance(pit, dict) and _num(pit.get("lat")) and _num(pit.get("lon")) else None
+        if p != self.pit:
+            self.pit = p
+            self.samples.clear()
+
+    def _trim(self, now):
+        while self.samples and now - self.samples[0][0] > CORR_WINDOW_S:
+            self.samples.popleft()
+
+    def feed(self, msg, now):
+        bl, bo, age = msg.get("base_lat"), msg.get("base_lon"), msg.get("base_fix_age_s")
+        if self.pit and _num(bl) and _num(bo) and _num(age) and age < CORR_MAX_BASE_AGE_S:
+            self.samples.append((now, self.pit[0] - bl, self.pit[1] - bo))
+        self._trim(now)
+
+    def vector(self, now):
+        self._trim(now)
+        if not self.samples or self.pit is None:
+            return None
+        n = len(self.samples)
+        dlat = sum(x[1] for x in self.samples) / n
+        dlon = sum(x[2] for x in self.samples) / n
+        e = dlon * math.pi / 180 * R_EARTH * math.cos(math.radians(self.pit[0]))
+        nn = dlat * math.pi / 180 * R_EARTH
+        return {"dlat": dlat, "dlon": dlon, "east_m": round(e, 2), "north_m": round(nn, 2),
+                "mag_m": round(math.hypot(e, nn), 2), "samples": n}
+
+    def apply(self, lat, lon, now):
+        v = self.vector(now) if self.enabled else None
+        if v and v["mag_m"] < CORR_MAX_M:
+            return lat + v["dlat"], lon + v["dlon"], True
+        return lat, lon, False
+
+    def snapshot(self, now):
+        v = self.vector(now)
+        why = None
+        if not self.enabled:
+            why = "off (config gps_correction)"
+        elif self.pit is None:
+            why = "no surveyed pit position in the map package"
+        elif v is None:
+            why = "no fresh pit radio fix (base_fix_age_s < 5) in 30 s"
+        elif v["mag_m"] >= CORR_MAX_M:
+            why = f"{v['mag_m']:.0f} m >= {CORR_MAX_M:.0f} m: not applied"
+        return {"enabled": self.enabled, "applied": bool(self.enabled and v and v["mag_m"] < CORR_MAX_M),
+                "vector": v, "pit": list(self.pit) if self.pit else None, "why_not": why}
+
+
+def race_lights(go_in_s, n=5):
+    """Red lights lit during the countdown: one more each second, all n in the last second.
+    Mirrors raceLights() in static/app.js."""
+    if go_in_s is None:
+        return 0
+    if go_in_s <= 0:
+        return n
+    return max(0, min(n, n + 1 - math.ceil(go_in_s - 1e-9)))
+
+
+TRACK_MAX_POINTS = 200
+TRACK_DEFAULT_WIDTH_M = 6.0
+
+
+def parse_track(doc):
+    """zones.json "track" (ZONES.md "Track route") -> {"points", "closed", "width_m", "length_m"} or
+    None when absent or invalid (a bad track is ignored; the zones still work)."""
+    t = doc.get("track") if isinstance(doc, dict) else None
+    if not isinstance(t, dict):
+        return None
+    pts = t.get("points")
+    if not isinstance(pts, list) or not 2 <= len(pts) <= TRACK_MAX_POINTS or not all(_pt(p) for p in pts):
+        return None
+    pts = [[float(p[0]), float(p[1])] for p in pts]
+    if any(abs(p[0]) > 90 or abs(p[1]) > 180 for p in pts):
+        return None
+    w = t.get("width_m")
+    w = float(w) if _num(w) and 1.0 <= w <= 50.0 else TRACK_DEFAULT_WIDTH_M
+    closed = t.get("closed") is True and len(pts) >= 3
+    ref = pts[0]
+    en = [local_en(p[0], p[1], ref) for p in pts]
+    segs = list(zip(en, en[1:] + ([en[0]] if closed else [])))
+    length = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in segs)
+    if length < 5.0:
+        return None
+    return {"points": pts, "closed": closed, "width_m": w, "length_m": round(length, 1)}
+
+
+def track_chevrons(track, spacing_m=15.0):
+    """Direction marks along a track: [(lat, lon, heading_deg)] every spacing_m, following point
+    order (the HUD draws the same thing; this is the testable reference)."""
+    pts = track["points"]
+    ref = pts[0]
+    en = [local_en(p[0], p[1], ref) for p in pts]
+    if track["closed"]:
+        en = en + [en[0]]
+    out, carry = [], spacing_m / 2.0
+    for a, b in zip(en, en[1:]):
+        L = math.hypot(b[0] - a[0], b[1] - a[1])
+        if L <= 0:
+            continue
+        hd = math.degrees(math.atan2(b[0] - a[0], b[1] - a[1])) % 360.0
+        d = carry
+        while d <= L:
+            f = d / L
+            lat, lon = en_to_ll(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, ref)
+            out.append((lat, lon, hd))
+            d += spacing_m
+        carry = d - L
+    return out
+
+
+def roll_item(rng, table=None):
+    """One item-box roll: (name, secs, scale); secs None = nothing sent (empty box, or a held item from
+    MULTI_ITEM_TABLE). table defaults to the single-player ITEM_TABLE."""
+    table = table or ITEM_TABLE
+    x = rng.random()
+    acc = 0.0
+    for name, p, secs, scale in table:
+        acc += p
+        if x < acc:
+            return name, secs, scale
+    return table[-1][0], None, None
+
+
+def angle_diff_deg(a, b):
+    """Shortest signed difference a - b in degrees, in (-180, 180]."""
+    d = (a - b) % 360.0
+    return d - 360.0 if d > 180.0 else d
+
+
+def slew_heading(cur, target, dt, max_dps=HEADING_SLEW_DPS):
+    """Heading-up map rotation: move cur towards target by at most max_dps * dt (shortest way).
+    cur None = jump to target; target None = hold cur. Mirrors slewHeading() in static/app.js."""
+    if target is None:
+        return cur
+    if cur is None:
+        return target % 360.0
+    d = angle_diff_deg(target, cur)
+    step = max_dps * max(0.0, dt)
+    if abs(d) <= step:
+        return target % 360.0
+    return (cur + math.copysign(step, d)) % 360.0
+
+
+def _centre(z):
+    """(lat, lon) centre of a boost/mud/item zone dict, or None."""
+    if z.get("shape") == "circle" and _num(z.get("lat")) and _num(z.get("lon")):
+        return float(z["lat"]), float(z["lon"])
+    pts = z.get("points")
+    if z.get("shape") == "polygon" and isinstance(pts, list) and len(pts) >= 3 and all(_pt(p) for p in pts):
+        ref = (float(pts[0][0]), float(pts[0][1]))
+        en = [local_en(float(p[0]), float(p[1]), ref) for p in pts]
+        a = cx = cy = 0.0                          # area centroid (shoelace)
+        for i in range(len(en)):
+            x1, y1 = en[i]
+            x2, y2 = en[(i + 1) % len(en)]
+            c = x1 * y2 - x2 * y1
+            a += c
+            cx += (x1 + x2) * c
+            cy += (y1 + y2) * c
+        if abs(a) < 1e-9:
+            e, n = sum(p[0] for p in en) / len(en), sum(p[1] for p in en) / len(en)
+        else:
+            e, n = cx / (3 * a), cy / (3 * a)
+        return en_to_ll(e, n, ref)
+    return None
+
+
+def en_to_ll(e, n, ref):
+    return (ref[0] + math.degrees(n / R_EARTH),
+            ref[1] + math.degrees(e / (R_EARTH * math.cos(math.radians(ref[0])))))
+
+
+def demo_zones(center, version=1):
+    """Built-in demo course (SIMULATION) around center = (lat, lon): the simulator's 70 x 36 m loop
+    with a start/finish line, a boost pad, mud and an item box. Used when the pit has no zones."""
+    ll = lambda e, n: [round(v, 7) for v in en_to_ll(e, n, center)]     # noqa: E731
+    b, it = ll(35, 0), ll(-35, 0)
+    return {"_comment": "DEMO (simulation) course generated by the kart display", "version": version, "enabled": True,
+            "zones": [
+                {"id": "demo-b", "type": "boost", "name": "Boost pad", "shape": "circle", "lat": b[0], "lon": b[1],
+                 "r_m": 9, "scale": 1.0, "secs": 5, "cooldown_s": 20},
+                {"id": "demo-m", "type": "mud", "name": "Mud", "shape": "polygon",
+                 "points": [ll(-12, -10), ll(12, -10), ll(12, -26), ll(-12, -26)], "scale": 0.5},
+                {"id": "demo-i", "type": "item", "name": "Item box", "shape": "circle", "lat": it[0], "lon": it[1],
+                 "r_m": 9, "cooldown_s": 15},
+                {"id": "demo-lap", "type": "lapline", "name": "Start / finish", "shape": "line",
+                 "a": ll(0, 10), "b": ll(0, 26), "min_lap_s": 20}]}
+
+
+def demo_path(doc, center=None, mph=15.0, approach_m=12.0):
+    """Closed driving loop for demo mode through the zones of doc: from just before the lap line,
+    across it, then through the centre of every boost/mud/item zone in angular order around their
+    centroid (travelling the same way round as the lap-line crossing), and back. If the loop would be
+    shorter than min_lap_s at `mph` (+5 s) a detour point is pushed outwards so laps still count.
+    Returns {"origin": (lat, lon), "points": [[lat, lon], ...] (closed: last joins first), "length_m"}."""
+    track = parse_track(doc)
+    if track is not None:                           # ZONES.md: demo drives along the track (closed loop)
+        pts = [list(p) for p in track["points"]]
+        ref = pts[0]
+        en = [local_en(p[0], p[1], ref) for p in pts] + [local_en(pts[0][0], pts[0][1], ref)]
+        L = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(en, en[1:]))
+        return {"origin": tuple(ref), "points": pts, "length_m": round(L, 1), "source": "track"}
+    zones = [z for z in (doc or {}).get("zones", []) if isinstance(z, dict)]
+    centres = [c for c in (_centre(z) for z in zones if z.get("type") in ("boost", "mud", "item")) if c]
+    lap = next((z for z in zones if z.get("type") == "lapline" and _pt(z.get("a")) and _pt(z.get("b"))), None)
+    if lap is not None:
+        origin = ((lap["a"][0] + lap["b"][0]) / 2.0, (lap["a"][1] + lap["b"][1]) / 2.0)
+    elif centres:
+        origin = centres[0]
+    elif center is not None:
+        origin = (float(center[0]), float(center[1]))
+    else:
+        raise ValueError("no zones and no centre for the demo loop")
+    P = [local_en(c[0], c[1], origin) for c in centres]
+    pts = []
+    if lap is not None:
+        a = local_en(lap["a"][0], lap["a"][1], origin)
+        b = local_en(lap["b"][0], lap["b"][1], origin)
+        ux, uy = b[0] - a[0], b[1] - a[1]
+        L = math.hypot(ux, uy) or 1.0
+        nx, ny = -uy / L, ux / L                    # normal to the line
+        if P:                                       # cross towards the side the zones are mostly on? no: away from
+            mx = sum(p[0] for p in P) / len(P)       # their centroid, so the loop comes back round to the line
+            my = sum(p[1] for p in P) / len(P)
+            if mx * nx + my * ny > 0:
+                nx, ny = -nx, -ny
+        before = (-nx * approach_m, -ny * approach_m)
+        after = (nx * approach_m, ny * approach_m)
+    else:
+        before = after = None
+    if len(P) < 2:                                  # too few zones for a loop: add corners around them
+        base = P[0] if P else (0.0, 0.0)
+        extra = [(base[0] + 30, base[1] + 25), (base[0] - 30, base[1] + 25), (base[0] - 30, base[1] - 25),
+                 (base[0] + 30, base[1] - 25)]
+        if before is not None:                      # keep the corners off the lap line's side
+            extra = [(after[0] * 3 + ex[0] * 0.0 + (ex[0] - base[0]), after[1] * 3 + (ex[1] - base[1]))
+                     for ex in extra]
+        P = P + extra
+    cx = sum(p[0] for p in P) / len(P)
+    cy = sum(p[1] for p in P) / len(P)
+    ang = lambda p: math.atan2(p[1] - cy, p[0] - cx)     # noqa: E731
+    if before is not None:
+        # travel direction round the centroid implied by crossing before -> after
+        cross = (before[0] - cx) * (after[1] - before[1]) - (before[1] - cy) * (after[0] - before[0])
+        sign = 1.0 if cross > 0 else -1.0          # +1 = counter-clockwise
+        a0 = ang(after)
+        order = sorted(P, key=lambda p: ((ang(p) - a0) * sign) % (2 * math.pi))
+        loop = [before, after] + order
+    else:
+        loop = sorted(P, key=ang)
+    length = lambda pts_: sum(math.hypot(pts_[i][0] - pts_[i - 1][0], pts_[i][1] - pts_[i - 1][1])   # noqa: E731
+                              for i in range(len(pts_)))
+    if lap is not None:
+        min_lap = float(lap["min_lap_s"]) if _num(lap.get("min_lap_s")) else MIN_LAP_DEFAULT_S
+        need = (min_lap + 5.0) * mph * 0.44704
+        L0 = length(loop)
+        if L0 < need:                               # detour outwards between the last zone and the line
+            p, q = loop[-1], loop[0]
+            mx, my = (p[0] + q[0]) / 2, (p[1] + q[1]) / 2
+            dx, dy = mx - cx, my - cy
+            d = math.hypot(dx, dy) or 1.0
+            push = (need - L0) / 2.0 + 5.0
+            loop.append((mx + dx / d * push, my + dy / d * push))
+    pts = [list(en_to_ll(e, n, origin)) for e, n in loop]
+    return {"origin": origin, "points": pts, "length_m": round(length(loop), 1), "source": "zones"}
+
+
+class _InvZone:
+    """Stand-in zone for a command fired from the carried inventory (.id and .name are read)."""
+    def __init__(self, zid):
+        self.id = zid
+        self.name = zid
+
+
+class GameEngine:
+    """Zone triggers + lap timing for this kart. Callers hold the app lock.
+
+    on_self(msg, now) / tick(now) / set_zones(doc, now) return a list of records;
+    every record is logged by the caller, and records with "ev": "cmd" carry the
+    "line" to send to the Heltec (`boost SECS SCALE`, or `slow MPH SECS` for mud on firmware
+    kart-0.2.4+; nothing else). Rules: ZONES.md. Extra kart-side rules:
+    no zone commands while the kart reports STOPPED (a boost entered while stopped
+    is used up, not saved for later); mud wins over boost when they overlap or while a mud
+    is still running; a boost during a running boost stacks (remaining + new, <= 30 s)."""
+
+    def __init__(self, local_enabled=True, gps_correction=False, rng=None, mud_secs=MUD_SLOW_SECS, item_reveal_s=0.0,
+                 item_hold=False):
+        self.local_enabled = bool(local_enabled)
+        self.item_reveal_s = max(0.0, float(item_reveal_s))   # hold an item-box prize this long for the dash prize-wheel; 0 = fire at once
+        self.item_hold = bool(item_hold)     # freeplay prizes go to a carried inventory (used later) instead of firing
+        self.inventory = []                  # [{"item","secs","scale","zone","mono","charges"?}] oldest first, max ITEM_HOLD_CAP
+        self.star_until = 0.0                # star active: SPORT boost sent + mud/hotlap-penalty immune until then
+        self.magnet_until = 0.0              # magnet active: item boxes picked up at double radius
+        self.hotlap = None                   # {"target": best_s}: beat it on the next lap -> rocket, miss -> mud
+        self.shields = 0                     # auto-block charges NOT in the inventory (prize landed while full)
+        self.mud_secs = int(max(1, min(30, int(mud_secs))))
+        self.fw = None              # Heltec firmware string from its status reply (None = unknown)
+        self.rng = rng or random.Random()
+        self.race = {"hold": False, "go_at": None, "secs": None, "rx": None, "go_mono": None,
+                     "go_confirmed": False, "how": None, "go_utc": None,
+                     "finished": False, "position": None, "finish_mono": None, "finish_lap": None,
+                     # running position from the pit beacon (race firmware 2026-11-06 20:30+)
+                     "pos": 0, "state": 0, "pos_changed_wall": None, "pos_changed_mono": None,
+                     "pos_prev": 0, "last_pos": 0, "position_source": None}
+        self.filter = GpsFilter()
+        self.corr = BaseCorrection(gps_correction)
+        self.gps_line_mono = None   # last {"t":"gps"} line
+        self.gps_lines = 0
+        self.pos = None             # last filtered sample (for the HUD)
+        self.gps_hz = None
+        self.track = None
+        self.doc = None
+        self.version = None
+        self.enabled = False
+        self.areas, self.lapline, self.ignored = [], None, []
+        self.inside = {}            # zone id -> entered mono
+        self.zst = {}               # zone id -> {"fired": bool, "cool_until": mono}
+        self.pending_items = []     # item-box prizes rolled but not yet sent: wait ITEM_REVEAL_S for the prize-wheel reveal
+        self.next_mud = None
+        self.prev_fix = None        # (lat, lon, mono)
+        self.last_fix_mono = None
+        self.stopped = None
+        self.scale = None
+        self.mode_req = None
+        self.override = None        # {"kind", "scale", "until", "zone", "via"} as last sent (until = stacked end)
+        self.events = deque(maxlen=12)
+        self.seq = 0
+        self.cmds_sent = 0
+        self.last_result = None     # {"result", "result_name", "mono"} of the last boost/slow echo
+        self.source = None          # the zones document's "source" (e.g. "freeplay"), tagged on its records
+        # multiplayer freeplay: a callable -> item table or None (FreeplayGame.item_table). Used only for boxes
+        # of a freeplay document; the pit's own item boxes always roll the single-player ITEM_TABLE.
+        self.freeplay_items = None
+        self._reset_lap()
+
+    # -- state ------------------------------------------------------------------
+    def _reset_lap(self):
+        self.lap = {"count": 0, "running": False, "start": None, "last_cross": None,
+                    "last_s": None, "best_s": None, "times": []}
+        self.lap_armed = True       # False after a crossing until the kart is LAP_REARM_M from the line
+
+    def active(self):
+        return self.local_enabled and self.enabled and (bool(self.areas) or self.lapline is not None)
+
+    def off_reason(self):
+        if not self.local_enabled:
+            return "off in this kart's config"
+        if self.doc is None:
+            return "no zones from the pit"
+        if not self.enabled:
+            return "off at the pit"
+        if not self.areas and self.lapline is None:
+            return "no zones"
+        return None
+
+    def _rec(self, recs, ev, now, **kw):
+        self.seq += 1
+        r = {"ev": ev, "seq": self.seq, **kw}
+        if self.source and ("zone" in kw or "version" in kw):
+            r["source"] = self.source
+        recs.append(r)
+        if ev != "cmd":
+            self.events.append(dict(r, mono=now))
+        return r
+
+    def set_fw(self, fw):
+        """The Heltec's firmware string (status reply), or None when unknown (link change, reboot)."""
+        self.fw = fw if isinstance(fw, str) and fw else None
+
+    def timed_slow(self):
+        """Mud as a real timed SLOW (`slow MPH SECS`) only on firmware kart-0.2.4+: older firmware reads
+        `slow 5 4` as a PERMANENT slow 5 that only START releases, so it keeps `boost SECS 0.5`."""
+        return fw_at_least(self.fw, FW_TIMED_SLOW)
+
+    def _drop_override(self, slow_too):
+        if self.override is not None and (slow_too or self.override.get("via") != "slow"):
+            self.override = None
+
+    def _ov_running(self, now, kind=None):
+        ov = self.override
+        return ov is not None and now < ov["until"] and (kind is None or ov["kind"] == kind)
+
+    def shield_hit(self, recs, now, **kw):
+        """Spend one carried SHIELD on a hit: the pit game's mud (_cmd) or, from kart-0.3.6, a multiplayer
+        shell / lightning the Heltec already blocked (hit line why "shield"; kw = hit_from, item). False =
+        none carried (for a Heltec hit that means its inv copy was stale: the caller resyncs the line)."""
+        sh = next((n for n, i in enumerate(self.inventory) if i["item"] == "shield"), None)
+        if sh is None and self.shields <= 0:
+            return False
+        if sh is not None:
+            self.inventory.pop(sh)
+        else:
+            self.shields -= 1
+        self._rec(recs, "shield_broke", now, **kw)
+        return True
+
+    def _cmd(self, recs, now, zone, kind, secs, scale):
+        if kind == "mud" and now < self.star_until:
+            self._rec(recs, "star_blocked", now, zone=zone.id)       # invincible: the mud fizzles
+            return
+        if kind == "mud" and self.shield_hit(recs, now, zone=zone.id):   # one mud eaten, shield gone
+            return
+        if kind == "mud":
+            secs = self.mud_secs
+            if self.timed_slow():
+                line, via = slow_line(MUD_SLOW_MPH, secs), "slow"
+            else:
+                line, via = boost_line(secs, scale), "boost"
+            self.cmds_sent += 1
+            self.override = {"kind": "mud", "scale": clamp_scale(scale), "until": now + int(secs), "zone": zone.id,
+                             "via": via}
+            self._rec(recs, "cmd", now, line=line, zone=zone.id, effect=kind)
+            return
+        secs, scale = int(max(1, min(BOOST_STACK_MAX_S, round(float(secs))))), clamp_scale(scale)
+        stacked = None
+        if self._ov_running(now, "boost"):
+            # boosts stack: the remaining time of the running boost + this one, <= 30 s (firmware SECS limit,
+            # it simply re-arms), at the stronger of the two scales (never above 1.0)
+            left = self.override["until"] - now
+            total = int(max(1, min(BOOST_STACK_MAX_S, round(left + secs))))
+            stacked = {"left_s": round(left, 1), "added_s": secs, "total_s": total}
+            secs, scale = total, clamp_scale(max(scale, self.override["scale"]))
+        line = boost_line(secs, scale)
+        self.cmds_sent += 1
+        self.override = {"kind": kind, "scale": scale, "until": now + secs, "zone": zone.id, "via": "boost"}
+        self._rec(recs, "cmd", now, line=line, zone=zone.id, effect=kind)
+        if stacked:
+            self._rec(recs, "boost_stacked", now, zone=zone.id, scale=scale, **stacked)
+        self._rec(recs, "boost", now, zone=zone.id, name=zone.name, scale=scale, secs=secs)
+
+    # -- zones file ---------------------------------------------------------------
+    def set_zones(self, doc, now):
+        """New zones document (or None = no file). Same document again = no-op."""
+        recs = []
+        if doc == self.doc:
+            return recs
+        old_lap = self.lapline.raw if self.lapline else None
+        was_active = self.active()
+        self.doc = doc
+        self.version = doc.get("version") if isinstance(doc, dict) else None
+        src = doc.get("source") if isinstance(doc, dict) else None
+        self.source = src if isinstance(src, str) and src else None
+        self.enabled, self.areas, self.lapline, self.ignored = parse_zones(doc)
+        if not self.enabled:
+            self.pending_items = []     # game turned off mid-reveal: the rolled prize dies with it
+            self.inventory = []         # carried items die with the game too
+            self.star_until = self.magnet_until = 0.0
+            self.hotlap = None
+            self.shields = 0
+                                        # (zone updates keep them: freeplay respawns boxes on every collection)
+        self.track = parse_track(doc)
+        if isinstance(doc, dict) and doc.get("track") is not None and self.track is None:
+            self.ignored.append({"id": "track", "reason": "invalid track (2-200 [lat, lon] points)"})
+        ids = {z.id: z for z in self.areas}
+        for zid in list(self.inside):
+            if zid not in ids or not self.active():
+                del self.inside[zid]
+                self._rec(recs, "zone_exit", now, zone=zid, why="zones changed")
+        self.zst = {k: v for k, v in self.zst.items() if k in ids}
+        if not self.active() or (self.lapline.raw if self.lapline else None) != old_lap:
+            if self.lap["running"] or self.lap["count"]:
+                self._rec(recs, "lap_reset", now, why="game off" if not self.active() else "lap line changed")
+            self._reset_lap()
+        if not self.active():
+            self.prev_fix = None
+            self.next_mud = None
+        if self.active() != was_active:
+            self._rec(recs, "game_on" if self.active() else "game_off", now, version=self.version,
+                      why=self.off_reason())
+        else:
+            self._rec(recs, "zones_updated", now, version=self.version)
+        return recs
+
+    # -- telemetry ----------------------------------------------------------------
+    def on_self(self, msg, now, wall=None):
+        pos_recs = self.race_position(msg.get("race_pos"), msg.get("race_state"), now, wall)
+        return pos_recs + self._on_self(msg, now)
+
+    def _on_self(self, msg, now):
+        self.stopped = msg.get("stopped")
+        if self.stopped is True:
+            self._drop_override(slow_too=False)     # STOP cancels the scale override: nothing to stack on later
+        self.mode_req = msg.get("mode_req")
+        self.scale = msg.get("scale") if msg.get("vesc_link") is True else None
+        if _num(msg.get("gps_hz")):
+            self.gps_hz = msg.get("gps_hz")
+        self.corr.feed(msg, now)
+        recs = []
+        if self.gps_line_mono is not None and now - self.gps_line_mono <= GPS_LINE_FRESH_S:
+            return self._timeouts(now, recs) if self.active() else recs     # 5 Hz gps lines carry the position
+        lat, lon = msg.get("lat"), msg.get("lon")
+        if msg.get("fix") is not True or not _num(lat) or not _num(lon):
+            return self._timeouts(now, recs) if self.active() else recs
+        return self._sample(float(lat), float(lon), msg.get("gps_kph"), msg.get("heading"),
+                            msg.get("hdop"), msg.get("sats"), now, "self", recs)
+
+    def on_gps(self, msg, now):
+        """{"t":"gps"} line (one per fix, up to 5 Hz): the preferred position source."""
+        recs = []
+        lat, lon = msg.get("lat"), msg.get("lon")
+        if not _num(lat) or not _num(lon):
+            return recs
+        self.gps_line_mono = now
+        self.gps_lines += 1
+        return self._sample(float(lat), float(lon), msg.get("kph"), msg.get("heading"),
+                            msg.get("hdop"), msg.get("sats"), now, "gps", recs)
+
+    def set_pit(self, pit):
+        self.corr.set_pit(pit)
+
+    def _sample(self, lat, lon, kph, heading, hdop, sats, now, source, recs):
+        lat, lon, corrected = self.corr.apply(lat, lon, now)
+        self.pos = self.filter.feed(lat, lon, kph, heading, hdop, sats, now, source)
+        self.pos["corrected"] = corrected
+        if not self.active():
+            return recs
+        if not self.pos["usable"]:
+            return self._timeouts(now, recs)
+        if self.pos["reset"]:
+            self.prev_fix = None
+        self._evaluate(lat, lon, now, recs)
+        return recs
+
+    def tick(self, now):
+        recs = []
+        r = self.race
+        if r["hold"] and r["go_at"] is not None and now >= r["go_at"] + RACE_GO_GRACE_S:
+            self._go(r["go_at"], now, "clock", recs)
+        if not self.active():
+            return recs
+        self._timeouts(now, recs)
+        self._fire_pending(now, recs)
+        self._mud(now, recs, entered=False)
+        return recs
+
+    def _timeouts(self, now, recs):
+        if self.last_fix_mono is not None and now - self.last_fix_mono > NO_FIX_EXIT_S and (self.inside or self.prev_fix):
+            for zid in list(self.inside):
+                del self.inside[zid]
+                self._exit_state(zid, now)
+                self._rec(recs, "zone_exit", now, zone=zid, why="no GPS fix for 5 s")
+            self.prev_fix = None
+            self.next_mud = None
+        return recs
+
+    def _exit_state(self, zid, now):
+        st = self.zst.setdefault(zid, {"fired": False, "cool_until": None})
+        z = next((a for a in self.areas if a.id == zid), None)
+        if st["fired"] and z is not None and z.type in ("boost", "item"):
+            st["fired"] = False
+            st["cool_until"] = now + z.cooldown_s
+
+    def _evaluate(self, lat, lon, now, recs):
+        entered = []
+        prev = self.prev_fix if self.prev_fix is not None and now - self.prev_fix[2] <= SWEEP_MAX_GAP_S else None
+        for z in self.areas:
+            d = z.outside_m(lat, lon)
+            # magnet: item boxes reach twice as far (outside_m is dist - r, so within another r)
+            lim = getattr(z, "r", 0) if z.type == "item" and now < self.magnet_until else 0
+            if z.id not in self.inside:
+                # inside now, or the path since the previous fix went through it (fast kart, 2 Hz fallback,
+                # small pad): an entry either way
+                if d <= lim or (prev is not None and z.swept(prev[0], prev[1], lat, lon)):
+                    self.inside[z.id] = now
+                    entered.append(z)
+                    self._rec(recs, "zone_enter", now, zone=z.id, type=z.type, name=z.name,
+                              **({} if d <= 0 else {"swept": True}))
+            elif d > ZONE_EXIT_HYST_M:
+                del self.inside[z.id]
+                self._exit_state(z.id, now)
+                self._rec(recs, "zone_exit", now, zone=z.id, type=z.type, name=z.name)
+        in_mud = any(z.type == "mud" for z in self.areas if z.id in self.inside)
+        mud_running = self._ov_running(now, "mud")      # a mud item's slow still running: mud wins too
+        fire = []                   # (zone, kind, secs, scale): at most ONE goes to the Heltec per sample
+        for z in entered:
+            if z.type not in ("boost", "item"):
+                continue
+            st = self.zst.setdefault(z.id, {"fired": False, "cool_until": None})
+            if self.stopped is True:
+                self._rec(recs, "suppressed", now, zone=z.id, why="kart STOPPED")
+            elif self.race["hold"]:
+                self._rec(recs, "suppressed", now, zone=z.id, why="grid hold")
+            elif in_mud or mud_running:
+                self._rec(recs, "suppressed", now, zone=z.id, why="inside mud" if in_mud else "mud running")
+            elif st["cool_until"] is not None and now < st["cool_until"]:
+                self._rec(recs, "suppressed", now, zone=z.id, why=f"cooldown {st['cool_until'] - now:.0f} s")
+            elif z.type == "item":
+                st["fired"] = True
+                table = self.freeplay_items() if self.source == "freeplay" and self.freeplay_items else None
+                name, secs, scale = roll_item(self.rng, table)
+                self._rec(recs, "item", now, zone=z.id, name=z.name, item=name,
+                          **({"table": "multi", "held": name in MULTI_HELD_ITEMS} if table else {}))
+                if secs is not None:
+                    fire.append((z, "mud" if name == "mud" else "boost", secs, scale, True, name))   # True = from a box (prize-wheel)
+                elif self.item_hold and self.source == "freeplay" and name in HOLDABLE_ITEMS:
+                    fire.append((z, "carry", 0, 0.0, True, name))    # shield/magnet/hotlap: nothing to send, just carried
+            else:
+                st["fired"] = True
+                fire.append((z, "boost", z.secs, z.scale, False, None))
+        if fire:
+            # overlapping boost pad + item box entered on the same fix: both are used up (cooldowns, item
+            # roulette), but only the strongest effect is sent (highest scale, then longest), so two
+            # commands never race each other in the Heltec
+            best = max(fire, key=lambda f: (clamp_scale(f[3]), int(f[2])))
+            for f in fire:
+                if f is not best:
+                    self._rec(recs, "suppressed", now, zone=f[0].id, why=f"overlaps {best[0].id}")
+            z, kind, secs, scale, from_box, name = best
+            if from_box and self.item_reveal_s > 0:
+                self.pending_items.append({"due": now + self.item_reveal_s, "zone": z, "kind": kind, "secs": secs,
+                                           "scale": scale, "name": name})
+            else:
+                self._prize(recs, now, z, kind, secs, scale, name if from_box else None)
+        self._fire_pending(now, recs)
+        self._mud(now, recs, entered=any(z.type == "mud" for z in entered))
+        if self.lapline is not None:
+            if not self.lap_armed and self.lapline.line_dist_m(lat, lon) > LAP_REARM_M:
+                self.lap_armed = True
+            if self.prev_fix is not None and now - self.prev_fix[2] <= NO_FIX_EXIT_S:
+                t = self.lapline.crossing(self.prev_fix[0], self.prev_fix[1], lat, lon)
+                if t is not None and t > 0.0:       # a fix exactly ON the line counts once (t == 1), not twice
+                    self._cross(self.prev_fix[2] + t * (now - self.prev_fix[2]), now, recs)
+        self.prev_fix = (lat, lon, now)
+        self.last_fix_mono = now
+
+    def _fire_pending(self, now, recs):
+        """Send item-box prizes whose prize-wheel reveal time has arrived (ITEM_REVEAL_S after the roll).
+        Re-checks the safety gates at fire time: a STOP or grid hold during the reveal suppresses it."""
+        if not self.pending_items:
+            return
+        due = [p for p in self.pending_items if now >= p["due"]]
+        if not due:
+            return
+        self.pending_items = [p for p in self.pending_items if now < p["due"]]
+        for p in due:
+            if not self.enabled:
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="game disabled")
+            elif self.stopped is True:
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="kart STOPPED")
+            elif self.race["hold"]:
+                self._rec(recs, "suppressed", now, zone=p["zone"].id, why="grid hold")
+            else:
+                self._prize(recs, now, p["zone"], p["kind"], p["secs"], p["scale"], p.get("name"))
+
+    def _prize(self, recs, now, zone, kind, secs, scale, name):
+        """A revealed item-box prize. With item_hold on (freeplay), holdable prizes go to the carried
+        inventory for the driver to use later (Core2 / dash); a full inventory makes the prize take
+        effect at once. Mud and boost PADs always apply immediately."""
+        if self.item_hold and name in HOLDABLE_ITEMS and self.source == "freeplay":
+            if len(self.inventory) < ITEM_HOLD_CAP:
+                it = {"item": name, "secs": int(secs) if secs else 0, "scale": clamp_scale(scale) if scale else 0.0,
+                      "zone": zone.id, "mono": now}
+                if name == "boost3":
+                    it["charges"] = BOOST3_CHARGES
+                self.inventory.append(it)
+                self._rec(recs, "item_held", now, zone=zone.id, item=name, slots=len(self.inventory))
+                return
+            return self._apply_item(recs, now, zone, name, secs, scale)   # full: at once instead
+        if kind == "carry":
+            return self._apply_item(recs, now, zone, name, secs, scale)   # item table rolled it outside hold mode
+        self._cmd(recs, now, zone, kind, secs, scale)
+
+    def _apply_item(self, recs, now, zone, name, secs, scale):
+        """A prize taking effect immediately (inventory full, or a non-firing item with item_hold off)."""
+        if name in ("boost", "rocket", "boost3"):
+            self._cmd(recs, now, zone, "boost", secs or 7, scale or 0.75)
+        elif name == "star":
+            self._star_on(recs, now, zone)
+        elif name == "magnet":
+            self.magnet_until = now + MAGNET_S
+            self._rec(recs, "magnet_on", now, zone=zone.id, secs=MAGNET_S)
+        elif name == "shield":
+            self.shields += 1
+            self._rec(recs, "shield_on", now, zone=zone.id)
+        elif name == "hotlap":
+            self._hotlap_arm(recs, now, zone)
+
+    def _star_on(self, recs, now, zone):
+        self.star_until = now + STAR_S
+        self._rec(recs, "star_on", now, zone=zone.id, secs=STAR_S)
+        self._cmd(recs, now, zone, "boost", STAR_S, 1.0)
+
+    def _hotlap_arm(self, recs, now, zone):
+        best = self.lap["best_s"]
+        if best is None:
+            self._rec(recs, "suppressed", now, zone=zone.id, why="hotlap needs a best lap")
+            return
+        self.hotlap = {"target": best}
+        self._rec(recs, "hotlap_armed", now, zone=zone.id, target_s=best)
+
+    def use_item(self, now, slot):
+        """Fire carried item `slot` (0-based, oldest first). Returns recs; CommandError when refused."""
+        if not isinstance(slot, int) or not 0 <= slot < len(self.inventory):
+            raise CommandError("empty slot")
+        if self.stopped is True:
+            raise CommandError("kart STOPPED")
+        if self.race["hold"]:
+            raise CommandError("grid hold")
+        if not self.enabled:
+            raise CommandError("game off")
+        it = self.inventory[slot]
+        name = it["item"]
+        if name == "shield":
+            raise CommandError("shield blocks by itself")
+        if name == "hotlap" and self.lap["best_s"] is None:
+            raise CommandError("no best lap yet")
+        recs = []
+        if name == "boost3" and it.get("charges", 1) > 1:
+            it["charges"] -= 1
+            self._rec(recs, "item_used", now, item=name, slots=len(self.inventory), charges_left=it["charges"])
+        else:
+            self.inventory.pop(slot)
+            self._rec(recs, "item_used", now, item=name, slots=len(self.inventory))
+        z = _InvZone(f"inv-{name}")
+        if name in ("boost", "rocket", "boost3"):
+            self._cmd(recs, now, z, "boost", it["secs"], self._felt_boost(it["scale"]))
+        elif name == "star":
+            self._star_on(recs, now, z)
+        elif name == "magnet":
+            self.magnet_until = now + MAGNET_S
+            self._rec(recs, "magnet_on", now, zone=z.id, secs=MAGNET_S)
+        elif name == "hotlap":
+            self._hotlap_arm(recs, now, z)
+        return recs
+
+    def _felt_boost(self, scale):
+        """A carried boost is always felt: at least one mode step above the kart's requested mode (ECO 0.50
+        -> 0.75, NORMAL 0.75 -> 1.0; the firmware lifts the speed cap with the scale). Found 2026-11-13: a
+        plain boost (0.75) did nothing in NORMAL. SPORT has nothing above it. Zone boosts keep their own number."""
+        base = MODE_SCALES.get(self.mode_req)
+        return scale if base is None else clamp_scale(max(scale, base + 0.25))
+
+    def restore_inventory(self, items, shields, now):
+        """Carried items a previous run saved (export_state), after a restart or power cycle. Only into
+        an empty inventory of a running freeplay game; the caller checks saved_wall freshness."""
+        if self.inventory or self.pending_items or not self.active() or self.source != "freeplay":
+            return []
+        recs = []
+        for it in items if isinstance(items, (list, tuple)) else []:
+            if len(self.inventory) >= ITEM_HOLD_CAP or not isinstance(it, dict):
+                break
+            name = it.get("item")
+            if name not in HOLDABLE_ITEMS:
+                continue
+            d = {"item": name, "secs": int(it["secs"]) if _num(it.get("secs")) else 0,
+                 "scale": clamp_scale(it["scale"]) if _num(it.get("scale")) and it["scale"] else 0.0,
+                 "zone": "restored", "mono": now}
+            if name == "boost3":
+                ch = it.get("charges")
+                d["charges"] = int(max(1, min(BOOST3_CHARGES, ch))) if _num(ch) else BOOST3_CHARGES
+            self.inventory.append(d)
+        if _num(shields) and shields > 0:
+            self.shields = int(min(ITEM_HOLD_CAP, shields))
+        if self.inventory or self.shields:
+            self._rec(recs, "inventory_restored", now, items=[i["item"] for i in self.inventory],
+                      shields=self.shields)
+        return recs
+
+    def _mud(self, now, recs, entered):
+        muds = [z for z in self.areas if z.type == "mud" and z.id in self.inside]
+        if not muds:
+            self.next_mud = None
+            return
+        if not entered and self.next_mud is not None and now < self.next_mud:
+            return
+        if self.stopped is True or self.race["hold"]:
+            return          # stays due: resumes on the first tick after START / GO if still inside
+        z = min(muds, key=lambda m: m.scale)
+        self._cmd(recs, now, z, "mud", self.mud_secs, z.scale)
+        self.next_mud = now + MUD_REPEAT_S
+        if entered:
+            self._rec(recs, "mud", now, zone=z.id, name=z.name, scale=z.scale)
+
+    def _cross(self, t_cross, now, recs):
+        L = self.lapline
+        lap = self.lap
+        go = self.race["go_mono"]
+        if self.race["finished"]:
+            self._rec(recs, "lap_ignored", now, zone=L.id, why="finished")    # laps stop counting after the flag
+            return
+        if self.race["hold"] or (go is not None and t_cross < go):
+            self._rec(recs, "lap_ignored", now, zone=L.id, why="before GO")
+            return
+        if not self.lap_armed:
+            # still near the line since the last crossing: GPS jitter (or a kart sitting on the line).
+            # Before the first full lap the latest crossing is the real start (the kart leaves forward).
+            if lap["count"] == 0 and lap["running"]:
+                lap.update(start=t_cross, last_cross=t_cross)
+                self._rec(recs, "lap_start", now, zone=L.id, restart=True)
+            else:
+                self._rec(recs, "lap_ignored", now, zone=L.id, why="near the line (not re-armed)")
+            return
+        self.lap_armed = False
+        if lap["last_cross"] is None:
+            lap.update(running=True, start=t_cross, last_cross=t_cross)
+            self._rec(recs, "lap_start", now, zone=L.id)
+            return
+        since = t_cross - lap["last_cross"]
+        if since < L.min_lap_s:
+            self._rec(recs, "lap_ignored", now, zone=L.id, since_s=round(since, 2), min_lap_s=L.min_lap_s)
+            return
+        lap_s = round(t_cross - lap["start"], 2)
+        best = lap["best_s"] is None or lap_s < lap["best_s"]
+        lap["count"] += 1
+        lap["last_s"] = lap_s
+        if best:
+            lap["best_s"] = lap_s
+        lap["times"] = (lap["times"] + [lap_s])[-10:]
+        lap.update(start=t_cross, last_cross=t_cross, running=True)
+        self._rec(recs, "lap", now, zone=L.id, lap=lap["count"], lap_s=lap_s, best=best)
+        if self.hotlap is not None:
+            tgt = self.hotlap["target"]
+            self.hotlap = None
+            if lap_s < tgt:
+                self._rec(recs, "hotlap_won", now, lap_s=lap_s, target_s=tgt)
+                self._prize(recs, now, _InvZone("hotlap-prize"), "boost", 10, 1.0, "rocket")   # a rocket, carried if room
+            else:
+                self._rec(recs, "hotlap_lost", now, lap_s=lap_s, target_s=tgt)
+                self._cmd(recs, now, _InvZone("hotlap-mud"), "mud", self.mud_secs, 0.5)        # shield/star can still save you
+
+    # -- race start (ZONES.md "Race start") -------------------------------------------
+    def race_position(self, pos, state, now, wall=None, recs=None):
+        """Running position P (0 = none, 1-8) and race state from the self line / position event.
+        A change records a "race_position" event: dir "up" (better), "down" (worse), "new", "gone"."""
+        recs = [] if recs is None else recs
+        r = self.race
+        prev_state = r["state"]
+        if _num(state) and 0 <= int(state) <= 3:
+            r["state"] = int(state)
+            if r["state"] != prev_state:
+                self._rec(recs, "race_state", now, state=r["state"], prev=prev_state)
+        p = int(pos) if _num(pos) and 0 <= int(pos) <= 8 else None
+        if p is not None and p != r["pos"]:
+            prev = r["pos"]
+            d = "new" if prev == 0 else "gone" if p == 0 else "up" if p < prev else "down"
+            r.update(pos=p, pos_prev=prev, pos_changed_mono=now, pos_changed_wall=wall)
+            if p:
+                r["last_pos"] = p
+            self._rec(recs, "race_position", now, pos=p, prev=prev, dir=d, state=r["state"])
+        # The pit beacon's race state is a second route to the flag (STOP RACE sends state 3 with the
+        # final positions; the per-kart `race 100+P` finish command may arrive later or be lost):
+        # state 3 = finished at once with the beacon's position; a new countdown (1) clears it.
+        if r["state"] == 3 and prev_state != 3:
+            if not r["finished"]:
+                self._finish(r["pos"] or r["last_pos"], "beacon_state", now, recs)
+            elif not r["position"] and (r["pos"] or r["last_pos"]):
+                r.update(position=r["pos"] or r["last_pos"], position_source="beacon_state")
+        elif r["state"] == 1 and prev_state != 1 and r["finished"]:
+            r.update(finished=False, position=None, finish_mono=None, finish_lap=None, position_source=None)
+        # Audit 2026-11-13: after STOP RACE the beacon goes idle (0) and stays there; NEW RACE / RESET LAPS at the pit
+        # never reach the kart, so "finished" froze the lap count until the next countdown. Idle long enough = over.
+        if r["finished"] and r["state"] == 0:
+            if r.get("idle_since") is None:
+                r["idle_since"] = now
+            elif now - r["idle_since"] >= RACE_IDLE_CLEAR_S:
+                r.update(finished=False, position=None, finish_mono=None, finish_lap=None, position_source=None,
+                         idle_since=None)
+                self._reset_lap()
+                self._rec(recs, "lap_reset", now, why="race over (pit idle)")
+        else:
+            r["idle_since"] = None
+        return recs
+
+    def race_active(self, now):
+        """A pit race owns the kart: grid hold, countdown/running beacon state, or the flag less than
+        RACE_PAUSE_AFTER_FINISH_S ago. Freeplay pauses for it (audit 2026-11-13: it only paused for pit ZONES)."""
+        r = self.race
+        if r["hold"] or r["state"] in (1, 2):
+            return True
+        if r["go_at"] is not None and now < r["go_at"]:
+            return True
+        return bool(r["finished"] and r["finish_mono"] is not None and now - r["finish_mono"] < RACE_PAUSE_AFTER_FINISH_S)
+
+    def _finish(self, pos, src, now, recs):
+        r, lap = self.race, self.lap
+        r.update(hold=False, finished=True, position=pos, finish_mono=now, position_source=src if pos else None,
+                 finish_lap={"laps": lap["count"], "best_s": lap["best_s"], "last_s": lap["last_s"]})
+        lap.update(running=False)
+        self._rec(recs, "race_finish", now, position=pos, laps=lap["count"], best_s=lap["best_s"], source=src)
+
+    def on_race(self, msg, now, wall=None):
+        """{"t":"race","event":"countdown","go_in_ms":N,"secs":S,"go_utc":U} / {"event":"go"}.
+        GO = arrival + go_in_ms (the overlay and the lap reset do not wait for the go line,
+        which only confirms it). Laps count from the first crossing after GO."""
+        recs = []
+        r = self.race
+        ev = msg.get("event")
+        if ev == "countdown":
+            go_in = msg.get("go_in_ms")
+            go_in = max(0.0, float(go_in) / 1000.0) if _num(go_in) else float(msg.get("secs") or 5)
+            r.update(hold=True, go_at=now + go_in, secs=msg.get("secs"), rx=now, go_confirmed=False, how=None,
+                     go_utc=msg.get("go_utc"), finished=False, position=None, finish_mono=None, finish_lap=None,
+                     position_source=None)
+            self._drop_override(slow_too=False)     # the firmware drops a BOOST (scale) override at the grid hold
+            self._rec(recs, "race_countdown", now, go_in_s=round(go_in, 2), secs=msg.get("secs"))
+            if go_in <= 0:
+                self._go(now, now, "clock", recs)
+        elif ev == "go":
+            if r["hold"]:
+                self._go(now, now, "line", recs)
+            elif r["go_mono"] is None or now - r["go_mono"] > GO_LINE_STANDALONE_S:
+                # no countdown seen (display restarted during the hold, or the line was lost): this IS the
+                # start; a finish from the previous race is cleared like a countdown would
+                r.update(finished=False, position=None, finish_mono=None, finish_lap=None, position_source=None)
+                self._go(now, now, "line", recs)
+            r["go_confirmed"] = True
+            self._rec(recs, "race_go_line", now)
+        elif ev == "position":
+            self.race_position(msg.get("position"), msg.get("state"), now, wall, recs)
+        elif ev == "finish":
+            # the pit's race finish (arg 0 / 100 + position): the firmware releases any hold; the HUD
+            # shows the FINISH takeover and the laps freeze until the next countdown
+            pos = msg.get("position")
+            pos = int(pos) if _num(pos) and 0 < int(pos) <= 8 else 0
+            if r["finished"] and r["position_source"] == "beacon_state":
+                # the beacon's state 3 got here first: the takeover is already showing; only refine
+                if pos and pos != r["position"]:
+                    r.update(position=pos, position_source="finish")
+                self._rec(recs, "race_finish_cmd", now, position=pos)
+                return recs
+            src = "finish" if pos else None
+            if not pos and r["last_pos"]:                # firmware sent no position: last beacon position
+                pos, src = r["last_pos"], "beacon"
+            self._finish(pos, src, now, recs)
+            r["position_source"] = src
+        return recs
+
+    def _go(self, t_go, now, how, recs):
+        r = self.race
+        r.update(hold=False, go_mono=t_go, how=how)
+        if self.lap["running"] or self.lap["count"]:
+            self._rec(recs, "lap_reset", now, why="race GO")
+        self._reset_lap()
+        self._rec(recs, "race_go", now, how=how)
+
+    # -- survive a server restart (same boot) / a demo ------------------------------------
+    def export_state(self, now):
+        """Lap + race timing as plain JSON. Monotonic times are kept as they are: CLOCK_MONOTONIC is
+        system-wide, so they stay valid for another process in the same boot (checked by boot_id).
+        Not exported (rebuilt from live data): zone inside/cooldowns, overrides, positions, SLOW."""
+        r = self.race
+        return {"v": 1, "boot_id": boot_id(), "saved_mono": now, "saved_wall": time.time(),
+                "lapline": self.lapline.raw if self.lapline else None,
+                "inventory": [{"item": i["item"], "secs": i["secs"], "scale": i["scale"],
+                               **({"charges": i["charges"]} if "charges" in i else {})}
+                              for i in self.inventory],
+                "shields": self.shields,
+                "lap": dict(self.lap, times=list(self.lap["times"])),
+                "race": {k: r[k] for k in ("hold", "go_at", "secs", "go_mono", "go_confirmed", "how", "finished",
+                                           "position", "finish_mono", "finish_lap", "position_source", "last_pos")}}
+
+    def import_state(self, doc, now):
+        """Restore export_state() after the zones are loaded. Only within the same boot, within
+        GAME_STATE_MAX_AGE_S, and with the very same lap line; otherwise timing starts fresh."""
+        recs = []
+        try:
+            ok = (isinstance(doc, dict) and doc.get("v") == 1 and doc.get("boot_id") == boot_id()
+                  and _num(doc.get("saved_mono")) and 0 <= now - doc["saved_mono"] <= GAME_STATE_MAX_AGE_S
+                  and self.lapline is not None and doc.get("lapline") == self.lapline.raw and self.active())
+            if not ok:
+                return recs
+            lap, race = doc["lap"], doc["race"]
+            if race.get("hold") and not (_num(race.get("go_at")) and race["go_at"] > now):
+                race["hold"] = False             # the countdown ended while we were down: GO happened
+                race["go_mono"] = race.get("go_at")
+            self.lap = {k: lap.get(k) for k in ("count", "running", "start", "last_cross", "last_s", "best_s")}
+            self.lap["count"] = int(self.lap["count"] or 0)
+            self.lap["times"] = list(lap.get("times") or [])[-10:]
+            self.lap_armed = False                # the kart may be sitting on the line right now
+            self.race.update({k: v for k, v in race.items() if k in self.race})
+            self.prev_fix = None
+            self._rec(recs, "zones_lap_restored", now, laps=self.lap["count"], best_s=self.lap["best_s"],
+                      running=self.lap["running"], finished=self.race["finished"],
+                      age_s=round(now - doc["saved_mono"], 1))
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return []
+        return recs
+
+    def grid_hold(self):
+        return bool(self.race["hold"])
+
+    def on_cmd(self, msg, now):
+        """A {"t":"cmd"} line: STOP/START end a grid hold (the firmware clears it);
+        remember the result of our last boost/slow (src 254, cmd 6 or 5)."""
+        if msg.get("cmd") == CMD_CODES["stop"] and msg.get("result") in (1, 2, 5):
+            self._drop_override(slow_too=False)     # firmware STOP cancels a scale override (a timed slow stays)
+        elif msg.get("cmd") == CMD_CODES["start"] and msg.get("result") in (1, 2, 3, 5):
+            self._drop_override(slow_too=True)      # firmware START cancels every override and every SLOW
+        if msg.get("cmd") in (CMD_CODES["stop"], CMD_CODES["start"]) and msg.get("result") in (1, 2, 5) \
+                and self.race["hold"]:
+            self.race.update(hold=False, how="stop" if msg.get("cmd") == CMD_CODES["stop"] else "start")
+            self._rec([], "race_released", now, by=CMD_NAMES.get(msg.get("cmd")))
+            if msg.get("cmd") == CMD_CODES["start"]:
+                self.race["go_mono"] = now
+                self._reset_lap()
+        if msg.get("src") != SRC_USB or msg.get("cmd") not in (CMD_CODES["boost"], CMD_CODES["slow"]):
+            return None
+        res = msg.get("result")
+        self.last_result = {"result": res, "result_name": CMD_RESULT_NAMES.get(res), "arg": msg.get("arg"), "mono": now}
+        return self.last_result
+
+    # -- display ------------------------------------------------------------------
+    def meter(self, now):
+        """Live current scale vs the requested mode's scale: boost above, mud below."""
+        ms = MODE_SCALES.get(self.mode_req)
+        sc = self.scale
+        ov = self.override if self.override and now < self.override["until"] else None
+        if self.stopped is True:
+            kind = "stopped"
+        elif self.race["hold"]:
+            kind = "grid"                  # held at zero power for the start: not MUD, not STOPPED
+        elif sc is None or ms is None:
+            kind = ov["kind"] if ov else "unknown"
+        elif ov and ov["kind"] == "mud":
+            kind = "mud"                   # timed SLOW (0.2.4+) caps speed, not the scale: the override says mud
+        elif sc > ms + SCALE_TOL or (ov and ov["kind"] == "boost" and sc >= ms - SCALE_TOL):
+            kind = "boost"
+        elif sc < ms - SCALE_TOL:
+            kind = "mud"
+        else:
+            kind = "normal"
+        return {"scale": sc, "mode_scale": round(ms, 3) if ms is not None else None, "kind": kind,
+                "override": {"kind": ov["kind"], "scale": ov["scale"], "left_s": round(ov["until"] - now, 1)} if ov else None}
+
+    def race_snapshot(self, now):
+        r = self.race
+        out = {"hold": r["hold"], "secs": r["secs"], "go_confirmed": r["go_confirmed"], "how": r["how"],
+               "go_in_s": round(r["go_at"] - now, 2) if r["hold"] and r["go_at"] is not None else None,
+               "go_age_s": round(now - r["go_mono"], 2) if r["go_mono"] is not None else None}
+        out["lights"] = race_lights(out["go_in_s"]) if r["hold"] else (5 if out["go_age_s"] is not None and out["go_age_s"] < 0 else 0)
+        out["finished"] = r["finished"]
+        out["position"] = r["position"]
+        out["finish_age_s"] = round(now - r["finish_mono"], 2) if r["finish_mono"] is not None else None
+        out["finish_lap"] = r["finish_lap"]
+        out["position_source"] = r["position_source"]
+        out["pos"] = r["pos"]
+        # state: the beacon's race state, except that a finish this kart already has (firmware finish
+        # command or beacon state 3) reads "finished" until the beacon says idle or a new countdown
+        st = 3 if r["finished"] and r["state"] in (2, 3) else r["state"]
+        out["state"] = st
+        out["state_name"] = RACE_STATES.get(st)
+        out["beacon_state"] = r["state"]
+        out["pos_changed_wall"] = r["pos_changed_wall"]
+        out["pos_prev"] = r["pos_prev"]
+        out["pos_changed_age_s"] = round(now - r["pos_changed_mono"], 2) if r["pos_changed_mono"] is not None else None
+        return out
+
+    def snapshot(self, now):
+        lap = self.lap
+        return {
+            "on": self.active(),
+            "off_reason": self.off_reason(),
+            "version": self.version,
+            "inside": sorted(self.inside),
+            "ignored": list(self.ignored),
+            "lap": {"count": lap["count"], "running": lap["running"],
+                    "current_s": round(now - lap["start"], 1) if lap["running"] and lap["start"] is not None else None,
+                    "last_s": lap["last_s"], "best_s": lap["best_s"], "times": list(lap["times"])},
+            "meter": self.meter(now),
+            "events": [{k: v for k, v in e.items() if k != "mono"} | {"age_s": _age(e["mono"], now)}
+                       for e in list(self.events)[-8:]],
+            "cmds_sent": self.cmds_sent,
+            "inventory": [{"item": i["item"], "secs": i["secs"],
+                           **({"charges": i["charges"]} if "charges" in i else {})} for i in self.inventory],
+            "effects": {"star_s": round(self.star_until - now, 1) if now < self.star_until else None,
+                        "magnet_s": round(self.magnet_until - now, 1) if now < self.magnet_until else None,
+                        "shields": self.shields,
+                        "hotlap_target_s": self.hotlap["target"] if self.hotlap else None},
+            "fw": self.fw,
+            "mud_cmd": "slow" if self.timed_slow() else "boost",
+            "lapline": self.lapline is not None,
+            "source": self.source,
+            "race": self.race_snapshot(now),
+            "track": self.track,
+            "pos": ({k: v for k, v in self.pos.items() if k != "mono"} | {"age_s": _age(self.pos["mono"], now)})
+                   if self.pos else None,
+            "gps_source": "gps" if self.gps_line_mono is not None and now - self.gps_line_mono <= GPS_LINE_FRESH_S
+                          else "self",
+            "gps_lines": self.gps_lines,
+            "gps_hz": self.gps_hz,
+            "correction": self.corr.snapshot(now),
+            "last_result": ({k: v for k, v in self.last_result.items() if k != "mono"}
+                            | {"age_s": _age(self.last_result["mono"], now)}) if self.last_result else None,
+        }
+
+
+# --- Freeplay: a kart-local item game that needs no pit (README "Freeplay") ---------------------
+# FreeplayGame produces a zones document in the shape mapsync delivers ({"version": "freeplay-N",
+# "enabled": true, "source": "freeplay", "zones": [item boxes], "track": {...}}); the server hands it
+# to the same GameEngine.set_zones, so collection, rolls, effects, cooldowns, the HUD roulette and
+# every safety rule (nothing while STOPPED or in grid hold, mud wins, scale <= 1.0) are the existing
+# code. Freeplay itself produces one command only: switching it on asks for ECO (`mode 0`, take_eco(),
+# sent by the server through its POST /cmd path), so the 15 mph ECO cap is the base and a BOOST (0.75 = NORMAL,
+# cap 25 mph) or ROCKET (1.0 = SPORT, uncapped), which lift the cap to the highest mode whose scale the boost
+# reaches (firmware 0.2.5; an in-between scale still lifts one mode), is felt. The course is one lap of this kart's own
+# filtered GPS positions (the loop-closing logic is a port of pit/server/pitcore.TrackRecorder).
+FREEPLAY_BOXES = 5           # config freeplay_boxes, 1-8
+FREEPLAY_BOXES_MAX = 8
+FP_BOX_R_M = 4.0             # ZONES.md item default
+FP_BOX_COOLDOWN_S = 15.0
+FP_BOX_SPACING_M = 15.0      # boxes at least this far apart ALONG the loop
+FP_KART_CLEAR_M = 10.0       # a box is never placed within this of the kart's current position
+FP_RESPAWN_S = 3.0           # a collected box comes back this long after, elsewhere on the loop
+FP_RESPAWN_AWAY_M = 20.0     # ... at least this far (straight line) from where it was collected
+FP_PLACE_TRIES = 300
+FP_FILL_RETRY_S = 2.0        # a box that did not fit (short loop) is retried this often
+FP_TRACK_WIDTH_M = 6.0
+FP_LAP_HALF_M = 8.0          # synthesized start/finish line: half-length each side of the loop (forgiving)
+FP_LAP_MIN_S = 15            # a crossing within this of the last is not a lap (pit demo uses 20)
+FP_REC_MIN_SPACING_M = 1.5   # pitcore REC_* values
+FP_REC_JUMP_SLACK_M = 15.0
+FP_REC_START_RADIUS_M = 12.0
+FP_REC_MIN_LAP_M = 60.0
+FP_REC_MAX_POINTS = 6000     # a "lap" this long never closed: start the recording again
+FP_SIMPLIFY_TOL_M = 1.0
+FP_FIX_FRESH_S = 3.0         # recording needs a usable fix at least this recent, else "no_gps"
+FP_KART_FRESH_S = 10.0       # the kart position used for the 10 m placement rule
+FP_ADOPT_NEAR_M = 30.0       # the pit's closed track is adopted as the course only if the kart is this close
+FP_PHASES = ("recording", "ready", "paused_pit", "off", "no_gps")
+# ROAM mode (owner 2026-11-13: "drive around not on a track, random boxes on the map, shell anyone"): no course,
+# boxes land in a ring around the kart and follow it; shells reach any direction.
+FP_MODES = ("track", "roam")
+FP_ROAM_MIN_M = 15.0         # a roam box lands at least this far from the kart ...
+FP_ROAM_MAX_M = 60.0         # ... and at most this far
+FP_ROAM_SPACING_M = 15.0     # roam boxes at least this far apart (straight line)
+FP_ROAM_FAR_M = 150.0        # a roam box left this far behind is moved back near the kart (one per tick)
+# ROAM is forgiving (owner 2026-11-13: "if karts lose gps etc, staying in that mode and rejoining the game"):
+MP_ROAM_RANGE_M = 40.0       # a shell reaches a peer this close ...
+MP_ROAM_FIX_FRESH_S = 60.0   # ... judged on fixes (mine and theirs) up to this old, so a GPS dropout does not blind it
+MP_ROAM_RESEND_S = 15.0      # a wish that is not in force is re-sent this often, forever (never dropped)
+# Multiplayer freeplay (docs/freeplay-multiplayer.md; Heltec firmware kart-0.2.5+). The firmware owns the session,
+# the attack repeats/acks and the hit effect; the kart Pi keeps the WISH (host / joined host id, re-sent after a
+# link up or Heltec reboot), the held item, the item roll and the target choice.
+FW_MULTIPLAYER = (0, 2, 5)   # first firmware with `session` / `attack` and the game / hit / attack lines
+MP_RANGE_M = 25.0            # a shell reaches a peer this close (its dead-reckoned position) ...
+MP_AHEAD_DEG = 75.0          # ... and within this of my heading (owner 2026-11-13: shelling someone behind you is dumb);
+#                              no heading yet (never moved) = no direction gate
+MP_FIX_FRESH_S = 10.0        # ... whose fix is younger than this
+MP_DR_MAX_S = 3.0            # a peer's last fix is moved along its heading at its gps_kph for at most this long
+MP_HEARD_S = 10.0            # no game line yet: peers = fleet karts heard this recently with my session
+MP_RESEND_S = 5.0            # the wished session is not in force: re-send at most this often ...
+MP_MAX_TRIES = 3             # ... and drop the wish after this many sends that did not take
+MP_REJOIN_GRACE_S = 90.0     # my host's game ended (host Pi/Heltec rebooted?): keep the wish + held item this long and
+                             # (a kart Pi reboot to kiosk is ~35-45 s, plus the Heltec relink; 30 s dropped kart 1 on 2026-11-13)
+#                              re-join as soon as the host is heard hosting again (audit 2026-11-13)
+MP_EVENTS_KEEP = 12
+MP_ALL = 255                 # GK_ADDR_ALL: `attack all ...`
+
+
+def douglas_peucker(pts, tol_m):
+    """Simplify [[lat, lon], ...] keeping both ends; perpendicular tolerance in metres (pitcore copy)."""
+    if len(pts) < 3:
+        return [list(p[:2]) for p in pts]
+    ref = (pts[0][0], pts[0][1])
+    xy = [local_en(p[0], p[1], ref) for p in pts]
+    keep = [False] * len(pts)
+    keep[0] = keep[-1] = True
+    stack = [(0, len(pts) - 1)]
+    while stack:
+        i, j = stack.pop()
+        (ax, ay), (bx, by) = xy[i], xy[j]
+        dx, dy = bx - ax, by - ay
+        L = math.hypot(dx, dy)
+        best, bi = -1.0, None
+        for k in range(i + 1, j):
+            px, py = xy[k]
+            d = abs(dy * (px - ax) - dx * (py - ay)) / L if L > 1e-9 else math.hypot(px - ax, py - ay)
+            if d > best:
+                best, bi = d, k
+        if bi is not None and best > tol_m:
+            keep[bi] = True
+            stack += [(i, bi), (bi, j)]
+    return [list(pts[k][:2]) for k in range(len(pts)) if keep[k]]
+
+
+def simplify_track(pts, tol_m=FP_SIMPLIFY_TOL_M, max_points=TRACK_MAX_POINTS):
+    """Douglas-Peucker with tol_m, raised x1.5 until the result fits in max_points (pitcore copy)."""
+    tol = max(0.05, float(tol_m))
+    out = douglas_peucker(pts, tol)
+    while len(out) > max_points:
+        tol *= 1.5
+        out = douglas_peucker(pts, tol)
+    return out
+
+
+def peer_position(ks, now, max_dr_s=MP_DR_MAX_S):
+    """A fleet KartState's last fix moved along its heading at its gps_kph for min(fix age, max_dr_s) s.
+    -> ((lat, lon), fix_age_s) or (None, None) without a fix."""
+    fx = ks.fix
+    if not fx or ks.last_fix_mono is None or not _num(fx.get("lat")) or not _num(fx.get("lon")):
+        return None, None
+    age = max(0.0, now - ks.last_fix_mono + (ks.gps_age_at_rx or 0.0))
+    lat, lon = float(fx["lat"]), float(fx["lon"])
+    kph, hd = fx.get("gps_kph"), fx.get("heading")
+    if _num(kph) and _num(hd) and kph > 0:
+        d = float(kph) / 3.6 * min(age, max_dr_s)
+        h = math.radians(float(hd))
+        lat, lon = en_to_ll(d * math.sin(h), d * math.cos(h), (lat, lon))
+    return (lat, lon), age
+
+
+def pit_game_on(doc):
+    """The pit's own game is running: enabled with at least one usable zone or a lap line."""
+    en, areas, lap, _ = parse_zones(doc)
+    return bool(en and (areas or lap is not None))
+
+
+class LoopRecorder:
+    """One lap of this kart's path (port of pitcore.TrackRecorder, single lap): points at least
+    1.5 m apart, jumps further than speed * dt + 15 m rejected; the lap closes when the path comes
+    back within 12 m of its start after at least 60 m travelled, at the nearest approach."""
+
+    def __init__(self):
+        self.points = []             # [lat, lon, mono, kph]
+        self.travel = 0.0
+        self.close = None            # (index, distance) best approach to the start inside the radius
+        self.rejected = 0
+
+    def feed(self, lat, lon, kph, now):
+        """Offer one usable fix. Returns the closed lap [[lat, lon], ...] once, else None."""
+        kph = float(kph) if _num(kph) else 0.0
+        p = [float(lat), float(lon), now, kph]
+        if self.points:
+            last = self.points[-1]
+            d = _dist_m(last, p)
+            v = max(kph, last[3]) / 3.6
+            if d > v * max(0.0, now - last[2]) + FP_REC_JUMP_SLACK_M:
+                self.rejected += 1
+                return None                          # GPS jump
+            if d < FP_REC_MIN_SPACING_M:
+                return None
+            self.travel += d
+        if len(self.points) >= FP_REC_MAX_POINTS:
+            self.__init__()
+        self.points.append(p)
+        return self._check()
+
+    def _check(self):
+        if self.travel < FP_REC_MIN_LAP_M:
+            return None
+        i = len(self.points) - 1
+        d = _dist_m(self.points[0], self.points[i])
+        if self.close is None:
+            if d <= FP_REC_START_RADIUS_M:
+                self.close = (i, d)
+            return None
+        if d < self.close[1] and d <= FP_REC_START_RADIUS_M:
+            self.close = (i, d)
+            return None
+        return [p[:2] for p in self.points[:self.close[0] + 1]]
+
+
+def course_from_lap(pts):
+    """A closed lap [[lat, lon], ...] -> parse_track() course (simplified to ~1 m, <= 200 points,
+    closed, 6 m wide) or None."""
+    out = simplify_track(pts)
+    if len(out) > 3 and _dist_m(out[0], out[-1]) < 2.0:
+        out = out[:-1]                               # the closing segment joins the last point to the first
+    return parse_track({"track": {"points": [[round(p[0], 7), round(p[1], 7)] for p in out],
+                                  "closed": True, "width_m": FP_TRACK_WIDTH_M}})
+
+
+class _Loop:
+    """Arc-length positions on a closed course (local metres around its first point)."""
+
+    def __init__(self, points):
+        self.ref = (points[0][0], points[0][1])
+        en = [local_en(p[0], p[1], self.ref) for p in points]
+        self.en = en + [en[0]]
+        self.cum = [0.0]
+        for a, b in zip(self.en, self.en[1:]):
+            self.cum.append(self.cum[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+        self.L = self.cum[-1]
+
+    def at(self, s):
+        s = s % self.L if self.L > 0 else 0.0
+        for i in range(1, len(self.cum)):
+            if s <= self.cum[i]:
+                seg = self.cum[i] - self.cum[i - 1]
+                f = (s - self.cum[i - 1]) / seg if seg > 0 else 0.0
+                a, b = self.en[i - 1], self.en[i]
+                return en_to_ll(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, self.ref)
+        return en_to_ll(self.en[-1][0], self.en[-1][1], self.ref)
+
+    def arc(self, a, b):
+        d = abs(a - b) % self.L if self.L > 0 else 0.0
+        return min(d, self.L - d)
+
+    def dist_m(self, lat, lon):
+        p = local_en(lat, lon, self.ref)
+        return min(dist_point_segment(p, a, b) for a, b in zip(self.en, self.en[1:]))
+
+
+class FreeplayGame:
+    """Freeplay state machine. Callers hold the app lock; every method that changes something returns
+    records ({"ev": "freeplay_...", "source": "freeplay", ...}) for the session log.
+
+    Precedence (select()): the pit's own game (enabled, >= 1 zone or lap line) wins and freeplay
+    pauses; otherwise, while on, freeplay's document is the one the engine runs. Demo mode turns it
+    off for the demo. Off restores the pit document."""
+
+    def __init__(self, boxes=FREEPLAY_BOXES, rng=None, allowed=True, why_not=None):
+        self.allowed = bool(allowed)
+        self.why_not = why_not or "off in this kart's config"
+        self.n_boxes = int(max(1, min(FREEPLAY_BOXES_MAX, int(boxes))))
+        self.rng = rng or random.Random()
+        self.on = False
+        self.mode = "track"          # FP_MODES: "track" = boxes on a recorded loop (laps), "roam" = around the kart
+        self.course = None           # parse_track() dict + "source" ("recorded" | "pit")
+        self.loop = None
+        self.boxes = []              # {"id", "name", "slot", "s", "lat", "lon", "r_m"}
+        self.pending = []            # {"slot", "due", "from": (lat, lon)}
+        self.collected = 0
+        self.rec = None              # LoopRecorder while the course is being driven
+        self.no_adopt = False        # after a course reset: record, never adopt the pit's track
+        self.kart = None             # (lat, lon, mono) last usable position
+        self.kart_heading = None     # last good Doppler heading (deg, 0 = north) that came with it
+        self.phase = "off"
+        self.pause_reason = None
+        self.pit_track = None
+        self._pit_seen = object()
+        self._pit_on = False
+        self._last_mono = None
+        self._gen = 0
+        self._ver = 0
+        self._doc = None
+        self._fill_at = 0.0
+        self.changed = True          # persistence: the server saves export() when this is set
+        self.eco_due = False         # switched on: one `mode 0` request is owed (take_eco())
+        self.eco = None              # outcome of the last one {"outcome", "why"/"id"/"error", "mono"}
+        # multiplayer: the wish and the held item are ours (persisted); the session itself is the firmware's
+        # (mirrored from its game lines)
+        self.fw_ok = False           # the Heltec's status fw is kart-0.2.5+ (set_fw)
+        self.disp = None             # KartDisplay (bind_display): fleet table + our own self line
+        self.my_id = None            # from game lines (else the display's heltec_id)
+        self.wish = None             # None | "host" | the joined host's id
+        self.wish_tries = 0          # session commands sent since the wish was last in force
+        self.wish_sent = None        # mono of the last one
+        self.wish_note = None        # why the wish was dropped (rejected 3 times, the host's game ended)
+        self.wish_grace_until = None # joined kart whose host vanished: re-join window end (mono), else None
+        self.use_refused = None      # {"text", "seq", "mono"}: a Core2 tap the server refused (dash flashes it)
+        self._use_refused_seq = 0
+        self._resend_due = False     # link up / Heltec reboot: the firmware forgot, send the wish again
+        self.held = None             # {"item": "shell"|"lightning", "mono"}
+        self.use_pending = None      # {"item", "to", "mono"}: `attack` sent, no sent/rejected line yet
+        self.attack = None           # latest attack line {"to", "item", "seq", "result", "acked", "why", "mono"}
+        self.last_hit = None         # latest hit line {"from", "item", "secs", "applied", "why", "seq", "mono"}
+        self.mevents = deque(maxlen=MP_EVENTS_KEEP)
+        self.mseq = 0                # never reset within a process (the page acts on each event once)
+        self._mp_clear_fw_state()
+
+    @staticmethod
+    def _rec(recs, ev, **kw):
+        r = {"ev": ev, "source": "freeplay", **kw}
+        recs.append(r)
+        return r
+
+    def _touch(self, persist=False):
+        self._doc = None
+        if persist:
+            self.changed = True
+
+    # -- control ------------------------------------------------------------------------
+    def set_on(self, on, now):
+        recs = []
+        on = bool(on)
+        if on and not self.allowed:
+            raise CommandError(f"freeplay is {self.why_not}")
+        if on == self.on:
+            return recs
+        self.on = on
+        self.eco_due = on            # only the off -> on transition (button or API); never a restore
+        self.boxes, self.pending = [], []
+        self.rec = LoopRecorder() if on and self.course is None and self.mode == "track" else None
+        self._fill_at = 0.0
+        self._touch(persist=True)
+        self._rec(recs, "freeplay_on" if on else "freeplay_off", course_m=self.course["length_m"] if self.course else None)
+        if not on and (self.wish is not None or self._session() or self.held is not None):
+            recs += self.leave(now, why="freeplay off")       # leaving freeplay leaves the session
+        return recs
+
+    FREEPLAY_MODE = 0            # ECO
+
+    def take_eco(self, stopped, grid_hold):
+        """The ECO request owed by the last switch-on, at most once: None (nothing owed) or
+        {"send": True, "line": "mode 0"} | {"send": False, "why": ...}. Skipped while the kart is
+        STOPPED or in a grid hold (the game's own rule for those states), and while freeplay is not
+        the running game (pit game on, demo). Later ticks never ask again."""
+        if not self.eco_due:
+            return None
+        self.eco_due = False
+        if stopped is True:
+            return {"send": False, "why": "kart STOPPED"}
+        if grid_hold:
+            return {"send": False, "why": "grid hold"}
+        if not self.running():
+            return {"send": False, "why": self.pause_reason or self.phase}
+        return {"send": True, "line": f"mode {self.FREEPLAY_MODE}"}
+
+    def note_eco(self, outcome, now, **kw):
+        self.eco = {"outcome": outcome, "mono": now, **kw}
+        return {"ev": "freeplay_mode", "source": "freeplay", "mode": self.FREEPLAY_MODE, "outcome": outcome, **kw}
+
+    def reset_course(self, now):
+        recs = []
+        self.course, self.loop = None, None
+        self.boxes, self.pending = [], []
+        self.no_adopt = True
+        self.rec = LoopRecorder() if self.on and self.mode == "track" else None
+        self._touch(persist=True)
+        self._rec(recs, "freeplay_course_reset")
+        return recs
+
+    def set_mode(self, mode, now):
+        """"track" | "roam". Switching re-places the boxes; a recorded course is kept for the next TRACK."""
+        if mode not in FP_MODES:
+            raise ValueError(f'mode must be one of {", ".join(FP_MODES)}')
+        recs = []
+        if mode == self.mode:
+            return recs
+        self.mode = mode
+        self.boxes, self.pending = [], []
+        self._fill_at = 0.0
+        self.rec = LoopRecorder() if self.on and self.course is None and mode == "track" else None
+        self._touch(persist=True)
+        self._rec(recs, "freeplay_mode", mode=mode)
+        return recs
+
+    def set_course(self, course, source, now, recs):
+        self.course = dict(course, source=source)
+        self.loop = _Loop(course["points"])
+        self.rec = None
+        self.no_adopt = False
+        self.boxes, self.pending = [], []
+        self._fill_at = 0.0
+        self._touch(persist=True)
+        self._rec(recs, "freeplay_course", course_from=source, points=len(course["points"]),
+                  length_m=course["length_m"])
+
+    # -- inputs ---------------------------------------------------------------------------
+    def on_pos(self, pos, now):
+        """The game engine's latest filtered sample (GameEngine.pos) after each fix."""
+        recs = []
+        if not pos or pos.get("mono") == self._last_mono:
+            return recs
+        self._last_mono = pos.get("mono")
+        if not pos.get("usable") or not _num(pos.get("lat")) or not _num(pos.get("lon")):
+            return recs
+        lat, lon = float(pos["lat"]), float(pos["lon"])
+        self.kart = (lat, lon, now)
+        if _num(pos.get("heading")):
+            self.kart_heading = float(pos["heading"])
+        if not self.on or self.mode == "roam" or self.course is not None or self.phase not in ("recording", "no_gps"):
+            return recs
+        if not self.no_adopt and self.pit_track is not None:
+            lp = _Loop(self.pit_track["points"])
+            if lp.dist_m(lat, lon) <= FP_ADOPT_NEAR_M:
+                self.set_course(self.pit_track, "pit", now, recs)
+                return recs
+        if self.rec is None:
+            self.rec = LoopRecorder()
+        if pos.get("reset"):
+            self.rec = LoopRecorder()                # the GPS filter accepted a jump: start the lap again
+        lap = self.rec.feed(lat, lon, pos.get("kph"), now)
+        if lap is not None:
+            course = course_from_lap(lap)
+            if course is None:
+                self.rec = LoopRecorder()
+                self._rec(recs, "freeplay_lap_rejected", points=len(lap))
+            else:
+                self.set_course(course, "recorded", now, recs)
+        return recs
+
+    def on_game(self, game_recs, now):
+        """GameEngine records: an "item" roll on one of our boxes = collected."""
+        recs = []
+        ids = {b["id"]: b for b in self.boxes}
+        for r in game_recs:
+            if r.get("ev") != "item" or r.get("zone") not in ids:
+                continue
+            b = ids.pop(r["zone"])
+            self.boxes = [x for x in self.boxes if x["id"] != b["id"]]
+            self.pending.append({"slot": b["slot"], "due": now + FP_RESPAWN_S, "from": (b["lat"], b["lon"])})
+            self.collected += 1
+            self._touch(persist=True)
+            self._rec(recs, "freeplay_collected", zone=b["id"], name=b["name"], item=r.get("item"),
+                      collected=self.collected)
+            item = r.get("item")
+            if item in MULTI_HELD_ITEMS and r.get("table") == "multi":
+                old = self.held["item"] if self.held else None       # one slot: a new held item replaces it
+                self.held = {"item": item, "mono": now}
+                self._rec(recs, "freeplay_item_held", item=item, replaced=old, zone=b["id"])
+                self._mevent(now, "held", item=item)
+        return recs
+
+    # -- placement --------------------------------------------------------------------------
+    def _kart_now(self, now, max_age=FP_KART_FRESH_S):
+        k = self.kart
+        return k if k is not None and now - k[2] <= max_age else None
+
+    def _place(self, slot, now, away_from=None):
+        if self.mode == "roam":
+            return self._place_roam(slot, now, away_from)
+        L = self.loop.L
+        if L <= 0:
+            return None
+        kart = self._kart_now(now)
+        for _ in range(FP_PLACE_TRIES):
+            s = self.rng.random() * L
+            if any(self.loop.arc(s, b["s"]) < FP_BOX_SPACING_M for b in self.boxes):
+                continue
+            lat, lon = self.loop.at(s)
+            if kart is not None and _dist_m(kart, (lat, lon)) < FP_KART_CLEAR_M:
+                continue
+            if away_from is not None and _dist_m(away_from, (lat, lon)) < FP_RESPAWN_AWAY_M:
+                continue
+            self._gen += 1
+            b = {"id": f"fp{self._gen}", "name": f"Box {slot}", "slot": slot, "s": round(s, 2),
+                 "lat": round(lat, 7), "lon": round(lon, 7), "r_m": FP_BOX_R_M}
+            self.boxes.append(b)
+            self._touch()
+            return b
+        return None
+
+    def _place_roam(self, slot, now, away_from=None):
+        """A box in a ring FP_ROAM_MIN_M..FP_ROAM_MAX_M around the kart's fresh position (none without one)."""
+        kart = self._kart_now(now)
+        if kart is None:
+            return None
+        lat0, lon0 = kart[0], kart[1]
+        m_lat, m_lon = 111320.0, 111320.0 * max(0.1, math.cos(math.radians(lat0)))
+        for _ in range(FP_PLACE_TRIES):
+            d = FP_ROAM_MIN_M + self.rng.random() * (FP_ROAM_MAX_M - FP_ROAM_MIN_M)
+            a = self.rng.random() * 2.0 * math.pi
+            lat, lon = lat0 + d * math.cos(a) / m_lat, lon0 + d * math.sin(a) / m_lon
+            if any(_dist_m((lat, lon), (b["lat"], b["lon"])) < FP_ROAM_SPACING_M for b in self.boxes):
+                continue
+            if away_from is not None and _dist_m(away_from, (lat, lon)) < FP_RESPAWN_AWAY_M:
+                continue
+            self._gen += 1
+            b = {"id": f"fp{self._gen}", "name": f"Box {slot}", "slot": slot, "s": None,
+                 "lat": round(lat, 7), "lon": round(lon, 7), "r_m": FP_BOX_R_M}
+            self.boxes.append(b)
+            self._touch()
+            return b
+        return None
+
+    def tick(self, now):
+        """Respawns (3 s after a collection) and the initial fill once a course exists (TRACK) or the kart
+        has a position (ROAM). ROAM also brings one far-behind box back near the kart per tick."""
+        recs = []
+        if not self.on or self.phase != "ready" or (self.mode == "track" and self.loop is None):
+            return recs
+        if self.mode == "roam":
+            kart = self._kart_now(now)
+            far = [b for b in self.boxes if kart is not None and _dist_m(kart, (b["lat"], b["lon"])) > FP_ROAM_FAR_M]
+            for b in far[:1]:
+                nb = self._place_roam(b["slot"], now)
+                if nb is None:
+                    break
+                self.boxes.remove(b)
+                self._touch()
+                self._rec(recs, "freeplay_spawn", zone=nb["id"], name=nb["name"], lat=nb["lat"], lon=nb["lon"],
+                          respawn=True, moved_from=b["id"])
+        for p in sorted(self.pending, key=lambda x: x["due"]):
+            if now < p["due"]:
+                continue
+            b = self._place(p["slot"], now, away_from=p["from"])
+            if b is None:
+                p["due"] = now + FP_FILL_RETRY_S
+                continue
+            self.pending.remove(p)
+            self._rec(recs, "freeplay_spawn", zone=b["id"], name=b["name"], lat=b["lat"], lon=b["lon"], respawn=True)
+        if now >= self._fill_at:
+            used = {b["slot"] for b in self.boxes} | {p["slot"] for p in self.pending}
+            for slot in range(1, self.n_boxes + 1):
+                if slot in used:
+                    continue
+                b = self._place(slot, now)
+                if b is None:
+                    self._fill_at = now + FP_FILL_RETRY_S
+                    break
+                self._rec(recs, "freeplay_spawn", zone=b["id"], name=b["name"], lat=b["lat"], lon=b["lon"])
+        return recs
+
+    # -- which document the engine runs -------------------------------------------------------
+    def select(self, pit_doc, now, demo=False, race=False):
+        """-> (zones document for GameEngine.set_zones, records). Updates phase/pause_reason.
+        race = the kart's GameEngine says a pit race owns it (race_active): freeplay pauses like for pit zones."""
+        recs = []
+        if pit_doc is not self._pit_seen:
+            self._pit_seen = pit_doc
+            self._pit_on = pit_game_on(pit_doc)
+            t = parse_track(pit_doc)
+            self.pit_track = t if t is not None and t["closed"] else None
+        reason = None
+        if not self.allowed:
+            phase, reason = "off", self.why_not
+        elif not self.on:
+            phase = "off"
+        elif demo:
+            phase, reason = "off", "demo"
+        elif self._pit_on:
+            phase, reason = "paused_pit", "pit game on"
+        elif race:
+            phase, reason = "paused_race", "pit race"
+        elif self.mode == "roam":
+            k = self.kart
+            phase = "ready" if k is not None and now - k[2] <= FP_FIX_FRESH_S else "no_gps"
+        elif self.course is not None:
+            phase = "ready"
+        else:
+            k = self.kart
+            phase = "recording" if k is not None and now - k[2] <= FP_FIX_FRESH_S else "no_gps"
+        if (phase, reason) != (self.phase, self.pause_reason):
+            self._rec(recs, "freeplay_phase", phase=phase, prev=self.phase, why=reason)
+            self.phase, self.pause_reason = phase, reason
+        return (self.doc() if phase in ("recording", "no_gps", "ready") else pit_doc), recs
+
+    def running(self):
+        return self.phase in ("recording", "no_gps", "ready")
+
+    def doc(self):
+        if self._doc is None:
+            self._ver += 1
+            d = {"version": f"freeplay-{self._ver}", "enabled": True, "source": "freeplay",
+                 "zones": [{"id": b["id"], "type": "item", "name": b["name"], "shape": "circle",
+                            "lat": b["lat"], "lon": b["lon"], "r_m": b["r_m"], "cooldown_s": FP_BOX_COOLDOWN_S}
+                           for b in self.boxes]}
+            lap = self._lapline() if self.mode == "track" else None
+            if lap is not None:
+                d["zones"].append(lap)      # timed laps + hotlap; also keeps the game on between respawns
+            if self.course is not None and self.mode == "track":
+                d["track"] = {"points": [list(p) for p in self.course["points"]], "closed": True,
+                              "width_m": self.course["width_m"]}
+            self._doc = d
+        return self._doc
+
+    def _lapline(self):
+        """Start/finish line across the loop at s=0 (where the recorded lap began / the pit track starts).
+        Perpendicular to the first few metres of the loop, FP_LAP_HALF_M each side."""
+        if self.loop is None or self.loop.L <= 0:
+            return None
+        (lat0, lon0) = self.loop.at(0.0)
+        (lat1, lon1) = self.loop.at(min(5.0, self.loop.L / 2))
+        m_lat = 111320.0
+        m_lon = 111320.0 * max(0.1, math.cos(math.radians(lat0)))
+        dn, de = (lat1 - lat0) * m_lat, (lon1 - lon0) * m_lon
+        n = math.hypot(dn, de)
+        if n < 0.5:
+            return None
+        pn, pe = -de / n, dn / n            # unit perpendicular (north, east components)
+        h = max(FP_LAP_HALF_M, (self.course.get("width_m") or 0.0) * 1.5 if self.course else 0.0)
+        return {"id": "fp-lap", "type": "lapline", "name": "Start / finish", "shape": "line",
+                "a": [round(lat0 + pn * h / m_lat, 7), round(lon0 + pe * h / m_lon, 7)],
+                "b": [round(lat0 - pn * h / m_lat, 7), round(lon0 - pe * h / m_lon, 7)],
+                "min_lap_s": FP_LAP_MIN_S}
+
+    # -- persistence + display ------------------------------------------------------------------
+    def export(self):
+        c = self.course
+        self.changed = False
+        return {"v": 1, "on": self.on, "mode": self.mode, "collected": self.collected,
+                "course": {"points": c["points"], "length_m": c["length_m"], "width_m": c["width_m"],
+                           "source": c.get("source")} if c else None,
+                "multi": {"wish": self.wish, "held": self.held["item"] if self.held else None}}
+
+    def load(self, doc, now):
+        """Restore export(). A bad file is ignored (freeplay starts off, no course)."""
+        recs = []
+        if not isinstance(doc, dict) or doc.get("v") != 1:
+            return recs
+        c = doc.get("course")
+        if isinstance(c, dict):
+            t = parse_track({"track": {"points": c.get("points"), "closed": True, "width_m": c.get("width_m")}})
+            if t is not None and t["closed"]:
+                self.course = dict(t, source=c.get("source") if c.get("source") in ("recorded", "pit") else "recorded")
+                self.loop = _Loop(t["points"])
+        if _num(doc.get("collected")) and doc["collected"] >= 0:
+            self.collected = int(doc["collected"])
+        if doc.get("mode") in FP_MODES:
+            self.mode = doc["mode"]
+        if doc.get("on") is True and self.allowed:
+            self.on = True
+            self.rec = LoopRecorder() if self.course is None and self.mode == "track" else None
+        m = doc.get("multi")
+        if isinstance(m, dict) and self.on:
+            w = m.get("wish")
+            if w == "host" or (isinstance(w, int) and not isinstance(w, bool) and w in KART_IDS):
+                self.wish = w                    # re-sent after the link comes up (multi_resync / multi_tick)
+                if m.get("held") in MULTI_HELD_ITEMS:
+                    self.held = {"item": m["held"], "mono": now}
+        self._touch()
+        self.changed = False
+        self._rec(recs, "freeplay_restored", on=self.on, mode=self.mode, course_m=self.course["length_m"] if self.course else None,
+                  collected=self.collected, wish=self.wish, held=self.held["item"] if self.held else None)
+        return recs
+
+    def snapshot(self, now):
+        c, r = self.course, self.rec
+        return {"allowed": self.allowed, "on": self.on, "mode": self.mode, "phase": self.phase, "pause_reason": self.pause_reason,
+                "boxes_target": self.n_boxes,
+                "course": {"points": len(c["points"]), "length_m": c["length_m"], "source": c.get("source")} if c else None,
+                "boxes": [{"id": b["id"], "name": b["name"], "lat": b["lat"], "lon": b["lon"], "r_m": b["r_m"]}
+                          for b in self.boxes],
+                "respawning": len(self.pending),
+                "eco": ({k: v for k, v in self.eco.items() if k != "mono"} | {"age_s": _age(self.eco["mono"], now)})
+                       if self.eco else None,
+                "collected": self.collected,
+                "record": {"distance_m": round(r.travel, 1), "points": len(r.points)}
+                          if r is not None and self.course is None and self.on and self.mode == "track" else None,
+                "multi": self.multi_snapshot(now)}
+
+    # -- multiplayer (docs/freeplay-multiplayer.md) ------------------------------------------------
+    def _mp_clear_fw_state(self):
+        """What the firmware told us about its session (game lines). Cleared when it may have forgotten."""
+        self.session = 0
+        self.hosting = False
+        self.peer_ids = []
+        self.hosts = []
+        self.score = 0
+        self.ended = None
+        self.fw_attack = None
+        self.game_mono = None
+
+    def bind_display(self, disp):
+        """The server's KartDisplay: its fleet table (peers, distances, scores) and our own self line."""
+        self.disp = disp
+
+    def set_fw(self, fw):
+        """The Heltec's status fw (None = unknown: link change, reboot). Multiplayer needs kart-0.2.5+."""
+        self.fw_ok = fw_at_least(fw, FW_MULTIPLAYER)
+
+    def _mevent(self, now, ev, **kw):
+        self.mseq += 1
+        self.mevents.append({"seq": self.mseq, "ev": ev, "mono": now, **kw})
+
+    def _my_id(self):
+        if self.my_id:
+            return self.my_id
+        return self.disp.heltec_id if self.disp is not None else None
+
+    def _session(self):
+        """My session: the latest game line's, else (no game line yet) the self line's `session` field."""
+        if self.game_mono is not None:
+            return self.session
+        me = self.disp.me if self.disp is not None else None
+        return me.multi.get("session", 0) if me is not None and me.last_mono is not None else 0
+
+    def _hosting(self):
+        if self.game_mono is not None:
+            return self.hosting
+        s = self._session()
+        return bool(s) and s == self._my_id()
+
+    def in_session(self):
+        return self._session() != 0
+
+    def item_table(self):
+        """GameEngine.freeplay_items hook: the multiplayer table while this kart is in a session, else None
+        (the single-player ITEM_TABLE)."""
+        return MULTI_ITEM_TABLE if self.on and self._session() != 0 else None
+
+    def _mp_gate(self, what):
+        if not self.allowed:
+            raise CommandError(f"freeplay is {self.why_not}")
+        if not self.on:
+            raise CommandError(f"turn freeplay on to {what}")
+        if not self.fw_ok:
+            raise CommandError("the Heltec firmware has no multiplayer (needs kart-0.2.5+)")
+        if self.pause_reason:
+            raise CommandError(f"freeplay is paused ({self.pause_reason})")
+
+    def _drop_held(self):
+        if self.held is not None:
+            self.held = None
+            self._touch(persist=True)
+
+    def _set_wish(self, wish):
+        self.wish = wish
+        self.wish_tries = 0
+        self.wish_note = None
+        self.wish_grace_until = None
+        self._resend_due = False
+        self._touch(persist=True)
+
+    def _send_wish(self, recs, now, resend=None):
+        line = "session host" if self.wish == "host" else f"session join {self.wish}"
+        self.wish_tries += 1
+        self.wish_sent = now
+        if resend:
+            self._rec(recs, "freeplay_host" if self.wish == "host" else "freeplay_join",
+                      **({} if self.wish == "host" else {"host": self.wish}), resend=resend, tries=self.wish_tries)
+        self._rec(recs, "cmd", line=line)
+
+    def _wish_met(self):
+        s = self._session()
+        if self.wish == "host":
+            return s != 0 and self._hosting()
+        return s == self.wish and not self._hosting()
+
+    def host(self, now):
+        """Host a freeplay game (`session host`). Needs freeplay on and firmware kart-0.2.5+."""
+        self._mp_gate("host")
+        recs = []
+        was = self._session()
+        if was and not self._hosting():
+            self._drop_held()                        # leaving someone's game for my own
+        self._set_wish("host")
+        self._rec(recs, "freeplay_host", was=was)
+        self._send_wish(recs, now)
+        return recs
+
+    def join(self, host, now):
+        """Join kart `host`'s game (`session join N`); the firmware accepts it only while N is heard hosting."""
+        if not isinstance(host, int) or isinstance(host, bool) or host not in KART_IDS:
+            raise ValueError("join takes a kart id 1-8")
+        self._mp_gate("join")
+        if host == self._my_id():
+            raise CommandError("that is this kart (host instead)")
+        recs = []
+        was = self._session()
+        if was and was != host:
+            self._drop_held()
+        self._set_wish(host)
+        self._rec(recs, "freeplay_join", host=host, was=was, heard_hosting=host in self.hosts)
+        self._send_wish(recs, now)
+        return recs
+
+    def leave(self, now, why=None):
+        """Leave the session (`session leave`, only when the firmware has multiplayer) and drop the wish and
+        the held item. Never refused."""
+        recs = []
+        was_wish, was = self.wish, self._session()
+        self.wish, self.wish_tries, self._resend_due, self.wish_note = None, 0, False, None
+        self._drop_held()
+        self.use_pending = None
+        self._touch(persist=True)
+        if self.fw_ok:
+            self._rec(recs, "cmd", line="session leave")
+        self._rec(recs, "freeplay_leave", session=was, wish=was_wish, why=why)
+        return recs
+
+    def use(self, now):
+        """Fire the held item: a shell at the nearest in-range peer (`attack N shell`), lightning at everyone
+        (`attack all lightning`). The slot empties now and comes back if the firmware rejects the attack."""
+        self._mp_gate("use an item")
+        if self.held is None:
+            raise CommandError("nothing held")
+        if self._session() == 0:
+            raise CommandError("not in a session")
+        item = self.held["item"]
+        dist = None
+        if item == "shell":
+            near = [p for p in self.peers(now) if p["in_range"]]
+            if not near:
+                raise CommandError("no one in range")
+            # ROAM: any direction (owner 2026-11-13); TRACK: only karts ahead; unknown heading: no direction gate
+            ahead = near if self.mode == "roam" else [p for p in near if p["ahead"] is not False]
+            if not ahead:
+                b = min(near, key=lambda p: p["dist_m"])
+                raise CommandError(f"K{b['id']} is behind you")
+            tgt = min(ahead, key=lambda p: p["dist_m"])
+            to, dist, line = tgt["id"], tgt["dist_m"], f"attack {tgt['id']} shell"
+        else:
+            if not self.peers(now):
+                raise CommandError("no karts in the game")
+            to, line = MP_ALL, "attack all lightning"
+        recs = []
+        self.held = None
+        self.use_pending = {"item": item, "to": to, "mono": now}
+        self._touch(persist=True)
+        self._rec(recs, "freeplay_use", item=item, to=to, dist_m=dist, line=line)
+        self._rec(recs, "cmd", line=line)
+        return recs
+
+    def on_multi_line(self, t, msg, now):
+        """A game / hit / attack line from the Heltec (firmware kart-0.2.5)."""
+        if t == "game":
+            return self.on_game_line(msg, now)
+        if t == "hit":
+            return self.on_hit_line(msg, now)
+        if t == "attack":
+            return self.on_attack_line(msg, now)
+        return []
+
+    @staticmethod
+    def _ids(v):
+        return sorted({x for x in v if isinstance(x, int) and not isinstance(x, bool) and x in KART_IDS}) \
+            if isinstance(v, list) else []
+
+    def on_game_line(self, msg, now):
+        recs = []
+        k = msg.get("kart")
+        if isinstance(k, int) and not isinstance(k, bool) and k in KART_IDS:
+            self.my_id = k
+        sess = _int0(msg.get("session"))
+        sess = sess if sess in KART_IDS else 0
+        hosting = msg.get("hosting") is True and sess != 0
+        peers, hosts = self._ids(msg.get("peers")), self._ids(msg.get("hosts"))
+        ended = msg.get("ended") if isinstance(msg.get("ended"), str) and msg.get("ended") else None
+        prev_sess, prev_host, prev_peers = self.session, self.hosting, self.peer_ids
+        new_end = ended is not None and ended != self.ended
+        if new_end:
+            if isinstance(self.wish, int):
+                # audit 2026-11-13: a host Heltec reboot ended everyone's game for good (its Pi re-hosts 1-2 s
+                # later, nobody re-joined). Keep the wish and the held item for a grace; _wish_check re-joins
+                # the moment the host is heard hosting again, or gives up when the grace runs out.
+                if self.wish_grace_until is None:
+                    self.wish_grace_until = now + MP_REJOIN_GRACE_S
+                    self.wish_note = f"K{self.wish}'s game ended ({ended}): rejoining if K{self.wish} comes back"
+                    self.wish_tries, self._resend_due = 0, False
+                    self._touch(persist=True)
+            else:
+                self._drop_held()
+        elif sess and prev_sess and sess != prev_sess:
+            self._drop_held()                        # a different game: the held item does not carry over
+        self.session, self.hosting, self.peer_ids, self.hosts = sess, hosting, peers, hosts
+        self.score, self.ended = _int0(msg.get("score")), ended
+        self.fw_attack = msg.get("attack") if isinstance(msg.get("attack"), dict) else None
+        self.game_mono = now
+        for p in peers:
+            if p not in prev_peers:
+                self._mevent(now, "peer", id=p, joined=True)
+        for p in prev_peers:
+            if p not in peers:
+                self._mevent(now, "peer", id=p, joined=False)
+        changed = (sess, hosting) != (prev_sess, prev_host) or new_end
+        if changed:
+            self._mevent(now, "session", session=sess, hosting=hosting, ended=ended)
+        if changed or peers != prev_peers:
+            self._rec(recs, "freeplay_session", session=sess, hosting=hosting, peers=peers, hosts=hosts,
+                      score=self.score, ended=ended, prev=prev_sess)
+        self._wish_check(now, recs)
+        return recs
+
+    def on_hit_line(self, msg, now):
+        recs = []
+        why = msg.get("why") if isinstance(msg.get("why"), str) else None
+        h = {"from": _int0(msg.get("from")), "item": msg.get("item") if isinstance(msg.get("item"), str) else None,
+             "secs": _int0(msg.get("secs")), "applied": msg.get("applied") is True, "why": why,
+             "seq": _int0(msg.get("seq"))}
+        self.last_hit = dict(h, mono=now)
+        self._mevent(now, "hit", **{k: h[k] for k in ("from", "item", "secs", "applied", "why")})
+        self._rec(recs, "freeplay_hit", **h)
+        return recs
+
+    def on_attack_line(self, msg, now):
+        recs = []
+        res = msg.get("result") if isinstance(msg.get("result"), str) else None
+        why = msg.get("why") if isinstance(msg.get("why"), str) else None
+        a = {"to": _int0(msg.get("to")), "item": msg.get("item") if isinstance(msg.get("item"), str) else None,
+             "seq": _int0(msg.get("seq")), "result": res, "acked": self._ids(msg.get("acked")), "why": why}
+        self.attack = dict(a, mono=now)
+        self._mevent(now, "attack", to=a["to"], item=a["item"], result=res, acked=a["acked"],
+                     **({"why": why} if why else {}))
+        pend = None
+        if res in ("sent", "rejected"):
+            pend, self.use_pending = self.use_pending, None
+        if res == "sent":
+            return recs
+        returned = False
+        if res == "rejected" and pend is not None and self.held is None and self._session():
+            self.held = {"item": pend["item"], "mono": now}          # not launched: the item comes back
+            self._touch(persist=True)
+            returned = True
+        self._rec(recs, "freeplay_attack", **a, returned=returned)
+        return recs
+
+    def multi_resync(self, now):
+        """Link up/down or a Heltec reboot: the firmware may have forgotten its session. Clears the mirrored
+        session state (the next game lines restore it) and re-sends the wish now if the firmware is known to be
+        kart-0.2.5+, else from multi_tick once its status reply says so. -> cmd records."""
+        self._mp_clear_fw_state()
+        self.use_pending = None
+        recs = []
+        if self.wish is not None:
+            self._resend_due = True
+            self._wish_check(now, recs)
+        return recs
+
+    def multi_tick(self, now):
+        """Periodic: re-send a wish that is not in force (once per MP_RESEND_S, MP_MAX_TRIES at most)."""
+        recs = []
+        self._wish_check(now, recs)
+        return recs
+
+    def _wish_check(self, now, recs):
+        if self.wish is None or not self.on or not self.fw_ok:
+            return
+        if self.wish_grace_until is not None and isinstance(self.wish, int):
+            if self._wish_met():                                           # back in the host's game
+                self.wish_grace_until, self.wish_note, self.wish_tries = None, None, 0
+                self._resend_due = False                                   # a Heltec bounce during the grace: nothing left to re-send
+                self._touch(persist=True)
+                return
+            if now >= self.wish_grace_until:
+                if self.mode == "roam":                                     # forgiving: keep waiting for the host
+                    if self.wish_note != f"waiting for K{self.wish}":
+                        self.wish_note = f"waiting for K{self.wish}"
+                        self._touch(persist=True)
+                else:
+                    note = f"K{self.wish}'s game ended: K{self.wish} did not come back"
+                    self._rec(recs, "freeplay_leave", session=self._session(), wish=self.wish, why=note, auto=True)
+                    self._mevent(now, "session", session=self._session(), hosting=self._hosting(), ended="host gone")
+                    self.wish, self.wish_tries, self.wish_note, self.wish_grace_until = None, 0, note, None
+                    self._drop_held()
+                    self._touch(persist=True)
+                    return
+            # the firmware accepts `session join N` only while it hears N hosting: send when it does, 2 s apart
+            if self.wish in self.hosts and (self.wish_sent is None or now - self.wish_sent >= 2.0):
+                self._send_wish(recs, now, resend="host is back")
+            return
+        if self._resend_due:
+            self._resend_due = False
+            self.wish_tries = 0
+            self._send_wish(recs, now, resend="heltec reset")
+            return
+        if self._wish_met():
+            self.wish_tries = 0
+            return
+        if self.wish_sent is not None and now - self.wish_sent < (MP_ROAM_RESEND_S if self.mode == "roam" else MP_RESEND_S):
+            return
+        if self.wish_tries >= MP_MAX_TRIES and self.mode == "roam":           # forgiving: keep asking, slowly
+            self._send_wish(recs, now, resend="not in force (roam keeps trying)")
+            return
+        if self.wish_tries >= MP_MAX_TRIES:
+            what = "host" if self.wish == "host" else f"join K{self.wish}"
+            note = f"{what} not taken by the Heltec after {self.wish_tries} tries"
+            self._rec(recs, "freeplay_leave", session=self._session(), wish=self.wish, why=note, auto=True)
+            self._mevent(now, "session", session=self._session(), hosting=self._hosting(), ended="rejected")
+            self.wish, self.wish_tries, self.wish_note = None, 0, note
+            self._drop_held()
+            self._touch(persist=True)
+            return
+        self._send_wish(recs, now, resend="not in force")
+
+    def peers(self, now):
+        """Karts in my session: [{"id", "dist_m", "in_range", "score", "age_s"}] (dist from my latest filtered
+        position to the peer's dead-reckoned fix; None without either)."""
+        sess = self._session()
+        if not sess:
+            return []
+        fleet = self.disp.fleet if self.disp is not None else {}
+        if self.game_mono is not None:
+            ids = list(self.peer_ids)
+        else:
+            ids = [k for k, ks in fleet.items() if ks.multi.get("session") == sess
+                   and ks.last_mono is not None and now - ks.last_mono <= MP_HEARD_S]
+        roam = self.mode == "roam"
+        me = self._kart_now(now, MP_ROAM_FIX_FRESH_S if roam else FP_KART_FRESH_S)
+        fresh_s, range_m = (MP_ROAM_FIX_FRESH_S, MP_ROAM_RANGE_M) if roam else (MP_FIX_FRESH_S, MP_RANGE_M)
+        out = []
+        for pid in sorted(ids):
+            if pid == self._my_id():
+                continue
+            ks = fleet.get(pid)
+            dist, fresh, score, age, pos = None, False, 0, None, None
+            if ks is not None:
+                score, age = ks.multi.get("score", 0), _age(ks.last_mono, now)
+                pos, fix_age = peer_position(ks, now)
+                if pos is not None and me is not None:
+                    dist = round(_dist_m(me, pos), 1)
+                fresh = fix_age is not None and fix_age < fresh_s
+            rel = None
+            if pos is not None and me is not None and self.kart_heading is not None:
+                rel = round((_bearing_deg(me, pos) - self.kart_heading + 180.0) % 360.0 - 180.0, 1)   # -180..180, 0 = dead ahead
+            out.append({"id": pid, "dist_m": dist, "in_range": dist is not None and fresh and dist <= range_m,
+                        "ahead": None if rel is None else abs(rel) <= MP_AHEAD_DEG, "rel_deg": rel,
+                        "score": score, "age_s": age})
+        return out
+
+    def multi_snapshot(self, now):
+        """/api/state freeplay.multi (docs/freeplay-multiplayer.md section 5); always complete."""
+        sess = self._session()
+        me = self.disp.me if self.disp is not None else None
+        score = self.score if self.game_mono is not None else (me.multi.get("score", 0) if me is not None else 0)
+        h, a, lh = self.held, self.attack, self.last_hit
+        return {
+            "session": sess,
+            "hosting": bool(sess) and self._hosting(),
+            "peers": self.peers(now),
+            "hosts": [x for x in self.hosts if x != self._my_id()],
+            "held": {"item": h["item"], "since_s": _age(h["mono"], now)} if h else None,
+            "score": score,
+            "attack": {"to": a["to"], "item": a["item"], "seq": a["seq"], "result": a["result"],
+                       "age_s": _age(a["mono"], now), "acked": list(a["acked"]), "why": a["why"]} if a else None,
+            "last_hit": {"from": lh["from"], "item": lh["item"], "secs": lh["secs"], "applied": lh["applied"], "seq": lh.get("seq"),
+                         "why": lh["why"], "age_s": _age(lh["mono"], now)} if lh else None,
+            "fw_ok": self.fw_ok,
+            "events": [{k: v for k, v in e.items() if k != "mono"} | {"age_s": _age(e["mono"], now)}
+                       for e in self.mevents],
+            "wish": self.wish,
+            "note": self.wish_note,
+            "use_refused": ({"text": self.use_refused["text"], "seq": self.use_refused["seq"],
+                             "age_s": _age(self.use_refused["mono"], now)}
+                            if self.use_refused and now - self.use_refused["mono"] <= 3.0 else None),
+        }
+
+    def note_use_refusal(self, text, now):
+        """The Core2 asked to use an item and item_use said no: surface the reason for ~3 s (the Core2 itself
+        only shows USING..., the dash flashes this on the item button like its own refused taps)."""
+        self._use_refused_seq += 1
+        self.use_refused = {"text": str(text), "seq": self._use_refused_seq, "mono": now}
