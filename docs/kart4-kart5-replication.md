@@ -145,7 +145,9 @@ Commission each unit independently, wheels lifted, operator at the cutoff:
   active worker and correct applied direction are verified. Worker failure can hold
   direction, and a prolonged wrong RX level can still qualify. Repair the harness
   separately; software filtering is not an electrical repair.
-- Start Heltec commissioning read-only. Assign ID 4 or 5, its unique BLE MAC/UUID pins,
+- Start Heltec commissioning read-only. A blank Heltec boots as kart 1 and transmits, so store
+  the ID first with `firmware/provision-kart-id` (see the bring-up checklist), then install the
+  read-only kart build. Assign ID 4 or 5, its unique BLE MAC/UUID pins,
   its own verified baseline and speed calibration; do not clone kart 3's NVS or
   speed-calibration factor. Pair only its Core2/Heltec with fresh private ESP-NOW keys.
   Use distinct `gokart-4/5` and `gokart-display-4/5` maintenance hostnames and private

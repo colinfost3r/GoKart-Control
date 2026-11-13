@@ -247,9 +247,15 @@ Neither new unit's UUID/BLE/pairing/capture is known yet. Never guess or clone k
   wheels-up pedal check. UUID `55004d000951343037353739`. Its stored drivetrain numbers are 14
   poles / 2.769 / 0.083 m, so its Heltec speed factor must be about 0.507, not 2.48 or kart 3's
   1.736. See [the record](../hardware/vesc/kart4/2026-11-13/README.md).
+- **Kart 4's boards are installed (November 13):** Heltec `f8:5b:1b:a2:15:50`, Core2
+  `3c:8a:1f:d7:51:40`, paired on channel 1, bound to VESC Bluetooth `ec:4b:65:41:40:51` by UUID.
+  The read-only checkpoint and a ten-minute soak passed; the Heltec then got the write-capable
+  `kart-m5-espnow` build and `speedcal 0.507`. A blank Heltec boots as kart 1 and transmits, so
+  its ID was stored first with the new `firmware/provision-kart-id` helper; do the same for
+  kart 5. See [the install record](../hardware/m5/2026-11-13-kart4-first-install/README.md)
+  for what was still pending (mode read-backs, pedal check, soak on that build, Wi-Fi/OTA).
 - **Still missing for karts 4/5:** a reverse-filter installer (none exists; kart 4 has no
-  filter), kart 4's Heltec/Core2 commissioning, and everything for kart 5, which has not been
-  captured.
+  filter), and everything for kart 5, which has not been captured.
 - Supervise each unit's normal cold boots, correct filtered direction, repeated starts from
   full rest, then accessory coexistence and intentional mode controls. Do not rerun Hall or
   pedal calibration. Resolve native ADC prerequisite differences before filter installation.

@@ -10,8 +10,14 @@ kart 3 and, with the owner's go-ahead, given kart 3's tune by one persistent wri
 reviewed fields plus five protection limits the owner chose after seeing kart 4's values. Read
 back exactly, confirmed after a power cycle, and pedal-checked wheels-up with fault 0. The new
 writer is `tools/vesc/apply_fleet_tune.py`; `prepare_fleet_kart.py --match-protection-limits`
-is the per-kart option for the limits. Kart 4 has **no reverse filter** and its boards were not
-yet commissioned; kart 5 is untouched. 584 tests pass.
+is the per-kart option for the limits. Kart 4 has **no reverse filter**; kart 5 is untouched.
+584 tests pass.
+
+The same day kart 4's never-flashed Heltec and Core2 were installed, paired and bound to that
+VESC by UUID. The read-only checkpoint and soak passed, then the Heltec got the write-capable
+build and speed factor 0.507 (its VESC stores a 0.083 m wheel). Its kart ID was stored before
+the kart firmware first ran (`firmware/provision-kart-id`), because a blank Heltec transmits as
+kart 1. [Board install record](hardware/m5/2026-11-13-kart4-first-install/README.md).
 [Record](hardware/vesc/kart4/2026-11-13/README.md),
 [replication guide](docs/kart4-kart5-replication.md).
 

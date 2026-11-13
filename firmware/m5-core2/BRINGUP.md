@@ -15,7 +15,9 @@ and Core2 reported `mode_ready:true`. See the
 Pit MODE/STOP/START/SLOW/BOOST/RACE/game physical acceptance, loaded driving and fleet/range tests
 remain pending; a received `rate 1` command does not establish motor-command acceptance.
 
-**The next two M5 karts are assigned IDs 4 and 5 and are not commissioned.** IDs 1 and 2
+**The next two M5 karts are assigned IDs 4 and 5.** Kart 4 reached the read-only checkpoint on
+2026-11-13 ([record](../../hardware/m5/2026-11-13-kart4-first-install/README.md)); kart 5 is
+untouched. Neither is commissioned for control by that. IDs 1 and 2
 remain Eamon's test karts; kart 3 is the reference. Follow the
 [kart-4/5 tune and reverse-filter preparation guide](../../docs/kart4-kart5-replication.md).
 For each, begin
@@ -128,6 +130,18 @@ image and commissioning values for rollback. Flash backups may include Wi-Fi/OTA
 keep them local under ignored `firmware/build/bench-private/`, never in Git or a public PR.
 Record the source commit and target for each new image. Upload only after choosing the exact
 board/port; build success alone does not establish that an image is installed.
+
+**Store the kart ID before the kart firmware first runs.** With no stored ID the Heltec
+firmware uses ID 1 and starts LoRa telemetry at boot, so a blank board transmits as kart 1
+beside the real kart 1 until `id N` is typed. On a new or erased Heltec, flash
+`firmware/provision-kart-id` first, built with `-DKART_ID=N` and the kart's own board options
+(its header shows the command). It starts no radio and stores only that ID. Read its
+`provision_id` line (`"stored":N,"ok":true`), then write the kart application at `0x10000`
+without erasing, and confirm `status` reports the intended kart.
+
+To find a new kart's VESC over Bluetooth, keep other unclaimed VESCs switched off, pin the
+UUID read over USB first (`vescuuid <24 hex>`) and only then the address from `blescan`
+(`vescmac ...`). With the UUID pinned, a wrong controller is released automatically.
 
 For each new ESP-NOW pair, install the initial read-only targets, provision and verify its
 confirmed unique kart ID with `writes:false`, then run this from the repository root using Python
