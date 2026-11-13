@@ -268,8 +268,10 @@ Neither new unit's UUID/BLE/pairing/capture is known yet. Never guess or clone k
   The read-only checkpoint and a ten-minute soak passed; the Heltec then got the write-capable
   `kart-m5-espnow` build and `speedcal 0.507`. A blank Heltec boots as kart 1 and transmits, so
   its ID was stored first with the new `firmware/provision-kart-id` helper; do the same for
-  kart 5. See [the install record](../hardware/m5/2026-11-13-kart4-first-install/README.md)
-  for what was still pending (mode read-backs, pedal check, soak on that build, Wi-Fi/OTA).
+  kart 5. ECO 15163, NORMAL 25272 and SPORT 150000 ERPM were then written from its Core2 and
+  read back, wheels up, fault 0; it was left in SPORT. See
+  [the install record](../hardware/m5/2026-11-13-kart4-first-install/README.md) for what is
+  still open (reverse under the caps, GPS check of the factor, Wi-Fi/OTA, pit commands).
 - **Still missing for karts 4/5:** a reverse-filter installer (none exists; kart 4 has no
   filter), and everything for kart 5, which has not been captured.
 - Supervise each unit's normal cold boots, correct filtered direction, repeated starts from

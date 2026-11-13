@@ -240,6 +240,7 @@
     "core2-erase.log": "8916d28376945ca10d7af63d5368c3848f12451fb23e35f941ab228221375237",
     "core2-factory-read-921600-failed.log": "4b7e6f0c3965cd051f07d3d9a495beb178f298ba64054b2af1291a64ea272d10",
     "core2-factory-read.log": "789f6fc15d5e8d5048455c6cc1d1a23baa7151e1f6c6dd7d34c49c9739b21c32",
+    "core2-modes-end.log": "66548f1f91e1f5b9f2bc8866173871a39adb508255d822dcb6e2f91fa67c1fcd",
     "core2-paired.log": "bea8b9d98fa008741bc43dca349bb81b7b4252e1041523fa583ba3d50b4da30c",
     "core2-soak-end.log": "348813e8e04b3ce7150f651270a76a5169b44006e667d074e7d617dbcef13272",
     "core2-soak.tsv": "b73512a1d966ac3e8a345b7e7f3e47de0f2a2624d328e143bf8341fdbda1df6e",
@@ -250,7 +251,8 @@
     "heltec-control-upload.log": "c824999469cad77d1399076d19c49263e21674994a2731fa0306cd7f0f63e7b5",
     "heltec-erase.log": "487e5424185fcf1b019723da64da50f6de8750b2c784e7912b04838c7146247e",
     "heltec-factory-read.log": "15df30c64e54c1b472dfe10b057a26349f452295bfe08b39187168639c2be8f5",
-    "heltec-modes.tsv": "b2cf78502a6debd336c30d89795de5dddfe794012efaa35860f533fa14a354e2",
+    "heltec-modes.tsv": "54603f6ad6acaeb952cfa6080cdb5eed8952ed0080f6dca3154d995e7334d41c",
+    "heltec-modes2.tsv": "7d5ffdddfb522102245f36efadec43284495164707f3a5998f2e46555f44bc98",
     "heltec-paired.log": "c2eca2087ddc8069fb9ff92eec91fe22dfe9f01813d34d553657c5bc0a8e0f33",
     "heltec-pin.log": "2076ef7515f2b49a237f6eda65f07172827c8bdb36e40d14f914486c661e2db3",
     "heltec-provision-upload.log": "e11531a2aaf10be115aee6d7cfc6aa3ed9e9916bb6734a45dad44bf548f77aad",
@@ -265,7 +267,6 @@
     "GPS, map and peer display (indoors, no fix); pit visibility of kart 4 was not checked",
     "link-loss and recovery tests; Core2 OTA",
     "the reverse filter on kart 4's VESC",
-    "mode read-backs, pedal check and soak on the write-capable build (pending when this was recorded)",
     "pit commands to kart 4"
   ],
   "control_build": {
@@ -321,11 +322,144 @@
       "mode_ready": true,
       "parse_errors": 0
     },
-    "vesc_state_when_recorded": "no mode written yet: SPORT adopted from the controller's own limits (scale 1.00, 150000 ERPM)",
+    "vesc_state_when_recorded": "SPORT confirmed, zero ERPM, fault 0",
     "pending": [
-      "ECO/NORMAL/SPORT holds with read-backs",
-      "wheels-up pedal check under the caps",
-      "ten-minute soak on this build"
-    ]
+      "reverse under the caps (not run in this check)",
+      "a GPS check of the 0.507 speed factor on the road"
+    ],
+    "mode_check": {
+      "setup": "owner at the kart, wheels up; console logged read-only (only `status` sent); modes held on the Core2",
+      "mode_log_lines": [
+        [
+          717.0,
+          "vesc write scale 0.500, cap 15 mph = 15163 ERPM"
+        ],
+        [
+          717.3,
+          "vesc write verify ok (scale 0.500, ERPM 15163)"
+        ],
+        [
+          732.8,
+          "vesc write scale 0.750, cap 25 mph = 25272 ERPM"
+        ],
+        [
+          733.0,
+          "vesc write verify ok (scale 0.750, ERPM 25272)"
+        ],
+        [
+          738.4,
+          "vesc write scale 1.000, no speed cap (150000 ERPM)"
+        ],
+        [
+          738.6,
+          "vesc write verify ok (scale 1.000, ERPM 150000)"
+        ]
+      ],
+      "mode_commands": [
+        [
+          717.0,
+          {
+            "src": 254,
+            "seq": 1,
+            "cmd": 1,
+            "arg": 0,
+            "result": 1
+          }
+        ],
+        [
+          732.8,
+          {
+            "src": 254,
+            "seq": 2,
+            "cmd": 1,
+            "arg": 1,
+            "result": 1
+          }
+        ],
+        [
+          738.4,
+          {
+            "src": 254,
+            "seq": 3,
+            "cmd": 1,
+            "arg": 2,
+            "result": 1
+          }
+        ]
+      ],
+      "limit_readbacks_in_order": [
+        {
+          "scale_max": 1.0,
+          "max_erpm": 150000,
+          "cap_mph": 0
+        },
+        {
+          "scale_max": 0.5,
+          "max_erpm": 15163,
+          "cap_mph": 15
+        },
+        {
+          "scale_max": 0.75,
+          "max_erpm": 25272,
+          "cap_mph": 25
+        },
+        {
+          "scale_max": 1.0,
+          "max_erpm": 150000,
+          "cap_mph": 0
+        }
+      ],
+      "wheel_peak_erpm_by_mode": {
+        "ECO": 14834,
+        "NORMAL": 23891,
+        "SPORT": 34446
+      },
+      "motor_a_max_abs_by_mode": {
+        "ECO": 44.6,
+        "NORMAL": 41.9,
+        "SPORT": 75.1
+      },
+      "expected_caps": {
+        "ECO": 15163,
+        "NORMAL": 25272,
+        "SPORT": 150000
+      },
+      "reverse_run_in_this_check": false,
+      "faults_seen": [
+        0
+      ],
+      "vesc_link_dropped": false,
+      "resets": 0,
+      "volts": [
+        75.3,
+        80.0
+      ],
+      "final_state": "SPORT confirmed, zero ERPM, fault 0",
+      "core2_after": {
+        "kart": 4,
+        "live": true,
+        "vesc": true,
+        "mode_ready": true,
+        "parse_errors": 0,
+        "heap": 147768,
+        "linked": true,
+        "channel": 1,
+        "channel_aligned": true,
+        "tx_failed": 4,
+        "rx_dropped": 105,
+        "rx_invalid": 0
+      },
+      "operator_report": "owner reported the sequence done and that it felt right"
+    },
+    "idle_on_this_build": {
+      "periods_s": [
+        480,
+        717
+      ],
+      "note": "untouched before the mode holds: no reset, VESC link up, fault 0",
+      "heap_min_first": 53288,
+      "heap_min_last": 53168,
+      "vesc_crc_err_last": 0
+    }
   }
 }

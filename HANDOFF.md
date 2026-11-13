@@ -25,7 +25,8 @@ The same day kart 4's never-flashed Heltec and Core2 were installed, paired and 
 VESC by UUID. The read-only checkpoint and soak passed, then the Heltec got the write-capable
 build and speed factor 0.507 (its VESC stores a 0.083 m wheel). Its kart ID was stored before
 the kart firmware first ran (`firmware/provision-kart-id`), because a blank Heltec transmits as
-kart 1. [Board install record](hardware/m5/2026-11-13-kart4-first-install/README.md).
+kart 1. ECO/NORMAL/SPORT were then written from its Core2 and read back at 15163 / 25272 /
+150000 ERPM, wheels up. [Board install record](hardware/m5/2026-11-13-kart4-first-install/README.md).
 [Record](hardware/vesc/kart4/2026-11-13/README.md),
 [replication guide](docs/kart4-kart5-replication.md).
 

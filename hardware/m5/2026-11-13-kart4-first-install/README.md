@@ -4,8 +4,8 @@ Kart 4's Heltec and Core2 were fitted but had never been flashed. They now run t
 game-rules candidate ([manifest](../../../docs/validation/m5-game-rules-2026-11-13.json)), are
 paired with each other, and the Heltec is bound to kart 4's own VESC. The read-only checkpoint
 and its soak passed; the Heltec was then moved to the write-capable build at the owner's
-request. **Mode read-backs, the pedal check and a soak on that build were still pending when
-this was written.** Details are in [observations.json](observations.json). The VESC side is in
+request, and ECO/NORMAL/SPORT were written from the Core2 and read back with the wheels up.
+Details are in [observations.json](observations.json). The VESC side is in
 [the kart 4 VESC record](../../vesc/kart4/2026-11-13/README.md).
 
 | Item | Kart 4 |
@@ -52,6 +52,19 @@ These values are **only for kart 4**. Never use them as defaults for another kar
     only; ID, pairing and pins were kept. Status: kart 4, `writes:true`, UUID equal to its pin,
     `id_ok`, `limits_ok`, baseline `read`, still linked. `speedcal 0.507` was stored before any
     mode could be selected, and the Core2 then reported `mode_ready:true`.
+11. **Idle on that build:** 480 s and then 717 s untouched, no reset, VESC link up, fault 0,
+    Heltec heap low-water mark 53.2 kB.
+12. **Mode check, wheels up, modes held by the owner on the Core2.** Each was written and
+    verified:
+
+    | Mode | Scale | ERPM cap | Wheel peak | Peak motor current |
+    | --- | ---: | ---: | ---: | ---: |
+    | ECO | 0.50 | 15163 | 14834 | 44.6 A |
+    | NORMAL | 0.75 | 25272 | 23891 | 41.9 A |
+    | SPORT | 1.00 | 150000 (none) | 34446 | 75.1 A |
+
+    Fault 0, no link drop, no reset; pack 75.3–80.0 V. The owner reported it felt right.
+    **Final state: SPORT**, stopped. No reverse run was made in this check.
 
 ## Speed factor
 
@@ -64,9 +77,8 @@ check on the road.
 
 ## Not done, not verified
 
-- ECO/NORMAL/SPORT read-backs, the pedal check under the caps and a soak on the write-capable
-  build. No mode had been written when this was recorded: the kart sat at its controller's own
-  limits (scale 1.00, 150000 ERPM), which the Heltec adopts as SPORT.
+- Reverse under the caps on the write-capable build (reverse was run natively before the
+  boards were installed; see the VESC record). The speed factor against GPS on the road.
 - Wi-Fi and OTA settings on either board: nothing provisioned, hostnames unset.
 - GPS, map and peers (indoors); whether the pit sees kart 4; pit commands; link-loss recovery.
 - The reverse filter on kart 4's VESC; anything on the road.
