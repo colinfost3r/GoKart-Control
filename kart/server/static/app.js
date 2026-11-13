@@ -1545,7 +1545,10 @@ document.querySelector(".mapctl").addEventListener("click", (e) => {
   if (b && b.id === "sunBtn") {
     sunPref = !sunOn;
     try { localStorage.setItem("gk_sun", sunPref ? "1" : "0"); } catch (err) { /* per-device convenience only */ }
-    sunApply(); return;
+    sunApply();
+    // say which way it went: the opaque SUN look was read as "not sun mode" and the tap as "it turned off" (2026-11-13)
+    mpNote(sunPref ? "SUN MODE ON: solid HUD, high-contrast map" : "SUN MODE OFF: night look", 3);
+    return;
   }
   if (b && b.id === "styleBtn") {
     mapStyle = mapStyle === "map" ? "sat" : "map";
