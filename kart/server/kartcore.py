@@ -1600,7 +1600,7 @@ class GameEngine:
             self._rec(recs, "item_used", now, item=name, slots=len(self.inventory))
         z = _InvZone(f"inv-{name}")
         if name in ("boost", "rocket", "boost3"):
-            self._cmd(recs, now, z, "boost", it["secs"], it["scale"])
+            self._cmd(recs, now, z, "boost", it["secs"], self._felt_boost(it["scale"]))
         elif name == "star":
             self._star_on(recs, now, z)
         elif name == "magnet":
@@ -1610,6 +1610,13 @@ class GameEngine:
             self._hotlap_arm(recs, now, z)
         self._tag_prize_commands(recs, 0, now)
         return recs
+
+    def _felt_boost(self, scale):
+        """A carried boost is always felt: at least one mode step above the kart's requested mode (ECO 0.50
+        -> 0.75, NORMAL 0.75 -> 1.0; the firmware lifts the speed cap with the scale). Found 2026-11-13: a
+        plain boost (0.75) did nothing in NORMAL. SPORT has nothing above it. Zone boosts keep their own number."""
+        base = MODE_SCALES.get(self.mode_req)
+        return scale if base is None else clamp_scale(max(scale, base + 0.25))
 
     def restore_inventory(self, items, shields, now):
         """Carried items a previous run saved (export_state), after a restart or power cycle. Only into

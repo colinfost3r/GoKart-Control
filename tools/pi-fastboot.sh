@@ -12,9 +12,10 @@ REVERT=0; [ "${1:-}" = "--revert" ] && REVERT=1
 # Services/timers a provisioned GoKart Pi never needs at boot:
 #   NetworkManager-wait-online: nothing waits for the network (the gokart units say so explicitly);
 #   apt/man-db/eeprom/e2scrub: maintenance, run by hand when updating (apt-get still works);
-#   udisks2: no removable-media automount on a kiosk; bluetooth: Heltec/T-Beam talk over USB.
+#   udisks2: no removable-media automount on a kiosk.
+#   bluetooth.service STAYS: the kart dash speakers are Bluetooth (kart/tools/bt_speaker.sh, 2026-11-13).
 UNITS="NetworkManager-wait-online.service apt-daily.timer apt-daily-upgrade.timer man-db.timer
-       rpi-eeprom-update.service udisks2.service bluetooth.service e2scrub_all.timer"
+       rpi-eeprom-update.service udisks2.service e2scrub_all.timer"
 for u in $UNITS; do
   systemctl cat "$u" >/dev/null 2>&1 || continue
   if [ "$REVERT" = 1 ]; then systemctl enable "$u" >/dev/null 2>&1 && echo "enabled  $u"

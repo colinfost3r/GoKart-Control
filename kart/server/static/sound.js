@@ -5,13 +5,15 @@
    GKSound.init({ volume: 0-1, enabled: bool, profile: "kart" | "pit", onchange: fn })
    GKSound.play(kind)   kinds: light, go, grid, roulette, item, empty, boost, super, mud, lap, best, finish, stop, tick
    GKSound.setMuted(b) / .muted (remembered in localStorage "gk_mute"), .unlocked(), .ensure()
+   GKSound.context() / .output(): the AudioContext and master gain, for music.js (kart page) to play into
+   init({ onplay: fn(kind) }) is called after each effect starts (music.js ducks under it)
    The first touch on the page unlocks audio (browsers block it before that, unless Chromium runs with
    --autoplay-policy=no-user-gesture-required, as both kiosks do). The kart profile is louder and fuller
    (an octave-down layer and a compressor; the kart is outdoors), the pit profile is quieter. */
 "use strict";
 const GKSound = (() => {
   const S = {
-    ctx: null, out: null, noiseBuf: null, volume: 0.8, enabled: true, profile: "pit", onchange: null,
+    ctx: null, out: null, noiseBuf: null, volume: 0.8, enabled: true, profile: "pit", onchange: null, onplay: null,
     muted: (() => { try { return localStorage.getItem("gk_mute") === "1"; } catch (e) { return false; } })(),
   };
   function changed() { if (S.onchange) try { S.onchange(); } catch (e) { /* ui only */ } }
@@ -82,8 +84,17 @@ const GKSound = (() => {
     roulette: (t) => { let at = 0, gap = 0.05; while (at < 1.15) { tone(t + at, 0.03, "square", 1500 + at * 500, 0, 0.09, false); at += gap; gap *= 1.11; } },
     item: (t) => { tone(t, 0.13, "square", 1319, 0, 0.22); tone(t + 0.12, 0.38, "square", 1976, 0, 0.22); },
     empty: (t) => { tone(t, 0.18, "triangle", 330, 220, 0.24); tone(t + 0.16, 0.3, "triangle", 247, 165, 0.24); },
-    // boost: rising filtered-noise whoosh + sawtooth sweep up
-    boost: (t) => { swish(t, 0.75, 350, 4200, 1.4, 0.5); tone(t, 0.7, "sawtooth", 160, 1100, 0.2); tone(t + 0.68, 0.22, "square", 1320, 0, 0.14); },
+    // boost: rising filtered-noise whoosh + sawtooth sweep up, then a quick three-note "power up" on top
+    boost: (t) => {
+      swish(t, 0.75, 350, 4200, 1.4, 0.5); tone(t, 0.7, "sawtooth", 160, 1100, 0.2);
+      [1047, 1319, 1568].forEach((f, i) => tone(t + 0.62 + i * 0.07, i === 2 ? 0.3 : 0.08, "square", f, 0, 0.16));
+    },
+    // hit: a shell got me (thud + a falling buzz); zap: lightning got me (crackle + a falling whine)
+    hit: (t) => { tone(t, 0.12, "sine", 150, 50, 0.6); swish(t, 0.2, 2500, 400, 1.2, 0.4); tone(t + 0.1, 0.55, "sawtooth", 520, 110, 0.26); },
+    zap: (t) => {
+      for (let i = 0; i < 9; i++) tone(t + i * 0.045, 0.03, "square", 2800 + ((i * 911) % 1800), 0, 0.14, false);
+      swish(t, 0.45, 6000, 1200, 4, 0.3); tone(t + 0.3, 0.5, "sawtooth", 880, 140, 0.22);
+    },
     // super: short ORIGINAL 6-note jingle (not any game's theme) + sparkle
     super: (t) => {
       [659, 784, 988, 880, 1175, 1568].forEach((f, i) => tone(t + i * 0.09, i === 5 ? 0.4 : 0.11, "square", f, 0, 0.2));
@@ -110,6 +121,7 @@ const GKSound = (() => {
       if (o.enabled !== undefined) S.enabled = o.enabled !== false;
       if (o.profile) S.profile = o.profile;
       if (o.onchange) S.onchange = o.onchange;
+      if (o.onplay !== undefined) S.onplay = o.onplay;
       if (S.out) S.out.gain.value = master();
       changed();
     },
@@ -117,6 +129,8 @@ const GKSound = (() => {
     get muted() { return S.muted; },
     get enabled() { return S.enabled; },
     unlocked() { return !!S.ctx && S.ctx.state === "running"; },
+    context() { return ensure(); },
+    output() { ensure(); return S.out; },
     setMuted(m) {
       S.muted = !!m;
       try { localStorage.setItem("gk_mute", S.muted ? "1" : "0"); } catch (e) { /* per-viewer convenience only */ }
@@ -127,6 +141,7 @@ const GKSound = (() => {
       const ctx = ensure();
       if (!ctx || ctx.state !== "running") return false;
       try { KINDS[kind](ctx.currentTime + 0.01); } catch (e) { return false; }   // sound is a nicety
+      if (S.onplay) try { S.onplay(kind); } catch (e) { /* music ducking is a nicety too */ }
       return true;
     },
   };

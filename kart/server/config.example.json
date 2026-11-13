@@ -25,6 +25,8 @@
     "demo_max_s": "Demo ends by itself after this many seconds.",
     "sound": "Game sounds on the driver page (WebAudio through the HDMI panel speakers).",
     "sound_volume": "Master volume of those sounds, 0-1.",
+    "music": "Driver page: an original chiptune loop under the sounds (static/music.js): RACE while moving or from GO, IDLE when parked, silent through the start lights; boosts speed it up, a slow drags it. The note button mutes it per display.",
+    "music_volume": "Music volume 0-1 (default 0.5), under sound_volume.",
     "sun_mode": "Driver page SUN theme by default: opaque black HUD with white borders, yellow active mode, contrast-boosted map photo (the 7 inch panel's backlight cannot be raised). The SUN map button toggles it per device and its last setting wins.",
     "freeplay": "Allow FREEPLAY (map button under SUN, or POST /api/freeplay from the kart): a kart-local item-box game that needs no pit. Drive one lap to set the course, then random item boxes appear on it. The pit's own game (enabled, with zones) always wins and pauses it. Needs game true. On/off and the course are kept in freeplay.json next to game-state.json.",
     "freeplay_boxes": "Item boxes kept on the freeplay course at once (1-8).",
@@ -34,7 +36,8 @@
     "item_hold": "true = freeplay prizes (boost/rocket/boost3/star/magnet/hotlap/shield) are carried (up to 3) and used later from the Core2 item screen or the dash chips; false = they fire at the prize-wheel reveal. Mud always applies at once.",
     "rotate": "0 or 180. Read by install.sh only: 180 = panel mounted ports-down (kernel video= rotate + touch calibration udev rule; reboot). Kart 2 runs 0.",
     "health_period_s": "Seconds between Pi power/thermal samples (vcgencmd get_throttled + CPU temperature, 0.2-3600). The driver page shows UNDERVOLT / THROTTLED / HAD UNDERVOLT only when something is wrong; transitions are logged.",
-    "health_file": "Tests/dev only: read the get_throttled text from this file instead of vcgencmd (null on a kart)."
+    "health_file": "Tests/dev only: read the get_throttled text from this file instead of vcgencmd (null on a kart).",
+    "bt_speaker": "MAC of the dash's Bluetooth speaker, kept connected by gokart-bt-speaker.service (tools/bt_speaker.sh). `tools/bt_speaker.sh pair MAC` writes it. null = no speaker: sounds stay on the HDMI panel."
   },
   "kart_id": 2,
   "pit_urls": [
@@ -63,6 +66,8 @@
   "demo_max_s": 180,
   "sound": true,
   "sound_volume": 0.8,
+  "music": true,
+  "music_volume": 0.5,
   "sun_mode": true,
   "freeplay": true,
   "freeplay_boxes": 5,
@@ -72,5 +77,6 @@
   "item_hold": true,
   "rotate": 0,
   "health_period_s": 10.0,
-  "health_file": null
+  "health_file": null,
+  "bt_speaker": null
 }

@@ -27,6 +27,10 @@ mkdir -p "$PROFILE" "$CACHE"
 # After a power cut Chromium thinks it crashed; clear that so no restore bubble appears.
 sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]*"/"exit_type":"Normal"/' \
   "$PROFILE/Default/Preferences" 2>/dev/null || true
+# Chromium picks its audio backend once at start: wait (max 10 s) for PipeWire's pulse socket so the
+# game sounds go through PipeWire (Bluetooth speaker, else the HDMI panel). pipewire-alsa catches the
+# ALSA fallback too, so this only shaves the backend probe.
+for _ in $(seq 1 20); do [ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/pulse/native" ] && break; sleep 0.5; done
 # shellcheck disable=SC2086
 "$BIN" --kiosk --noerrdialogs --disable-infobars --touch-events=enabled \
   --ozone-platform=wayland --no-first-run --password-store=basic \

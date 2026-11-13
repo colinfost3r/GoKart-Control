@@ -98,6 +98,8 @@ DEFAULTS = {
     "demo_max_s": 180,                  # demo ends by itself after this
     "sound": True,                      # driver page: synthesized game sounds (WebAudio, static/sound.js)
     "sound_volume": 0.8,                # master volume of those sounds, 0-1
+    "music": True,                      # driver page: original chiptune loop under the sounds (static/music.js)
+    "music_volume": 0.5,                # its volume, 0-1 (under sound_volume)
     "sun_mode": True,                   # driver page: opaque high-contrast SUN theme (the SUN button overrides it per device)
     "freeplay": True,                   # allow freeplay (FREEPLAY map button / POST /api/freeplay): kart-local item boxes, no pit
     "freeplay_boxes": 5,                # item boxes kept on the freeplay course (1-8)
@@ -108,18 +110,19 @@ DEFAULTS = {
     "rotate": 0,                        # install.sh only: 180 = panel mounted ports-down (kernel + touch rotation)
     "health_period_s": health.PERIOD_S, # vcgencmd get_throttled + CPU temp sample period (Pi only)
     "health_file": None,                # tests/dev: read the get_throttled text from this file instead of vcgencmd
+    "bt_speaker": None,                 # tools/bt_speaker.sh only: MAC of the dash's Bluetooth speaker (pair writes it)
 }
 # config sanity: (type, min, max) for numbers; a bad value is replaced by the default and reported
 CONFIG_RULES = {
     "kart_id": (int, 1, 8), "map_poll_s": (float, 5, 3600), "follow_span_m": (float, 10, 2000),
     "follow_resume_s": (float, 1, 600), "mode_hold_ms": (int, 0, 5000), "map_fps": (int, 1, 30),
     "http_port": (int, 1, 65535), "status_poll_s": (float, 5, 3600), "max_log_mb": (float, 10, 100000),
-    "demo_max_s": (float, 10, 3600), "sound_volume": (float, 0, 1), "rotate": (int, 0, 180),
+    "demo_max_s": (float, 10, 3600), "sound_volume": (float, 0, 1), "music_volume": (float, 0, 1), "rotate": (int, 0, 180),
     "health_period_s": (float, 0.2, 3600), "freeplay_boxes": (int, 1, 8),
     "mud_slow_secs": (int, 1, 30), "item_reveal_s": (float, 0, 5),
 }
 CONFIG_BOOLS = ("beginner_mode", "remote_cmd", "game", "gps_correction", "demo", "sound", "sun_mode", "freeplay",
-                "item_hold")
+                "item_hold", "music")
 CONFIG_CHOICES = {"map_orientation": ("heading_up", "north_up"), "rotate": (0, 180),
                   "freeplay_speed": tuple(m5_course.GAME_SPEEDS)}
 MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -133,7 +136,7 @@ DEMO_FINISH_LAPS = 3                    # demo mode: FINISH (P1) after this many
 INV_SAVE_EVENTS = ("item_held", "item_used", "shield_broke", "shield_on", "inventory_restored",
                    "game_on", "game_off")
 PUBLIC_CFG = ("kart_id", "beginner_mode", "map_orientation", "follow_span_m", "follow_resume_s",
-              "mode_hold_ms", "map_fps", "game", "sound", "sound_volume", "demo", "sun_mode", "freeplay",
+              "mode_hold_ms", "map_fps", "game", "sound", "sound_volume", "music", "music_volume", "demo", "sun_mode", "freeplay",
               "freeplay_boxes", "item_hold")
 
 

@@ -932,8 +932,8 @@ class Items(unittest.TestCase):
         self.assertEqual(evs(r2, "item_held")[0]["item"], "boost")
         self.assertEqual([i["item"] for i in g.inventory], ["boost"])
         g.on_self(fix(-4, 0), 9.9)                                 # use needs current controller state
-        r3 = g.use_item(10.0, 0)                                    # used much later
-        self.assertEqual(lines(r3), ["boost 7 0.75"])
+        r3 = g.use_item(10.0, 0)                                    # used much later; NORMAL (fix()) -> one mode up = 1.00
+        self.assertEqual(lines(r3), ["boost 7 1.00"])
         self.assertEqual(g.inventory, [])
         with self.assertRaises(kc.CommandError):                    # empty slot refused
             g.use_item(11.0, 0)
@@ -944,6 +944,28 @@ class Items(unittest.TestCase):
         with self.assertRaises(kc.CommandError):
             g.use_item(39.5, 0)
         self.assertEqual(len(g.inventory), 1)
+
+    def test_carried_boost_steps_one_mode_above_the_current_one(self):
+        # owner 2026-11-13 (kart 1 bench): a plain boost is 0.75, the same scale NORMAL already runs, so in
+        # NORMAL it did nothing. A carried boost now lands at least one mode up: ECO -> 0.75, NORMAL -> 1.00,
+        # SPORT -> 1.00 (nothing above it). A rocket (1.0) is unchanged.
+        for mode, want in ((0, "boost 7 0.75"), (1, "boost 7 1.00"), (2, "boost 7 1.00"), (None, "boost 7 0.75")):
+            g = kc.GameEngine(rng=FixedRng(0.1), item_reveal_s=1.4, item_hold=True)
+            d = zones_doc(item_zone()); d["source"] = "freeplay"
+            g.set_zones(d, 0.0)
+            g.on_self(fix(-20, 0, mode_req=mode), 1.0)
+            g.on_self(fix(-4, 0, mode_req=mode), 1.5)
+            g.tick(3.0)
+            self.assertEqual([i["item"] for i in g.inventory], ["boost"], mode)
+            g.on_self(fix(-4, 0, mode_req=mode), 9.9)               # use needs current controller state
+            self.assertEqual(lines(g.use_item(10.0, 0)), [want], mode)
+        g = kc.GameEngine(rng=FixedRng(0.3), item_reveal_s=1.4, item_hold=True)   # rocket stays 1.0
+        d = zones_doc(item_zone()); d["source"] = "freeplay"
+        g.set_zones(d, 0.0)
+        g.on_self(fix(-20, 0, mode_req=1), 1.0); g.on_self(fix(-4, 0, mode_req=1), 1.5); g.tick(3.0)
+        self.assertEqual([i["item"] for i in g.inventory], ["rocket"])
+        g.on_self(fix(-4, 0, mode_req=1), 9.9)                      # use needs current controller state
+        self.assertEqual(lines(g.use_item(10.0, 0)), ["boost 10 1.00"])
 
     def _fp_engine(self, x, **kw):
         g = kc.GameEngine(rng=FixedRng(x), item_hold=True, **kw)
@@ -1001,11 +1023,11 @@ class Items(unittest.TestCase):
         for n, left in ((2.0, 2), (30.0, 1)):
             g.on_self(fix(-20, 0), n - 0.1)
             r = g.use_item(n, 0)
-            self.assertEqual(lines(r), ["boost 7 0.75"])
+            self.assertEqual(lines(r), ["boost 7 1.00"])
             self.assertEqual(g.inventory[0]["charges"], left)
         g.on_self(fix(-20, 0), 59.9)
         r = g.use_item(60.0, 0)                                          # the last charge spends the card
-        self.assertEqual(lines(r), ["boost 7 0.75"])
+        self.assertEqual(lines(r), ["boost 7 1.00"])
         self.assertEqual(g.inventory, [])
 
     def test_hotlap_rewards_a_rocket_or_punishes_with_mud(self):

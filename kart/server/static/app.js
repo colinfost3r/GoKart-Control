@@ -93,6 +93,7 @@ function render() {
   const race = (S.game && S.game.race) || {};
   show("gridBanner", race.hold === true && st.stopped !== true);
   document.body.classList.toggle("alerting", st.stopped === true || slow.active === true || race.hold === true || !$("connBanner").classList.contains("hidden"));
+  musicState(me, race, slow, fresh);
 
   // chips
   const id = me.heltec_id !== null ? me.heltec_id : me.configured_id;
@@ -124,10 +125,13 @@ function render() {
   const mphEl = $("mph");
   const wheel = fresh && me.vesc_fresh && !nul(d.wheel_mph) ? Math.abs(d.wheel_mph) : null;
   let arcMph = null;
-  if (fresh && !nul(d.gps_mph)) { txt("mph", Math.round(d.gps_mph)); svgCls(mphEl, "mphnum"); txt("mphSrc", "GPS"); arcMph = d.gps_mph; }
+  // wheels turning while GPS says stopped (kart on a stand, or GPS lagging): the wheel number is the useful one
+  const spinning = wheel !== null && wheel > 3 && fresh && !nul(d.gps_mph) && d.gps_mph < 2;
+  if (spinning) { txt("mph", Math.round(wheel)); svgCls(mphEl, "mphnum"); txt("mphSrc", "WHEEL"); arcMph = wheel; }
+  else if (fresh && !nul(d.gps_mph)) { txt("mph", Math.round(d.gps_mph)); svgCls(mphEl, "mphnum"); txt("mphSrc", "GPS"); arcMph = d.gps_mph; }
   else if (wheel !== null) { txt("mph", Math.round(wheel)); svgCls(mphEl, "mphnum"); txt("mphSrc", "WHEEL"); arcMph = wheel; }
   else { txt("mph", !fresh ? "NO DATA" : "NO FIX"); svgCls(mphEl, "mphnum na"); txt("mphSrc", "GPS"); }
-  txt("mphNote", fresh && !g.fix_fresh
+  txt("mphNote", spinning ? "wheels turning, GPS 0 mph" : fresh && !g.fix_fresh
     ? (wheel !== null ? "NO GPS FIX: wheel speed" : !nul(g.fix_age_s) ? `last fix ${ageText(g.fix_age_s)} ago` : "")
     : (wheel !== null ? `wheel ${wheel.toFixed(0)} mph` : ""));
   const game = S.game || {}, meter = (game.meter || {});
@@ -195,7 +199,7 @@ function render() {
 
   renderGame(game, fresh, st);
   renderRace((game && game.race) || {});
-  sndConfig(); sndUi(); soundTest(S.sound_test); sunApply();
+  sndConfig(); sndUi(); musConfig(); musUi(); soundTest(S.sound_test); sunApply();
   show("sndTest", !!dm.active);
   // pulses (BOOST label, USB link chip) flip with each render (5 Hz) instead of a 60 fps CSS animation:
   // on a Pi 3 B every animated frame is a full GPU composite
@@ -356,6 +360,12 @@ function renderMulti(f, m) {
     mpUi.lastRefusalSeq = ur.seq;
     mpFeedback((m.held && m.held.item) || "shell", String(ur.text).toUpperCase().slice(0, 40), "miss", 2.5);
   }
+  // I got hit (the SLOW banner shows the rest): a thud for a shell, a crackle for lightning, once per hit
+  const lh = m && m.last_hit;
+  if (lh && lh.applied && !nul(lh.age_s) && lh.age_s < 2) {
+    const hk = `${lh.from}:${lh.item}:${Math.round((performance.now() - lh.age_s * 1000) / 1500)}`;
+    if (hk !== mpUi.lastHitKey) { mpUi.lastHitKey = hk; Snd.play(lh.item === "lightning" ? "zap" : "hit"); }
+  }
   if (inS) txt("mpScore", "★ " + (Number(m.score) || 0));
   show("mpScore", inS);
   // INVITE: hosts heard while not in a session (at most 3 rows: they fit above the scale bar)
@@ -514,7 +524,7 @@ function gameEvents(game) {
     if (e.ev === "item") { if (!(MP_ITEMS[e.item] && performance.now() - mpUi.rouletteAt < 3000)) itemRoulette(e.item, e.zone); }   // a multi "held" may have spun it
     else if (e.ev === "suppressed") cancelItemRoulette(e.zone, e.why);
     else if (e.ev === "boost" && itemZones.has(e.zone)) { /* shown by the roulette */ }
-    else if (e.ev === "boost") { flash("BOOST!", "boost"); Snd.play("boost"); }
+    else if (e.ev === "boost") { flash("BOOST!", "boost"); Snd.play("boost"); musBoost(); }
     else if (e.ev === "mud") { flash("MUD", "mud"); Snd.play("mud"); }
     else if (e.ev === "lap") { flash(`LAP ${e.lap}  ${lapTime(e.lap_s)}${e.best ? "  BEST" : ""}`, "lap", e.best ? "fbest" : ""); Snd.play(e.best ? "best" : "lap"); }
     else if (e.ev === "lap_start") Snd.play("lap");
@@ -721,7 +731,54 @@ function sndConfig() {
   const key = [cfg("sound", true), cfg("sound_volume", 0.8)].join();
   if (key === sndCfgKey) return;
   sndCfgKey = key;
-  GKSound.init({ enabled: cfg("sound", true) !== false, volume: cfg("sound_volume", 0.8), profile: "kart", onchange: () => sndUi() });
+  GKSound.init({ enabled: cfg("sound", true) !== false, volume: cfg("sound_volume", 0.8), profile: "kart", onchange: () => sndUi(), onplay: musDuck });
+}
+/* music (static/music.js): an original chiptune loop under the effects. "music": false in config.json removes
+   it, "music_volume" 0-1 (default 0.5); the note button mutes it per display (localStorage gk_music) and the
+   sound button mutes everything. RACE loop while the kart moves (> 3 mph, kept 15 s through stops) or from
+   GO; the softer IDLE loop when parked; silence from the lights to GO and under the finish fanfare. A boost
+   pushes the tempo up for 6 s, a slow (shell / mud / lightning) pulls it down while SLOW shows. */
+const Music = GKMusic;
+let musCfgKey = null, musMoveAt = -1e9, musBoostUntil = 0;
+function musDuck(kind) {
+  if (kind === "grid" || kind === "tick") return;
+  Music.duck(kind === "roulette" ? 0.55 : 0.35, kind === "roulette" ? 1400 : (kind === "finish" || kind === "super") ? 1600 : 450);
+}
+function musConfig() {
+  const key = [cfg("music", true), cfg("music_volume", 0.5)].join();
+  if (key === musCfgKey) return;
+  musCfgKey = key;
+  Music.init({ sound: GKSound, enabled: cfg("music", true) !== false, volume: cfg("music_volume", 0.5), onchange: () => musUi() });
+}
+const MUS_ICON = (muted) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">'
+  + '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="18" cy="16" r="3" fill="currentColor"/>'
+  + (muted ? '<path d="M3 3l18 18"/>' : "") + "</svg>";
+let musShown = null;
+function musUi() {
+  const on = Music.enabled && Snd.enabled;
+  const key = [on, Music.muted].join();
+  if (key === musShown) return;
+  musShown = key;
+  const b = $("musBtn");
+  b.classList.toggle("hidden", !on);
+  b.classList.toggle("muted", Music.muted);
+  b.innerHTML = MUS_ICON(Music.muted);
+}
+$("musBtn").addEventListener("click", () => { Snd.ensure(); Music.setMuted(!Music.muted); });
+function musBoost() { musBoostUntil = performance.now() + 6000; }
+function musicState(me, race, slow, fresh) {
+  if (!Music.enabled) return;
+  const now = performance.now(), d = (me && me.derived) || {};
+  const mph = fresh ? Math.max(Math.abs(Number(d.gps_mph) || 0), Math.abs(Number(d.wheel_mph) || 0)) : 0;
+  if (mph > 3) musMoveAt = now;
+  let theme;
+  if (Snd.muted) theme = null;
+  else if (raceUi.active && raceUi.goShownAt === null) theme = null;                                       // lights
+  else if (race.finished === true && !nul(race.finish_age_s) && race.finish_age_s < 4) theme = null;        // fanfare
+  else if (now - musMoveAt < 15000 || (raceUi.active && raceUi.goShownAt !== null)) theme = "race";
+  else theme = "idle";
+  Music.setTheme(theme);
+  Music.setTempo(slow.active === true ? 0.8 : now < musBoostUntil ? 1.15 : 1);
 }
 const SND_ICON = (muted) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round">'
   + '<path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/>'
@@ -1560,5 +1617,5 @@ setInterval(() => {
     cb.classList.remove("hidden");
   }
 }, 1000);
-sndConfig(); Snd.ensure(); sndUi();
+sndConfig(); Snd.ensure(); sndUi(); musConfig(); musUi();
 connect();
